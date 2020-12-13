@@ -1,5 +1,5 @@
 ---
-title: CV
+title: Curriculum Vitae
 layout: page
 ---
 
