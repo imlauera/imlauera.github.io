@@ -3,5 +3,5 @@ title: Curriculum Vitae
 layout: page
 ---
 
-* [Español](/resume_spanish.pdf)
+* [Español](/resume.pdf)
 * [English](/resume_english.pdf)
