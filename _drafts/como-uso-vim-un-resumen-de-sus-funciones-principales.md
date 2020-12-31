@@ -1,9 +1,7 @@
 ---
 layout: post
 title: Como uso VIM, un resumen de sus funciones principales
-date: 2020-12-31 11:08 -0300
 ---
-
 #### Navegación.
 <img src="{{site.baseurl}}/assets/img/vim_keys_hjkl.jpeg"/>
 > La tecla h está a la izquierda y mueve a la izquierda.   
