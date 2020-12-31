@@ -7,12 +7,12 @@ Soy un desarrollador de software, estudiante de ciencias de la computación, pos
 
 ### Experiencia:
 
-*Proyectos de la Universidad*
+**Proyectos de la Universidad**
 - Desarrollé en Erlang un servidor distribuido de TaTeTi.
 - Desarrollé un graficador de grafos como proyecto final de un materia en Python,Gnuplot. Este programa fue implementado con el algoritmo de Fruchterman-Reingold.
 - Concurrencia y paralelismo con OpenMP y POSIX Threads en C.
 
-*Proyectos Personales*
+**Proyectos Personales**
 - Implementé un Image-Board orientado al anonimato con Flask, BootstrapV4 y JQuery.
 - Implementé un prueba de velocidad de tipeo. Esto fue programado con PHP, MySQL y JQuery.
 - Usando MercadoLibre API desarrollé un cliente web ligero para buscar productos en ReactJS.
@@ -22,20 +22,14 @@ Soy un desarrollador de software, estudiante de ciencias de la computación, pos
 - Transcribí libros de álgebra y cálculo en LATEX y LyX.
 - Desarrollé un bot en NeoBux usando Python y Bash cuya funcionalidad era acceder automáticamente a las publicidades. Hice esto con el objetivo de aprender y por diversión.
 - Como usuario de GNU/Linux a través de los años escribí múltiples scripts en Python y Bash.
-- Jugando con JavaScript, JQuery, HTML5, CSS3 y Flask desarrollé pequeñas aplicaciones webs.
 
-## Áreas de Conocimiento
+### Áreas de Conocimiento
 
-- Desarrollo Web.  
-Python/Flask/Django, NodeJS/ExpressJS, PHP, JavaScript, HTML5/CSS3, AngularJS, ReactJS.
-- Base de Datos.  
-MySQL, PostgreSQL, SQLite.-SysAdmin.GNU/Linux, Seguridad.
-- Version-control system.  
-Git, SVN.
-- Creacion de documentos.  
-LATEX, LyX, BibTeX, Pandoc, Markdown.
-- Seguridad.   
-Buffer OverFlow, XSS, CSFR, SQLi, LFI, RFI, IDOR, SSFR.
+- Desarrollo Web: Flask/Django, NodeJS/ExpressJS, PHP, JavaScript, HTML5/CSS3, AngularJS, ReactJS.
+- Base de Datos: MySQL, PostgreSQL, SQLite.-SysAdmin.GNU/Linux, Seguridad.
+- Version-control system: Git, SVN.
+- Creacion de documentos: LATEX, LyX, BibTeX, Pandoc, Markdown.
+- Seguridad: Buffer OverFlow, XSS, CSFR, SQLi, LFI, RFI, IDOR, SSFR.
 
 ## Idiomas
 - Español (nativo).
