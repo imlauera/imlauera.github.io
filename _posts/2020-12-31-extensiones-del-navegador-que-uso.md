@@ -17,7 +17,7 @@ Algunas opciones: <span style="color: yellow">LastPass, BitWarden, TweakPass</sp
 
 <img src="{{site.baseurl}}/assets/img/alternateplayerfortwitch.jpg" width=20/><span style="color:yellow;">Alternate Player for Twitch</span>, un reproductor de video alternativo para Twitch.   
 
-De Twitch uso: <span style="color: yellow;">FrankerFaceZ</span><img src="{{site.baseurl}}/assets/img/frankerfacez.png" width=20/>, <span style="color: yellow;">BetterTV</span><img src="{{site.baseurl}}/assets/img/bettertv.jpg" width=20/> para los emotes.  
+Para Twitch uso: <span style="color: yellow;">FrankerFaceZ</span><img src="{{site.baseurl}}/assets/img/frankerfacez.png" width=20/>, <span style="color: yellow;">BetterTV</span><img src="{{site.baseurl}}/assets/img/bettertv.jpg" width=20/> para los emotes.  
 
 Si uso Chromium o Google Chrome desactivo el botón tan molesto del **ChromeCast**.
 Esto se puede hacer accediendo la ruta 
