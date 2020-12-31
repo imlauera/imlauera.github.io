@@ -24,7 +24,7 @@ También se puede usar etiquetas HTML en Markdown.
 Ahora generamos la presentación:
 >  pandoc hello.md -t beamer -o hello.pdf
 
-#### Cambiando diseño, agregando título, autor, usando metadata.
+#### Cambiando diseño, agregando título, autor de la presentación usando metadata.
 En el archivo hello.md agregamos al comienzo:
 ```
 ---
