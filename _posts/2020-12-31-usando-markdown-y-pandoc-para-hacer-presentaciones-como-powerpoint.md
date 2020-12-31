@@ -47,5 +47,5 @@ colortheme:
 
 Podés bajar otros buscando por beamer themes.
 
-Cada vez que cambiás modificás el documento markdown tenés que volver a generarlo usando pandoc.
+Cada vez que modificás el documento markdown tenés que volver a generarlo usando pandoc.
 
