@@ -21,7 +21,7 @@ Esto es una prueba.
 Más información: [Markdown Cheat Sheet](https://guides.github.com/pdfs/markdown-cheatsheet-online.pdf)  
 También se puede usar etiquetas HTML en Markdown.
 
-Ahora generamos el documento PDF:
+Ahora generamos la presentación:
 >  pandoc hello.md -t beamer -o hello.pdf
 
 #### Cambiando diseño, agregando título, autor, usando metadata.
