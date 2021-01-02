@@ -14,7 +14,7 @@ Motivos por los cuales uso DDG como buscador por defecto:
 
 
 Antes de seguir, <span style="color: green;">te recomiendo que vayas a las preferencias de tu navegador y buscá por duckduckgo</span>
-(la mayoría de navegadores como Chrome, Firefox, WaterFox, Opera, Brave ya lo tienen incorporado), y cambiá el buscador por defecto a DuckDuckgo.  
+(la mayoría de navegadores como <span style="color: lightblue;">Chrome</span>, <span style="color: #b5ce7e;">Firefox</span>, <span style="color: orange;">WaterFox</span>, <span style="color: #ffff1a;">Opera</span>, <span style="color: blue;">Brave</span> ya lo tienen incorporado), y cambiá el buscador por defecto a DuckDuckgo.  
 
 Ahora cada vez que escribas algo en la barra de direcciones va a usar DuckDuckGo.
 
