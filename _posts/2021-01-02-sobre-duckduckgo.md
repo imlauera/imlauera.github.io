@@ -6,7 +6,7 @@ date: 2021-01-02 11:39 -0300
 Motivos por los cuales uso DDG como buscador por defecto:
 
 1. OpenSource.
-2. DuckDuckGo no recopila ni comparte tu información, y no ofrece resultados "promovidos", la publicidad que muestra no es personalizada y va destinada al financiamiento del proyecto. 
+2. DuckDuckGo no recopila ni comparte tu información, y no ofrece resultados \"promovidos\", la publicidad que muestra no es personalizada y va destinada al financiamiento del proyecto. 
 3. Es configurable, se puede cambiar la apariencia, los colores, fuentes y temas a usar.
 4. Te brinda una respuesta rápida de la búsqueda sin necesidad de acceder a la sitio.
 5. Podés reproducir videos de YouTube externamente. 
