@@ -11,4 +11,4 @@ Actualmente instalados y funcionando perfectamente:
 
 Pude también correr el emulador de PS2 (PCSX2), y el emulador de PS3 (RPCS3), pudiendo así poder jugar a un montón de otros juegos más.
 Los juegos que probé en PCSX2 fueron:
-> Resident Evil 4 y Guitar Hero
+> Resident Evil 4, Guitar Hero
