@@ -9,6 +9,6 @@ Game Manager usados:
 Actualmente instalados y funcionando perfectamente: 
 > HearthStone, Minecraft, League Of Legends, CSGO, Dota2, Dota Underlords, Unturned, WarFrame.
 
-Pude también correr el emulador de PS2, y el emulador de PS3, pudiendo así poder jugar a un montón de otros juegos más.
-Los juegos que probé correrlos fueron:
+Pude también correr el emulador de PS2 (PCSX2), y el emulador de PS3 (RPCS3), pudiendo así poder jugar a un montón de otros juegos más.
+Los juegos que probé en PCSX2 correrlos fueron:
 > Resident Evil 4 y Guitar Hero
