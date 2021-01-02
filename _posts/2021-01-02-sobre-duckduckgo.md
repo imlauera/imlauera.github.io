@@ -7,8 +7,8 @@ Motivos por los cuales uso DDG como buscador por defecto:
 
 1. OpenSource.
 2. DuckDuckGo no recopila ni comparte tu información, y no ofrece resultados "promovidos", la publicidad que muestra no es personalizada y va destinada al financiamiento del proyecto. 
-3. Es configurable se puede cambiar la apariencia, los colores, fuentes y temas a usar.
-4. Tiene una respuesta rápida de la búsqueda sin necesidad de acceder a la sitio.
+3. Es configurable, se puede cambiar la apariencia, los colores, fuentes y temas a usar.
+4. Te brinda una respuesta rápida de la búsqueda sin necesidad de acceder a la sitio.
 5. Podés reproducir videos de YouTube externamente. 
 6. Podés usar comandos **bangs**, que son atajos para usar los buscadores de sitios externos, más abajo doy algunos ejemplos.
 
@@ -42,6 +42,7 @@ Para traducciones rápidas.
 !esen - Traducir texto de español a inglés usango GoogleTranslate.
 !ende - Traducir texto de inglés a alemán.
 Y así los demás idiomas.
+
 Ejemplo:
 !esen Esta es una simple prueba.
 
