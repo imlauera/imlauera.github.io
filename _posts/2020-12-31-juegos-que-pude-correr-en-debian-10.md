@@ -7,4 +7,4 @@ Game Manager usados:
 > Lutris, PlayOnLinux, Steam.
 
 Actualmente instalados y funcionando perfectamente: 
-> HearthStone, Minecraft, League Of Legends, CSGO, Dota2, Dota Underlords, Unturned.
+> HearthStone, Minecraft, League Of Legends, CSGO, Dota2, Dota Underlords, Unturned, WarFrame.
