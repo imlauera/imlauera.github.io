@@ -52,4 +52,4 @@ O también podés usar DeepL, la competencia de Google Translate.
 !deeplen - Tranduce el idioma detectado a inglés.
 ```
 
-[Buscador de bangs de DuckDuckGo](https://duckduckgo.com/bang)
+[Visitá el buscador de bangs de DuckDuckGo](https://duckduckgo.com/bang)
