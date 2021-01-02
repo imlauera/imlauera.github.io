@@ -57,6 +57,4 @@ Podés usar y bajar otros buscando por beamer themes.
 
 Cada vez que modificás el documento markdown tenés que volver a generarlo usando pandoc.
 
-Fuentes: [The Easiest Way to Make Presentations! (Pandoc + Markdown)](https://www.youtube.com/watch?v=dum7q6UXiCE)  
-[Pandoc](https://en.wikipedia.org/wiki/Pandoc)  
-[Beamer](https://en.wikipedia.org/wiki/Beamer_(LaTeX))
+Fuentes: [The Easiest Way to Make Presentations! (Pandoc + Markdown)](https://www.youtube.com/watch?v=dum7q6UXiCE), [Pandoc](https://en.wikipedia.org/wiki/Pandoc), [Beamer](https://en.wikipedia.org/wiki/Beamer_(LaTeX)).
