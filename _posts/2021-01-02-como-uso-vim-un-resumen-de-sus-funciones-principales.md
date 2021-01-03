@@ -3,6 +3,18 @@ layout: post
 title: Como uso VIM, guía definitiva.
 date: 2021-01-02 22:40 -0300
 ---
+
+### Entrando y saliendo de VIM.
+vim nombre\_del\_archivo para abrir vim   
+:w: guarda el archivo.   
+:q  sale, :q! para forzar la salida.
+:wq guarda y sale.  
+:x sale y guarda, equivalente a wq.  
+
+Se puede salir usando también Shift+zq (salir sin guardar :q) o Shift+zz (guardar y salir que es equivalente a :wq o :x) 
+
+Si abrís vim sin el nombre del archivo. O sea sólo escribiendo vim, cuando guardás vas
+a tener que asignar el nombre del archivo haciendo :w \<nombre del archivo\>
 #### Navegación.
 <img src="{{site.baseurl}}/assets/img/vim_keys_hjkl.jpeg"/>
 > La tecla h está a la izquierda y mueve a la izquierda.   
@@ -62,28 +74,40 @@ combos: "dt)", "vf)", "vt)",  "yt)", "ct)", etc.
 Shift+d ("D") borra el resto de línea desde donde está el cursor hacia adelante y te deja en normal mode.
 Shift+c ("C") hace lo mismo que Shift+d pero te deja en insert mode.
 
-"S" borra una línea **entera** y te deja en insert mode
-vimbegood exercises (plugin for neovim)   
-
-
+Shift+s ("S") borra una línea **entera** y te deja en insert mode
 
 "gg" salta al comienzo del archivo y "G" salta al final.
 ":100" o "100G" saltan a la línea 100
 "12j" salta hacia abajo 12 líneas, "12k" salta hacia arriba (can also combine with "w" and "b" but used less often)  
-Relative numbers "set relativenumber" in .vimrc  
-"{" and "}" sirven para moverse hacia atrás o adelante entre parrafos, salta entre líneas vacías.
-"Ctrl + u" y "Ctrl + d" es equivalente a PageUp y PageDown, sirven para moverse mitad de página hacia arriba y la hacia abajo en el archivo.
-"%" to jump to matching pair of curly braces, brackets, parentheses; but DOESN'T work on quotes  
-"\*i{" to do command * on insides of curly brace  e.g. "di{", "d2i{", "ci{"  
-"\*ip" to do command * on paragraph e.g. "cip", "vip"  
-"\*a[" to do command * on inside of braces INCLUDING braces e.g. "da{",  
-"diw" para eliminar una palabra si tu cursor está en el medio de una.  
-asioji       
-vim \<enter\>  to open vim   
-":e \<folder\>" to open finder (":e ." for current dir) and use tab for auto-complete     
-"Ctrl + p" to open plug-in finder (fzf recommended)     
-"Ctrl + ^" to jump between last two files (remember to press shift otherwise it's "Ctrl + 6")     
+
+
+Usá relative numbers agregando "set relativenumber" in .vimrc  
+Te sirve para saber cuantas lineas hay hacia arriba y abajo desde la línea en donde está tu cursor.
+Esto es útil para saber cuantas líneas tenés que saltar usando por (numero)j o (numero)k.
+
+"{" y "}" sirven para moverse hacia atrás o adelante entre parrafos es decir salta entre líneas vacías.
+"Ctrl + u" y "Ctrl + d" es equivalente a Page Up y Page Down, sirven para mover mitad de página hacia arriba o hacia abajo en el archivo.
+"%" si te ubicás al final de una llave, corchete, o paréntesis y apretás %, te lleva hacia donde se abrió o se cerró, no funciona con comillas.
+
+"\*i{" sirve para ejecutar un comando * dentro de unas llaves. Por ejemplo: "di{", "d2i{", "ci{"  
+Si usamos d2i, afectaremos las llaves externas.
+
+"\*ip" sirve para ejecutar un comando * sobre un párrafo. Por ejemplo: "cip", "vip"  
+"\*a[" sirve para ejecutar un comando * dentro de unos corchetes incluyendo el corchete.   
+Por ejemplo: "da{"
+
+"diw" para eliminar una palabra si tu cursor está en el medio de una.   
+
+":e \<carpeta/nombre\_del\_archivo\>" para abrir un archivo y se usa tab para autocompletar.
+Si el archivo está en el directorio actual simplemente ponés el nombre del archivo :e home.html
+Ejemplo de uso: :e css/styl y luego uso \<tab\> para autocompletar el nombre del archivo.
+
+<span style="color: red; font-weight: bold;">"Ctrl + p" to open plug-in finder (fzf recommended)</span>   
+
+Si abriste archivos con :e se usa Ctrl+6 o Ctrl+^ para moverte entre los dos últimos archivos abiertos.
+
 Tip: Have a main file that serves as hub, <Ctrl + p> to file you want to go to (spoke), and then <Ctrl + ^> back to hub (avoid hopping around in a triangle between more than 2 files)     
+
 "Ctrl + o" and "Ctrl + i" to jump backwards and forwards through history (can be inefficient if you have to jump back a lot)      
 "mh" to set local mark that you can jump to with 'h (can use any letter) but...      
 Tip: Have only 3-4 marks with "h" being most important and "l" being least important     
