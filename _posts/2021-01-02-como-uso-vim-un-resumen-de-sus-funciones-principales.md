@@ -110,32 +110,24 @@ Tip: Have a main file that serves as hub, <Ctrl + p> to file you want to go to (
 
 "Ctrl + o" and "Ctrl + i" to jump backwards and forwards through history (can be inefficient if you have to jump back a lot)      
 "mh" para establecer una marca local a la que podés saltar usando 'h (podés usar cualquier letra) pero...      
-Observación: Have only 3-4 marks with "h" being most important and "l" being least important     
-Observación: Simple find command might be more efficient than local marks     
+Observación 1: Tené sólo de 3-4 marcas con "h" de las cosas más importantes y "l" de las menos importantes  
+Observación 2: Usar el comando para buscar descripto más arriba puede ser más eficiente que usar marcas locales. 
 
 "mH" para establecer una marca global a la que podés saltar usando 'H (podés usar cualquier letra)     
-File tree can be helpful for ramping up on a new project but less helpful once you know where you want to go      
-ThePrimeagen uses splits not tabs, and tends not to have splits open for very long     
+
+
+Algunos usan divisiones y no pestañas.
+
 <Ctrl + w> + "o" para cerrar todos los búferes a excepción del actual buffer   
 <Ctrl + w> + "v" para separar verticalmente, <Ctrl + w> + "s" (or "n") para separar horizontalmente.
 ":resize 10" to set split to 10 rows tall, ":vertical resize 20" to set split to 20 columns wide     
 
-<Ctrl + w> then "=" to equally spread splits     
+<Ctrl + w> + "=" para dividir por igual los splits, si es que antes lo cambiaste con resize.
  Can remap to quickly open explorer / file tree in narrow vsplit     
-<Ctrl + w> then "r" to rotate buffers, <Ctrl + w> then "H" to switch from horizontal to vertical split     
+<Ctrl + w> + "r" sirve para rotar los bufers, <Ctrl + w> + "H" para cambiar la división de horizontal a vertical   
 
-Tip: Rarely uses these commands; prefers to quickly open and close any splits to focus on one buffer   
-
-
-
-
-#### Último video.
-Learning and getting good at vim is one the best investments  
-Work might never make you happy but there is satisfaction is trying to be good at something  
-":h *" to open help manual page for *  
-Tip: Use gruvbox colour scheme  
-
-
+":h \*" sirve para abrir el manual de ayuda. Como por ejemplo :h f (con el espacio)
+Se recomienda usar gruvbox como colour scheme por defecto.
 
 
 Comentar sobre ZSH vi mode puede ayudar mucho a forzar a escribir con las intrucciones de vim.
