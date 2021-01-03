@@ -109,15 +109,17 @@ Si abriste archivos con :e se usa Ctrl+6 o Ctrl+^ para moverte entre los dos úl
 Tip: Have a main file that serves as hub, <Ctrl + p> to file you want to go to (spoke), and then <Ctrl + ^> back to hub (avoid hopping around in a triangle between more than 2 files)     
 
 "Ctrl + o" and "Ctrl + i" to jump backwards and forwards through history (can be inefficient if you have to jump back a lot)      
-"mh" to set local mark that you can jump to with 'h (can use any letter) but...      
-Tip: Have only 3-4 marks with "h" being most important and "l" being least important     
-Tip: Simple find command might be more efficient than local marks     
-"mH" to set a global mark that you can jump to with 'H (can use any letter)     
+"mh" para establecer una marca local a la que podés saltar usando 'h (podés usar cualquier letra) pero...      
+Observación: Have only 3-4 marks with "h" being most important and "l" being least important     
+Observación: Simple find command might be more efficient than local marks     
+
+"mH" para establecer una marca global a la que podés saltar usando 'H (podés usar cualquier letra)     
 File tree can be helpful for ramping up on a new project but less helpful once you know where you want to go      
 ThePrimeagen uses splits not tabs, and tends not to have splits open for very long     
-<Ctrl + w> then "o" to close all but current buffer     
-<Ctrl + w> then "v" to split vertically, <Ctrl + w> then "s" (or "n") to split horizontally     
+<Ctrl + w> + "o" para cerrar todos los búferes a excepción del actual buffer   
+<Ctrl + w> + "v" para separar verticalmente, <Ctrl + w> + "s" (or "n") para separar horizontalmente.
 ":resize 10" to set split to 10 rows tall, ":vertical resize 20" to set split to 20 columns wide     
+
 <Ctrl + w> then "=" to equally spread splits     
  Can remap to quickly open explorer / file tree in narrow vsplit     
 <Ctrl + w> then "r" to rotate buffers, <Ctrl + w> then "H" to switch from horizontal to vertical split     
