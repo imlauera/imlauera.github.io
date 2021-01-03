@@ -1,6 +1,7 @@
 ---
 layout: post
-title: Como uso VIM, un resumen de sus funciones principales
+title: Como uso VIM, guía definitiva.
+date: 2021-01-02 22:40 -0300
 ---
 #### Navegación.
 <img src="{{site.baseurl}}/assets/img/vim_keys_hjkl.jpeg"/>
@@ -45,56 +46,57 @@ shift+i, and shift+a: mueve el cursor y te pone en insert mode al principio de l
 /,  n, and shift+n. busca hacia delante del cursor, con n recorrés las ocurrencias, con shift+n las recorrés hacia atrás.  
 ?: busca hacia atrás del cursor.  
 \* and #, busca las palabras en todo el texto de la palabra en donde tu cursor está situado (busca hacia adelante).  
-#: lo mismo pero hacia atrás  
+\#: hace lo mismo pero hacia atrás  
 
 
-"f*" jumps to character  
-"t*" jumps to behind character  
-"F*" and "T*" jump backwards through results   
-";" to jump forward and "," to jump backwards through results  
-"x" to delete a character, "s" to delete character and enter insert mode  
-"cw" (or "ce") to delete word and enter insert mode  
+"f\*" busca y salta al primer caracter encontrado en la línea en donde está el cursor. Ejemplo: fa 
+"t\*" busca y salta atrás del primer caracter encontrado en la línea donde está el cursor. Ejemplo: ta 
+"F\*" y "T\*" saltan hacia atrás en los resultados encontrados 
+
+Pero esto se puede hacer más fácil usando:   
+
+";" salta hacia adelante y "," salta hacia atrás son iguales que F\* y T\* 
+"x" eliminar un caracter, "s" eliminar un caracter y ponerte en inser mode (muy útil)
+"cw" (or "ce") borrar una palabra y entrar a insert mode 
 combos: "dt)", "vf)", "vt)",  "yt)", "ct)", etc.  
-"D" delete rest of line, "C" delete rest of line and enter insert mode  
-"S" delete entire line and enter insert mode  
+Shift+d ("D") borra el resto de línea desde donde está el cursor hacia adelante y te deja en normal mode.
+Shift+c ("C") hace lo mismo que Shift+d pero te deja en insert mode.
+
+"S" borra una línea **entera** y te deja en insert mode
 vimbegood exercises (plugin for neovim)   
 
 
 
-"gg" to jump to the top and "G" to jump to the bottom  
-":100" or "100G" to jump to line 100  
-"12j" to jump down 12 lines, "12k" to jump back up (can also combine with "w" and "b" but used less often)  
+"gg" salta al comienzo del archivo y "G" salta al final.
+":100" o "100G" saltan a la línea 100
+"12j" salta hacia abajo 12 líneas, "12k" salta hacia arriba (can also combine with "w" and "b" but used less often)  
 Relative numbers "set relativenumber" in .vimrc  
-"{" and "}" to hop to back and forth between empty lines  
-"Ctrl + u" and "Ctrl + d" to jump half-page up and half-page down  
+"{" and "}" sirven para moverse hacia atrás o adelante entre parrafos, salta entre líneas vacías.
+"Ctrl + u" y "Ctrl + d" es equivalente a PageUp y PageDown, sirven para moverse mitad de página hacia arriba y la hacia abajo en el archivo.
 "%" to jump to matching pair of curly braces, brackets, parentheses; but DOESN'T work on quotes  
-"*i{" to do command * on insides of curly brace  e.g. "di{", "d2i{", "ci{"  
-"*ip" to do command * on paragraph e.g. "cip", "vip"  
-"*a[" to do command * on inside of braces INCLUDING braces e.g. "da{",  
-"diw" to delete word if you're in the middle of word   
-
-
-
-
-
-$ vim <enter>  to open vim  
-":e <folder>" to open finder (":e ." for current dir) and use tab for auto-complete  
-"Ctrl + p" to open plug-in finder (fzf recommended)  
-"Ctrl + ^" to jump between last two files (remember to press shift otherwise it's "Ctrl + 6")  
-Tip: Have a main file that serves as hub, <Ctrl + p> to file you want to go to (spoke), and then <Ctrl + ^> back to hub (avoid hopping around in a triangle between more than 2 files)  
-"Ctrl + o" and "Ctrl + i" to jump backwards and forwards through history (can be inefficient if you have to jump back a lot)   
-"mh" to set local mark that you can jump to with 'h (can use any letter) but...   
-Tip: Have only 3-4 marks with "h" being most important and "l" being least important  
-Tip: Simple find command might be more efficient than local marks  
-"mH" to set a global mark that you can jump to with 'H (can use any letter)  
-File tree can be helpful for ramping up on a new project but less helpful once you know where you want to go   
-ThePrimeagen uses splits not tabs, and tends not to have splits open for very long  
-<Ctrl + w> then "o" to close all but current buffer  
-<Ctrl + w> then "v" to split vertically, <Ctrl + w> then "s" (or "n") to split horizontally  
-":resize 10" to set split to 10 rows tall, ":vertical resize 20" to set split to 20 columns wide  
-<Ctrl + w> then "=" to equally spread splits  
- Can remap to quickly open explorer / file tree in narrow vsplit  
-<Ctrl + w> then "r" to rotate buffers, <Ctrl + w> then "H" to switch from horizontal to vertical split  
+"\*i{" to do command * on insides of curly brace  e.g. "di{", "d2i{", "ci{"  
+"\*ip" to do command * on paragraph e.g. "cip", "vip"  
+"\*a[" to do command * on inside of braces INCLUDING braces e.g. "da{",  
+"diw" para eliminar una palabra si tu cursor está en el medio de una.  
+asioji       
+vim \<enter\>  to open vim   
+":e \<folder\>" to open finder (":e ." for current dir) and use tab for auto-complete     
+"Ctrl + p" to open plug-in finder (fzf recommended)     
+"Ctrl + ^" to jump between last two files (remember to press shift otherwise it's "Ctrl + 6")     
+Tip: Have a main file that serves as hub, <Ctrl + p> to file you want to go to (spoke), and then <Ctrl + ^> back to hub (avoid hopping around in a triangle between more than 2 files)     
+"Ctrl + o" and "Ctrl + i" to jump backwards and forwards through history (can be inefficient if you have to jump back a lot)      
+"mh" to set local mark that you can jump to with 'h (can use any letter) but...      
+Tip: Have only 3-4 marks with "h" being most important and "l" being least important     
+Tip: Simple find command might be more efficient than local marks     
+"mH" to set a global mark that you can jump to with 'H (can use any letter)     
+File tree can be helpful for ramping up on a new project but less helpful once you know where you want to go      
+ThePrimeagen uses splits not tabs, and tends not to have splits open for very long     
+<Ctrl + w> then "o" to close all but current buffer     
+<Ctrl + w> then "v" to split vertically, <Ctrl + w> then "s" (or "n") to split horizontally     
+":resize 10" to set split to 10 rows tall, ":vertical resize 20" to set split to 20 columns wide     
+<Ctrl + w> then "=" to equally spread splits     
+ Can remap to quickly open explorer / file tree in narrow vsplit     
+<Ctrl + w> then "r" to rotate buffers, <Ctrl + w> then "H" to switch from horizontal to vertical split     
 
 Tip: Rarely uses these commands; prefers to quickly open and close any splits to focus on one buffer   
 

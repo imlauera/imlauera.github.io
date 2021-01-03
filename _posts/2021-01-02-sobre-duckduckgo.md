@@ -38,8 +38,8 @@ Que buscar por
 
 Para traducciones rápidas.
 
-!enes - Traducir texto de inglés a español usango GoogleTranslate.
-!esen - Traducir texto de español a inglés usango GoogleTranslate.
+!enes - Traducir texto de inglés a español usando Google Translate.
+!esen - Traducir texto de español a inglés usando Google Translate.
 !ende - Traducir texto de inglés a alemán.
 Y así los demás idiomas.
 
