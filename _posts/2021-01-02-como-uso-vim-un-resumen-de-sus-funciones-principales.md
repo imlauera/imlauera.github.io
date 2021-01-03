@@ -130,4 +130,5 @@ Algunos usan divisiones y no pestañas.
 Se recomienda usar gruvbox como colour scheme por defecto.
 
 
-Comentar sobre ZSH vi mode puede ayudar mucho a forzar a escribir con las intrucciones de vim.
+Si usás ZSH podés usar el modo vimode para usar las intrucciones de vim en zsh.
+Sólo tenés que agregar ```bindkey -v``` en el .zshrc
