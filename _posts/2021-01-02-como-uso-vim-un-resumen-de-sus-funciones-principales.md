@@ -110,26 +110,26 @@ Tip: Have a main file that serves as hub, <Ctrl + p> to file you want to go to (
 
 "Ctrl + o" and "Ctrl + i" to jump backwards and forwards through history (can be inefficient if you have to jump back a lot)      
 "mh" para establecer una marca local a la que podés saltar usando 'h (podés usar cualquier letra) pero...      
-Observación 1: Tené sólo de 3-4 marcas con "h" de las cosas más importantes y "l" de las menos importantes  
-Observación 2: Usar el comando para buscar descripto más arriba puede ser más eficiente que usar marcas locales. 
+> Observación 1: Tené sólo de 3-4 marcas con "h" de las cosas más importantes y "l" de las menos importantes  
+
+> Observación 2: Usar el comando para buscar descripto más arriba puede ser más eficiente que usar marcas locales. 
 
 "mH" para establecer una marca global a la que podés saltar usando 'H (podés usar cualquier letra)     
 
 
 Algunos usan divisiones y no pestañas.
 
-<Ctrl + w> + "o" para cerrar todos los búferes a excepción del actual buffer   
-<Ctrl + w> + "v" para separar verticalmente, <Ctrl + w> + "s" (or "n") para separar horizontalmente.
-":resize 10" to set split to 10 rows tall, ":vertical resize 20" to set split to 20 columns wide     
+`<Ctrl + w>` + "o" para cerrar todos los búferes a excepción del actual buffer   
+`<Ctrl + w>` + "v" para separar verticalmente, <Ctrl + w> + "s" (or "n") para separar horizontalmente.  
+`":resize 10"` to set split to 10 rows tall, ":vertical resize 20" to set split to 20 columns wide     
+`<Ctrl + w> + "="` para dividir por igual los splits, si es que antes lo cambiaste con resize.  
+` Can remap to quickly open explorer / file tree in narrow vsplit       
+`<Ctrl + w> + "r"` sirve para rotar los bufers, <Ctrl + w> + "H" para cambiar la división de horizontal a vertical   
 
-<Ctrl + w> + "=" para dividir por igual los splits, si es que antes lo cambiaste con resize.
- Can remap to quickly open explorer / file tree in narrow vsplit     
-<Ctrl + w> + "r" sirve para rotar los bufers, <Ctrl + w> + "H" para cambiar la división de horizontal a vertical   
-
-":h \*" sirve para abrir el manual de ayuda. Como por ejemplo :h f (con el espacio)
+`":h \*"` sirve para abrir el manual de ayuda. Como por ejemplo :h f (con el espacio)
 Se recomienda usar gruvbox como colour scheme por defecto.
 
-Se puede seleccionar líneas enteras y agregar atrás o adelante usando :norm I y :norm A respectivametne.
+Se puede seleccionar líneas enteras (Shift+v+k o j) y luego escribir :norm I o :norm A para agregar texto atrás o adelante respectivametne.
 
 Si usás ZSH podés usar el modo vimode para usar las intrucciones de vim en zsh.
 Sólo tenés que agregar ```bindkey -v``` en el .zshrc
