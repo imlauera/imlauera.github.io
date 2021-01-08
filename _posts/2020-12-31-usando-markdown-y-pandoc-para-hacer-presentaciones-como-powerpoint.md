@@ -5,7 +5,7 @@ date: 2020-12-31 10:39 -0300
 ---
 
 Primero de todo tenés que tener el paquete LaTeX instalado. Si usás debian te recomiendo instalar el paquete 
-texlive-full.
+texlive-full.   
 **Pandoc** es un conversor de documentos libre y de código abierto, mayormente usado como una herramienta de escritura (especialmente por académicos). 
 
 **Markdown** es un lenguaje de marcado cuya funcionalidad es darle estilo a un texto.
