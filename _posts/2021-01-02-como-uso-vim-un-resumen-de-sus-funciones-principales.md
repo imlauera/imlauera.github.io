@@ -81,7 +81,7 @@ Shift+s ("S") borra una línea **entera** y te deja en insert mode
 ```
   
 
-Usá relative numbers agregando "set relativenumber" in .vimrc  
+**Usá relative numbers agregando "set relativenumber" in .vimrc**
 Te sirve para saber cuantas lineas hay hacia arriba y abajo desde la línea en donde está tu cursor.
 Esto es útil para saber cuantas líneas tenés que saltar usando por (numero)j o (numero)k.
 
