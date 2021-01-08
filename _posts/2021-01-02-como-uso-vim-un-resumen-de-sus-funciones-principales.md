@@ -60,26 +60,26 @@ shift+i, and shift+a: mueve el cursor y te pone en insert mode al principio de l
 \* and #, busca las palabras en todo el texto de la palabra en donde tu cursor está situado (busca hacia adelante).  
 \#: hace lo mismo pero hacia atrás  
 
-
+```
 "f\*" busca y salta al primer caracter encontrado en la línea en donde está el cursor. Ejemplo: fa 
 "t\*" busca y salta atrás del primer caracter encontrado en la línea donde está el cursor. Ejemplo: ta 
 "F\*" y "T\*" saltan hacia atrás en los resultados encontrados 
+```
 
 Pero esto se puede hacer más fácil usando:   
-
-";" salta hacia adelante y "," salta hacia atrás son iguales que F\* y T\* 
-"x" eliminar un caracter, "s" eliminar un caracter y ponerte en inser mode (muy útil)
-"cw" (or "ce") borrar una palabra y entrar a insert mode 
-combos: "dt)", "vf)", "vt)",  "yt)", "ct)", etc.  
-Shift+d ("D") borra el resto de línea desde donde está el cursor hacia adelante y te deja en normal mode.
-Shift+c ("C") hace lo mismo que Shift+d pero te deja en insert mode.
-
-Shift+s ("S") borra una línea **entera** y te deja en insert mode
-
-"gg" salta al comienzo del archivo y "G" salta al final.
-":100" o "100G" saltan a la línea 100
-"12j" salta hacia abajo 12 líneas, "12k" salta hacia arriba (can also combine with "w" and "b" but used less often)  
-
+```
+";" salta hacia adelante y "," salta hacia atrás son iguales que F\* y T\*  
+"x" eliminar un caracter, "s" eliminar un caracter y ponerte en inser mode (muy útil)  
+"cw" (or "ce") borrar una palabra y entrar a insert mode   
+combos: "dt)", "vf)", "vt)",  "yt)", "ct)", etc.   
+Shift+d ("D") borra el resto de línea desde donde está el cursor hacia adelante y te deja en normal mode.  
+Shift+c("C") hace lo mismo que Shift+d pero te deja en insert mode.   
+Shift+s ("S") borra una línea **entera** y te deja en insert mode  
+"gg" salta al comienzo del archivo y "G" salta al final.  
+":100" o "100G" saltan a la línea 100  
+"12j" salta hacia abajo 12 líneas, "12k" salta hacia arriba (se puede combinar también con "w" o con "b" pero no es tan usado).  
+```
+  
 
 Usá relative numbers agregando "set relativenumber" in .vimrc  
 Te sirve para saber cuantas lineas hay hacia arriba y abajo desde la línea en donde está tu cursor.
@@ -129,6 +129,7 @@ Algunos usan divisiones y no pestañas.
 ":h \*" sirve para abrir el manual de ayuda. Como por ejemplo :h f (con el espacio)
 Se recomienda usar gruvbox como colour scheme por defecto.
 
+Se puede seleccionar líneas enteras y agregar atrás o adelante usando :norm I y :norm A respectivametne.
 
 Si usás ZSH podés usar el modo vimode para usar las intrucciones de vim en zsh.
 Sólo tenés que agregar ```bindkey -v``` en el .zshrc
