@@ -21,11 +21,11 @@ Ahora cada vez que escribas algo en la barra de direcciones va a usar DuckDuckGo
 #### Sobre Bangs.
 El !bang puede estar en cualquier posición al hacer la búsqueda.  
 
-Por ejemplo es lo mismo buscar por:
-> Thy Art Is Murder !yt
+Por ejemplo estos 3 casos son equivalentes:
 
-Que buscar por
-> Thy !yt Art Is Murder
+> !yt Debian Testing how to !yt 
+> Debian Testing how to !yt 
+> Debian !yt Testing how to
 
 ##### Lista de bangs que considero útiles.
 ```
@@ -35,6 +35,7 @@ Que buscar por
 !b - Buscar en Bing.
 !g - Buscar en Google.
 !gimg - Buscar en Google Images.
+!tw - Buscar en Twitter
 
 Para traducciones rápidas.
 
