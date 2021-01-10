@@ -119,8 +119,8 @@ Tip: Have a main file that serves as hub, <Ctrl + p> to file you want to go to (
 
 Algunos usan divisiones y no pestañas.
 
-`<Ctrl + w>` + "o" para cerrar todos los búferes a excepción del actual buffer   
-`<Ctrl + w>` + "v" para separar verticalmente, <Ctrl + w> + "s" (or "n") para separar horizontalmente.  
+`<Ctrl + w> + "o"` para cerrar todos los búferes a excepción del actual buffer   
+`<Ctrl + w> + "v"` para separar verticalmente, <Ctrl + w> + "s" (or "n") para separar horizontalmente.  
 `":resize 10"` to set split to 10 rows tall, ":vertical resize 20" to set split to 20 columns wide     
 `<Ctrl + w> + "="` para dividir por igual los splits, si es que antes lo cambiaste con resize.  
 ` Can remap to quickly open explorer / file tree in narrow vsplit       
@@ -131,4 +131,4 @@ Se recomienda usar gruvbox como colour scheme por defecto.
 
 Se puede seleccionar líneas enteras (Shift+v luego pulsar k o j repetidamente para seleccionar las líneas) y luego escribir `:norm I<y el texto a agregar>` o `:norm A<y el texto a agregar>` para agregar texto atrás o adelante respectivametne.
 
-<span style="color: yellow;">Si usás ZSH podés usar el modo vimode para usar las keybindings(atajos de teclado) de vim</span>, si mal no recuerdo Bash y Fish también lo tienen. Para conseguir esto en zsh basta con agregar ```bindkey -v``` en el .zshrc
+<span style="color: yellow;">Si usás ZSH podés usar el modo vimode para usar las keybindings(atajos de teclado) de vim</span>, si mal no recuerdo Bash y Fish también lo tienen. Para conseguir esto en zshen zsh  basta con agregar ```bindkey -v``` en el .zshrc

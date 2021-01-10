@@ -26,7 +26,8 @@ Soy un desarrollador de software, estudiante de ciencias de la computación, pos
 ### Áreas de Conocimiento
 
 - Desarrollo Web: Flask/Django, NodeJS/ExpressJS, PHP, JavaScript, HTML5/CSS3, AngularJS, ReactJS.
-- Base de Datos: MySQL, PostgreSQL, SQLite.-SysAdmin.GNU/Linux, Seguridad.
+- Base de Datos: MySQL, PostgreSQL, SQLite, MongoDB.
+- SysAdmin: GNU/Linux, Seguridad.
 - Version-control system: Git, SVN.
 - Creacion de documentos: LATEX, LyX, BibTeX, Pandoc, Markdown.
 - Seguridad: Buffer OverFlow, XSS, CSFR, SQLi, LFI, RFI, IDOR, SSFR.
