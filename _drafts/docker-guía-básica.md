@@ -1,7 +1,6 @@
 ---
 layout: post
 title: 'Docker: Guía básica'
-date: 2021-01-10 20:30 -0300
 ---
 #### Docker vs VMs
 - Las máquinas virtuales usan un sistema operativo completo con su propia gestión de memoria y la
