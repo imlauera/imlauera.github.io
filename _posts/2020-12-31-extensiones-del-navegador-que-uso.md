@@ -3,7 +3,7 @@ layout: post
 title: Extensiones del navegador que uso
 date: 2020-12-31 10:39 -0300
 ---
-Actualmente estoy usando <img src="{{site.baseurl}}/assets/img/waterfox.png" width=20/> WaterFox como navegador principal.
+Actualmente estoy usando LibreWolf como navegador principal.
 
 Y las extensiones que uso son las siguientes: 
 
