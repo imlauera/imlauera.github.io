@@ -1,0 +1,491 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.2.0">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2021-04-17T13:46:32-03:00</updated><id>/feed.xml</id><title type="html">Andrés Imlauer</title><subtitle>Mi blog personal.</subtitle><entry><title type="html">Intercambiando canales de audio en PulseAudio</title><link href="/2021/02/27/intercambiando-canales-de-audio-en-pulseaudio.html" rel="alternate" type="text/html" title="Intercambiando canales de audio en PulseAudio" /><published>2021-02-27T17:57:00-03:00</published><updated>2021-02-27T17:57:00-03:00</updated><id>/2021/02/27/intercambiando-canales-de-audio-en-pulseaudio</id><content type="html" xml:base="/2021/02/27/intercambiando-canales-de-audio-en-pulseaudio.html">&lt;p&gt;Editar el archivo: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/usr/share/pulseaudio/alsa-mixer/profile-sets/default.conf&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;y en la línea:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Mapping analog-stereo]
+device-strings &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; front:%f hw:%f
+channel-map &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; left,right
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Cambiar channel-map a right,left.&lt;/p&gt;
+
+&lt;p&gt;Luego basta con reiniciar pulseaudio, con &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pulseaudio -k&lt;/code&gt;&lt;/p&gt;</content><author><name></name></author><summary type="html">Editar el archivo: /usr/share/pulseaudio/alsa-mixer/profile-sets/default.conf</summary></entry><entry><title type="html">Cambiando la resolución de TTY</title><link href="/2021/01/08/cambiando-la-resoluci%C3%B3n-de-tty.html" rel="alternate" type="text/html" title="Cambiando la resolución de TTY" /><published>2021-01-08T15:06:00-03:00</published><updated>2021-01-08T15:06:00-03:00</updated><id>/2021/01/08/cambiando-la-resoluci%C3%B3n-de-tty</id><content type="html" xml:base="/2021/01/08/cambiando-la-resoluci%C3%B3n-de-tty.html">&lt;p&gt;Sólo podés usar modos que tu tarjeta gráfica soporta vía VBE; podés verlos ejecutando el comando &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;vbeinfo&lt;/code&gt; en el grub o también podés detectar las resoluciones usando el comando:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;hwinfo &lt;span class=&quot;nt&quot;&gt;--framebuffer&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Luego el resultado lo usé en &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;&quot;gfxpayload=&quot;&lt;/code&gt; en /etc/default/grub demostrado más abajo, en mi caso la máxima resolución admitida era 1920x1080.&lt;/p&gt;
+
+&lt;h3 id=&quot;editando-etcdefaultgrub&quot;&gt;Editando /etc/default/grub&lt;/h3&gt;
+
+&lt;p&gt;En muchos sitios decían de usar la opción vga en la variable GRUB_CMDLINE_LINUX pero no funcionó para mi, está obsoleta. Es decir, en vez de usar &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;GRUB_CMDLINE_LINUX=&quot;vga=nnn&quot;&lt;/code&gt; usé &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;GRUB_CMDLINE_LINUX=&quot;gfxpayload=1920x1080&quot;&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Éstas son las opciones que agregué y modifiqué al archivo /etc/default/grub:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# Modifiqué estas dos variables:&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;GRUB_CMDLINE_LINUX&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;gfxpayload=1920x1080&quot;&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;GRUB_GFXMODE&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;1920x1080
+
+&lt;span class=&quot;c&quot;&gt;# Y agregué estas otras dos variables:&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# Hack to force higher framebuffer resolution&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;GRUB_GFXPAYLOAD_LINUX&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;1920x1080
+&lt;span class=&quot;c&quot;&gt;# Hace falta poner esto para que funcione el Hack para forzar la resolución&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;GRUB_GFXPAYLOAD_LINUX&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;keep
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Luego de eso, ejecutar&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;update-grub
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Y listo!&lt;/p&gt;
+
+&lt;p&gt;Por último si querés cambiar la letra de la TTY, lo podés hacer ejecutando:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;dpkg-reconfigure console-setup
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;</content><author><name></name></author><summary type="html">Sólo podés usar modos que tu tarjeta gráfica soporta vía VBE; podés verlos ejecutando el comando vbeinfo en el grub o también podés detectar las resoluciones usando el comando: sudo hwinfo --framebuffer Luego el resultado lo usé en &quot;gfxpayload=&quot; en /etc/default/grub demostrado más abajo, en mi caso la máxima resolución admitida era 1920x1080.</summary></entry><entry><title type="html">Actualizando a Testing desde Debian Stable</title><link href="/2021/01/06/actualizando-a-testing-desde-debian-stable.html" rel="alternate" type="text/html" title="Actualizando a Testing desde Debian Stable" /><published>2021-01-06T20:49:00-03:00</published><updated>2021-01-06T20:49:00-03:00</updated><id>/2021/01/06/actualizando-a-testing-desde-debian-stable</id><content type="html" xml:base="/2021/01/06/actualizando-a-testing-desde-debian-stable.html">&lt;h3 id=&quot;cómo-funciona-debian-de-pruebas-testing&quot;&gt;Cómo funciona Debian de pruebas, Testing&lt;/h3&gt;
+
+&lt;p&gt;Los paquetes desde Debian inestable entran automáticamente en la siguiente distribución estable de pruebas(Debian Testing), cuando una lista de requerimientos se completa:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;ul&gt;
+    &lt;li&gt;El paquete ha estado en “inestable”(unstable) por lo menos 2-10 días (dependiendo de la urgencia de la subida).&lt;/li&gt;
+    &lt;li&gt;Se ha construido el paquete para todas las arquitecturas para las que la presente versión de pruebas fue construida.&lt;/li&gt;
+    &lt;li&gt;Instalar el paquete en pruebas no hará la distribución menos instalable.&lt;/li&gt;
+    &lt;li&gt;El paquete no introduce nuevos bugs de publicación críticos.&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/blockquote&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Edite el fichero /etc/apt/sources.list, cambiando ‘stable’ (o ‘buster’ o el actual nombre clave para stable) a ‘testing’ (o ‘bullseye’ el actual nombre clave para la siguiente publicación estable).&lt;/li&gt;
+  &lt;li&gt;Elimine o comente las líneas de actualizaciones de seguridad de stable (cualquier cosa con security.debian.org en ella).&lt;/li&gt;
+  &lt;li&gt;Elimine o comente otras líneas específicas de stable, como *-backports o *-updates.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;El nombre clave para la siguiente publicación estable, p.ej: “bullseye”, seguirá el trazo de “bullseye” a través de su transición a “stable” y mas tarde a oldstable, mientras que “testing” permanecerá rotando tras la nueva publicacion stable. Si preferís seguir la publicación stretch segun se vuelve stable, actualice el /etc/apt/sources.list reemplazando “stable” o “testing” con “bullseye”.&lt;/p&gt;
+
+&lt;p&gt;Si estás siguiendo testing o el nombre clave de la siguiente estable, siempre debería tener la correspondiente línea deb http://security.debian.org &amp;lt;”testing” or codename&amp;gt;/updates main en /etc/apt/sources.list.&lt;/p&gt;</content><author><name></name></author><summary type="html">Cómo funciona Debian de pruebas, Testing</summary></entry><entry><title type="html">Como uso VIM, guía definitiva.</title><link href="/2021/01/02/como-uso-vim-un-resumen-de-sus-funciones-principales.html" rel="alternate" type="text/html" title="Como uso VIM, guía definitiva." /><published>2021-01-02T22:40:00-03:00</published><updated>2021-01-02T22:40:00-03:00</updated><id>/2021/01/02/como-uso-vim-un-resumen-de-sus-funciones-principales</id><content type="html" xml:base="/2021/01/02/como-uso-vim-un-resumen-de-sus-funciones-principales.html">&lt;h3 id=&quot;entrando-y-saliendo-de-vim&quot;&gt;Entrando y saliendo de VIM.&lt;/h3&gt;
+&lt;p&gt;vim nombre_del_archivo para abrir vim &lt;br /&gt;
+:w: guarda el archivo. &lt;br /&gt;
+:q  sale, :q! para forzar la salida.
+:wq guarda y sale.&lt;br /&gt;
+:x sale y guarda, equivalente a wq.&lt;/p&gt;
+
+&lt;p&gt;Se puede salir usando también Shift+zq (salir sin guardar :q) o Shift+zz (guardar y salir que es equivalente a :wq o :x)&lt;/p&gt;
+
+&lt;p&gt;Si abrís vim sin el nombre del archivo. O sea sólo escribiendo vim, cuando guardás vas
+a tener que asignar el nombre del archivo haciendo :w &amp;lt;nombre del archivo&amp;gt;&lt;/p&gt;
+&lt;h4 id=&quot;navegación&quot;&gt;Navegación.&lt;/h4&gt;
+&lt;p&gt;&lt;img src=&quot;//assets/img/vim_keys_hjkl.jpeg&quot; /&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+  &lt;p&gt;La tecla h está a la izquierda y mueve a la izquierda. &lt;br /&gt;
+  La tecla l está a la derecha y mueve a la derecha. &lt;br /&gt;
+  La tecla j parece una flecha que apunta hacia abajo.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;span style=&quot;color:green;&quot;&gt;No deberías usar las flechas&lt;/span&gt;, si usás las flechas no entendiste VIM al 100% todavía.
+Acostumbrarse a usar h, j, k, l fue una de las cosas que más me costaron, por la
+memoria muscular que tenía de usar las flechas, tenés que practicarlos hasta que no tengas
+que pensar cuando los estás usando.&lt;/p&gt;
+
+&lt;p&gt;escape: entrás a normal mode. Por defecto VIM abre en Normal Mode. En normal mode VIM va a interpretar como un comando cualquier tecla que presiones, por ejemplo apretá Escape y después w, vas a moverte palabra por palabra en el archivo que tenés abierto.
+Con i: entrás a insert mode (cuando estás en insert mode podés empezar a escribir texto) por ejemplo si estando en Insert Mode apretás ahora w te lo va a tomar como una entrada de texto, no como un comando.&lt;/p&gt;
+
+&lt;p&gt;Siempre vas a estar variando entre estos dos, para moverte y editar el código.&lt;/p&gt;
+
+&lt;p&gt;w: mueve hacia adelante por palabras desde el cursor hasta el final de la palabra, incluyendo el espacio.&lt;br /&gt;
+b: mueve hacia atrás desde el cursor hasta el comienzo de la palabra, incluyendo el espacio.&lt;br /&gt;
+y: copia. Todos los comandos de Vim se pueden usar con combos, pero esto es algo que lo veremos más adelante, por eso acá se usa yy para copiar una línea solamente pero puede usar combos para copiar múltiples líneas, como por ejemplo: yt. (copia desde donde está el cursor hasta que encuentra un .), o yj (copia dos lineas desde el cursor para abajo, habiamos visto que j sería para bajar), o yk (copia dos lineas para arriba). &lt;br /&gt;
+yy: copia una línea dentro de Vim, ojo no lo copia al clipboard.&lt;br /&gt;
+p: pega lo copiado con y.&lt;br /&gt;
+d: borra y lo copia. Pasa lo mismo que con y, se puede utilizar con combos, d por si sólo no hace nada. Pero si lo combinas como por ejemplo: dd (borra una linea entera), dj (borra dos lineas hacia abajo), dk (borra dos líneas hacia arriba), d$ (borra desde el cursor hasta el final de la linea), dw(borra una palabra hacia adelante), db(borra una palabra hacia atrás)&lt;br /&gt;
+v: selección visual, se usa al igual que los otros combinandolos con otras instrucciones, como por ejemplo: vw, vb, v$, vk, vj. Una vez que estás en visual mode podés seleccionar el texto hacia adelante presionando w infinitas veces, salís de este modo con Escape.&lt;br /&gt;
+V: selección visual, pero a diferencia de v, selecciona la línea completa.&lt;br /&gt;
+:w: guarda el archivo.&lt;br /&gt;
+:q sale.&lt;/p&gt;
+
+&lt;p&gt;:wq guarda y sale.&lt;/p&gt;
+
+&lt;p&gt;:x sale y guarda, equivalente a wq.&lt;/p&gt;
+
+&lt;p&gt;Se puede salir de VIM usando también Shift+zq (salir sin guardar :q) o Shift+zz (guardar y salir que es equivalente a :wq o :x)&lt;/p&gt;
+
+&lt;p&gt;o: agrega una nueva línea abajo, mueve el cursor abajo y te deja en insert mode, si estás situado en el comienzo de la definición de una función de programación te ubicará adentro de la misma en insert mode.&lt;br /&gt;
+shift+o: lo mismo pero hacia atrás.&lt;br /&gt;
+shift+p: lo mismo que p pero pega atrás del cursor.&lt;br /&gt;
+a: te deja en insert mode al igual que i, sólo que en vez de insertar atrás del cursor lo hace adelante del cursor, muy útil cuando querés insertar texto y al final de una línea.&lt;br /&gt;
+shift+i, and shift+a: mueve el cursor y te pone en insert mode al principio de la linea y el otro lo mismo pero al final de la linea.&lt;br /&gt;
+/,  n, and shift+n. busca hacia delante del cursor, con n recorrés las ocurrencias, con shift+n las recorrés hacia atrás.&lt;br /&gt;
+?: busca hacia atrás del cursor.&lt;br /&gt;
+* and #, busca las palabras en todo el texto de la palabra en donde tu cursor está situado (busca hacia adelante).&lt;br /&gt;
+#: hace lo mismo pero hacia atrás&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&quot;f\*&quot; busca y salta al primer caracter encontrado en la línea en donde está el cursor. Ejemplo: fa 
+&quot;t\*&quot; busca y salta atrás del primer caracter encontrado en la línea donde está el cursor. Ejemplo: ta 
+&quot;F\*&quot; y &quot;T\*&quot; saltan hacia atrás en los resultados encontrados 
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Pero esto se puede hacer más fácil usando:&lt;/p&gt;
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&quot;;&quot; salta hacia adelante y &quot;,&quot; salta hacia atrás son iguales que F\* y T\*  
+&quot;x&quot; eliminar un caracter, &quot;s&quot; eliminar un caracter y ponerte en inser mode (muy útil)  
+&quot;cw&quot; (or &quot;ce&quot;) borrar una palabra y entrar a insert mode   
+combos: &quot;dt)&quot;, &quot;vf)&quot;, &quot;vt)&quot;,  &quot;yt)&quot;, &quot;ct)&quot;, etc.   
+Shift+d (&quot;D&quot;) borra el resto de línea desde donde está el cursor hacia adelante y te deja en normal mode.  
+Shift+c(&quot;C&quot;) hace lo mismo que Shift+d pero te deja en insert mode.   
+Shift+s (&quot;S&quot;) borra una línea **entera** y te deja en insert mode  
+&quot;gg&quot; salta al comienzo del archivo y &quot;G&quot; salta al final.  
+&quot;:100&quot; o &quot;100G&quot; saltan a la línea 100  
+&quot;12j&quot; salta hacia abajo 12 líneas, &quot;12k&quot; salta hacia arriba (se puede combinar también con &quot;w&quot; o con &quot;b&quot; pero no es tan usado).  
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;Usá relative numbers agregando “set relativenumber” in .vimrc&lt;/strong&gt;
+Te sirve para saber cuantas lineas hay hacia arriba y abajo desde la línea en donde está tu cursor.
+Esto es útil para saber cuantas líneas tenés que saltar usando por (numero)j o (numero)k.&lt;/p&gt;
+
+&lt;p&gt;”{“ y “}” sirven para moverse hacia atrás o adelante entre parrafos es decir salta entre líneas vacías.
+“Ctrl + u” y “Ctrl + d” es equivalente a Page Up y Page Down, sirven para mover mitad de página hacia arriba o hacia abajo en el archivo.
+“%” si te ubicás al final de una llave, corchete, o paréntesis y apretás %, te lleva hacia donde se abrió o se cerró, no funciona con comillas.&lt;/p&gt;
+
+&lt;p&gt;”*i{“ sirve para ejecutar un comando * dentro de unas llaves. Por ejemplo: “di{“, “d2i{“, “ci{“&lt;br /&gt;
+Si usamos d2i, afectaremos las llaves externas.&lt;/p&gt;
+
+&lt;p&gt;”*ip” sirve para ejecutar un comando * sobre un párrafo. Por ejemplo: “cip”, “vip”&lt;br /&gt;
+“*a[” sirve para ejecutar un comando * dentro de unos corchetes incluyendo el corchete. &lt;br /&gt;
+Por ejemplo: “da{“&lt;/p&gt;
+
+&lt;p&gt;“diw” para eliminar una palabra si tu cursor está en el medio de una.&lt;/p&gt;
+
+&lt;p&gt;“:e &amp;lt;carpeta/nombre_del_archivo&amp;gt;” para abrir un archivo y se usa tab para autocompletar.
+Si el archivo está en el directorio actual simplemente ponés el nombre del archivo :e home.html
+Ejemplo de uso: :e css/styl y luego uso &amp;lt;tab&amp;gt; para autocompletar el nombre del archivo.&lt;/p&gt;
+
+&lt;p&gt;&lt;span style=&quot;color: red; font-weight: bold;&quot;&gt;“Ctrl + p” to open plug-in finder (fzf recommended)&lt;/span&gt;&lt;/p&gt;
+
+&lt;p&gt;Si abriste archivos con :e se usa Ctrl+6 o Ctrl+^ para moverte entre los dos últimos archivos abiertos.&lt;/p&gt;
+
+&lt;p&gt;Tip: Have a main file that serves as hub, &amp;lt;Ctrl + p&amp;gt; to file you want to go to (spoke), and then &amp;lt;Ctrl + ^&amp;gt; back to hub (avoid hopping around in a triangle between more than 2 files)&lt;/p&gt;
+
+&lt;p&gt;“Ctrl + o” and “Ctrl + i” to jump backwards and forwards through history (can be inefficient if you have to jump back a lot)    &lt;br /&gt;
+“mh” para establecer una marca local a la que podés saltar usando ‘h (podés usar cualquier letra) pero…&lt;/p&gt;
+&lt;blockquote&gt;
+  &lt;p&gt;Observación 1: Tené sólo de 3-4 marcas con “h” de las cosas más importantes y “l” de las menos importantes&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Observación 2: Usar el comando para buscar descripto más arriba puede ser más eficiente que usar marcas locales.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;“mH” para establecer una marca global a la que podés saltar usando ‘H (podés usar cualquier letra)&lt;/p&gt;
+
+&lt;p&gt;Algunos usan divisiones y no pestañas.&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;&amp;lt;Ctrl + w&amp;gt; + &quot;o&quot;&lt;/code&gt; para cerrar todos los búferes a excepción del actual buffer &lt;br /&gt;
+&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;&amp;lt;Ctrl + w&amp;gt; + &quot;v&quot;&lt;/code&gt; para separar verticalmente, &amp;lt;Ctrl + w&amp;gt; + “s” (or “n”) para separar horizontalmente.&lt;br /&gt;
+&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;&quot;:resize 10&quot;&lt;/code&gt; to set split to 10 rows tall, “:vertical resize 20” to set split to 20 columns wide   &lt;br /&gt;
+&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;&amp;lt;Ctrl + w&amp;gt; + &quot;=&quot;&lt;/code&gt; para dividir por igual los splits, si es que antes lo cambiaste con resize.&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;&amp;lt;Ctrl + w&amp;gt; + &quot;r&quot;&lt;/code&gt; sirve para rotar los bufers, &amp;lt;Ctrl + w&amp;gt; + “H” para cambiar la división de horizontal a vertical&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;&quot;:h \*&quot;&lt;/code&gt; sirve para abrir el manual de ayuda. Como por ejemplo :h f (con el espacio)
+Se recomienda usar gruvbox como colour scheme por defecto.&lt;/p&gt;
+
+&lt;p&gt;Se puede seleccionar líneas enteras (Shift+v luego pulsar k o j repetidamente para seleccionar las líneas) y luego escribir &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;:norm I&amp;lt;y el texto a agregar&amp;gt;&lt;/code&gt; o &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;:norm A&amp;lt;y el texto a agregar&amp;gt;&lt;/code&gt; para agregar texto atrás o adelante respectivametne.&lt;/p&gt;
+
+&lt;h3 id=&quot;tabs&quot;&gt;Tabs.&lt;/h3&gt;
+&lt;p&gt;Si tenés el plugin FZF instalado podés navegar entre las tabs usando el comando W (:W) y podés moverte escribiendo el nombre o el número de la tab.&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;:tabnew {file} o :tabedit {file} para crear una nueva pestaña, le podés pasar el nombre de archivo a modificar o a crear.
+Por ejemplo: :tabnew nuevo\_archivo
+:tabfind {file} - abre un nuevo archivo es lo mismo que :tabnew y :tabedit.
+:tabclose - cierra la tab que estás usando
+:tabclose {i} - cierra la tab número i
+:tabonly (cerra todas las demás tabs menos la que estás usando)
+gt para ir a la siguiente.
+gT para ir a la anterior.
+:tabn para ir a la siguiente
+:tabp para ir a la anterior.
+:tabfirst para ir a la primera
+:tablast para ir a la última
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;span style=&quot;color: yellow;&quot;&gt;Si usás ZSH podés usar el modo vimode para usar las keybindings(atajos de teclado) de vim&lt;/span&gt;, si mal no recuerdo Bash y Fish también lo tienen. Para conseguir esto en zshen zsh  basta con agregar &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;bindkey -v&lt;/code&gt; en el .zshrc&lt;/p&gt;</content><author><name></name></author><summary type="html">Entrando y saliendo de VIM. vim nombre_del_archivo para abrir vim :w: guarda el archivo. :q sale, :q! para forzar la salida. :wq guarda y sale. :x sale y guarda, equivalente a wq.</summary></entry><entry><title type="html">Sobre DuckDuckGo</title><link href="/2021/01/02/sobre-duckduckgo.html" rel="alternate" type="text/html" title="Sobre DuckDuckGo" /><published>2021-01-02T11:39:00-03:00</published><updated>2021-01-02T11:39:00-03:00</updated><id>/2021/01/02/sobre-duckduckgo</id><content type="html" xml:base="/2021/01/02/sobre-duckduckgo.html">&lt;p&gt;Motivos por los cuales uso DDG como buscador por defecto:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;OpenSource.&lt;/li&gt;
+  &lt;li&gt;DuckDuckGo no recopila ni comparte tu información, y no ofrece resultados &quot;promovidos&quot;, la publicidad que muestra no es personalizada y va destinada al financiamiento del proyecto.&lt;/li&gt;
+  &lt;li&gt;Es configurable, se puede cambiar la apariencia, los colores, fuentes y temas a usar.&lt;/li&gt;
+  &lt;li&gt;Te brinda una respuesta rápida de la búsqueda sin necesidad de acceder a la sitio.&lt;/li&gt;
+  &lt;li&gt;Podés reproducir videos de YouTube externamente.&lt;/li&gt;
+  &lt;li&gt;Podés usar comandos &lt;strong&gt;bangs&lt;/strong&gt;, que son atajos para usar los buscadores de sitios externos, más abajo doy algunos ejemplos.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Antes de seguir, &lt;span style=&quot;color: green;&quot;&gt;te recomiendo que vayas a las preferencias de tu navegador y buscá por duckduckgo&lt;/span&gt;
+(la mayoría de navegadores como &lt;span style=&quot;color: lightblue;&quot;&gt;Chrome&lt;/span&gt;, &lt;span style=&quot;color: #b5ce7e;&quot;&gt;Firefox&lt;/span&gt;, &lt;span style=&quot;color: orange;&quot;&gt;WaterFox&lt;/span&gt;, &lt;span style=&quot;color: #ffff1a;&quot;&gt;Opera&lt;/span&gt;, &lt;span style=&quot;color: blue;&quot;&gt;Brave&lt;/span&gt; ya lo tienen incorporado), y cambiá el buscador por defecto a DuckDuckgo.&lt;/p&gt;
+
+&lt;p&gt;Ahora cada vez que escribas algo en la barra de direcciones va a usar DuckDuckGo.&lt;/p&gt;
+
+&lt;h4 id=&quot;sobre-bangs&quot;&gt;Sobre Bangs.&lt;/h4&gt;
+&lt;p&gt;El !bang puede estar en cualquier posición al hacer la búsqueda.&lt;/p&gt;
+
+&lt;p&gt;Por ejemplo estos 3 casos son equivalentes:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;!yt Debian Testing how to !yt 
+Debian Testing how to !yt 
+Debian !yt Testing how to&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h5 id=&quot;lista-de-bangs-que-considero-útiles&quot;&gt;Lista de bangs que considero útiles.&lt;/h5&gt;
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;!yt o !watch - Buscar en YouTube.
+!mlar - Buscar en MercadoLibre Argentina.
+!yandexen - Buscar en Yandex.
+!b - Buscar en Bing.
+!g - Buscar en Google.
+!gimg - Buscar en Google Images.
+!tw - Buscar en Twitter
+
+Para traducciones rápidas.
+
+!enes - Traducir texto de inglés a español usando Google Translate.
+!esen - Traducir texto de español a inglés usando Google Translate.
+!ende - Traducir texto de inglés a alemán.
+Y así los demás idiomas.
+
+Ejemplo:
+!esen Esta es una simple prueba.
+
+O también podés usar DeepL, la competencia de Google Translate.
+
+!dles - Traduce el idioma detectado automáticamente a español.
+!deeplen - Tranduce el idioma detectado a inglés.
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://duckduckgo.com/bang&quot;&gt;Visitá el buscador de bangs de DuckDuckGo&lt;/a&gt;&lt;/p&gt;</content><author><name></name></author><summary type="html">Motivos por los cuales uso DDG como buscador por defecto:</summary></entry><entry><title type="html">Lista de juegos estoy corriendo en Debian 10</title><link href="/2020/12/31/juegos-que-pude-correr-en-debian-10.html" rel="alternate" type="text/html" title="Lista de juegos estoy corriendo en Debian 10" /><published>2020-12-31T19:58:00-03:00</published><updated>2020-12-31T19:58:00-03:00</updated><id>/2020/12/31/juegos-que-pude-correr-en-debian-10</id><content type="html" xml:base="/2020/12/31/juegos-que-pude-correr-en-debian-10.html">&lt;p&gt;Game Manager usados:&lt;/p&gt;
+&lt;blockquote&gt;
+  &lt;p&gt;Lutris, PlayOnLinux, Steam.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Actualmente instalados y funcionando perfectamente, usando Vulkan.
+En Debian tuve que instalar el paquete: nvidia-vulkan-common&lt;/p&gt;
+&lt;blockquote&gt;
+  &lt;p&gt;HearthStone, Minecraft, League Of Legends, CSGO, Dota2, Dota Underlords, Unturned, WarFrame, World Of Warcraft, Classic Doom&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Pude también correr el emulador de PS2 (PCSX2), y el emulador de PS3 (RPCS3).
+Los juegos que probé con el emulador de PS2 fueron:&lt;/p&gt;
+&lt;blockquote&gt;
+  &lt;p&gt;Resident Evil 4, Guitar Hero&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;span style=&quot;color: red; font-weight:bold;&quot;&gt;Observación&lt;/span&gt;: Lutris por defecto ya tiene integrado el emulador de PS2, no hace falta instalarlo por separado, directamente buscás el juego y te va a proceder a presentar diferentes formas de correrlo si es que existen varias.&lt;/p&gt;
+
+&lt;p&gt;Comentar sobre vulkan support&lt;/p&gt;</content><author><name></name></author><summary type="html">Game Manager usados: Lutris, PlayOnLinux, Steam.</summary></entry><entry><title type="html">Extensiones del navegador que uso</title><link href="/2020/12/31/extensiones-del-navegador-que-uso.html" rel="alternate" type="text/html" title="Extensiones del navegador que uso" /><published>2020-12-31T10:39:00-03:00</published><updated>2020-12-31T10:39:00-03:00</updated><id>/2020/12/31/extensiones-del-navegador-que-uso</id><content type="html" xml:base="/2020/12/31/extensiones-del-navegador-que-uso.html">&lt;p&gt;Actualmente estoy usando LibreWolf como navegador principal.&lt;/p&gt;
+
+&lt;p&gt;Y las extensiones que uso son las siguientes:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;//assets/img/ublock.png&quot; width=&quot;20&quot; /&gt;&lt;span style=&quot;color:yellow;&quot;&gt;uBlock Origin&lt;/span&gt; es una extensión de navegador de código abierto para filtrado de contenido y bloqueo de publicidad en línea.&lt;br /&gt;
+&lt;img src=&quot;//assets/img/simpletranslate.jpg&quot; width=&quot;20&quot; /&gt;&lt;span style=&quot;color:yellow;&quot;&gt;Simple Translate&lt;/span&gt; traduce rápidamente el texto seleccionado en cualquier página web, muy útil.&lt;br /&gt;
+&lt;img src=&quot;//assets/img/darkreader.png&quot; width=&quot;20&quot; /&gt;&lt;span style=&quot;color:yellow;&quot;&gt;DarkReader&lt;/span&gt; crea una versión Dark Mode de casi cualquier páginas webs. Ojo: hay algunas webs, MUY pocas, que crashean por esto, pero se puede desabilitar su uso para páginas particulares.&lt;br /&gt;
+&lt;img src=&quot;//assets/img/searchby.png&quot; width=&quot;20&quot; /&gt;&lt;span style=&quot;color:yellow;&quot;&gt;Search by Image&lt;/span&gt; busca una imágen en múltiples buscadores con un click. Cuando instalé la extensión tuve que cambiar el modo de búsqueda a “Select and Upload” en lugar de sólo Select, sino no me funcionaba.&lt;br /&gt;
+&lt;span style=&quot;color:blue;&quot;&gt;HTTPS Everywhere&lt;/span&gt; HTTPS Everywhere es una extensión para proteger sus comunicaciones al habilitar el cifrado HTTPS automáticamente en sitios que se sabe que lo admiten, incluso cuando escribe URL o sigue enlaces que omiten el prefijo https.&lt;/p&gt;
+
+&lt;p&gt;Un gestor de contraseñas, en inglés denominado password manager, sirve para almacenar y administrar tus contraseñas. &lt;span style=&quot;color:green;&quot;&gt;Esto es muy útil cuando tenés que registrarte
+en una página que no es de tu confianza&lt;/span&gt; y en lugar de usar la contraseña que usás en tus correos, generás una contraseña random, y la guardás en ese gestor.
+Algunas opciones: &lt;span style=&quot;color: yellow&quot;&gt;LastPass, BitWarden, TweakPass&lt;/span&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;//assets/img/alternateplayerfortwitch.jpg&quot; width=&quot;20&quot; /&gt;&lt;span style=&quot;color:yellow;&quot;&gt;Alternate Player for Twitch&lt;/span&gt;, un reproductor de video alternativo para Twitch.&lt;/p&gt;
+
+&lt;p&gt;Para Twitch uso: &lt;span style=&quot;color: yellow;&quot;&gt;FrankerFaceZ&lt;/span&gt;&lt;img src=&quot;//assets/img/frankerfacez.png&quot; width=&quot;20&quot; /&gt;, &lt;span style=&quot;color: yellow;&quot;&gt;BetterTV&lt;/span&gt;&lt;img src=&quot;//assets/img/bettertv.jpg&quot; width=&quot;20&quot; /&gt; para los emotes.&lt;/p&gt;
+
+&lt;p&gt;Si uso Chromium o Google Chrome desactivo el botón tan molesto del &lt;strong&gt;ChromeCast&lt;/strong&gt;.
+Esto se puede hacer accediendo la ruta&lt;/p&gt;
+&lt;blockquote&gt;
+  &lt;p&gt;chrome://flags/#load-media-router-component-extension&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;y desabilitando la primer opción.&lt;/p&gt;</content><author><name></name></author><summary type="html">Actualmente estoy usando LibreWolf como navegador principal.</summary></entry><entry><title type="html">Usando Markdown, Beamer y Pandoc para hacer presentaciones como PowerPoint</title><link href="/2020/12/31/usando-markdown-y-pandoc-para-hacer-presentaciones-como-powerpoint.html" rel="alternate" type="text/html" title="Usando Markdown, Beamer y Pandoc para hacer presentaciones como PowerPoint" /><published>2020-12-31T10:39:00-03:00</published><updated>2020-12-31T10:39:00-03:00</updated><id>/2020/12/31/usando-markdown-y-pandoc-para-hacer-presentaciones-como-powerpoint</id><content type="html" xml:base="/2020/12/31/usando-markdown-y-pandoc-para-hacer-presentaciones-como-powerpoint.html">&lt;p&gt;Primero de todo tenés que tener el paquete LaTeX instalado. Si usás debian te recomiendo instalar el paquete 
+texlive-full. &lt;br /&gt;
+&lt;strong&gt;Pandoc&lt;/strong&gt; es un conversor de documentos libre y de código abierto, mayormente usado como una herramienta de escritura (especialmente por académicos).&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Markdown&lt;/strong&gt; es un lenguaje de marcado cuya funcionalidad es darle estilo a un texto.&lt;/p&gt;
+
+&lt;p&gt;Abrimos un archivo llamado: hello.md y escribimos&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-markdown&quot; data-lang=&quot;markdown&quot;&gt;&lt;span class=&quot;gh&quot;&gt;# Hello World.&lt;/span&gt;
+
+Esto es una prueba.
+&lt;span class=&quot;p&quot;&gt;
+*&lt;/span&gt; Esto es un ítem.
+&lt;span class=&quot;p&quot;&gt;*&lt;/span&gt; De una lista.
+&lt;span class=&quot;p&quot;&gt;*&lt;/span&gt; Prueba
+
+&lt;span class=&quot;gu&quot;&gt;## Este es un título más pequeño&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Más información: &lt;a href=&quot;https://guides.github.com/pdfs/markdown-cheatsheet-online.pdf&quot;&gt;Markdown Cheat Sheet&lt;/a&gt;&lt;br /&gt;
+También se puede usar etiquetas HTML en Markdown.&lt;/p&gt;
+
+&lt;p&gt;Ahora generamos la presentación:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;pandoc hello.md &lt;span class=&quot;nt&quot;&gt;-t&lt;/span&gt; beamer &lt;span class=&quot;nt&quot;&gt;-o&lt;/span&gt; hello.pdf
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;span style=&quot;color: red; font-weight:bold;&quot;&gt;Observación&lt;/span&gt;: Para crear la presentación estamos usando &lt;strong&gt;Beamer&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Beamer es una clase de LaTeX para la creación de presentaciones. Al estar basado en LaTeX, Beamer es especialmente útil para preparar presentaciones en las que es necesario mostrar gran cantidad de expresiones matemáticas, el fuerte de dicho sistema de maquetación.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h4 id=&quot;cambiando-diseño-agregando-título-autor-en-la-presentación-usando-metadata&quot;&gt;Cambiando diseño, agregando título, autor en la presentación usando metadata:&lt;/h4&gt;
+&lt;p&gt;En el archivo hello.md agregamos al comienzo:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-markdown&quot; data-lang=&quot;markdown&quot;&gt;&lt;span class=&quot;nn&quot;&gt;---&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;title&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+&lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;Hola Mundo.&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;author&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+&lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;Andrés Imlauer&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;theme&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+&lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;Copenhagen&lt;/span&gt;
+&lt;span class=&quot;nn&quot;&gt;---&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Se puede también usar otros beamer themes, agregando en la sección de metadata mostrada arriba, lo siguiente:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-markdown&quot; data-lang=&quot;markdown&quot;&gt;colortheme:
+&lt;span class=&quot;p&quot;&gt;-&lt;/span&gt; albatross&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Podés usar y bajar otros buscando por beamer themes.&lt;/p&gt;
+
+&lt;p&gt;Cada vez que modificás el documento markdown tenés que volver a generarlo usando pandoc.&lt;/p&gt;
+
+&lt;p&gt;Fuentes: &lt;a href=&quot;https://www.youtube.com/watch?v=dum7q6UXiCE&quot;&gt;The Easiest Way to Make Presentations! (Pandoc + Markdown)&lt;/a&gt;, &lt;a href=&quot;https://en.wikipedia.org/wiki/Pandoc&quot;&gt;Pandoc&lt;/a&gt;, &lt;a href=&quot;https://en.wikipedia.org/wiki/Beamer_(LaTeX)&quot;&gt;Beamer&lt;/a&gt;.&lt;/p&gt;</content><author><name></name></author><summary type="html">Primero de todo tenés que tener el paquete LaTeX instalado. Si usás debian te recomiendo instalar el paquete texlive-full. Pandoc es un conversor de documentos libre y de código abierto, mayormente usado como una herramienta de escritura (especialmente por académicos).</summary></entry><entry><title type="html">Generando códigos QR desde la línea de comandos</title><link href="/2020/12/13/c%C3%B3digos-qr.html" rel="alternate" type="text/html" title="Generando códigos QR desde la línea de comandos" /><published>2020-12-13T00:52:00-03:00</published><updated>2020-12-13T00:52:00-03:00</updated><id>/2020/12/13/c%C3%B3digos-qr</id><content type="html" xml:base="/2020/12/13/c%C3%B3digos-qr.html">&lt;p&gt;El código QR es capaz de contener mucha información &lt;strong&gt;más que un código de barras&lt;/strong&gt;,
+y es por su diseño, el escáner puede determinar en qué dirección se encuentra el
+código QR y orientar la imágen automáticamente al leerlo y decodificarlo.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;¿Por qué no usar un generador de QR online?&lt;/strong&gt; &lt;span style=&quot;color: #e48484;&quot;&gt;Todos pueden
+a retener y guardar la información&lt;/span&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;span style=&quot;color: green&quot;&gt;Si vas a crear códigos QR con información personal
+en ellos, como detalles de contacto o detalles de la conexión WiFi, no 
+es recomendable usar estos servicios&lt;/span&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Todos tus datos están en tu control si usás un programa en la línea de comandos
+como qrencode&lt;/strong&gt;. También tenés la ventaja de poder crear scripts y alias para crear códigos QR.&lt;/p&gt;
+
+&lt;h3 id=&quot;usos-de-los-códigos-qr&quot;&gt;Usos de los códigos QR.&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Mostrar texto.&lt;/li&gt;
+  &lt;li&gt;Navegar a un punto en el mapa.&lt;/li&gt;
+  &lt;li&gt;Hacer una llamada.&lt;/li&gt;
+  &lt;li&gt;Enviar un mensaje SMS.&lt;/li&gt;
+  &lt;li&gt;Enviar un correo electrónico.&lt;/li&gt;
+  &lt;li&gt;Abrir una URL.&lt;/li&gt;
+  &lt;li&gt;Agregar un contacto.&lt;/li&gt;
+  &lt;li&gt;Agregar un evento a tu calendario.&lt;/li&gt;
+  &lt;li&gt;Conectarte a una red WiFi.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;instalando-qrencode&quot;&gt;Instalando qrencode&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;Ubuntu/Debian/Linux Mint&lt;/strong&gt;&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;apt-get &lt;span class=&quot;nb&quot;&gt;install &lt;/span&gt;qrencode&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;&lt;strong&gt;Instalando qrencode en ArchLinux/Manjaro/Artix&lt;/strong&gt;&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;pacman &lt;span class=&quot;nt&quot;&gt;-S&lt;/span&gt; qrencode&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;h4 id=&quot;usando-qrencode&quot;&gt;Usando qrencode&lt;/h4&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;-s 6: Esto establece el tamaño de los bloques en el patrón cuadriculado QR. El número
+que proporciona establece el tamaño de píxeles.&lt;/li&gt;
+  &lt;li&gt;-l H: Esto establece el nivel de correción de errores. Las opciones que podemos usar
+son “L” para bajo, “M” para medio y “Q” para alto.&lt;/li&gt;
+  &lt;li&gt;-o “text.png”: La opción &lt;em&gt;output&lt;/em&gt; te permite establecer el nombre de la imágen generada.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;El texto a codificar se pone a lo último. Ejemplo:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;qrencode &lt;span class=&quot;nt&quot;&gt;-s&lt;/span&gt; 6 &lt;span class=&quot;nt&quot;&gt;-l&lt;/span&gt; H &lt;span class=&quot;nt&quot;&gt;-o&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;text.png&quot;&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Esto es una prueba 123&quot;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Esto va a generar una imágen llamada text.png y cuando esta se escanee se va a mostrar
+el texto escrito anteriormente.&lt;/p&gt;
+
+&lt;h4 id=&quot;agregando-color&quot;&gt;Agregando color&lt;/h4&gt;
+
+&lt;p&gt;Las opciones --foreground y --background te permiten establecer colores 
+para los códigos QR. Ejemplo:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;qrencode &lt;span class=&quot;nt&quot;&gt;-s&lt;/span&gt; 6 &lt;span class=&quot;nt&quot;&gt;-l&lt;/span&gt; H &lt;span class=&quot;nt&quot;&gt;--foregound&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;3599FE&quot;&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--background&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;FFFFFF&quot;&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-o&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;blue.png&quot;&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Este código QR va a ser azul y blanco.&quot;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;h4 id=&quot;guardando-una-ubicación-en-un-código-qr&quot;&gt;Guardando una ubicación en un código QR.&lt;/h4&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;qrencode &lt;span class=&quot;nt&quot;&gt;-s&lt;/span&gt; 6 &lt;span class=&quot;nt&quot;&gt;-l&lt;/span&gt; H &lt;span class=&quot;nt&quot;&gt;-o&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;geo.png&quot;&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;geo:51.185013,-1.859105&quot;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;h4 id=&quot;guardando-un-número-de-teléfono-en-un-código-qr&quot;&gt;Guardando un número de teléfono en un código QR.&lt;/h4&gt;
+&lt;p&gt;En vez de usar “(123) 456-7890” es recomendable usar “1234567890”, sin espacios ni guiones.&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;qrencode &lt;span class=&quot;nt&quot;&gt;-s&lt;/span&gt; 6 &lt;span class=&quot;nt&quot;&gt;-l&lt;/span&gt; H &lt;span class=&quot;nt&quot;&gt;-o&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;phone.png&quot;&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;tel:5555555555&quot;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;h4 id=&quot;enviando-un-correo-desde-un-código-qr&quot;&gt;Enviando un correo desde un código QR.&lt;/h4&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;qrencode &lt;span class=&quot;nt&quot;&gt;-s&lt;/span&gt; 6 &lt;span class=&quot;nt&quot;&gt;-l&lt;/span&gt; H &lt;span class=&quot;nt&quot;&gt;-o&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;email.png&quot;&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;mailto:imlauerandres@gmail.com?subject=qrencode&amp;amp;body=Las herramientas de línea de comandos están copadas.&quot;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;h4 id=&quot;generando-un-código-qr-de-una-url&quot;&gt;Generando un código QR de una URL.&lt;/h4&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;qrencode &lt;span class=&quot;nt&quot;&gt;-s&lt;/span&gt; 6 &lt;span class=&quot;nt&quot;&gt;-l&lt;/span&gt; H &lt;span class=&quot;nt&quot;&gt;-o&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;URL.png&quot;&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;https://aimlauer.github.io&quot;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Lo podés usar con una URL de un video de YouTube por ejemplo, escaneando el código 
+te va a abrir ese video, funciona de la misma forma que una URL cualquiera.&lt;/p&gt;
+
+&lt;h4 id=&quot;enviando-un-mensaje-sms-o-un-mms-desde-un-código-qr&quot;&gt;Enviando un mensaje SMS o un MMS desde un código QR.&lt;/h4&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;qrencode &lt;span class=&quot;nt&quot;&gt;-s&lt;/span&gt; 6 &lt;span class=&quot;nt&quot;&gt;-l&lt;/span&gt; H &lt;span class=&quot;nt&quot;&gt;-o&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;SMS.png&quot;&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;smsto:5555555555,Este es el texto de un mensaje SMS.&quot;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;h4 id=&quot;contactarse-a-una-red-wifi-a-través-de-un-código-qr&quot;&gt;Contactarse a una red WiFi a través de un código QR.&lt;/h4&gt;
+&lt;p&gt;La palabra clave es WIFI, seguida de dos puntos “:” y los siguientes parámetros:&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;T: El tipo de seguridad. Puede ser WEP, WPA, WPA2. La mayoría son WPA2.&lt;/li&gt;
+  &lt;li&gt;S: El nombre &lt;strong&gt;completo&lt;/strong&gt; de la red WiFi (SSID)&lt;/li&gt;
+  &lt;li&gt;P: La contraseña de la red WiFi. Observe que hay dos puntos entre la “P” y la contraseña
+y dos punto y comas “;;” después de la contraseña.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;qrencode &lt;span class=&quot;nt&quot;&gt;-s&lt;/span&gt; 6 &lt;span class=&quot;nt&quot;&gt;-l&lt;/span&gt; H &lt;span class=&quot;nt&quot;&gt;-o&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;wifi.png&quot;&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;WIFI:T:&amp;lt;Tipo de Seguridad&amp;gt;;S:&amp;lt;SSID&amp;gt;;P:&amp;lt;Clave&amp;gt;;;&quot;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Ejemplo:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;qrencode &lt;span class=&quot;nt&quot;&gt;-s&lt;/span&gt; 6 &lt;span class=&quot;nt&quot;&gt;-l&lt;/span&gt; H &lt;span class=&quot;nt&quot;&gt;-o&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;wifi.png&quot;&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;WIFI:T:WPA2;S:Fibertel WiFi145 2.4GHz;P:123465789;;&quot;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;h4 id=&quot;agregando-un-contacto-con-un-código-qr&quot;&gt;Agregando un contacto con un código QR.&lt;/h4&gt;
+
+&lt;p&gt;Los datos del contacto se tiene que escribir en formato vCard.
+Es mejor escribir los datos en un archivo de texto y después pasarselo a QR.&lt;/p&gt;
+
+&lt;p&gt;Copia este formato y pegalo en un archivo llamado “contacto.txt” y editalo con tus datos:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;BEGIN:VCARD
+VERSION:2.1
+N:McKay,D
+FN:Dave McKay
+TEL;TYPE=voice,cell,pref:5555555555
+TITLE:Journalist
+ORG:CloudSavvyIT
+EMAIL:dave@madeupdomain.com
+URL:www.cloudsavvyit.com
+END:VCARD&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Luego generamos el código QR con:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;qrencode &lt;span class=&quot;nt&quot;&gt;-s&lt;/span&gt; 6 &lt;span class=&quot;nt&quot;&gt;-l&lt;/span&gt; H &lt;span class=&quot;nt&quot;&gt;-o&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;contacto.png&quot;&lt;/span&gt; &amp;lt; contacto.txt&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;h4 id=&quot;agregando-un-evento-de-calendario-con-un-código-qr&quot;&gt;Agregando un evento de calendario con un código QR.&lt;/h4&gt;
+
+&lt;p&gt;Es similar a agregar un contacto.&lt;/p&gt;
+
+&lt;p&gt;Copia este formato y pegalo en un archivo llamado “contacto.txt” y editalo con tus datos:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-text&quot; data-lang=&quot;text&quot;&gt;BEGIN:VEVENT
+SUMMARY:Works Picnic
+DESCRIPTION:Fun, food, and games in the sun
+LOCATION:Eastwood Park
+DTSTART:20210710T103000
+DTEND:20210710T154500
+END:VEVENT&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Luego generamos el código QR así:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-bash&quot; data-lang=&quot;bash&quot;&gt;qrencode &lt;span class=&quot;nt&quot;&gt;-s&lt;/span&gt; 6 &lt;span class=&quot;nt&quot;&gt;-l&lt;/span&gt; H &lt;span class=&quot;nt&quot;&gt;-o&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;evento.png&quot;&lt;/span&gt; &amp;lt; evento.txt&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Traducido y resumido de: &lt;a href=&quot;https://www.cloudsavvyit.com/8382/how-to-create-qr-codes-from-the-linux-command-line/&quot;&gt;cloudsavvyit&lt;/a&gt;&lt;/p&gt;</content><author><name></name></author><summary type="html">El código QR es capaz de contener mucha información más que un código de barras, y es por su diseño, el escáner puede determinar en qué dirección se encuentra el código QR y orientar la imágen automáticamente al leerlo y decodificarlo.</summary></entry></feed>
