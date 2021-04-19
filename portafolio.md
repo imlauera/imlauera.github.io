@@ -3,7 +3,4 @@ layout: page
 title: Portafolio
 permalink: /portafolio/
 ---
-
-### Mi portafolio
-
-[andresimlauer.rf.gd](http://andresimlauer.rf.gd)
+[imlauerandres.github.io](http://imlauerandres.github.io)
