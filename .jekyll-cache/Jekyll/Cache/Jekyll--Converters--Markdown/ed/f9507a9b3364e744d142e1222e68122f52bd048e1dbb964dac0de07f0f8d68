@@ -1,0 +1,57 @@
+I"�<p>En esta publicación vamos a analizar como reproducir un texto a audio con Festival.</p>
+
+<p>Antes de empezar, estos son los paquetes de las voces que se necesitan instalar para que pueda
+festival pueda leer algún texto:</p>
+
+<p><code class="language-plaintext highlighter-rouge">festvox-kdlpc16k</code>: Voz masculina de inglés americano para Festival.  <br />
+<code class="language-plaintext highlighter-rouge">festvox-ellpc11k</code>: Voz masculiona de castellano español para Festival.</p>
+
+<p>Si querés más voces podés buscarlas con el siguiente comando
+<code class="language-plaintext highlighter-rouge">sudo apt search festvox-</code>.  <br />
+Por ejemplo para instalar una voz Italiano ejecutamos:
+<code class="language-plaintext highlighter-rouge">sudo apt-get install festvox-itapc16k</code>
+<strong>Observación: Hay muchos tipos de voces de español.</strong></p>
+
+<p>Ahora procedemos entonces a instalar festival junto con voces masculinas español e inglés descriptas
+anteriormentes:
+<code class="language-plaintext highlighter-rouge">sudo apt install festival festival-doc festvox-kdlpc16k festvox-ellpc11k</code></p>
+
+<p>Para establecer una voz por defecto en vez de tener que agregar
+<code class="language-plaintext highlighter-rouge">--language spanish</code> cada vez que querés leer algo en español, podés agregar:
+en <code class="language-plaintext highlighter-rouge">~/.festivalrc</code> lo siguiente <code class="language-plaintext highlighter-rouge">(set! voice_default voice_el_diphone)</code> (obviamente
+tenés que tener el paquete instalado que lo indiqué más arriba)<br />
+<span style="color: blue">Si el archivo .festivalrc no existe, creálo.</span></p>
+
+<p>Si querés saber las voces que tenés instaladas en tu sistema 
+podés entrar a la shell interactiva de festival ejecutando 
+festival y escribí <code class="language-plaintext highlighter-rouge">(voice.list)</code> con los <code class="language-plaintext highlighter-rouge">()</code> y 
+si querés poner una por defecto en ~/.festivalrc agregá 
+el prefijo <code class="language-plaintext highlighter-rouge">voice_</code> antes del nombre de la voz que te muestra el comando <code class="language-plaintext highlighter-rouge">(voice.list)</code></p>
+
+<p>Para leer un texto sin guardar el audio: <code class="language-plaintext highlighter-rouge">festival --tts archivo</code><br />
+<code class="language-plaintext highlighter-rouge">tts</code>: Significa text to speech (texto a voz)</p>
+
+<p>Pero <span style="color:red">acordate que para que lea los tíldes y las n tenés que cambiar la codificación de tu archivo usando iconv</span> de la siguiente manera:
+<code class="language-plaintext highlighter-rouge">iconv -f utf-8 -t iso-8859-1 serhombre -o serhombre_iso</code>
+Y ahora podés leerlo con el comando <code class="language-plaintext highlighter-rouge">festival --tts archivo</code></p>
+
+<p><code class="language-plaintext highlighter-rouge">text2wave</code>: Sirve para guardar el audio generado por festival.<br />
+<code class="language-plaintext highlighter-rouge">text2wave -o salida.wav -eval '(voice_el_diphone)' text_file</code></p>
+
+<p>Si ya tenés configurada la voz deseada por defecto en <code class="language-plaintext highlighter-rouge">~/.festivalrc</code> seteada no necesitás poner el argumento <code class="language-plaintext highlighter-rouge">-eval</code>.</p>
+
+<p>Ahora para que sea mas sencillo usarlo desde cualquier lado:
+<code class="language-plaintext highlighter-rouge">sudo apt-get install xsel iconv</code>
+<code class="language-plaintext highlighter-rouge">xsel</code>: Te permite seleccionar texto gráficamente, más adelante muestro un ejemplo de como funciona.
+<code class="language-plaintext highlighter-rouge">iconv</code>: convertir texto de una codificación de caracteres a otra. Es necesario porque sino festival en español no te lee los tíldes ni las ñ.</p>
+
+<p>Si seleccionás algún tipo de texto en cualquier aplicación 
+y ejecutás el siguiente comando, te lo va a leer.</p>
+
+<p><code class="language-plaintext highlighter-rouge">xsel | iconv -c -f utf-8 -t iso-8859-1 | festival --language</code></p>
+
+<p>Si querés guardar el audio generado podés usar <strong>text2wave</strong> (un script de Festival)
+de la siguiente manera</p>
+
+<p>Y esto es todo.</p>
+:ET

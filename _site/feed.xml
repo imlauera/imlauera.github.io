@@ -1,4 +1,79 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.2.0">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2021-04-17T13:46:32-03:00</updated><id>/feed.xml</id><title type="html">Andrés Imlauer</title><subtitle>Mi blog personal.</subtitle><entry><title type="html">Intercambiando canales de audio en PulseAudio</title><link href="/2021/02/27/intercambiando-canales-de-audio-en-pulseaudio.html" rel="alternate" type="text/html" title="Intercambiando canales de audio en PulseAudio" /><published>2021-02-27T17:57:00-03:00</published><updated>2021-02-27T17:57:00-03:00</updated><id>/2021/02/27/intercambiando-canales-de-audio-en-pulseaudio</id><content type="html" xml:base="/2021/02/27/intercambiando-canales-de-audio-en-pulseaudio.html">&lt;p&gt;Editar el archivo: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/usr/share/pulseaudio/alsa-mixer/profile-sets/default.conf&lt;/code&gt;&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.2.0">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2021-04-19T15:27:41-03:00</updated><id>/feed.xml</id><title type="html">Andrés Imlauer</title><subtitle>Mi blog personal.</subtitle><entry><title type="html">Texto a Voz en GNU/Linux</title><link href="/2021/04/19/texto-a-voz-en-gnu-linux.html" rel="alternate" type="text/html" title="Texto a Voz en GNU/Linux" /><published>2021-04-19T14:49:00-03:00</published><updated>2021-04-19T14:49:00-03:00</updated><id>/2021/04/19/texto-a-voz-en-gnu-linux</id><content type="html" xml:base="/2021/04/19/texto-a-voz-en-gnu-linux.html">&lt;p&gt;En esta publicación vamos a analizar como reproducir un texto a audio con Festival.&lt;/p&gt;
+
+&lt;p&gt;Antes de empezar, estos son los paquetes de las voces que se necesitan instalar para que pueda
+festival pueda leer algún texto:&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;festvox-kdlpc16k&lt;/code&gt;: Voz masculina de inglés americano para Festival.  &lt;br /&gt;
+&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;festvox-ellpc11k&lt;/code&gt;: Voz masculiona de castellano español para Festival.&lt;/p&gt;
+
+&lt;p&gt;Si querés más voces podés buscarlas con el siguiente comando
+&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sudo apt search festvox-&lt;/code&gt;.  &lt;br /&gt;
+Por ejemplo para instalar una voz Italiano ejecutamos:
+&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sudo apt-get install festvox-itapc16k&lt;/code&gt;
+&lt;strong&gt;Observación: Hay muchos tipos de voces de español.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Ahora procedemos entonces a instalar festival junto con voces masculinas español e inglés descriptas
+anteriormentes:
+&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sudo apt install festival festival-doc festvox-kdlpc16k festvox-ellpc11k&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Para establecer una voz por defecto en vez de tener que agregar
+&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;--language spanish&lt;/code&gt; cada vez que ejecutás festival, podés agregar:
+en &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;~/.festivalrc&lt;/code&gt; lo siguiente: 
+&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(set! voice_default voice_el_diphone)&lt;/code&gt;. &lt;span style=&quot;color:red&quot;&gt;Incluir&lt;/span&gt; los &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;()&lt;/code&gt; (obviamente
+tenés que tener el paquete de español instalado que lo indiqué más arriba)&lt;br /&gt;
+&lt;span style=&quot;color: blue&quot;&gt;Si el archivo ~/.festivalrc no existe, creálo.&lt;/span&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;span style=&quot;color: #791451&quot;&gt;Si querés saber las voces que tenés instaladas en tu sistema 
+podés entrar a la shell interactiva de festival ejecutando 
+&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;festival&lt;/code&gt; en la consola y escribí &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(voice.list)&lt;/code&gt; con los &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;()&lt;/code&gt;.&lt;/span&gt;&lt;/p&gt;
+
+&lt;p&gt;Para establecer una de estas voces estas por defecto en agregá en &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;~/.festivalrc&lt;/code&gt;
+&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(set! voice_default voice_el_diphone)&lt;/code&gt;. &lt;span style=&quot;color:red&quot;&gt;Incluir&lt;/span&gt; los &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;()&lt;/code&gt;. &lt;strong&gt;OJO&lt;/strong&gt;: agregar el  prefijo &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;voice_&lt;/code&gt; 
+antes del nombre de la voz que te muestra el comando &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(voice.list)&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Para leer un texto sin guardar el audio: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;festival --tts archivo&lt;/code&gt; (va a usar la voz que 
+pusiste por defecto en &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;~/.festivalrc&lt;/code&gt; o podés usar la opcion &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;--language spanish&lt;/code&gt; si no pusiste
+ninguna.&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;--tts&lt;/code&gt;: Significa text to speech (texto a voz)&lt;/p&gt;
+
+&lt;p&gt;Pero &lt;span style=&quot;color:red&quot;&gt;para que lea los tíldes y las ñ tenés que cambiar la codificación de tu archivo usando iconv&lt;/span&gt; de la siguiente manera:
+Primero instalamos iconv: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sudo apt install iconv&lt;/code&gt;. &lt;br /&gt;
+&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;iconv&lt;/code&gt;: convertir texto de una codificación de caracteres a otra. Es necesario porque sino festival en español no te lee los tíldes ni las ñ. Más información ejecutá &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;man iconv&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Luego para cambiar la codificación del archivo:  &lt;br /&gt;
+&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;iconv -f utf-8 -t iso-8859-1 texto_prueba -o texto_prueba_iso&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Y ahora podés leerlo en español con las tíldes y la ñ con el comando &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;festival --tts texto_prueba_iso&lt;/code&gt;&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;text2wave&lt;/code&gt;: Es un script que trabaja con Festival y forma parte del mismo, sirve para generar un archivo wav desde un archivo de texto.&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;text2wave -o salida.wav -eval '(voice_el_diphone)' texto_prueba&lt;/code&gt;  &lt;br /&gt;
+Si ya tenés configurada la voz deseada por defecto en &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;~/.festivalrc&lt;/code&gt; no necesitás poner el argumento &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;-eval&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;También se puede generar un archivo &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mp3&lt;/code&gt; de la siguiente forma:&lt;br /&gt;
+&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;text2wave text_file | lame - text.mp3&lt;/code&gt;&lt;br /&gt;
+Tenés que tener el comando &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;lame&lt;/code&gt; instalado, 
+y se lo instala con: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sudo apt install lame&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;OJO&lt;/strong&gt;: ¡¡Acordate que primero tenés que cambiar la codificación del archivo!! si querés que pueda leer las tíldes y las ñ en español, el comando para cambiar la codificación está descripto más arriba.&lt;/p&gt;
+
+&lt;p&gt;Ahora si querés que lea el texto seleccionado gráficamente con el mouse. Podés usar
+&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sudo apt-get install xsel&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;xsel&lt;/code&gt;: Te permite manipular con el texto seleccionado gráficamente, más adelante muestro un ejemplo de como funciona.
+Más información ejecutá &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;man xsel&lt;/code&gt; en la consola. &lt;br /&gt;
+Si seleccionás algún tipo de texto en cualquier aplicación 
+y ejecutás el siguiente comando, te lo va a leer.&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;xsel | iconv -c -f utf-8 -t iso-8859-1 | festival --language&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Si querés guardar el audio generado podés usar &lt;strong&gt;text2wave&lt;/strong&gt; (un script de Festival)
+de la siguiente manera&lt;/p&gt;
+
+&lt;p&gt;Y esto es todo.&lt;/p&gt;</content><author><name></name></author><summary type="html">En esta publicación vamos a analizar como reproducir un texto a audio con Festival.</summary></entry><entry><title type="html">Intercambiando canales de audio en PulseAudio</title><link href="/2021/02/27/intercambiando-canales-de-audio-en-pulseaudio.html" rel="alternate" type="text/html" title="Intercambiando canales de audio en PulseAudio" /><published>2021-02-27T17:57:00-03:00</published><updated>2021-02-27T17:57:00-03:00</updated><id>/2021/02/27/intercambiando-canales-de-audio-en-pulseaudio</id><content type="html" xml:base="/2021/02/27/intercambiando-canales-de-audio-en-pulseaudio.html">&lt;p&gt;Editar el archivo: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/usr/share/pulseaudio/alsa-mixer/profile-sets/default.conf&lt;/code&gt;&lt;/p&gt;
 
 &lt;p&gt;y en la línea:&lt;/p&gt;
 
