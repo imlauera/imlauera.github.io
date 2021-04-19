@@ -83,3 +83,4 @@ Si querés guardar el audio generado podés usar **text2wave** (un script de Fes
 de la siguiente manera
 
 Y esto es todo.
+Más información: <a href="https://wiki.archlinux.org/index.php/Festival" target="_blank">Festival (Arch Wiki)</a>

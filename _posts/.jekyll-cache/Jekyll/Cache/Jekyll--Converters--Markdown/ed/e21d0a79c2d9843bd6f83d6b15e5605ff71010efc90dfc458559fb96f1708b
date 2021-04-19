@@ -1,0 +1,30 @@
+I"W	<p>Sólo podés usar modos que tu tarjeta gráfica soporta vía VBE; podés verlos ejecutando el comando <code class="language-plaintext highlighter-rouge">vbeinfo</code> en el grub o también podés detectar las resoluciones usando el comando:</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">sudo </span>hwinfo <span class="nt">--framebuffer</span>
+</code></pre></div></div>
+<p>Luego el resultado lo usé en <code class="language-plaintext highlighter-rouge">"gfxpayload="</code> en /etc/default/grub demostrado más abajo, en mi caso la máxima resolución admitida era 1920x1080.</p>
+
+<h3 id="editando-etcdefaultgrub">Editando /etc/default/grub</h3>
+
+<p>En muchos sitios decían de usar la opción vga en la variable GRUB_CMDLINE_LINUX pero no funcionó para mi, está obsoleta. Es decir, en vez de usar <code class="language-plaintext highlighter-rouge">GRUB_CMDLINE_LINUX="vga=nnn"</code> usé <code class="language-plaintext highlighter-rouge">GRUB_CMDLINE_LINUX="gfxpayload=1920x1080"</code></p>
+
+<p>Éstas son las opciones que agregué y modifiqué al archivo /etc/default/grub:</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Modifiqué estas dos variables:</span>
+<span class="nv">GRUB_CMDLINE_LINUX</span><span class="o">=</span><span class="s2">"gfxpayload=1920x1080"</span>
+<span class="nv">GRUB_GFXMODE</span><span class="o">=</span>1920x1080
+
+<span class="c"># Y agregué estas otras dos variables:</span>
+<span class="c"># Hack to force higher framebuffer resolution</span>
+<span class="nv">GRUB_GFXPAYLOAD_LINUX</span><span class="o">=</span>1920x1080
+<span class="c"># Hace falta poner esto para que funcione el Hack para forzar la resolución</span>
+<span class="nv">GRUB_GFXPAYLOAD_LINUX</span><span class="o">=</span>keep
+</code></pre></div></div>
+<p>Luego de eso, ejecutar</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">sudo </span>update-grub
+</code></pre></div></div>
+<p>Y listo!</p>
+
+<p>Por último si querés cambiar la letra de la TTY, lo podés hacer ejecutando:</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">sudo </span>dpkg-reconfigure console-setup
+</code></pre></div></div>
+
+:ET
