@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>Cambiando La Resolución De TTY | Mi Blog Personal</title>
+	<link rel="canonical" href="https://imlauera.github.io/">
+	<link rel='alternate' type='application/rss+xml' title="Mi Blog Personal RSS" href='/index.xml'>
+	<link rel='stylesheet' type='text/css' href='/style.css'>
+	<link rel="icon" href="/favicon.ico">
+	<meta name="description" content="Sólo podés usar modos que tu tarjeta gráfica soporta vía VBE; podés verlos ejecutando el comando vbeinfo en el grub o también podés detectar las resoluciones usando el comando:
+sudo hwinfo --framebuffer Luego el resultado lo usé en &quot;gfxpayload=&quot; en /etc/default/grub demostrado más abajo, en mi caso la máxima resolución admitida era 1920x1080.
+Editando /etc/default/grub En muchos sitios decían de usar la opción vga en la variable GRUB_CMDLINE_LINUX pero no funcionó para mi, está obsoleta.">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="robots" content="index, follow">
+	<meta charset="utf-8">
+</head>
+<body>
+<main>
+<header><h1 id="tag_Cambiando la resolución de TTY">Cambiando la resolución de TTY</h1></header>
+<article>
+
+<p>Sólo podés usar modos que tu tarjeta gráfica soporta vía VBE; podés verlos ejecutando el comando <code>vbeinfo</code> en el grub o también podés detectar las resoluciones usando el comando:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo hwinfo --framebuffer
+</code></pre></div><p>Luego el resultado lo usé en <code>&quot;gfxpayload=&quot;</code> en /etc/default/grub demostrado más abajo, en mi caso la máxima resolución admitida era 1920x1080.</p>
+<h3 id="editando-etcdefaultgrub">Editando /etc/default/grub</h3>
+<p>En muchos sitios decían de usar la opción vga en la variable GRUB_CMDLINE_LINUX pero no funcionó para mi, está obsoleta. Es decir, en vez de usar <code>GRUB_CMDLINE_LINUX=&quot;vga=nnn&quot;</code> usé <code>GRUB_CMDLINE_LINUX=&quot;gfxpayload=1920x1080&quot;</code></p>
+<p>Éstas son las opciones que agregué y modifiqué al archivo /etc/default/grub:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#75715e"># Modifiqué estas dos variables:</span>
+GRUB_CMDLINE_LINUX<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;gfxpayload=1920x1080&#34;</span>
+GRUB_GFXMODE<span style="color:#f92672">=</span>1920x1080
+
+<span style="color:#75715e"># Y agregué estas otras dos variables:</span>
+<span style="color:#75715e"># Hack to force higher framebuffer resolution</span>
+GRUB_GFXPAYLOAD_LINUX<span style="color:#f92672">=</span>1920x1080
+<span style="color:#75715e"># Hace falta poner esto para que funcione el Hack para forzar la resolución</span>
+GRUB_GFXPAYLOAD_LINUX<span style="color:#f92672">=</span>keep
+</code></pre></div><p>Luego de eso, ejecutar</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo update-grub
+</code></pre></div><p>Y listo!</p>
+<p>Por último si querés cambiar la letra de la TTY, lo podés hacer ejecutando:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo dpkg-reconfigure console-setup
+</code></pre></div>
+
+<div id="nextprev">
+<a href="/articulos/cifrando-archivos-en-gnu-linux/"><div id="prevart">Previous:<br>Cifrando archivos en GNU/Linux</div></a>
+<a href="/articulos/2022-07-12-como-calcular-costo-de-envio-correoargentino/"><div id="nextart">Next:<br>Calcular costo de envio CorreoArgentino</div></a>
+</div>
+
+</article>
+</main>
+
+<footer>
+	<a href="https://imlauera.github.io/">https://imlauera.github.io/</a><br><br><a href="/index.xml"><img src="/rss.svg" style="max-height:1.5em" alt="RSS Feed" title="Subscribe via RSS for updates."></a>
+</footer>
+
+</body>
+</html>
