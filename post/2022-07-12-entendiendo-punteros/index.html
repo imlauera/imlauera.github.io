@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+    <title>ANDRES IMLAUER BLOG</title>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+    <meta content="utf-8" http-equiv="encoding">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="theme-color" content="#000084" />
+    <link rel="icon" href="https://example.com/favicon.ico">
+    <link rel="canonical" href="https://example.com">
+    
+    
+</head>
+<body>
+<nav class="navbar navbar-inverse navbar-fixed-top">
+    <div class="navbar-inner">
+        <div class="container">
+            <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse"></button>
+            <a class="brand" href="https://example.com">ANDRES IMLAUER BLOG</a>
+            <div class="nav-collapse collapse">
+                <ul class="nav">
+                    
+                    
+                        
+                            <li>
+                                <a href="/about/">
+                                    
+                                    <span>Acerca</span>
+                                </a>
+                            </li>
+                        
+                    
+                        
+                            <li>
+                                <a href="/post/">
+                                    
+                                    <span>Lista Publicaciones</span>
+                                </a>
+                            </li>
+                        
+                    
+                </ul>
+            </div>
+        </div>
+    </div>
+</nav><div id="content" class="container">
+
+<div class="row-fluid navmargin">
+    <div class="page-header">
+        <h1>Entendiendo Punteros - Mon, Jan 1, 0001</h1>
+    </div>
+    <p class="lead"></p>
+    <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdlib.h&gt;</span><span style="color:#75715e">
+</span><span style="color:#75715e"></span>
+<span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">printLocalTime</span>()
+{
+  <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>timeStringBuff<span style="color:#f92672">=</span>malloc(<span style="color:#ae81ff">30</span>); <span style="color:#75715e">//50 chars should be enough
+</span><span style="color:#75715e"></span>  <span style="color:#75715e">//char timeStringBuff[100]; //50 chars should be enough
+</span><span style="color:#75715e"></span>  <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>mic <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;2022&#34;</span>;
+  <span style="color:#66d9ef">char</span> c <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;m&#39;</span>;
+  <span style="color:#66d9ef">int</span> test <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>;
+  <span style="color:#66d9ef">char</span> prueba[<span style="color:#ae81ff">50</span>]; <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>prueba_m <span style="color:#f92672">=</span> malloc(<span style="color:#ae81ff">50</span>);
+  printf(<span style="color:#e6db74">&#34;%d</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>,<span style="color:#66d9ef">sizeof</span>(prueba));
+  printf(<span style="color:#e6db74">&#34;%d</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>,<span style="color:#66d9ef">sizeof</span>(prueba_m));
+  sprintf(timeStringBuff, <span style="color:#e6db74">&#34;they tried everything %s %d</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>,mic,test);
+  <span style="color:#75715e">//Optional: Construct String object
+</span><span style="color:#75715e"></span>  <span style="color:#75715e">// Esto retorna un puntero a la direccion de memoria en donde esta timeStringBuff
+</span><span style="color:#75715e"></span>  <span style="color:#75715e">// *timeStringBuff = timeStringBuff[0]
+</span><span style="color:#75715e"></span>  <span style="color:#75715e">// *(timeStringBuff+3) = timeStringBuff[3]
+</span><span style="color:#75715e"></span>  printf(<span style="color:#e6db74">&#34;%s</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>,timeStringBuff);
+  <span style="color:#75715e">// Vos no retornas la palabra cuando ejecutas return timeStringBufff retornas un puntero
+</span><span style="color:#75715e"></span>  <span style="color:#75715e">// que apunta a la primer letra del char. Y lo que hace el &#39;%s&#39; es leer hasta que encuentra el \0
+</span><span style="color:#75715e"></span>  printf(<span style="color:#e6db74">&#34;%c</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>,<span style="color:#f92672">*</span>timeStringBuff);
+  <span style="color:#66d9ef">char</span> hola[] <span style="color:#f92672">=</span> {<span style="color:#e6db74">&#39;h&#39;</span>,<span style="color:#e6db74">&#39;o&#39;</span>,<span style="color:#e6db74">&#39;l&#39;</span>,<span style="color:#e6db74">&#39;a&#39;</span>,<span style="color:#e6db74">&#39;\0&#39;</span>};
+  printf(<span style="color:#e6db74">&#34;%s</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>,hola);
+  <span style="color:#75715e">// Cambio valor
+</span><span style="color:#75715e"></span>  <span style="color:#66d9ef">for</span>(<span style="color:#66d9ef">int</span> i<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>; i<span style="color:#f92672">&lt;</span><span style="color:#ae81ff">10000</span>; i<span style="color:#f92672">++</span>){
+    sprintf(timeStringBuff, <span style="color:#e6db74">&#34;reincarnation&#34;</span>);
+  }
+  printf(<span style="color:#e6db74">&#34;%s</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>,timeStringBuff);
+  <span style="color:#66d9ef">if</span> (c <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;m&#39;</span>) printf(<span style="color:#e6db74">&#34;we&#39;re winning</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+  
+  <span style="color:#66d9ef">return</span> timeStringBuff;
+}
+
+<span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>()
+{
+    <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>freeThis <span style="color:#f92672">=</span> printLocalTime();
+    printf(<span style="color:#e6db74">&#34;%s</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>,freeThis);
+    free(freeThis);
+    printf(<span style="color:#e6db74">&#34;%s</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>,freeThis);
+    <span style="color:#66d9ef">int</span> a <span style="color:#f92672">=</span> <span style="color:#ae81ff">65</span>;
+    printf(<span style="color:#e6db74">&#34;%c</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>,(<span style="color:#66d9ef">char</span>)a);
+    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+}
+</code></pre></div>
+    <h4><a href="https://example.com">Back to Home</a></h4>
+</div>
+
+
+        </div><footer class="container">
+    <hr class="soften">
+    <p>
+&copy; 
+
+    
+
+<span id="thisyear">2022</span>
+
+
+</p>
+    <p class="text-center">
+        
+        
+        <a href="https://linkedin.com">Linkedin</a> 
+        <a href="https://github.com/imlauera">GitHub</a> 
+        
+    </p>
+</footer>
+
+</body><link rel="stylesheet" href="/css/bootstrap.css">
+<link rel="stylesheet" href="/css/bootstrap-responsive.css">
+<link rel="stylesheet" href="/css/style.css">
+
+<script src="/js/jquery.js"></script>
+<script src="/js/bootstrap-386.js"></script>
+<script src="/js/bootstrap-transition.js"></script>
+<script src="/js/bootstrap-alert.js"></script>
+<script src="/js/bootstrap-modal.js"></script>
+<script src="/js/bootstrap-dropdown.js"></script>
+<script src="/js/bootstrap-scrollspy.js"></script>
+<script src="/js/bootstrap-tab.js"></script>
+<script src="/js/bootstrap-tooltip.js"></script>
+<script src="/js/bootstrap-popover.js"></script>
+<script src="/js/bootstrap-button.js"></script>
+<script src="/js/bootstrap-collapse.js"></script>
+<script src="/js/bootstrap-carousel.js"></script>
+<script src="/js/bootstrap-typeahead.js"></script>
+<script src="/js/bootstrap-affix.js"></script>
+<script>
+    _386 = { 
+        fastLoad: false ,
+        onePass: false , 
+        speedFactor: 1 
+    };
+
+    
+    function ThisYear() {
+        document.getElementById('thisyear').innerHTML = new Date().getFullYear();
+    };
+</script>
+</html>
