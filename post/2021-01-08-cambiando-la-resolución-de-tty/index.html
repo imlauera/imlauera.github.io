@@ -13,7 +13,9 @@
 sudo hwinfo --framebuffer Luego el resultado lo usé en &quot;gfxpayload=&quot; en /etc/default/grub demostrado más abajo, en mi caso la máxima resolución admitida era 1920x1080.
 Editando /etc/default/grub En muchos sitios decían de usar la opción vga en la variable GRUB_CMDLINE_LINUX pero no funcionó para mi, está obsoleta." />
 <meta property="og:type" content="article" />
-<meta property="og:url" content="https://imlauera.github.io/post/2021-01-08-cambiando-la-resoluci%C3%B3n-de-tty/" />
+<meta property="og:url" content="https://imlauera.github.io/post/2021-01-08-cambiando-la-resoluci%C3%B3n-de-tty/" /><meta property="article:section" content="post" />
+
+
 
 
 		<meta itemprop="name" content="Cambiando la resolución de TTY">
@@ -22,11 +24,7 @@ sudo hwinfo --framebuffer Luego el resultado lo usé en &quot;gfxpayload=&quot; 
 Editando /etc/default/grub En muchos sitios decían de usar la opción vga en la variable GRUB_CMDLINE_LINUX pero no funcionó para mi, está obsoleta.">
 
 <meta itemprop="wordCount" content="157">
-
-
-
 <meta itemprop="keywords" content="" />
-
 		
 		<meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="Cambiando la resolución de TTY"/>
@@ -111,26 +109,26 @@ Editando /etc/default/grub En muchos sitios decían de usar la opción vga en la
 </div>
 <div class="content post__content clearfix">
 			<p>Sólo podés usar modos que tu tarjeta gráfica soporta vía VBE; podés verlos ejecutando el comando <code>vbeinfo</code> en el grub o también podés detectar las resoluciones usando el comando:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo hwinfo --framebuffer
-</code></pre></div><p>Luego el resultado lo usé en <code>&quot;gfxpayload=&quot;</code> en /etc/default/grub demostrado más abajo, en mi caso la máxima resolución admitida era 1920x1080.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo hwinfo --framebuffer
+</span></span></code></pre></div><p>Luego el resultado lo usé en <code>&quot;gfxpayload=&quot;</code> en /etc/default/grub demostrado más abajo, en mi caso la máxima resolución admitida era 1920x1080.</p>
 <h3 id="editando-etcdefaultgrub">Editando /etc/default/grub</h3>
 <p>En muchos sitios decían de usar la opción vga en la variable GRUB_CMDLINE_LINUX pero no funcionó para mi, está obsoleta. Es decir, en vez de usar <code>GRUB_CMDLINE_LINUX=&quot;vga=nnn&quot;</code> usé <code>GRUB_CMDLINE_LINUX=&quot;gfxpayload=1920x1080&quot;</code></p>
 <p>Éstas son las opciones que agregué y modifiqué al archivo /etc/default/grub:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#75715e"># Modifiqué estas dos variables:</span>
-GRUB_CMDLINE_LINUX<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;gfxpayload=1920x1080&#34;</span>
-GRUB_GFXMODE<span style="color:#f92672">=</span>1920x1080
-
-<span style="color:#75715e"># Y agregué estas otras dos variables:</span>
-<span style="color:#75715e"># Hack to force higher framebuffer resolution</span>
-GRUB_GFXPAYLOAD_LINUX<span style="color:#f92672">=</span>1920x1080
-<span style="color:#75715e"># Hace falta poner esto para que funcione el Hack para forzar la resolución</span>
-GRUB_GFXPAYLOAD_LINUX<span style="color:#f92672">=</span>keep
-</code></pre></div><p>Luego de eso, ejecutar</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo update-grub
-</code></pre></div><p>Y listo!</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Modifiqué estas dos variables:</span>
+</span></span><span style="display:flex;"><span>GRUB_CMDLINE_LINUX<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;gfxpayload=1920x1080&#34;</span>
+</span></span><span style="display:flex;"><span>GRUB_GFXMODE<span style="color:#f92672">=</span>1920x1080
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Y agregué estas otras dos variables:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Hack to force higher framebuffer resolution</span>
+</span></span><span style="display:flex;"><span>GRUB_GFXPAYLOAD_LINUX<span style="color:#f92672">=</span>1920x1080
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Hace falta poner esto para que funcione el Hack para forzar la resolución</span>
+</span></span><span style="display:flex;"><span>GRUB_GFXPAYLOAD_LINUX<span style="color:#f92672">=</span>keep
+</span></span></code></pre></div><p>Luego de eso, ejecutar</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo update-grub
+</span></span></code></pre></div><p>Y listo!</p>
 <p>Por último si querés cambiar la letra de la TTY, lo podés hacer ejecutando:</p>
-<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">sudo dpkg-reconfigure console-setup
-</code></pre></div>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo dpkg-reconfigure console-setup
+</span></span></code></pre></div>
 		</div>
 	</article>
 </main>
@@ -166,7 +164,7 @@ GRUB_GFXPAYLOAD_LINUX<span style="color:#f92672">=</span>keep
 <section class="comments">
 	<div id="disqus_thread"></div>
 <script type="application/javascript">
-    var disqus_config = function () {
+    window.disqus_config = function () {
     
     
     
