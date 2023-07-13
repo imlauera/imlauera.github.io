@@ -21,7 +21,7 @@ arduino-cli core update-index --additional-urls https://raw.githubusercontent.co
 arduino-cli config init arduino-cli config dump --verbose Cuando inicias la configuracion te crea un archivo en ~/.arduino/arduino-cli.yaml podes editar ese archivo y agregar la URL del indice en ese archivo en vez de usar &ndash;additional-urls como se demostro en el paso 1.">
 <meta itemprop="datePublished" content="2023-07-12T02:26:15-03:00" />
 <meta itemprop="dateModified" content="2023-07-12T02:26:15-03:00" />
-<meta itemprop="wordCount" content="217">
+<meta itemprop="wordCount" content="203">
 
 
 
@@ -682,18 +682,17 @@ arduino-cli config dump --verbose
 <div class="highlight"><pre class="chroma"><code class="language-bash" data-lang="bash">arduino-cli core install esp32:esp32
 </code></pre></div><p>Podes buscar el FQBN (necesario para compilar) usando el comando</p>
 <div class="highlight"><pre class="chroma"><code class="language-bash" data-lang="bash">arduino-cli board search esp32
-arduino-cli board details -b &lt;YOUR FQBN&gt;
+arduino-cli board details -b &lt;Tu FQBN&gt;
 </code></pre></div><p><strong>Crea un nuevo sketch</strong>:</p>
 <pre><code>arduino-cli sketch new ejemplo
 cd ejemplo
 </code></pre><p>No hace falta si ya tenes un archivo ino. Directamente pasa al siguiente paso.</p>
 <p><strong>Para compilar el sketch</strong>:</p>
 <div class="highlight"><pre class="chroma"><code class="language-bash" data-lang="bash">arduino-cli compile --fqbn esp32:esp32:esp32 .
-arduino-cli compile -b megaTinyCore:megaavr:atxy7:chip<span class="o">=</span>1607,clock<span class="o">=</span>5internal,bodvoltage<span class="o">=</span>1v8,bodmode<span class="o">=</span>disabled,eesave<span class="o">=</span>enable,millis<span class="o">=</span>enabled,resetpin<span class="o">=</span>UPDI,startuptime<span class="o">=</span>0,wiremode<span class="o">=</span>mors,printf<span class="o">=</span>minimal,attach<span class="o">=</span>allenabled --output-dir ./build/
-</code></pre></div><p><strong>Para subirlo al esp32</strong>:
+</code></pre></div><p>Se puede usar <code>--output-dir ./build/</code> para guardar el binario generado en build</p>
+<p><strong>Para subirlo al esp32</strong>:
 Accede a la carpeta build y ejecuta</p>
 <div class="highlight"><pre class="chroma"><code class="language-bash" data-lang="bash">arduino-cli upload -p /dev/ttyS0 --fqbn esp32:esp32:esp32 .
-arduino-cli upload -b FQBN:fuseKey<span class="o">=</span>fuseValue,.. -p &lt;Serial UPDI uploader PORT&gt; -P &lt;PROGRAMMER&gt; -t
 </code></pre></div><p><strong>Para monitorearlo</strong>:</p>
 <div class="highlight"><pre class="chroma"><code class="language-bash" data-lang="bash">screen /dev/ttyS0 <span class="m">115200</span>
 </code></pre></div><p><strong>Buscar librerias</strong>:</p>
@@ -701,7 +700,7 @@ arduino-cli upload -b FQBN:fuseKey<span class="o">=</span>fuseValue,.. -p &lt;Se
 </code></pre></div><p><strong>Instalando librerias</strong>:</p>
 <div class="highlight"><pre class="chroma"><code class="language-bash" data-lang="bash">arduino-cli lib install <span class="s2">&#34;DHT sensor library&#34;</span>
 </code></pre></div><p><strong>Para compilar y subir</strong>:</p>
-<div class="highlight"><pre class="chroma"><code class="language-bash" data-lang="bash">arduino-cli compile -b FQBN:fuseKey<span class="o">=</span>fuseValue,fuseKey<span class="o">=</span>fuseValue,.. --output-dir ./build/ -u -p &lt;Serial UPDI uploader PORT&gt; -P &lt;PROGRAMMER&gt; -t
+<div class="highlight"><pre class="chroma"><code class="language-bash" data-lang="bash">arduino-cli compile --fqbn esp32:esp32:esp32 -u -p /dev/ttyS0
 </code></pre></div>
 </div>
 
