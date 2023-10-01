@@ -47,9 +47,9 @@ Acumulación con el tiempo de un largo historial. Inclusión de ficheros binario
       <pubDate>Wed, 20 Sep 2023 08:59:37 -0300</pubDate>
       
       <guid>/post/letsencrypt-docker/</guid>
-      <description>Luego de renovar el certificado automáticamente hay que reiniciar el servidor Apache para que cargue el nuevo certificado para ello usaremos renew-hooks Una forma de hacerlo LetsEncrypt certbot con multiples renew-hooks https://stackoverflow.com/questions/42300579/letsencrypt-certbot-multiple-renew-hooks Si coloca algún script en la carpeta &amp;ldquo;publicar&amp;rdquo;, se ejecutará automáticamente después de la renovación. No olvide hacerlo ejecutable agregando +x al script.
-Estoy usando solo un &amp;ldquo;001-restart-nginx.sh&amp;rdquo; con el siguiente contenido:
-#!/bin/bash echo &amp;#34;ssl certs updated&amp;#34; &amp;amp;&amp;amp; service nginx restart /etc/letsencrypt/renewal-hooks/post/001-restart-nginx.</description>
+      <description>Setear que el servicio de docker inicie automáticamente en caso de caída o reseteo por mantenimiento https://stackoverflow.com/questions/43671482/how-to-run-docker-compose-up-d-at-system-start-up
+Usando systemd: Creá un archivo en /etc/systemd/system/docker-compose-app.service con el siguiente contenido:
+# /etc/systemd/system/docker-compose-app.service [Unit] Description=Docker Compose Application Service Requires=docker.service After=docker.service [Service] Type=oneshot RemainAfterExit=yes WorkingDirectory=/home/test/docker ExecStart=/usr/bin/docker compose up -d ExecStop=/usr/bin/docker compose down TimeoutStartSec=0 [Install] WantedBy=multi-user.target Cambie el parámetro WorkingDirectory con la ruta de su proyecto docker. Y habilite el servicio para que se inicie automáticamente:</description>
     </item>
     
     <item>
