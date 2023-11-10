@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+
+
+
+
+
+<head>
+  <meta property="og:title" content="Recuperar grub en debian desde usb live" />
+<meta property="og:description" content="¿UEFI o BIOS? La forma más sencilla de saber si el sistema se ha iniciado en modo UEFI o BIOS es buscar una carpeta /sys/firmware/efi. La carpeta estará presente si su sistema utiliza UEFI.
+sudo grub-install /dev/sdX fdisk -l ó lsblk for i in /dev /dev/pts /proc /sys /run; do mount -B $i /mnt$i; done sudo chroot /mnt sudo grub-install /dev/sda sudo update-grub $ mount /dev/sdaY /mnt $ mount --bind /dev /mnt/dev $ mount --bind /dev/pts /mnt/dev/pts $ mount --bind /proc /mnt/proc $ mount --bind /sys /mnt/sys $ chroot /mnt $ grub-install /dev/sdX $ update-grub $ exit $ umount /mnt/dev/pts $ umount /mnt/dev $ umount /mnt/proc $ umount /mnt/sys $ umount /mnt Otra forma $ sudo mount /dev/sdXY /mnt $ sudo mount /dev/sda1/mnt/boot/efi #use only if /boot is on a different partition $ for i in /dev /dev/pts /proc /sys /run; do sudo mount -B $i /mnt$i; done $ sudo chroot /mnt $ grub-install /dev/sda $ update-grub Otra forma sudo mount /dev/sda1 /mnt sudo grub-install --boot-directory=/mnt/boot /dev/sda sudo mount /dev/sda1 /mnt Otra forma Precaución cambiá el nombre de las particiones." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="/post/recuperar_grub_debian_usb_live/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2023-11-10T04:51:31-03:00" />
+<meta property="article:modified_time" content="2023-11-10T04:51:31-03:00" />
+
+
+  <meta itemprop="name" content="Recuperar grub en debian desde usb live">
+<meta itemprop="description" content="¿UEFI o BIOS? La forma más sencilla de saber si el sistema se ha iniciado en modo UEFI o BIOS es buscar una carpeta /sys/firmware/efi. La carpeta estará presente si su sistema utiliza UEFI.
+sudo grub-install /dev/sdX fdisk -l ó lsblk for i in /dev /dev/pts /proc /sys /run; do mount -B $i /mnt$i; done sudo chroot /mnt sudo grub-install /dev/sda sudo update-grub $ mount /dev/sdaY /mnt $ mount --bind /dev /mnt/dev $ mount --bind /dev/pts /mnt/dev/pts $ mount --bind /proc /mnt/proc $ mount --bind /sys /mnt/sys $ chroot /mnt $ grub-install /dev/sdX $ update-grub $ exit $ umount /mnt/dev/pts $ umount /mnt/dev $ umount /mnt/proc $ umount /mnt/sys $ umount /mnt Otra forma $ sudo mount /dev/sdXY /mnt $ sudo mount /dev/sda1/mnt/boot/efi #use only if /boot is on a different partition $ for i in /dev /dev/pts /proc /sys /run; do sudo mount -B $i /mnt$i; done $ sudo chroot /mnt $ grub-install /dev/sda $ update-grub Otra forma sudo mount /dev/sda1 /mnt sudo grub-install --boot-directory=/mnt/boot /dev/sda sudo mount /dev/sda1 /mnt Otra forma Precaución cambiá el nombre de las particiones."><meta itemprop="datePublished" content="2023-11-10T04:51:31-03:00" />
+<meta itemprop="dateModified" content="2023-11-10T04:51:31-03:00" />
+<meta itemprop="wordCount" content="300">
+<meta itemprop="keywords" content="" />
+  <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Recuperar grub en debian desde usb live"/>
+<meta name="twitter:description" content="¿UEFI o BIOS? La forma más sencilla de saber si el sistema se ha iniciado en modo UEFI o BIOS es buscar una carpeta /sys/firmware/efi. La carpeta estará presente si su sistema utiliza UEFI.
+sudo grub-install /dev/sdX fdisk -l ó lsblk for i in /dev /dev/pts /proc /sys /run; do mount -B $i /mnt$i; done sudo chroot /mnt sudo grub-install /dev/sda sudo update-grub $ mount /dev/sdaY /mnt $ mount --bind /dev /mnt/dev $ mount --bind /dev/pts /mnt/dev/pts $ mount --bind /proc /mnt/proc $ mount --bind /sys /mnt/sys $ chroot /mnt $ grub-install /dev/sdX $ update-grub $ exit $ umount /mnt/dev/pts $ umount /mnt/dev $ umount /mnt/proc $ umount /mnt/sys $ umount /mnt Otra forma $ sudo mount /dev/sdXY /mnt $ sudo mount /dev/sda1/mnt/boot/efi #use only if /boot is on a different partition $ for i in /dev /dev/pts /proc /sys /run; do sudo mount -B $i /mnt$i; done $ sudo chroot /mnt $ grub-install /dev/sda $ update-grub Otra forma sudo mount /dev/sda1 /mnt sudo grub-install --boot-directory=/mnt/boot /dev/sda sudo mount /dev/sda1 /mnt Otra forma Precaución cambiá el nombre de las particiones."/>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Recuperar grub en debian desde usb live
+    
+  </title>
+  <link rel="stylesheet" href='/css/site.min.css'>
+  <link rel="canonical" href="/post/recuperar_grub_debian_usb_live/">
+  <link rel="alternate" type="application/rss&#43;xml" href="/index.xml" title="Personal Blog">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  
+  <meta name="description" content="¿UEFI o BIOS? La forma más sencilla de saber si el sistema se ha iniciado en modo UEFI o BIOS es buscar una carpeta /sys/firmware/efi. La carpeta estará presente si su sistema utiliza UEFI.
+sudo grub-install /dev/sdX fdisk -l ó lsblk for i in /dev /dev/pts /proc /sys /run; do mount -B $i /mnt$i; done sudo chroot /mnt sudo grub-install /dev/sda sudo update-grub $ mount /dev/sdaY /mnt $ mount --bind /dev /mnt/dev $ mount --bind /dev/pts /mnt/dev/pts $ mount --bind /proc /mnt/proc $ mount --bind /sys /mnt/sys $ chroot /mnt $ grub-install /dev/sdX $ update-grub $ exit $ umount /mnt/dev/pts $ umount /mnt/dev $ umount /mnt/proc $ umount /mnt/sys $ umount /mnt Otra forma $ sudo mount /dev/sdXY /mnt $ sudo mount /dev/sda1/mnt/boot/efi #use only if /boot is on a different partition $ for i in /dev /dev/pts /proc /sys /run; do sudo mount -B $i /mnt$i; done $ sudo chroot /mnt $ grub-install /dev/sda $ update-grub Otra forma sudo mount /dev/sda1 /mnt sudo grub-install --boot-directory=/mnt/boot /dev/sda sudo mount /dev/sda1 /mnt Otra forma Precaución cambiá el nombre de las particiones.">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="https://www.gravatar.com/avatar/79128d4c1a22cda8a371fd8b925477e3?s=128&d=identicon">
+      </figure>
+    </a>
+    <a class="navbar-item" href="/">
+      Personal Blog
+    </a>
+  </div>
+  
+  <div class="navbar-menu">
+    <div class="navbar-start">
+      
+      <a class="navbar-item" href="/tags/ads/">
+        
+        Ads
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/ai/">
+        
+        Ai
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/alpine/">
+        
+        Alpine
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/android/">
+        
+        Android
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/archivos/">
+        
+        Archivos
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/armado-pc/">
+        
+        Armado PC
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/audio/">
+        
+        Audio
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/bash/">
+        
+        Bash
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/beamer/">
+        
+        Beamer
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/buscador/">
+        
+        Buscador
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/c/">
+        
+        C
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/cambiar-dns/">
+        
+        Cambiar DNS
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/canales-de-audio/">
+        
+        Canales de audio
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/chat/">
+        
+        Chat
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/chatgpt/">
+        
+        Chatgpt
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/cifrar/">
+        
+        Cifrar
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/comandos/">
+        
+        Comandos
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/command-line-tool/">
+        
+        Command line tool
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/compile/">
+        
+        Compile
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/consola/">
+        
+        Consola
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/copilot/">
+        
+        Copilot
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/correoargentino/">
+        
+        Correoargentino
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/costo-envio/">
+        
+        Costo envio
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/counter/">
+        
+        Counter
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/cs/">
+        
+        Cs
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/curl/">
+        
+        Curl
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/dall-e/">
+        
+        Dall e
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/ddgr/">
+        
+        Ddgr
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/debian/">
+        
+        Debian
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/debian-testing/">
+        
+        Debian testing
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/descargar/">
+        
+        Descargar
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/digital/">
+        
+        Digital
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/dns/">
+        
+        DNS
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/domains/">
+        
+        Domains
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/duckduckgo/">
+        
+        Duckduckgo
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/elon-musk/">
+        
+        Elon musk
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/estafa/">
+        
+        Estafa
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/exif-viewer/">
+        
+        Exif viewer
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/extensiones/">
+        
+        Extensiones
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/false/">
+        
+        False
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/freebsd/">
+        
+        Freebsd
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/fzf/">
+        
+        Fzf
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/generacion-qt/">
+        
+        Generacion qt
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/google/">
+        
+        Google
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/hardware/">
+        
+        Hardware
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/howto/">
+        
+        Howto
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/index/">
+        
+        Index
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/instalacion/">
+        
+        Instalacion
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/install/">
+        
+        Install
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/ios/">
+        
+        I os
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/jpeg/">
+        
+        Jpeg
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/juegos/">
+        
+        Juegos
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/kvm/">
+        
+        Kvm
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/latex/">
+        
+        Latex
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/linux/">
+        
+        Linux
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/lista/">
+        
+        Lista
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/lokinet/">
+        
+        Lokinet
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/markdown/">
+        
+        Markdown
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/mpv/">
+        
+        Mpv
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/navegador/">
+        
+        Navegador
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/neovim/">
+        
+        Neovim
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/opencard/">
+        
+        Opencard
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/pandoc/">
+        
+        Pandoc
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/png/">
+        
+        Png
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/ponzi/">
+        
+        Ponzi
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/powerpoint/">
+        
+        Powerpoint
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/premium/">
+        
+        Premium
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/presentaciones/">
+        
+        Presentaciones
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/publicidad/">
+        
+        Publicidad
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/pulseaudio/">
+        
+        Pulseaudio
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/punteros/">
+        
+        Punteros
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/qemu/">
+        
+        Qemu
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/qr/">
+        
+        Qr
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/quitar/">
+        
+        Quitar
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/radio/">
+        
+        Radio
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/remove/">
+        
+        Remove
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/resolucion/">
+        
+        Resolucion
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/spotify/">
+        
+        Spotify
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/stream/">
+        
+        Stream
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/svelte3/">
+        
+        Svelte3
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/systemd/">
+        
+        Systemd
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/texto-a-voz/">
+        
+        Texto a voz
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/tty/">
+        
+        Tty
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/vim/">
+        
+        Vim
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/virt-manager/">
+        
+        Virt manager
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/vpn/">
+        
+        VPN
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/webp/">
+        
+        Webp
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/xq/">
+        
+        Xq
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/youtube/">
+        
+        Youtube
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/yq/">
+        
+        Yq
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/zig/">
+        
+        Zig
+        
+      </a>
+      
+    </div>
+    
+    <div class="navbar-end">
+      
+      <a class="navbar-item" href="https://github.com/orf/" rel="noopener" target="_blank">
+        <span class="icon">
+          
+            <img alt="icons/svg/github.svg" src='/icons/svg/github.svg'>
+          
+        </span>
+      </a>
+      
+      
+      <a class="navbar-item" href="mailto:imlauerandres[at]gmail.com" target="_blank">
+        <span class="icon">
+          <img alt="email" src='/icons/svg/email.svg'>
+        </span>
+      </a>
+      
+      <a class="navbar-item" href="/index.xml" target="_blank">
+        <span class="icon">
+          <img alt="rss" src='/icons/svg/rss.svg'>
+        </span>
+      </a>
+      
+    </div>
+  </div>
+</nav>
+
+  <section>
+    <section class='hero is-small is-info is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Recuperar grub en debian desde usb live
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2023-11-10T04:51:31-03:00'>
+      November 10, 2023
+    </time>
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <p>¿UEFI o BIOS? La forma más sencilla de saber si el sistema se ha iniciado en modo UEFI o BIOS es buscar una carpeta /sys/firmware/efi. La carpeta estará presente si su sistema utiliza UEFI.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-console" data-lang="console"><span class="line"><span class="cl"><span class="go">sudo grub-install /dev/sdX
+</span></span></span><span class="line"><span class="cl"><span class="go">fdisk -l ó lsblk
+</span></span></span><span class="line"><span class="cl"><span class="go">for i in /dev /dev/pts /proc /sys /run; do mount -B $i /mnt$i; done
+</span></span></span><span class="line"><span class="cl"><span class="go">sudo chroot /mnt
+</span></span></span><span class="line"><span class="cl"><span class="go">sudo grub-install /dev/sda
+</span></span></span><span class="line"><span class="cl"><span class="go">sudo update-grub
+</span></span></span><span class="line"><span class="cl"><span class="go"></span><span class="gp">$</span> mount /dev/sdaY /mnt
+</span></span><span class="line"><span class="cl"><span class="gp">$</span> mount --bind /dev /mnt/dev
+</span></span><span class="line"><span class="cl"><span class="gp">$</span> mount --bind /dev/pts /mnt/dev/pts
+</span></span><span class="line"><span class="cl"><span class="gp">$</span> mount --bind /proc /mnt/proc
+</span></span><span class="line"><span class="cl"><span class="gp">$</span> mount --bind /sys /mnt/sys
+</span></span><span class="line"><span class="cl"><span class="gp">$</span> chroot /mnt
+</span></span><span class="line"><span class="cl"><span class="gp">$</span> grub-install /dev/sdX
+</span></span><span class="line"><span class="cl"><span class="gp">$</span> update-grub
+</span></span><span class="line"><span class="cl"><span class="gp">$</span> <span class="nb">exit</span>
+</span></span><span class="line"><span class="cl"><span class="gp">$</span> umount /mnt/dev/pts
+</span></span><span class="line"><span class="cl"><span class="gp">$</span> umount /mnt/dev
+</span></span><span class="line"><span class="cl"><span class="gp">$</span> umount /mnt/proc
+</span></span><span class="line"><span class="cl"><span class="gp">$</span> umount /mnt/sys
+</span></span><span class="line"><span class="cl"><span class="gp">$</span> umount /mnt
+</span></span></code></pre></div><h3 id="otra-forma">Otra forma</h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-console" data-lang="console"><span class="line"><span class="cl"><span class="gp">$</span> sudo mount /dev/sdXY /mnt
+</span></span><span class="line"><span class="cl"><span class="gp">$</span> sudo mount /dev/sda1/mnt/boot/efi          <span class="c1">#use only if /boot is on a different partition</span>
+</span></span><span class="line"><span class="cl"><span class="gp">$</span> <span class="k">for</span> i in /dev /dev/pts /proc /sys /run<span class="p">;</span> <span class="k">do</span> sudo mount -B <span class="nv">$i</span> /mnt<span class="nv">$i</span><span class="p">;</span> <span class="k">done</span>
+</span></span><span class="line"><span class="cl"><span class="gp">$</span> sudo chroot /mnt
+</span></span><span class="line"><span class="cl"><span class="gp">$</span> grub-install /dev/sda
+</span></span><span class="line"><span class="cl"><span class="gp">$</span> update-grub
+</span></span></code></pre></div><h4 id="otra-forma-1">Otra forma</h4>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">sudo mount /dev/sda1 /mnt
+</span></span><span class="line"><span class="cl">sudo grub-install --boot-directory<span class="o">=</span>/mnt/boot /dev/sda
+</span></span><span class="line"><span class="cl">sudo mount /dev/sda1 /mnt
+</span></span></code></pre></div><h3 id="otra-forma-2">Otra forma</h3>
+<p>Precaución cambiá el nombre de las particiones.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">mount /dev/sda5 /mnt/
+</span></span><span class="line"><span class="cl">mount /dev/sda1 /mnt/boot
+</span></span><span class="line"><span class="cl">mount --bind /dev /mnt/dev/
+</span></span><span class="line"><span class="cl">mount --bind /proc /mnt/proc/
+</span></span><span class="line"><span class="cl">chroot /mnt
+</span></span><span class="line"><span class="cl"><span class="c1"># grub-install --recheck /dev/sda</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># exit</span>
+</span></span></code></pre></div><p>Luego de reiniciar el sistema ejecutá:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">sudo update-grub
+</span></span></code></pre></div><h3 id="otra-forma-3">Otra forma</h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">mount /dev/sda1 /mnt
+</span></span><span class="line"><span class="cl">mount --bind /sys /mnt/sys
+</span></span><span class="line"><span class="cl">mount --bind /proc /mnt/proc
+</span></span><span class="line"><span class="cl">mount --bind /run /mnt/run
+</span></span><span class="line"><span class="cl">mount --bind /dev /mnt/dev
+</span></span><span class="line"><span class="cl">chroot /mnt /bin/sh -i
+</span></span><span class="line"><span class="cl">/sbin/grub-install --target<span class="o">=</span>i386-pc /dev/sda
+</span></span><span class="line"><span class="cl">/sbin/grub-mkconfig &gt; /boot/grub/grub.cfg
+</span></span></code></pre></div><p>Control D para salir del chroot o exit
+Luego ejecutá reboot</p>
+<h5 id="fedora">Fedora</h5>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">sudo mount /dev/sda3 /mnt
+</span></span><span class="line"><span class="cl">sudo mount --bind /sys /mnt/root/sys
+</span></span><span class="line"><span class="cl">sudo mount --bind /proc /mnt/root/proc
+</span></span><span class="line"><span class="cl">sudo mount --bind /run /mnt/root/run
+</span></span><span class="line"><span class="cl">sudo mount --bind /dev /mnt/root/dev
+</span></span><span class="line"><span class="cl">sudo chroot /mnt/root bash
+</span></span><span class="line"><span class="cl">mount /dev/sd3 /
+</span></span><span class="line"><span class="cl">mount /dev/sda2 /boot
+</span></span><span class="line"><span class="cl">rm -f /etc/grub.d/*
+</span></span><span class="line"><span class="cl">rm -f /etc/sysconfig/grub
+</span></span><span class="line"><span class="cl">grub2-mkconfig -o /boot/grub2/grub.cfg
+</span></span><span class="line"><span class="cl">grub2-install --target<span class="o">=</span>i386-pc /dev/sda
+</span></span></code></pre></div><p><a href="https://www.maketecheasier.com/restore-grub-2-as-the-main-bootloader/">https://www.maketecheasier.com/restore-grub-2-as-the-main-bootloader/</a></p>
+
+</div>
+
+
+      </div>
+    </section>
+  </section><footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a href="https://github.com/orf/bare-hugo-theme" target="_blank">Bare Hugo theme.</a>
+      
+      
+    </p>
+    
+  </div>
+</footer>
+
+
+</body>
+</html>
