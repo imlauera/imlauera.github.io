@@ -17,7 +17,7 @@
   <meta itemprop="name" content="Instalación de archlinux básica">
 <meta itemprop="description" content="loadkeys es wifi-menu timedatectl set-ntp true cfdisk /dev/sda -&gt; gpt (recomendable para uefi de hdd mayores a 2teras, dos también funciona con uefi pero solo si no supera los 2teras) Crea una particion de swap de 4gb, otra de efi de por lo menos 300megas y el espacio que sobra para ext4 mkfs.ext4 /dev/sda3 (root partition) mkswap /dev/sda2 (swap partition) mkfs.fat -F 32 /dev/sda1 (efi partition) mount /dev/sda3 (root_partition) /mnt mount --mkdir /dev/sda1 (efi partition) /mnt/boot swapon /dev/sda2 (swap_partition) pacstrap -K /mnt base base-devel linux linux-firmware vim man-pages man-db genfstab -U /mnt &gt;&gt; /mnt/etc/fstab arch-chroot /mnt ln -sf /usr/share/zoneinfo/America/Buenos_Aires /etc/localtime hwclock --systohc vim /etc/locale."><meta itemprop="datePublished" content="2023-11-22T02:05:50-03:00" />
 <meta itemprop="dateModified" content="2023-11-22T02:05:50-03:00" />
-<meta itemprop="wordCount" content="248">
+<meta itemprop="wordCount" content="276">
 <meta itemprop="keywords" content="" />
   <meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="Instalación de archlinux básica"/>
@@ -725,15 +725,17 @@
 </span></span><span class="line"><span class="cl">::1 localhost
 </span></span><span class="line"><span class="cl">127.0.0.1 host_name
 </span></span></code></pre></div><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">passwd <span class="c1"># cambiar la clave del root</span>
-</span></span><span class="line"><span class="cl">pacman -S grub networkmanager wpa_supplicant wireless_tools netctl 
-</span></span><span class="line"><span class="cl">pacman -S efibootmgr dosfstools os-prober mtools
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">pacman -S grub networkmanager 
+</span></span><span class="line"><span class="cl">pacman -S wpa_supplicant wireless_tools netctl  <span class="c1"># no necesario, con networkmanager te basta. Opcional </span>
 </span></span><span class="line"><span class="cl">systemctl <span class="nb">enable</span> NetworkManager
-</span></span><span class="line"><span class="cl"><span class="c1">#grub-install --efi-directory=/boot</span>
-</span></span><span class="line"><span class="cl"><span class="c1">#grub-install --target=x86_64-efi --bootloader-id=grub_uefi --efi-directory=/boot --recheck</span>
-</span></span><span class="line"><span class="cl">grub-install --efi-directory<span class="o">=</span>/boot --recheck
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">pacman -S os-prober mtools <span class="c1"># opcional si tenes dual boot con windows</span>
 </span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">#### uefi</span>
+</span></span><span class="line"><span class="cl">pacman -S efibootmgr 
+</span></span><span class="line"><span class="cl">grub-install --target<span class="o">=</span>x86_64-efi --bootloader-id<span class="o">=</span>grub_uefi --efi-directory<span class="o">=</span>/boot --recheck
+</span></span><span class="line"><span class="cl"><span class="c1">##### legacy</span>
+</span></span><span class="line"><span class="cl">pacman -S dosfstools 
+</span></span><span class="line"><span class="cl">grub-install /dev/sda --recheck
 </span></span><span class="line"><span class="cl">
 </span></span><span class="line"><span class="cl">
 </span></span><span class="line"><span class="cl">
@@ -741,10 +743,9 @@
 </span></span><span class="line"><span class="cl"><span class="nb">exit</span>
 </span></span><span class="line"><span class="cl">reboot
 </span></span></code></pre></div><p>Crear un usuario e instalar xfce</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1">## useradd -G wheel,video,audio -m nombre_usuario -d /home/imlauera</span>
-</span></span><span class="line"><span class="cl"><span class="c1"># useradd -m -g users -G wheel nombre_usuario</span>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># useradd -m -g users -G video,audio,wheel nombre_usuario</span>
 </span></span><span class="line"><span class="cl"><span class="c1"># passwd nombre_usuario ## agregar password</span>
-</span></span><span class="line"><span class="cl"><span class="c1"># vim /etc/sudoers y agregá tu usuario ahí</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># vim /etc/sudoers y agregá tu usuario copiando la linea de root y sustituyendo root por tu nombre de usuario</span>
 </span></span><span class="line"><span class="cl"><span class="c1"># pacman -Syu xorg xfce4 xfce4-goodies </span>
 </span></span></code></pre></div><p>Ingresá desde tu usuario y creá un archivo .xinitrc adentro poné</p>
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="nb">exec</span> xfce4-session
