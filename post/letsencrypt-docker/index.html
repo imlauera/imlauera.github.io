@@ -729,46 +729,46 @@ Usando systemd: Creá un archivo en /etc/systemd/system/docker-compose-app.servi
 <p><a href="https://stackoverflow.com/questions/43671482/how-to-run-docker-compose-up-d-at-system-start-up">https://stackoverflow.com/questions/43671482/how-to-run-docker-compose-up-d-at-system-start-up</a></p>
 <h4 id="usando-systemd">Usando systemd:</h4>
 <p>Creá un archivo en /etc/systemd/system/docker-compose-app.service con el siguiente contenido:</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># /etc/systemd/system/docker-compose-app.service</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="o">[</span>Unit<span class="o">]</span>
-</span></span><span class="line"><span class="cl"><span class="nv">Description</span><span class="o">=</span>Docker Compose Application Service
-</span></span><span class="line"><span class="cl"><span class="nv">Requires</span><span class="o">=</span>docker.service
-</span></span><span class="line"><span class="cl"><span class="nv">After</span><span class="o">=</span>docker.service
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="o">[</span>Service<span class="o">]</span>
-</span></span><span class="line"><span class="cl"><span class="nv">Type</span><span class="o">=</span>oneshot
-</span></span><span class="line"><span class="cl"><span class="nv">RemainAfterExit</span><span class="o">=</span>yes
-</span></span><span class="line"><span class="cl"><span class="nv">WorkingDirectory</span><span class="o">=</span>/home/test/docker
-</span></span><span class="line"><span class="cl"><span class="nv">ExecStart</span><span class="o">=</span>/usr/bin/docker compose up -d
-</span></span><span class="line"><span class="cl"><span class="nv">ExecStop</span><span class="o">=</span>/usr/bin/docker compose down
-</span></span><span class="line"><span class="cl"><span class="nv">TimeoutStartSec</span><span class="o">=</span><span class="m">0</span>
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="o">[</span>Install<span class="o">]</span>
-</span></span><span class="line"><span class="cl"><span class="nv">WantedBy</span><span class="o">=</span>multi-user.target
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># /etc/systemd/system/docker-compose-app.service</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>Unit<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>Description<span style="color:#f92672">=</span>Docker Compose Application Service
+</span></span><span style="display:flex;"><span>Requires<span style="color:#f92672">=</span>docker.service
+</span></span><span style="display:flex;"><span>After<span style="color:#f92672">=</span>docker.service
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>Service<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>Type<span style="color:#f92672">=</span>oneshot
+</span></span><span style="display:flex;"><span>RemainAfterExit<span style="color:#f92672">=</span>yes
+</span></span><span style="display:flex;"><span>WorkingDirectory<span style="color:#f92672">=</span>/home/test/docker
+</span></span><span style="display:flex;"><span>ExecStart<span style="color:#f92672">=</span>/usr/bin/docker compose up -d
+</span></span><span style="display:flex;"><span>ExecStop<span style="color:#f92672">=</span>/usr/bin/docker compose down
+</span></span><span style="display:flex;"><span>TimeoutStartSec<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>Install<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>WantedBy<span style="color:#f92672">=</span>multi-user.target
 </span></span></code></pre></div><p>Cambie el parámetro WorkingDirectory con la ruta de su proyecto docker. Y habilite el servicio para que se inicie automáticamente:</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">systemctl <span class="nb">enable</span> docker-compose-app
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>systemctl enable docker-compose-app
 </span></span></code></pre></div><h3 id="usando-restartalways">Usando restart:always</h3>
 <p>Utilice <code>restart: always</code> en su archivo <code>docker-compose.yaml</code> a cada servicio que desee reiniciar en el archivo docker-compose.yml.
 <code>docker-compose up -d</code> volverá a iniciar el contenedor desde las imágenes.</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">nginx:   
-</span></span><span class="line"><span class="cl">    restart: always   
-</span></span><span class="line"><span class="cl">    image: nginx   
-</span></span><span class="line"><span class="cl">    ports:
-</span></span><span class="line"><span class="cl">      - <span class="s2">&#34;80:80&#34;</span>
-</span></span><span class="line"><span class="cl">      - <span class="s2">&#34;443:443&#34;</span>
-</span></span><span class="line"><span class="cl">    links:
-</span></span><span class="line"><span class="cl">      - other_container:other_container
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nginx:   
+</span></span><span style="display:flex;"><span>    restart: always   
+</span></span><span style="display:flex;"><span>    image: nginx   
+</span></span><span style="display:flex;"><span>    ports:
+</span></span><span style="display:flex;"><span>      - <span style="color:#e6db74">&#34;80:80&#34;</span>
+</span></span><span style="display:flex;"><span>      - <span style="color:#e6db74">&#34;443:443&#34;</span>
+</span></span><span style="display:flex;"><span>    links:
+</span></span><span style="display:flex;"><span>      - other_container:other_container
 </span></span></code></pre></div><p>Ahora si reinicías la máquina o si apagás y prendés la VPS, el servicio se levantará sólo.
 <strong>Observación: Esto sólo funciona si tenés el docker.service habilitado al iniciar el sistema</strong>
 Eso se hace con el siguiente comando:</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">$ sudo systemctl <span class="nb">enable</span> docker
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ sudo systemctl enable docker
 </span></span></code></pre></div><h2 id="instalar-certbot-de-letsencrypt">Instalar certbot de LetsEncrypt</h2>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-console" data-lang="console"><span class="line"><span class="cl"><span class="go">sudo apt update
-</span></span></span><span class="line"><span class="cl"><span class="go">sudo apt install -y certbot
-</span></span></span></code></pre></div><p>Ahora podemos ejecutar Certbot para obtener nuestro certificado. Usaremos la opción &ndash;standalone para decirle a Certbot que maneje el desafío usando su propio servidor web integrado. La opción &ndash;preferred-challenges le indica a Certbot que use el puerto 80 o el puerto 443. Si está usando el puerto 80, querrá &ndash;preferred-challenges http. Para el puerto 443 sería &ndash;preferred-challenges tls-sni. Finalmente, el indicador -d se usa para especificar el dominio para el que solicita un certificado. Puede agregar varias opciones -d para cubrir varios dominios en un solo certificado.</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># http</span>
-</span></span><span class="line"><span class="cl">sudo certbot certonly --standalone --preferred-challenges http -d example.com
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-console" data-lang="console"><span style="display:flex;"><span>sudo apt update
+</span></span><span style="display:flex;"><span>sudo apt install -y certbot
+</span></span></code></pre></div><p>Ahora podemos ejecutar Certbot para obtener nuestro certificado. Usaremos la opción &ndash;standalone para decirle a Certbot que maneje el desafío usando su propio servidor web integrado. La opción &ndash;preferred-challenges le indica a Certbot que use el puerto 80 o el puerto 443. Si está usando el puerto 80, querrá &ndash;preferred-challenges http. Para el puerto 443 sería &ndash;preferred-challenges tls-sni. Finalmente, el indicador -d se usa para especificar el dominio para el que solicita un certificado. Puede agregar varias opciones -d para cubrir varios dominios en un solo certificado.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># http</span>
+</span></span><span style="display:flex;"><span>sudo certbot certonly --standalone --preferred-challenges http -d example.com
 </span></span></code></pre></div><p><a href="https://www.digitalocean.com/community/tutorials/how-to-use-certbot-standalone-mode-to-retrieve-let-s-encrypt-ssl-certificates-on-ubuntu-16-04">https://www.digitalocean.com/community/tutorials/how-to-use-certbot-standalone-mode-to-retrieve-let-s-encrypt-ssl-certificates-on-ubuntu-16-04</a></p>
 <blockquote>
 <p>Los certificados de Let&rsquo;s Encrypt solo son válidos por noventa días. Esto es para alentar a los usuarios a automatizar su proceso de renovación de certificados. El paquete certbot que instalamos se encarga de esto agregando un script de renovación a /etc/cron.d. Este script se ejecuta dos veces al día y renovará cualquier certificado que se encuentre dentro de los treinta días posteriores a su vencimiento.</p>
@@ -786,31 +786,31 @@ Eso se hace con el siguiente comando:</p>
 <p><a href="https://stackoverflow.com/questions/42300579/letsencrypt-certbot-multiple-renew-hooks">https://stackoverflow.com/questions/42300579/letsencrypt-certbot-multiple-renew-hooks</a>
 Si coloca algún script en la carpeta &ldquo;post&rdquo;, se ejecutará automáticamente después de la renovación. No olvide hacerlo ejecutable agregando +x al script.</p>
 <p>Estoy usando solo un &ldquo;001-restart-nginx.sh&rdquo; con el siguiente contenido:</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-console" data-lang="console"><span class="line"><span class="cl"><span class="gp">#</span>!/bin/bash
-</span></span><span class="line"><span class="cl"><span class="go">echo &#34;ssl certs updated&#34; &amp;&amp; service nginx restart
-</span></span></span></code></pre></div><p>Eso va en <code>/etc/letsencrypt/renewal-hooks/post/001-restart-nginx.sh</code></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-console" data-lang="console"><span style="display:flex;"><span>#!/bin/bash
+</span></span><span style="display:flex;"><span>echo &#34;ssl certs updated&#34; &amp;&amp; service nginx restart
+</span></span></code></pre></div><p>Eso va en <code>/etc/letsencrypt/renewal-hooks/post/001-restart-nginx.sh</code></p>
 <p>De esta manera, no es necesario proporcionar manualmente los parámetros &ndash;post-hook con ciertas instrucciones.</p>
 <p>En el proceso de renovación real verá algo como esto:</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-console" data-lang="console"><span class="line"><span class="cl"><span class="go">- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-</span></span></span><span class="line"><span class="cl"><span class="go">Congratulations, all renewals succeeded. The following certs have been renewed:
-</span></span></span><span class="line"><span class="cl"><span class="go">  /etc/letsencrypt/live/&lt;your-domain-name&gt;/fullchain.pem (success)
-</span></span></span><span class="line"><span class="cl"><span class="go">- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-</span></span></span><span class="line"><span class="cl"><span class="go">Running post-hook command: /etc/letsencrypt/renewal-hooks/post/001-restart-nginx.sh
-</span></span></span><span class="line"><span class="cl"><span class="go">Output from post-hook command 001-restart-nginx.sh:
-</span></span></span><span class="line"><span class="cl"><span class="go">ssl certs updated
-</span></span></span></code></pre></div><h2 id="otra-forma">Otra forma</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-console" data-lang="console"><span style="display:flex;"><span>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+</span></span><span style="display:flex;"><span>Congratulations, all renewals succeeded. The following certs have been renewed:
+</span></span><span style="display:flex;"><span>  /etc/letsencrypt/live/&lt;your-domain-name&gt;/fullchain.pem (success)
+</span></span><span style="display:flex;"><span>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+</span></span><span style="display:flex;"><span>Running post-hook command: /etc/letsencrypt/renewal-hooks/post/001-restart-nginx.sh
+</span></span><span style="display:flex;"><span>Output from post-hook command 001-restart-nginx.sh:
+</span></span><span style="display:flex;"><span>ssl certs updated
+</span></span></code></pre></div><h2 id="otra-forma">Otra forma</h2>
 <p>También puedes configurar hooks (y otras opciones si lo deseas) como opciones globales en el archivo <code>/etc/letsencrypt/cli.ini</code> (ver documentación) de esta manera:</p>
-<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-console" data-lang="console"><span class="line"><span class="cl"><span class="gp">#</span> Global config <span class="k">for</span> letsencrypt runs
-</span></span><span class="line"><span class="cl"><span class="gp">#</span>
-</span></span><span class="line"><span class="cl"><span class="c1"># Note that these options apply automatically to all use of Certbot for</span>
-</span></span><span class="line"><span class="cl"><span class="gp">#</span> obtaining or renewing certificates, so options specific to a single
-</span></span><span class="line"><span class="cl"><span class="gp">#</span> certificate on a system with several certificates should not be placed
-</span></span><span class="line"><span class="cl"><span class="gp">#</span> here.
-</span></span><span class="line"><span class="cl"><span class="err">
-</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="go">renew-hook = service postfix reload
-</span></span></span><span class="line"><span class="cl"><span class="go"></span><span class="gp">#</span>post-hook <span class="o">=</span> service nginx reload
-</span></span><span class="line"><span class="cl"><span class="go">post-hook = docker compose -f /home/test/docker/docker-compose.yml restart app
-</span></span></span></code></pre></div><p>Primero debe crear el archivo en la mayoría de los sistemas. Letsencrypt viene sin.
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-console" data-lang="console"><span style="display:flex;"><span># Global config <span style="color:#66d9ef">for</span> letsencrypt runs
+</span></span><span style="display:flex;"><span>#
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Note that these options apply automatically to all use of Certbot for</span>
+</span></span><span style="display:flex;"><span># obtaining or renewing certificates, so options specific to a single
+</span></span><span style="display:flex;"><span># certificate on a system with several certificates should not be placed
+</span></span><span style="display:flex;"><span># here.
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span>renew-hook = service postfix reload
+</span></span><span style="display:flex;"><span>#post-hook <span style="color:#f92672">=</span> service nginx reload
+</span></span><span style="display:flex;"><span>post-hook = docker compose -f /home/test/docker/docker-compose.yml restart app
+</span></span></code></pre></div><p>Primero debe crear el archivo en la mayoría de los sistemas. Letsencrypt viene sin.
 También puede crear una versión específica del certificado en cada carpeta de <code>renewal</code> si no desea globalizarse.</p>
 
 </div>
