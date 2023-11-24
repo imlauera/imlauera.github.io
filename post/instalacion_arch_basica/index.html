@@ -27,7 +27,7 @@ De ahí seleccioná gpt en la lista.
 Explicación de por qué gpt:
 To boot MBR under UEFI, you need CSM."><meta itemprop="datePublished" content="2023-11-22T02:05:50-03:00" />
 <meta itemprop="dateModified" content="2023-11-22T02:05:50-03:00" />
-<meta itemprop="wordCount" content="676">
+<meta itemprop="wordCount" content="693">
 <meta itemprop="keywords" content="archlinux,full,installation," />
   <meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="Instalación de ArchLinux completa"/>
@@ -843,30 +843,31 @@ Tenés que ubicar el efi y ejecutarlo</p>
 </span></span><span style="display:flex;"><span>cd grub
 </span></span><span style="display:flex;"><span>grubx64.efi
 </span></span></code></pre></div><h5 id="legacy-dosmbr">legacy dos/mbr</h5>
-<p>grub-install /dev/sda &ndash;recheck</p>
-<p>grub-mkconfig -o /boot/grub/grub.cfg
-exit
-reboot</p>
-<pre tabindex="0"><code>
-#### Crear un usuario e instalar xfce
-```bash
-# nmtui (para conectarse wifi)
-# useradd -m -g users -G video,audio,wheel nombre_usuario
-# passwd nombre_usuario ## agregar password
-# vim /etc/sudoers y agregá tu usuario copiando la linea de root y sustituyendo root por tu nombre de usuario
-# pacman -S pipewire # servidor de audio
-# pacman -Syu xorg xfce4 xfce4-goodies 
-</code></pre><p>Ingresá desde tu usuario y creá un archivo .xinitrc adentro poné</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>grub-install /dev/sda --recheck
+</span></span></code></pre></div><h6 id="luego-de-instalar-el-grub-se-lo-configura-con-el-siguiente-comando">Luego de instalar el grub se lo configura con el siguiente comando:</h6>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>grub-mkconfig -o /boot/grub/grub.cfg
+</span></span><span style="display:flex;"><span>exit
+</span></span></code></pre></div><h5 id="ahora-salimos-del-chroot-y-reiniciamos">Ahora salimos del chroot y reiniciamos</h5>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>exit
+</span></span><span style="display:flex;"><span>reboot
+</span></span></code></pre></div><h4 id="crear-un-usuario-e-instalar-xfce">Crear un usuario e instalar xfce</h4>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-console" data-lang="console"><span style="display:flex;"><span># nmtui <span style="color:#f92672">(</span>para conectarse wifi<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span># useradd -m -g users -G video,audio,wheel nombre_usuario
+</span></span><span style="display:flex;"><span># passwd nombre_usuario <span style="color:#75715e">## agregar password</span>
+</span></span><span style="display:flex;"><span># vim /etc/sudoers y agregá tu usuario copiando la linea de root y sustituyendo root por tu nombre de usuario
+</span></span><span style="display:flex;"><span># pacman -S pipewire <span style="color:#75715e"># servidor de audio</span>
+</span></span><span style="display:flex;"><span># pacman -Syu xorg xfce4 xfce4-goodies 
+</span></span></code></pre></div><p>Ingresá desde tu usuario y creá un archivo .xinitrc adentro poné</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>exec xfce4-session
 </span></span></code></pre></div><h3 id="agregar-keymap-keyboard-y-touchpad-synaptics">agregar keymap keyboard y touchpad synaptics</h3>
-<pre tabindex="0"><code># /etc/X11/xorg.conf.d/00-keyboard.conf
-Section &#34;InputClass&#34;
-        Identifier &#34;system-keyboard&#34;
-        MatchIsKeyboard &#34;on&#34;
-        Option &#34;XkbLayout&#34; &#34;es&#34;
-        Option &#34;XkbModel&#34; &#34;pc104&#34;
-EndSection
-</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-console" data-lang="console"><span style="display:flex;"><span># /etc/X11/xorg.conf.d/70-synaptics.conf
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-console" data-lang="console"><span style="display:flex;"><span># /etc/X11/xorg.conf.d/00-keyboard.conf
+</span></span><span style="display:flex;"><span>Section &#34;InputClass&#34;
+</span></span><span style="display:flex;"><span>        Identifier &#34;system-keyboard&#34;
+</span></span><span style="display:flex;"><span>        MatchIsKeyboard &#34;on&#34;
+</span></span><span style="display:flex;"><span>        Option &#34;XkbLayout&#34; &#34;es&#34;
+</span></span><span style="display:flex;"><span>        Option &#34;XkbModel&#34; &#34;pc104&#34;
+</span></span><span style="display:flex;"><span>EndSection
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-console" data-lang="console"><span style="display:flex;"><span># /etc/X11/xorg.conf.d/70-synaptics.conf
 </span></span><span style="display:flex;"><span>Section &#34;InputClass&#34;
 </span></span><span style="display:flex;"><span>    Identifier &#34;touchpad&#34;
 </span></span><span style="display:flex;"><span>    Driver &#34;synaptics&#34;
