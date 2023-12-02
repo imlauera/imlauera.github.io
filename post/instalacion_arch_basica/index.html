@@ -27,7 +27,7 @@ De ahí seleccioná gpt en la lista.
 Explicación de por qué gpt:
 To boot MBR under UEFI, you need CSM."><meta itemprop="datePublished" content="2023-11-22T02:05:50-03:00" />
 <meta itemprop="dateModified" content="2023-11-22T02:05:50-03:00" />
-<meta itemprop="wordCount" content="812">
+<meta itemprop="wordCount" content="980">
 <meta itemprop="keywords" content="archlinux,full,installation," />
   <meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="Instalación de ArchLinux completa"/>
@@ -939,7 +939,43 @@ Tenés que ubicar el efi y ejecutarlo</p>
 </span></span><span style="display:flex;"><span>    # No error logging
 </span></span><span style="display:flex;"><span>    #dwm &gt;/dev/null 2&gt;&amp;1
 </span></span><span style="display:flex;"><span>done
-</span></span></code></pre></div>
+</span></span></code></pre></div><p>sudo pacman -S git
+git clone <a href="https://git.suckless.org/dwm">https://git.suckless.org/dwm</a>
+git clone <a href="https://git.suckless.org/st">https://git.suckless.org/st</a>
+git clone <a href="https://git.suckless.org/dwmstatus">https://git.suckless.org/dwmstatus</a>
+curl -L <a href="https://www.brain-dump.org/projects/dvtm/dvtm-0.15.tar.gz">https://www.brain-dump.org/projects/dvtm/dvtm-0.15.tar.gz</a> -o dvtm.tar.gz
+sudo pacman -S xorg-server xorg-xinit libx11 libxinerama libxft webkit2gtk
+cd st
+sudo make clean install
+cd dwm
+vim config.h</p>
+<p>static const char *termcmd[]  = { &ldquo;st&rdquo;,&quot;-e&quot;,&ldquo;dvtm&rdquo;, NULL };</p>
+<p>static const char *up_vol[]   = { &ldquo;pactl&rdquo;, &ldquo;set-sink-volume&rdquo;, &ldquo;@DEFAULT_SINK@&rdquo;, &ldquo;+10%&rdquo;,   NULL };
+static const char *down_vol[] = { &ldquo;pactl&rdquo;, &ldquo;set-sink-volume&rdquo;, &ldquo;@DEFAULT_SINK@&rdquo;, &ldquo;-10%&rdquo;,   NULL };
+static const char *mute_vol[] = { &ldquo;pactl&rdquo;, &ldquo;set-sink-mute&rdquo;,   &ldquo;@DEFAULT_SINK@&rdquo;, &ldquo;toggle&rdquo;, NULL };</p>
+<p>static const char *brighter[] = { &ldquo;brightnessctl&rdquo;, &ldquo;set&rdquo;, &ldquo;10%+&rdquo;, NULL };
+static const char *dimmer[]   = { &ldquo;brightnessctl&rdquo;, &ldquo;set&rdquo;, &ldquo;10%-&rdquo;, NULL };</p>
+<p>mkdir $HOME/pics
+scrot $HOME/pics/%m-%d-%Y-%H%M%S.png
+scrot $HOME/pics/%m-%d-%Y-%H%M%S.png &ndash;select &ndash;line mode=edge</p>
+<pre><code>   { 0,         XK_Print, spawn, SHCMD(&quot;/path/to/scripts/screenshot.sh&quot;) },
+   { ShiftMask, XK_Print, spawn, SHCMD(&quot;/path/to/scripts/screenshotsel.sh&quot;) },
+</code></pre>
+<p>sudo make clean install</p>
+<p>.xinitrc:
+dwmstatus &amp;
+feh &ndash;bg-center &ldquo;/home/esotericwarfare/wall.png&rdquo; &amp;
+st -e irssi &amp;
+chromium &amp;
+exec startdwm</p>
+<p>[esotericwarfare@arch ~]$ cat /usr/bin/startdwm
+while true; do
+# Log stderror to a file
+dwm 2&gt; ~/.dwm.log
+# No error logging
+#dwm &gt;/dev/null 2&gt;&amp;1
+done</p>
+
 </div>
 
 
