@@ -19,7 +19,7 @@ Mejor mirá como instalé el GRUB en ArchLinux bajo UEFI y agregá la opción --
 <meta itemprop="description" content="¿UEFI o BIOS? La forma más sencilla de saber si el sistema se ha iniciado en modo UEFI o BIOS es buscar una carpeta /sys/firmware/efi. La carpeta estará presente si su sistema utiliza UEFI.
 Mejor mirá como instalé el GRUB en ArchLinux bajo UEFI y agregá la opción --removable si cuando booteás te lleva a la EFI shell, y en caso de archlinux no hace falta hacer mount --bind sino que sólo con montar la particion de root y de efi y ejecutar arch-chroot /mnt basta."><meta itemprop="datePublished" content="2023-11-10T04:51:31-03:00" />
 <meta itemprop="dateModified" content="2023-11-10T04:51:31-03:00" />
-<meta itemprop="wordCount" content="477">
+<meta itemprop="wordCount" content="543">
 <meta itemprop="keywords" content="" />
   <meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="Recuperar grub en debian desde usb live"/>
@@ -830,6 +830,28 @@ Luego ejecutá reboot</p>
 </span></span><span style="display:flex;"><span>grub2-mkconfig -o /boot/grub2/grub.cfg
 </span></span><span style="display:flex;"><span>grub2-install --target<span style="color:#f92672">=</span>i386-pc /dev/sda
 </span></span></code></pre></div><p><a href="https://www.maketecheasier.com/restore-grub-2-as-the-main-bootloader/">https://www.maketecheasier.com/restore-grub-2-as-the-main-bootloader/</a></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo mount /dev/sdb8 /mnt 
+</span></span><span style="display:flex;"><span>sudo mount /dev/sdb6 /mnt/boot 
+</span></span><span style="display:flex;"><span>sudo mount /dev/sdb2 /mnt/boot/efi
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>sudo mount --bind /dev /mnt/dev <span style="color:#f92672">&amp;&amp;</span>
+</span></span><span style="display:flex;"><span>sudo mount --bind /dev/pts /mnt/dev/pts <span style="color:#f92672">&amp;&amp;</span>
+</span></span><span style="display:flex;"><span>sudo mount --bind /proc /mnt/proc <span style="color:#f92672">&amp;&amp;</span>
+</span></span><span style="display:flex;"><span>sudo mount --bind /sys /mnt/sys
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>sudo chroot /mnt
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>grub-install --target<span style="color:#f92672">=</span>x86_64-efi /dev/sdb
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>grub-install --recheck /dev/sdb
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>exit <span style="color:#f92672">&amp;&amp;</span>
+</span></span><span style="display:flex;"><span>sudo umount /mnt/sys <span style="color:#f92672">&amp;&amp;</span>
+</span></span><span style="display:flex;"><span>sudo umount /mnt/proc <span style="color:#f92672">&amp;&amp;</span>
+</span></span><span style="display:flex;"><span>sudo umount /mnt/dev/pts <span style="color:#f92672">&amp;&amp;</span>
+</span></span><span style="display:flex;"><span>sudo umount /mnt/dev <span style="color:#f92672">&amp;&amp;</span>
+</span></span><span style="display:flex;"><span>sudo umount /mnt
+</span></span></code></pre></div><p><a href="https://askubuntu.com/questions/831216/how-can-i-reinstall-grub-to-the-efi-partition">https://askubuntu.com/questions/831216/how-can-i-reinstall-grub-to-the-efi-partition</a></p>
 
 </div>
 
