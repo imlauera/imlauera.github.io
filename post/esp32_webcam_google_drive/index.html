@@ -9,7 +9,7 @@
   <meta property="og:title" content="Subir capturas con una esp32 webcam a google drive" />
 <meta property="og:description" content="Me compré una cámara ESP32 de MercadoLibre y seguí esta guía para subir las fotos a google drive. https://web.archive.org/web/20230608061848/https://www.gsampallo.com/2019/10/13/esp32-cam-subir-fotos-a-google-drive/. Backup: https://archive.is/ABArm
 Se usa google script. Hice un pequeño cambio en el código agregué sensores para que la cámara tenga una mejor calidad cuando hay mucha luz o poca luz y forcé el http en lugar del https porque no funcionaba con el siguiente parámetro: client.setInsecure();
-Para subir el código al ESP32 Arduino Tenés que puentear GND(ground) con GPIO0 para poder programarlo." />
+Google Script Accedé a Google Script: https://script." />
 <meta property="og:type" content="article" />
 <meta property="og:url" content="https://imlauera.is-a.dev/post/esp32_webcam_google_drive/" /><meta property="article:section" content="post" />
 <meta property="article:published_time" content="2023-11-10T04:51:54-03:00" />
@@ -19,15 +19,15 @@ Para subir el código al ESP32 Arduino Tenés que puentear GND(ground) con GPIO0
   <meta itemprop="name" content="Subir capturas con una esp32 webcam a google drive">
 <meta itemprop="description" content="Me compré una cámara ESP32 de MercadoLibre y seguí esta guía para subir las fotos a google drive. https://web.archive.org/web/20230608061848/https://www.gsampallo.com/2019/10/13/esp32-cam-subir-fotos-a-google-drive/. Backup: https://archive.is/ABArm
 Se usa google script. Hice un pequeño cambio en el código agregué sensores para que la cámara tenga una mejor calidad cuando hay mucha luz o poca luz y forcé el http en lugar del https porque no funcionaba con el siguiente parámetro: client.setInsecure();
-Para subir el código al ESP32 Arduino Tenés que puentear GND(ground) con GPIO0 para poder programarlo."><meta itemprop="datePublished" content="2023-11-10T04:51:54-03:00" />
+Google Script Accedé a Google Script: https://script."><meta itemprop="datePublished" content="2023-11-10T04:51:54-03:00" />
 <meta itemprop="dateModified" content="2023-11-10T04:51:54-03:00" />
-<meta itemprop="wordCount" content="1106">
+<meta itemprop="wordCount" content="1271">
 <meta itemprop="keywords" content="" />
   <meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="Subir capturas con una esp32 webcam a google drive"/>
 <meta name="twitter:description" content="Me compré una cámara ESP32 de MercadoLibre y seguí esta guía para subir las fotos a google drive. https://web.archive.org/web/20230608061848/https://www.gsampallo.com/2019/10/13/esp32-cam-subir-fotos-a-google-drive/. Backup: https://archive.is/ABArm
 Se usa google script. Hice un pequeño cambio en el código agregué sensores para que la cámara tenga una mejor calidad cuando hay mucha luz o poca luz y forcé el http en lugar del https porque no funcionaba con el siguiente parámetro: client.setInsecure();
-Para subir el código al ESP32 Arduino Tenés que puentear GND(ground) con GPIO0 para poder programarlo."/>
+Google Script Accedé a Google Script: https://script."/>
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -47,7 +47,7 @@ Para subir el código al ESP32 Arduino Tenés que puentear GND(ground) con GPIO0
   <meta name="author" content="Imlauer.">
   <meta name="description" content="Me compré una cámara ESP32 de MercadoLibre y seguí esta guía para subir las fotos a google drive. https://web.archive.org/web/20230608061848/https://www.gsampallo.com/2019/10/13/esp32-cam-subir-fotos-a-google-drive/. Backup: https://archive.is/ABArm
 Se usa google script. Hice un pequeño cambio en el código agregué sensores para que la cámara tenga una mejor calidad cuando hay mucha luz o poca luz y forcé el http en lugar del https porque no funcionaba con el siguiente parámetro: client.setInsecure();
-Para subir el código al ESP32 Arduino Tenés que puentear GND(ground) con GPIO0 para poder programarlo.">
+Google Script Accedé a Google Script: https://script.">
 </head>
 <body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
   <div class="navbar-brand">
@@ -733,6 +733,32 @@ Para subir el código al ESP32 Arduino Tenés que puentear GND(ground) con GPIO0
 <div class="content is-medium">
   <p>Me compré una cámara ESP32 de MercadoLibre y seguí esta guía para subir las fotos a google drive. <a href="https://web.archive.org/web/20230608061848/https://www.gsampallo.com/2019/10/13/esp32-cam-subir-fotos-a-google-drive/">https://web.archive.org/web/20230608061848/https://www.gsampallo.com/2019/10/13/esp32-cam-subir-fotos-a-google-drive/</a>. Backup: <a href="https://archive.is/ABArm">https://archive.is/ABArm</a></p>
 <p>Se usa google script. Hice un pequeño cambio en el código agregué sensores para que la cámara tenga una mejor calidad cuando hay mucha luz o poca luz y forcé el http en lugar del https porque no funcionaba con el siguiente parámetro: <code>client.setInsecure()</code>;</p>
+<h3 id="google-script">Google Script</h3>
+<p>Accedé a Google Script: <a href="https://script.google.com/">https://script.google.com/</a>  &gt; New Project
+Ahí pegá este código:</p>
+<pre tabindex="0"><code>function doPost(e) {
+  var data = Utilities.base64Decode(e.parameters.data);
+  var nombreArchivo = Utilities.formatDate(new Date(), &#34;GMT-3&#34;, &#34;yyyyMMdd_HHmmss&#34;)+&#34;.jpg&#34;;
+  var blob = Utilities.newBlob(data, e.parameters.mimetype, nombreArchivo );
+  
+  
+   // Save the photo to Google Drive
+  var folder, folders = DriveApp.getFoldersByName(&#34;ESP32-CAM&#34;);
+  if (folders.hasNext()) {
+    folder = folders.next();
+  } else {
+    folder = DriveApp.createFolder(&#34;ESP32-CAM&#34;);
+  }
+  var file = folder.createFile(blob); 
+  return ContentService.createTextOutput(&#39;Completo&#39;)
+}
+</code></pre><p>El paso siguiente es guardar el script y publicarlo como aplicación web, esto ultimo lo hacemos desde
+Publicar(Deploy) &gt; Implementar como aplicación web</p>
+<p>Debemos elegir que se ejecute como nuestro usuario y que cualquier persona incluso los anónimos tengan acceso a la aplicación; luego confirmamos las opciones que se nos presenta.</p>
+<p>En la ultima opción Google nos mostrar una url donde estará publicada nuestra aplicación; debemos copiar esta url, la utilizaremos en el programa del ESP32-CAM.</p>
+<p>La url provista tendrá el siguiente formato:</p>
+<p><code>https://script.google.com/macros/s/XXXXXXXXXXXXXX/exec</code>
+Donde las XXXXXXXXXXXXXX serán reemplazadas por una secuencia alfanumérica que identifica a la aplicación.</p>
 <h5 id="para-subir-el-código-al-esp32-arduino">Para subir el código al ESP32 Arduino</h5>
 <p>Tenés que puentear GND(ground) con GPIO0 para poder programarlo. Explicado en este video: <a href="https://m.youtube.com/watch?v=oCA7XZl8ztk&amp;feature=youtu.be">https://m.youtube.com/watch?v=oCA7XZl8ztk&amp;feature=youtu.be</a></p>
 <p>Primero instalá arduino con en distros basadas en debian: <code>sudo apt install arduino</code> o en arch: <code>pacman -S arduino</code> si no funciona así podés instalar el paquete de la AUR <code>yay -S arduino-ide-bin</code></p>
