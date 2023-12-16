@@ -27,7 +27,7 @@ De ahí seleccioná gpt en la lista.
 Explicación de por qué gpt:
 To boot MBR under UEFI, you need CSM."><meta itemprop="datePublished" content="2023-11-22T02:05:50-03:00" />
 <meta itemprop="dateModified" content="2023-11-22T02:05:50-03:00" />
-<meta itemprop="wordCount" content="3700">
+<meta itemprop="wordCount" content="3699">
 <meta itemprop="keywords" content="archlinux,full,installation," />
   <meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="Instalación de ArchLinux completa"/>
@@ -1435,71 +1435,70 @@ vsync = true
 </span></span></code></pre></div><hr>
 <h3 id="pacman">Pacman</h3>
 <p>cheat:pacman</p>
-<h4 id="to-search-for-a-package">To search for a package:</h4>
+<h5 id="to-search-for-a-package">To search for a package:</h5>
 <p><code>pacman -Ss &lt;package&gt;...</code></p>
-<h4 id="to-update-the-local-package-base-and-upgrade-all-out-of-date-packages">To update the local package base and upgrade all out-of-date packages:</h4>
+<h5 id="to-update-the-local-package-base-and-upgrade-all-out-of-date-packages">To update the local package base and upgrade all out-of-date packages:</h5>
 <p><code>pacman -Suy</code></p>
-<h4 id="to-install-a-package">To install a package:</h4>
+<h5 id="to-install-a-package">To install a package:</h5>
 <p><code>pacman -S &lt;package&gt;...</code></p>
-<h4 id="to-uninstall-a-package">To uninstall a package:</h4>
+<h5 id="to-uninstall-a-package">To uninstall a package:</h5>
 <p><code>pacman -R &lt;package&gt;...</code></p>
-<h4 id="to-uninstall-a-package-and-its-depedencies-removing-all-new-orphans">To uninstall a package and its depedencies, removing all new orphans:</h4>
+<h5 id="to-uninstall-a-package-and-its-depedencies-removing-all-new-orphans">To uninstall a package and its depedencies, removing all new orphans:</h5>
 <p><code>pacman -Rcs &lt;package&gt;...</code></p>
-<h4 id="to-get-information-about-package">To get information about package:</h4>
+<h5 id="to-get-information-about-package">To get information about package:</h5>
 <p><code>pacman -Si &lt;package&gt;...</code></p>
-<h4 id="to-install-a-package-from-builded-package-file-tarxz">To install a package from builded package file (.tar.xz):</h4>
+<h5 id="to-install-a-package-from-builded-package-file-tarxz">To install a package from builded package file (.tar.xz):</h5>
 <p><code>pacman -U &lt;file&gt;</code></p>
-<h4 id="to-list-the-commands-provided-by-an-installed-package">To list the commands provided by an installed package:</h4>
+<h5 id="to-list-the-commands-provided-by-an-installed-package">To list the commands provided by an installed package:</h5>
 <p><code>pacman -Ql &lt;package&gt;... | sed -n -e 's/.*\/bin\///p' | tail -n +2</code></p>
-<h4 id="to-list-explicitly-installed-packages">To list explicitly installed packages:</h4>
+<h5 id="to-list-explicitly-installed-packages">To list explicitly installed packages:</h5>
 <p><code>pacman -Qe</code></p>
-<h4 id="to-list-the-top-most-recent-explicitly-installed-packages-not-in-the-base-groups">To list the top-most recent explicitly installed packages (not in the base groups):</h4>
+<h5 id="to-list-the-top-most-recent-explicitly-installed-packages-not-in-the-base-groups">To list the top-most recent explicitly installed packages (not in the base groups):</h5>
 <p>expac &ndash;timefmt=&rsquo;%Y-%m-%d %T&rsquo; &lsquo;%l\t%n&rsquo; $(comm -23 &lt;(pacman -Qeq|sort) &lt;(pacman -Qqg base base-devel|sort)) | sort -r | head -20</p>
-<h4 id="to-list-orphan-packages-installed-as-dependencies-and-not-required-anymore">To list orphan packages (installed as dependencies and not required anymore):</h4>
+<h5 id="to-list-orphan-packages-installed-as-dependencies-and-not-required-anymore">To list orphan packages (installed as dependencies and not required anymore):</h5>
 <p><code>pacman -Qdt</code></p>
-<h4 id="to-list-installed-packages-sorted-by-size">To list installed packages sorted by size</h4>
+<h5 id="to-list-installed-packages-sorted-by-size">To list installed packages sorted by size</h5>
 <p><code>pacman -Qi | awk '/^Name/ {name=$3} /^Installed Size/ {print name, $4 substr($5,1,1)}' | column -t | sort -rhk2 | cat -n | tac</code></p>
-<h4 id="you-cant-directly-install-packages-from-the-arch-user-database-aur-with">You can&rsquo;t directly install packages from the Arch User Database (AUR) with</h4>
-<h4 id="pacman-you-need-an-aur-helper-program-such-as-yay-or-paru-to-do-that">pacman. You need an AUR helper program such as <code>yay</code> or <code>paru</code> to do that.</h4>
-<h4 id="but-considering-that-all-of-those-are-themselves-in-the-aur-here-is-how-to">But considering that all of those are themselves in the AUR, here is how to</h4>
-<h4 id="do-that-manualy">do that manualy.</h4>
-<h4 id="heading"></h4>
-<h4 id="installing-a-package-from-aur-is-a-relatively-simple-process">Installing a package from AUR is a relatively simple process:</h4>
-<h4 id="--make-sure-that-you-have-the-base-devel-and-git-packages-installed">- Make sure that you have the <code>base-devel</code> and <code>git</code> packages installed</h4>
-<h4 id="--retrieve-the-repository-corresponding-to-the-package-from-the-aur-website">- Retrieve the repository corresponding to the package from the AUR website</h4>
-<h4 id="--run-makepkg-in-the-cloned-repository">- Run <code>makepkg</code> in the cloned repository</h4>
-<h4 id="--use-pacman-to-install-the-created-package">- Use <code>pacman</code> to install the created package</h4>
-<h4 id="heading-1"></h4>
-<h4 id="ensure-that-have-base-devel-and-git">Ensure that have <code>base-devel</code> and <code>git</code>:</h4>
+<h5 id="you-cant-directly-install-packages-from-the-arch-user-database-aur-with">You can&rsquo;t directly install packages from the Arch User Database (AUR) with</h5>
+<h5 id="pacman-you-need-an-aur-helper-program-such-as-yay-or-paru-to-do-that">pacman. You need an AUR helper program such as <code>yay</code> or <code>paru</code> to do that.</h5>
+<h5 id="but-considering-that-all-of-those-are-themselves-in-the-aur-here-is-how-to">But considering that all of those are themselves in the AUR, here is how to</h5>
+<h5 id="do-that-manualy">do that manualy.</h5>
+<h5 id="heading"></h5>
+<h5 id="installing-a-package-from-aur-is-a-relatively-simple-process">Installing a package from AUR is a relatively simple process:</h5>
+<h5 id="--make-sure-that-you-have-the-base-devel-and-git-packages-installed">- Make sure that you have the <code>base-devel</code> and <code>git</code> packages installed</h5>
+<h5 id="--retrieve-the-repository-corresponding-to-the-package-from-the-aur-website">- Retrieve the repository corresponding to the package from the AUR website</h5>
+<h5 id="--run-makepkg-in-the-cloned-repository">- Run <code>makepkg</code> in the cloned repository</h5>
+<h5 id="--use-pacman-to-install-the-created-package">- Use <code>pacman</code> to install the created package</h5>
+<h5 id="heading-1"></h5>
+<h5 id="ensure-that-have-base-devel-and-git">Ensure that have <code>base-devel</code> and <code>git</code>:</h5>
 <p><code>pacman -S --needed base-devel git</code></p>
-<h4 id="retrieve-the-repository">Retrieve the repository:</h4>
+<h5 id="retrieve-the-repository">Retrieve the repository:</h5>
 <p>git clone <a href="https://aur.archlinux.org/">https://aur.archlinux.org/</a><!-- raw HTML omitted -->.git
 cd <!-- raw HTML omitted --></p>
-<h4 id="build-the-package">Build the package:</h4>
+<h5 id="build-the-package">Build the package:</h5>
 <p>makepkg -s</p>
-<h4 id="install">Install:</h4>
+<h5 id="install">Install:</h5>
 <p><code>sudo pacman -U &lt;package (.pkg.tar.zst)&gt;</code></p>
-<p>tldr:pacman</p>
-<h4 id="pacman-1">pacman</h4>
-<h4 id="arch-linux-package-manager-utility">Arch Linux package manager utility.</h4>
-<h4 id="some-subcommands-such-as-pacman-sync-have-their-own-usage-documentation">Some subcommands such as <code>pacman sync</code> have their own usage documentation.</h4>
-<h4 id="for-equivalent-commands-in-other-package-managers-see-httpswikiarchlinuxorgtitlepacmanrosetta">For equivalent commands in other package managers, see <a href="https://wiki.archlinux.org/title/Pacman/Rosetta">https://wiki.archlinux.org/title/Pacman/Rosetta</a>.</h4>
-<h4 id="more-information-httpsmanarchlinuxorgmanpacman8">More information: <a href="https://man.archlinux.org/man/pacman.8">https://man.archlinux.org/man/pacman.8</a>.</h4>
-<h4 id="synchronize-and-update-all-packages">Synchronize and update all packages:</h4>
+<h3 id="tldrpacman">tldr:pacman</h3>
+<h5 id="arch-linux-package-manager-utility">Arch Linux package manager utility.</h5>
+<h5 id="some-subcommands-such-as-pacman-sync-have-their-own-usage-documentation">Some subcommands such as <code>pacman sync</code> have their own usage documentation.</h5>
+<h5 id="for-equivalent-commands-in-other-package-managers-see-httpswikiarchlinuxorgtitlepacmanrosetta">For equivalent commands in other package managers, see <a href="https://wiki.archlinux.org/title/Pacman/Rosetta">https://wiki.archlinux.org/title/Pacman/Rosetta</a>.</h5>
+<h5 id="more-information-httpsmanarchlinuxorgmanpacman8">More information: <a href="https://man.archlinux.org/man/pacman.8">https://man.archlinux.org/man/pacman.8</a>.</h5>
+<h5 id="synchronize-and-update-all-packages">Synchronize and update all packages:</h5>
 <p><code>sudo pacman -Syu</code></p>
-<h4 id="install-a-new-package">Install a new package:</h4>
+<h5 id="install-a-new-package">Install a new package:</h5>
 <p><code>sudo pacman -S package_name</code></p>
-<h4 id="remove-a-package-and-its-dependencies">Remove a package and its dependencies:</h4>
+<h5 id="remove-a-package-and-its-dependencies">Remove a package and its dependencies:</h5>
 <p><code>sudo pacman -Rs package_name</code></p>
-<h4 id="search-the-package-database-for-a-regular-expression-or-keyword">Search the package database for a regular expression or keyword:</h4>
+<h5 id="search-the-package-database-for-a-regular-expression-or-keyword">Search the package database for a regular expression or keyword:</h5>
 <p><code>pacman -Ss &quot;search_pattern&quot;</code></p>
-<h4 id="list-installed-packages-and-versions">List installed packages and versions:</h4>
+<h5 id="list-installed-packages-and-versions">List installed packages and versions:</h5>
 <p><code>pacman -Q</code></p>
-<h4 id="list-only-the-explicitly-installed-packages-and-versions">List only the explicitly installed packages and versions:</h4>
+<h5 id="list-only-the-explicitly-installed-packages-and-versions">List only the explicitly installed packages and versions:</h5>
 <p><code>pacman -Qe</code></p>
-<h4 id="list-orphan-packages-installed-as-dependencies-but-not-actually-required-by-any-package">List orphan packages (installed as dependencies but not actually required by any package):</h4>
+<h5 id="list-orphan-packages-installed-as-dependencies-but-not-actually-required-by-any-package">List orphan packages (installed as dependencies but not actually required by any package):</h5>
 <p><code>pacman -Qtdq</code></p>
-<h4 id="empty-the-entire-pacman-cache">Empty the entire pacman cache:</h4>
+<h5 id="empty-the-entire-pacman-cache">Empty the entire pacman cache:</h5>
 <p><code>sudo pacman -Scc</code></p>
 
 </div>
