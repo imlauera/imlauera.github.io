@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+
+
+
+
+
+<head>
+  <meta property="og:title" content="Reversing: IDA PRO Free" />
+<meta property="og:description" content="Ayer estaba jugando un poco con IDA PRO aprendiendo un poco de ASM. https://hex-rays.com/ida-free/
+Analicemos el siguiente código
+int main(){ return -1; } Este es el código que nos genera el IDA:
+; Attributes: bp-based frame ; int __cdecl main(int argc, const char **argv, const char **envp) public main main proc near ; __unwind { push rbp ; Almacenar el registro RBP en la pila mov rbp, rsp ; Asigna a RBP el valor del registro apuntador RSP mov eax, 0FFFFFFFFh ; Mueve el -1 (escrito hexadecimal) al registro acumulador (eax)." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="/post/reversing_ida_pro_free/" /><meta property="article:section" content="post" />
+<meta property="article:published_time" content="2024-06-27T21:22:58-03:00" />
+<meta property="article:modified_time" content="2024-06-27T21:22:58-03:00" />
+
+  <meta itemprop="name" content="Reversing: IDA PRO Free">
+<meta itemprop="description" content="Ayer estaba jugando un poco con IDA PRO aprendiendo un poco de ASM. https://hex-rays.com/ida-free/
+Analicemos el siguiente código
+int main(){ return -1; } Este es el código que nos genera el IDA:
+; Attributes: bp-based frame ; int __cdecl main(int argc, const char **argv, const char **envp) public main main proc near ; __unwind { push rbp ; Almacenar el registro RBP en la pila mov rbp, rsp ; Asigna a RBP el valor del registro apuntador RSP mov eax, 0FFFFFFFFh ; Mueve el -1 (escrito hexadecimal) al registro acumulador (eax)."><meta itemprop="datePublished" content="2024-06-27T21:22:58-03:00" />
+<meta itemprop="dateModified" content="2024-06-27T21:22:58-03:00" />
+<meta itemprop="wordCount" content="444">
+<meta itemprop="keywords" content="" />
+  <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Reversing: IDA PRO Free"/>
+<meta name="twitter:description" content="Ayer estaba jugando un poco con IDA PRO aprendiendo un poco de ASM. https://hex-rays.com/ida-free/
+Analicemos el siguiente código
+int main(){ return -1; } Este es el código que nos genera el IDA:
+; Attributes: bp-based frame ; int __cdecl main(int argc, const char **argv, const char **envp) public main main proc near ; __unwind { push rbp ; Almacenar el registro RBP en la pila mov rbp, rsp ; Asigna a RBP el valor del registro apuntador RSP mov eax, 0FFFFFFFFh ; Mueve el -1 (escrito hexadecimal) al registro acumulador (eax)."/>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Reversing: IDA PRO Free
+    
+  </title>
+  <link rel="stylesheet" href='/css/site.min.css'>
+  <link rel="canonical" href="/post/reversing_ida_pro_free/">
+  <link rel="alternate" type="application/rss&#43;xml" href="/index.xml" title="Personal Blog">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="Ayer estaba jugando un poco con IDA PRO aprendiendo un poco de ASM. https://hex-rays.com/ida-free/
+Analicemos el siguiente código
+int main(){ return -1; } Este es el código que nos genera el IDA:
+; Attributes: bp-based frame ; int __cdecl main(int argc, const char **argv, const char **envp) public main main proc near ; __unwind { push rbp ; Almacenar el registro RBP en la pila mov rbp, rsp ; Asigna a RBP el valor del registro apuntador RSP mov eax, 0FFFFFFFFh ; Mueve el -1 (escrito hexadecimal) al registro acumulador (eax).">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="https://www.gravatar.com/avatar/79128d4c1a22cda8a371fd8b925477e3?s=128&d=identicon">
+      </figure>
+    </a>
+    <a class="navbar-item" href="/">
+      Personal Blog
+    </a>
+  </div>
+  
+  <div class="navbar-menu">
+    <div class="navbar-start">
+      
+      <a class="navbar-item" href="/tags/ads/">
+        
+        Ads
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/ai/">
+        
+        Ai
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/alpine/">
+        
+        Alpine
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/android/">
+        
+        Android
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/archivos/">
+        
+        Archivos
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/archlinux/">
+        
+        Archlinux
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/armado-pc/">
+        
+        Armado PC
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/audio/">
+        
+        Audio
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/bash/">
+        
+        Bash
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/beamer/">
+        
+        Beamer
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/binarios/">
+        
+        Binarios
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/bios/">
+        
+        Bios
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/buscador/">
+        
+        Buscador
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/c/">
+        
+        C
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/cambiar-dns/">
+        
+        Cambiar DNS
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/canales-de-audio/">
+        
+        Canales de audio
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/ch341a/">
+        
+        Ch341a
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/chat/">
+        
+        Chat
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/chatgpt/">
+        
+        Chatgpt
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/cifrar/">
+        
+        Cifrar
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/comandos/">
+        
+        Comandos
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/command-line-tool/">
+        
+        Command line tool
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/compile/">
+        
+        Compile
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/consola/">
+        
+        Consola
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/copilot/">
+        
+        Copilot
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/correoargentino/">
+        
+        Correoargentino
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/costo-envio/">
+        
+        Costo envio
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/counter/">
+        
+        Counter
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/cs/">
+        
+        Cs
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/curl/">
+        
+        Curl
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/dall-e/">
+        
+        Dall e
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/ddgr/">
+        
+        Ddgr
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/debian/">
+        
+        Debian
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/debian-testing/">
+        
+        Debian testing
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/desbloquear/">
+        
+        Desbloquear
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/desbloqueo/">
+        
+        Desbloqueo
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/descargar/">
+        
+        Descargar
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/digital/">
+        
+        Digital
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/dns/">
+        
+        DNS
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/domains/">
+        
+        Domains
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/duckduckgo/">
+        
+        Duckduckgo
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/elon-musk/">
+        
+        Elon musk
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/estafa/">
+        
+        Estafa
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/exif-viewer/">
+        
+        Exif viewer
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/extensiones/">
+        
+        Extensiones
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/false/">
+        
+        False
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/freebsd/">
+        
+        Freebsd
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/full/">
+        
+        Full
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/fzf/">
+        
+        Fzf
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/generacion-qt/">
+        
+        Generacion qt
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/gentoo/">
+        
+        Gentoo
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/gobierno/">
+        
+        Gobierno
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/google/">
+        
+        Google
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/hardware/">
+        
+        Hardware
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/howto/">
+        
+        Howto
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/index/">
+        
+        Index
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/instalacion/">
+        
+        Instalacion
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/install/">
+        
+        Install
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/installation/">
+        
+        Installation
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/ios/">
+        
+        I os
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/jpeg/">
+        
+        Jpeg
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/juegos/">
+        
+        Juegos
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/kvm/">
+        
+        Kvm
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/latex/">
+        
+        Latex
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/linux/">
+        
+        Linux
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/lista/">
+        
+        Lista
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/lokinet/">
+        
+        Lokinet
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/markdown/">
+        
+        Markdown
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/mpv/">
+        
+        Mpv
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/navegador/">
+        
+        Navegador
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/neovim/">
+        
+        Neovim
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/netbook/">
+        
+        Netbook
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/opencard/">
+        
+        Opencard
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/pandoc/">
+        
+        Pandoc
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/pinza-programadora/">
+        
+        Pinza programadora
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/png/">
+        
+        Png
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/ponzi/">
+        
+        Ponzi
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/powerpoint/">
+        
+        Powerpoint
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/premium/">
+        
+        Premium
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/presentaciones/">
+        
+        Presentaciones
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/publicidad/">
+        
+        Publicidad
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/pulseaudio/">
+        
+        Pulseaudio
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/punteros/">
+        
+        Punteros
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/qemu/">
+        
+        Qemu
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/qr/">
+        
+        Qr
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/quitar/">
+        
+        Quitar
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/radio/">
+        
+        Radio
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/remove/">
+        
+        Remove
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/resolucion/">
+        
+        Resolucion
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/spotify/">
+        
+        Spotify
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/stream/">
+        
+        Stream
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/svelte3/">
+        
+        Svelte3
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/systemd/">
+        
+        Systemd
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/texto-a-voz/">
+        
+        Texto a voz
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/tty/">
+        
+        Tty
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/vim/">
+        
+        Vim
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/virt-manager/">
+        
+        Virt manager
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/vpn/">
+        
+        VPN
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/webp/">
+        
+        Webp
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/xq/">
+        
+        Xq
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/youtube/">
+        
+        Youtube
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/yq/">
+        
+        Yq
+        
+      </a>
+      
+      <a class="navbar-item" href="/tags/zig/">
+        
+        Zig
+        
+      </a>
+      
+    </div>
+    
+    <div class="navbar-end">
+      
+      <a class="navbar-item" href="https://github.com/orf/" rel="noopener" target="_blank">
+        <span class="icon">
+          
+            <img alt="icons/svg/github.svg" src='/icons/svg/github.svg'>
+          
+        </span>
+      </a>
+      
+      
+      <a class="navbar-item" href="mailto:imlauerandres[at]gmail.com" target="_blank">
+        <span class="icon">
+          <img alt="email" src='/icons/svg/email.svg'>
+        </span>
+      </a>
+      
+      <a class="navbar-item" href="/index.xml" target="_blank">
+        <span class="icon">
+          <img alt="rss" src='/icons/svg/rss.svg'>
+        </span>
+      </a>
+      
+    </div>
+  </div>
+</nav>
+
+  <section>
+    <section class='hero is-small is-info is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Reversing: IDA PRO Free
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2024-06-27T21:22:58-03:00'>
+      June 27, 2024
+    </time>
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <p>Ayer estaba jugando un poco con IDA PRO aprendiendo un poco de ASM.
+<a href="https://hex-rays.com/ida-free/">https://hex-rays.com/ida-free/</a></p>
+<p>Analicemos el siguiente código</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">(){</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>Este es el código que nos genera el IDA:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-asm" data-lang="asm"><span class="line"><span class="cl"><span class="c1">; Attributes: bp-based frame
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl"><span class="c1">; int __cdecl main(int argc, const char **argv, const char **envp)
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nf">public</span> <span class="no">main</span>
+</span></span><span class="line"><span class="cl"><span class="nf">main</span> <span class="no">proc</span> <span class="no">near</span>
+</span></span><span class="line"><span class="cl"><span class="c1">; __unwind {
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nf">push</span>    <span class="no">rbp</span> <span class="c1">; Almacenar el registro RBP en la pila
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nf">mov</span>     <span class="no">rbp</span><span class="p">,</span> <span class="no">rsp</span> <span class="c1">; Asigna a RBP el valor del registro apuntador RSP
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nf">mov</span>     <span class="no">eax</span><span class="p">,</span> <span class="mi">0</span><span class="no">FFFFFFFFh</span> <span class="c1">; Mueve el -1 (escrito hexadecimal) al registro acumulador (eax).
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nf">pop</span>     <span class="no">rbp</span> <span class="c1">; Restauramos el valor inicial de RBP.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nf">retn</span>
+</span></span><span class="line"><span class="cl"><span class="c1">; } // starts at 1129
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nf">main</span> <span class="no">endp</span>
+</span></span><span class="line"><span class="cl"><span class="nf">_text</span> <span class="no">ends</span>
+</span></span></code></pre></div><p>Siguiente código:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">int</span> <span class="n">a</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="n">a</span><span class="o">=</span><span class="n">a</span><span class="o">+</span><span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>El IDA nos genera:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-asm" data-lang="asm"><span class="line"><span class="cl"><span class="c1">; Attributes: bp-based frame
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl"><span class="c1">; int __cdecl main(int argc, const char **argv, const char **envp)
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nf">public</span> <span class="no">main</span>
+</span></span><span class="line"><span class="cl"><span class="nf">main</span> <span class="no">proc</span> <span class="no">near</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nf">var_4</span><span class="err">=</span> <span class="no">dword</span> <span class="no">ptr</span> <span class="p">-</span><span class="mi">4</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">; __unwind {
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nf">push</span>    <span class="no">rbp</span> <span class="c1">; Almacenar el registro RBP en la pila
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nf">mov</span>     <span class="no">rbp</span><span class="p">,</span> <span class="no">rsp</span> <span class="c1">; Asigna a RBP el valor del registro apuntador RSP
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nf">mov</span>     <span class="p">[</span><span class="no">rbp</span><span class="err">+</span><span class="no">var_4</span><span class="p">],</span> <span class="mi">0</span> <span class="c1">; Almacena el valor 0 en la dirección de memoria correspondiente a la variable local var_4 dentro del marco de pila (stack frame) actual. `var_4` es una variable local que se encuentra a un desplazamiento de `-0x4` bytes desde rbp, ya que el stack crece hacia abajo en memoria. `[rbp+var_4]` es un modo de direccionamiento que calcula la dirección de memoria sumando el contenido de rbp (inicio del stack frame) y el desplazamiento `var_4 (-0x4 bytes)`.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl"><span class="nf">add</span>     <span class="p">[</span><span class="no">rbp</span><span class="err">+</span><span class="no">var_4</span><span class="p">],</span> <span class="mi">1</span> <span class="c1">; Toma el valor almacenado en la dirección de memoria correspondiente a la variable local `var_4` dentro de ese marco de la pila actual y suma 1 a ese valor.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nf">mov</span>     <span class="no">eax</span><span class="p">,</span> <span class="mi">0</span> <span class="c1">; eax es un registro que se utiliza para manipular datos
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nf">pop</span>     <span class="no">rbp</span> <span class="c1">; Restauramos el valor inicial de RBP.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nf">retn</span>
+</span></span><span class="line"><span class="cl"><span class="c1">; } // starts at 1129
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nf">main</span> <span class="no">endp</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nf">_text</span> <span class="no">ends</span>
+</span></span></code></pre></div><h4 id="siguiente-código">Siguiente código:</h4>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">char</span> <span class="o">*</span><span class="n">variable1</span> <span class="o">=</span> <span class="s">&#34;Hola&#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-asm" data-lang="asm"><span class="line"><span class="cl"><span class="c1">; Attributes: bp-based frame
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl"><span class="c1">; int __cdecl main(int argc, const char **argv, const char **envp)
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nf">public</span> <span class="no">main</span>
+</span></span><span class="line"><span class="cl"><span class="nf">main</span> <span class="no">proc</span> <span class="no">near</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nf">var_8</span><span class="err">=</span> <span class="no">qword</span> <span class="no">ptr</span> <span class="p">-</span><span class="mi">8</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">; __unwind {
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nf">push</span>    <span class="no">rbp</span> <span class="c1">; Almacenar el registro RBP en la pila
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nf">mov</span>     <span class="no">rbp</span><span class="p">,</span> <span class="no">rsp</span> <span class="c1">; Asigna a RBP el valor del registro apuntador RSP
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nf">lea</span>     <span class="no">rax</span><span class="p">,</span> <span class="no">aHola</span>      <span class="c1">; &#34;Hola&#34; ; Carga Hola en el registro rax.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nf">mov</span>     <span class="p">[</span><span class="no">rbp</span><span class="err">+</span><span class="no">var_8</span><span class="p">],</span> <span class="no">rax</span> <span class="c1">; Carga el contenido del registro rax(Hola) al registro rbp+var_8.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nf">mov</span>     <span class="no">eax</span><span class="p">,</span> <span class="mi">0</span> <span class="c1">; Carga 0 al registro eax para el return 0
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nf">pop</span>     <span class="no">rbp</span> <span class="c1">; Restauramos el valor inicial de RBP.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nf">retn</span>
+</span></span><span class="line"><span class="cl"><span class="c1">; } // starts at 1129
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nf">main</span> <span class="no">endp</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="nf">_text</span> <span class="no">ends</span>
+</span></span></code></pre></div>
+</div>
+
+
+      </div>
+    </section>
+  </section><footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a href="https://github.com/orf/bare-hugo-theme" target="_blank">Bare Hugo theme.</a>
+      
+      
+    </p>
+    
+  </div>
+</footer>
+
+
+</body>
+</html>
