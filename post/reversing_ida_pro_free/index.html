@@ -22,7 +22,7 @@ Analicemos el siguiente código
 C: int main(){ return -1; } Este es el código que nos genera el IDA:
 ASM: ; Attributes: bp-based frame ; int __cdecl main(int argc, const char **argv, const char **envp) public main main proc near ; __unwind { push rbp ; Almacenar el registro RBP en la pila mov rbp, rsp ; Asigna a RBP el valor del registro apuntador RSP mov eax, 0FFFFFFFFh ; Mueve el -1 (escrito hexadecimal) al registro acumulador (eax)."><meta itemprop="datePublished" content="2024-06-27T21:22:58-03:00" />
 <meta itemprop="dateModified" content="2024-06-27T21:22:58-03:00" />
-<meta itemprop="wordCount" content="452">
+<meta itemprop="wordCount" content="531">
 <meta itemprop="keywords" content="" />
   <meta name="twitter:card" content="summary"/>
 <meta name="twitter:title" content="Reversing: IDA PRO Free"/>
@@ -818,7 +818,16 @@ ASM: ; Attributes: bp-based frame ; int __cdecl main(int argc, const char **argv
 </span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nf">main</span> <span class="no">endp</span>
 </span></span><span class="line"><span class="cl">
 </span></span><span class="line"><span class="cl"><span class="nf">_text</span> <span class="no">ends</span>
-</span></span></code></pre></div>
+</span></span></code></pre></div><h4 id="siguiente-código-2">Siguiente código:</h4>
+<h3 id="c-3">C</h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">(){</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">int</span> <span class="n">i</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="k">for</span> <span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="mi">100</span><span class="p">;</span><span class="n">i</span><span class="o">++</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>Código ASM generado por IDA:
+<img src="/img/for.png" alt="IDA PRO FOR"></p>
+<p>En la imagen debajo de la cajita llamada loc_113A: se puede ver que compara el registro [rbp+var_4] con 63h que en hexadecimal representa 99, si es menor salta a loc_1136 y suma 1 al registro en donde está la variable i, si no es mayor entonces carga 0 al registro eax restaura el valor inicial de RBP y llama a return.</p>
+
 </div>
 
 
