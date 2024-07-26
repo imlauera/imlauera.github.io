@@ -21,7 +21,7 @@ Obteniendo información sobre la empresa Podemos usar https://opencorporates.com
 Búsqueda de subdominios. Google dork: site google.com -inurl:www O usando el comando sublist3r en kali: sublist3r -d google.com
 Obteniendo información sobre la empresa Podemos usar https://opencorporates.com para obtener direcciones, números de teléfonos, correos electrónicos, que tipo de servicios están dando, y demás información."><meta itemprop="datePublished" content="2024-07-24T22:57:44-03:00" />
 <meta itemprop="dateModified" content="2024-07-24T22:57:44-03:00" />
-<meta itemprop="wordCount" content="991">
+<meta itemprop="wordCount" content="1521">
 <meta itemprop="keywords" content="" />
   <meta name="twitter:card" content="summary"/><meta name="twitter:title" content="Ethical hacking"/>
 <meta name="twitter:description" content="Footprinting Es una técnica que se usa para juntar la máxima cantidad de información posible acerca de un target en específico para aprovechar la parte más vulnerable del sistema para atacar.
@@ -938,7 +938,8 @@ Genera una iso de un so para obtener contraseñas de windows?</p>
 <p><a href="https://vpnbook.com/freevpn">https://vpnbook.com/freevpn</a>
 <code>sudo openvpn vpnbook-us1-tcp443.ovpn</code></p>
 <h3 id="sniffing-tools">sniffing tools</h3>
-<p>wireshark</p>
+<p>wireshark
+<code>ettercap -T | grep password</code> XDDD</p>
 <h3 id="mac-spoofing">mac spoofing</h3>
 <p>Los paquetes serán enviados usando diferentes direcciones de mac.
 <code>macof -i eth0 -n 100</code></p>
@@ -946,9 +947,81 @@ Genera una iso de un so para obtener contraseñas de windows?</p>
 <p><code>yersinia -G </code><br>
 <code>Lauch attack -&gt; Floding CDP table -&gt; flooding CDP table</code>:  <br>
 <code>List attack -&gt; stop attack</code></p>
-<h4 id="ataque-dhcp">ataque DHCP</h4>
+<h4 id="ataque-dhcp-descubrimiento-de-ips">ataque DHCP (descubrimiento de ips)</h4>
 <p><code>yersinia -G </code><br>
-Lanzar el ataque: <code>Lauch attack -&gt; Floding CDP table -&gt; flooding CDP table</code>:</p>
+<code>Lauch attack -&gt; sending DISCOVER packet</code>
+Abrí wireshark y accedé a tu interfaz de red, en la mayoría de los casos es eth0 si usas cable y wlan0 si estás conectado por wifi y verás los paquetes de dhcp que se están mandando a la red.</p>
+<h4 id="dns-poisoning">dns poisoning</h4>
+<p><code>dnschef --fakeip=192.168.0.4 --fakedomains=microsoft.com --interface=0.0.0.0</code>
+Tenés que hacer que la víctima use el dns 192.168.0.5
+Si ejecutamos <code>nslookup microsoft.com</code> notaremos que la IP del servidor es <code>192.168.0.5</code>.</p>
+<h4 id="como-detectar-sniffers">Como detectar sniffers.</h4>
+<p>El primer método es evitar usar protocolos inseguros como ftp y http, en cambio usar https y sftp.
+En windows podemos usar <code>xarp</code>.
+En linux con nmap: <code>nmap --script=sniffer-detect 192.168.0.5</code>
+En los resultados dice: <code>Likely in promiscuous mode.</code></p>
+<h3 id="ingeniería-social">Ingeniería social.</h3>
+<p>Creación de emails engañosos para llevar al usuario a páginas maliciosas.
+Hay muchos tipos de usuarios atacados por ingeniería social como: recepcionistas, IT helpdesk, HR Dept, Top Mgmt.
+Agregar video 23.social engineering</p>
+<h3 id="ataque-dos-vs-ddos">Ataque DoS vs DDOS</h3>
+<h3 id="syn-flooding-attackmás-viejo-que-la-mierda-y-no-funciona-para-nada">SYN Flooding Attack(más viejo que la mierda y no funciona para nada)</h3>
+<p><code>hping3 -S 192.168.0.3 -a 192.168.0.5 -p 22 --flood</code> <br>
+<strong>Otra forma de hacerlo con metasploit</strong><br>
+<code>systemctl start postgresql &amp;&amp; msfdb init &amp;&amp; sudo msfconsole </code> <br>
+<code>msf&gt; db_status</code>
+<code>msf&gt; use auxiliary/dos/tcp/synflood</code>
+<code>msf&gt; set RHOSTS 192.168.0.3</code>
+<code>msf&gt; set RPORT 21</code>
+<code>msf&gt; set SHOST 192.168.0.10</code>
+<code>msf&gt; set TIMEOUT 50000</code>
+<code>msf&gt; exploit</code></p>
+<p>Podemos ver los paquetes enviados con wireshark</p>
+<h3 id="icmp-flood-más-viejo-que-la-mierda-y-no-funciona-para-nada">icmp flood (más viejo que la mierda y no funciona para nada)</h3>
+<p><code>hping3 -c 100 --icmp 192.168.0.3</code></p>
+<h3 id="ping-of-death-más-viejo-que-la-mierda-y-no-funciona-para-nada">ping of death (más viejo que la mierda y no funciona para nada)</h3>
+<p><code>ping 192.168.0.3 -t -l 65500</code></p>
+<h3 id="precauciones">Precauciones</h3>
+<p>Habilitar la limitación del enrutador
+Usá reverse proxy.</p>
+<h3 id="session-hijacking">Session Hijacking</h3>
+<h4 id="capturando-cookies">Capturando Cookies</h4>
+<h4 id="deshabilitar-detención-de-portal-cautivo">Deshabilitar detención de portal cautivo</h4>
+<p><a href="https://detectportal.firefox.com">https://detectportal.firefox.com</a><br>
+<code>firefox -&gt; about:config -&gt; network.captive-portal-service.enabled -&gt; false</code></p>
+<h4 id="burpsuite">BurpSuite</h4>
+<p>Instalalo, dejá la configuración por defecto, andá a la pestaña proxy, intercept -&gt; insercept is off -&gt; proxy settings -&gt; edit -&gt; bind to port: 8888 -&gt; specific address: 192.168.0.3 (la tuya)
+Bajo el título: <code>Request interception rules -&gt; intercept responses based on the following rules.</code>
+Abrí firefox <code>settings-&gt;manual proxy configuration-&gt;192.168.0.3 8888 also use this for https</code></p>
+<p>Para captar las cookies usaremos una aplicación extremadamente vulnerable llamada <strong>bWAPP</strong>.</p>
+<p>Abrimos bWAPP en firefox, y el burpsuite podemos ir viendo las consultas (request) que se hacen en siguiente(forward)</p>
+<h4 id="enumeración-usando-httprint">Enumeración usando HTTPrint.</h4>
+<p>Es una aplicacion de mierda de Windows para obtener información sobre el servidor, hay mejores alternativas.</p>
+<h4 id="skipfish">skipfish</h4>
+<p><code>skipfish -o /root/output http://192.168.0.10/bWAPP</code> te creará un index.html con toda la información sobre posibles vulnerabilidades directorios abiertos en esa ip.<br>
+output es una carpeta.</p>
+<h4 id="netcat">netcat</h4>
+<p><code>nc -vv asdf.org 80</code></p>
+<h3 id="obtener-la-versión-del-servidor-con-metasploit">obtener la versión del servidor con metasploit</h3>
+<p><code>msf &gt; use auxiliary/scanner/http/http_version</code> <br>
+<code>msf &gt; set RHOSTS 192.168.0.10</code> <br>
+<code>msf &gt; set THREADS 10</code> <br>
+<code>msf &gt; run</code></p>
+<p><code>msf &gt; use auxiliary/scanner/http/files_dir</code>
+<code>msf &gt; show options</code>
+<code>msf &gt; set RHOSTS 192.168.0.10</code>
+<code>msf &gt; run</code></p>
+<p>Lo mismo con <code>msf &gt; use auxiliary/scanner/http/files_dir</code> para escanear por métodos disponibles en http (no sirve para nada)</p>
+<p><strong>webDAV</strong> Protocolo usado para crear y mover documentos en un servidor.</p>
+<p><code>msf &gt; use auxiliary/scanner/http/webdav_scanner</code></p>
+<h5 id="website-mirroring-usando-httptrack">Website mirroring usando HTTPtrack</h5>
+<p>Para descargar la página entera en tu computadora, podemos usar wget curl en linux.</p>
+<h3 id="bruteforce-de-aplicaciones-web">bruteforce de aplicaciones web</h3>
+<p><code>disbuster</code></p>
+<p><code>medusa -h 192.168.0.10 -u bee -P passwords.txt -M ftp</code></p>
+<p><code>webcruiser</code> escaner web de seguridad.</p>
+<h4 id="honeypots">Honeypots</h4>
+<p>Mecanismos para atraer scriptkiddies y engañarlos: <strong>Pentbox tool</strong></p>
 
 </div>
 
