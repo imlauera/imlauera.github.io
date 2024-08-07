@@ -27,7 +27,7 @@ C: int main(){ return -1; } Este es el código que nos genera el IDA:
 ASM: ; Attributes: bp-based frame ; int __cdecl main(int argc, const char **argv, const char **envp) public main main proc near ; __unwind { push rbp ; Almacenar el registro RBP en la pila mov rbp, rsp ; Asigna a RBP el valor del registro apuntador RSP mov eax, 0FFFFFFFFh ; Mueve el -1 (escrito hexadecimal) al registro acumulador (eax).">
   <meta itemprop="datePublished" content="2024-06-27T21:22:58-03:00">
   <meta itemprop="dateModified" content="2024-06-27T21:22:58-03:00">
-  <meta itemprop="wordCount" content="547">
+  <meta itemprop="wordCount" content="594">
   
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="Reversing: IDA Free">
@@ -185,6 +185,25 @@ ASM: ; Attributes: bp-based frame ; int __cdecl main(int argc, const char **argv
 </span></span></code></pre></div><p>Código ASM generado por IDA:
 <img src="/img/for.png" alt="IDA PRO FOR"></p>
 <p>En la imagen debajo de la cajita llamada loc_113A: se puede ver que compara el registro [rbp+var_4] con 63h que en hexadecimal representa 99, con la instruccion jle (jump if less or equal) si es menor o igual salta a loc_1136 y suma 1 al registro en donde está la variable i y vuelve a ejecutar loc_113A, si no es mayor entonces carga 0 al registro eax restaura el valor inicial de RBP y llama a return.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="k">struct</span> <span class="n">point</span><span class="p">{</span> 
+</span></span><span class="line"><span class="cl">	<span class="kt">int</span> <span class="n">x</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="kt">int</span> <span class="n">y</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">(){</span>
+</span></span><span class="line"><span class="cl">	<span class="k">struct</span> <span class="n">point</span> <span class="n">p1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="n">p1</span><span class="p">.</span><span class="n">x</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">	<span class="n">p1</span><span class="p">.</span><span class="n">y</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="nf">printf</span><span class="p">(</span><span class="s">&#34;p1: (%d,%d)</span><span class="se">\n</span><span class="s">&#34;</span><span class="p">,</span> <span class="n">p1</span><span class="p">.</span><span class="n">x</span><span class="p">,</span> <span class="n">p1</span><span class="p">.</span><span class="n">y</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>Luego de asignar las variables como una estructura, llegué a obtener el siguiente código en el ida:</p>
+&lt; !-- raw html -->
+
+<video width="630" height="300" src="/img/cracking/ida_struct.mp4" controls></video>
+
+
 
 </div>
 
