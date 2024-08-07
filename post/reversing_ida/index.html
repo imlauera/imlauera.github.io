@@ -8,36 +8,36 @@
 <head>
   <meta property="og:url" content="https://imlauera.github.io/post/reversing_ida/">
   <meta property="og:site_name" content="Tech Blog">
-  <meta property="og:title" content="Reversing IDA">
-  <meta property="og:description" content="Curso 1: Explotando un desbordamiento de buffer(buffer overflow) provocado porque comparó el tamaño del buffer sin considerar el signo. La comparación se realizó con jl.
-View -&gt; Open subviews -&gt; Strings Las strings son clickeables y apretando la x podemos ver adonde la utilizan.
-Podemos pintarla de algún color en la parte izquierda de la ventana. Cuando no tenés símbolos NO son registradas, tenés que identificar las llamadas por ejemplo: call sub_4011C0 es printf si le das click al nombre y otra vez al nombre, verás una llamada a _studio_common_vfprintf.">
+  <meta property="og:title" content="Explotando un buffer overflow que provocado al querer restringir/comparar el tamaño del buffer sin considerar el signo.">
+  <meta property="og:description" content="Curso 1: Explotando un desbordamiento de buffer(buffer overflow) que fue provocado al querer restringir/comparar el tamaño del buffer sin considerar el signo. La comparación se realizó con jl. Luego pisamos la variable numero_random con 44434241 que luego se xorea con la variable numero_2 que es 0, y eso hará que pasemos el nivel.
+Inicio View -&gt; Open subviews -&gt; Strings Las strings son clickeables y apretando la x podemos ver adonde la utilizan.">
   <meta property="og:locale" content="es_es">
   <meta property="og:type" content="article">
     <meta property="article:section" content="post">
     <meta property="article:published_time" content="2024-08-06T16:59:15-03:00">
     <meta property="article:modified_time" content="2024-08-06T16:59:15-03:00">
+    <meta property="article:tag" content="Reversing">
+    <meta property="article:tag" content="Ida">
 
   
-  <meta itemprop="name" content="Reversing IDA">
-  <meta itemprop="description" content="Curso 1: Explotando un desbordamiento de buffer(buffer overflow) provocado porque comparó el tamaño del buffer sin considerar el signo. La comparación se realizó con jl.
-View -&gt; Open subviews -&gt; Strings Las strings son clickeables y apretando la x podemos ver adonde la utilizan.
-Podemos pintarla de algún color en la parte izquierda de la ventana. Cuando no tenés símbolos NO son registradas, tenés que identificar las llamadas por ejemplo: call sub_4011C0 es printf si le das click al nombre y otra vez al nombre, verás una llamada a _studio_common_vfprintf.">
+  <meta itemprop="name" content="Explotando un buffer overflow que provocado al querer restringir/comparar el tamaño del buffer sin considerar el signo.">
+  <meta itemprop="description" content="Curso 1: Explotando un desbordamiento de buffer(buffer overflow) que fue provocado al querer restringir/comparar el tamaño del buffer sin considerar el signo. La comparación se realizó con jl. Luego pisamos la variable numero_random con 44434241 que luego se xorea con la variable numero_2 que es 0, y eso hará que pasemos el nivel.
+Inicio View -&gt; Open subviews -&gt; Strings Las strings son clickeables y apretando la x podemos ver adonde la utilizan.">
   <meta itemprop="datePublished" content="2024-08-06T16:59:15-03:00">
   <meta itemprop="dateModified" content="2024-08-06T16:59:15-03:00">
-  <meta itemprop="wordCount" content="606">
+  <meta itemprop="wordCount" content="975">
+  <meta itemprop="keywords" content="Reversing,Ida">
   
   <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="Reversing IDA">
-  <meta name="twitter:description" content="Curso 1: Explotando un desbordamiento de buffer(buffer overflow) provocado porque comparó el tamaño del buffer sin considerar el signo. La comparación se realizó con jl.
-View -&gt; Open subviews -&gt; Strings Las strings son clickeables y apretando la x podemos ver adonde la utilizan.
-Podemos pintarla de algún color en la parte izquierda de la ventana. Cuando no tenés símbolos NO son registradas, tenés que identificar las llamadas por ejemplo: call sub_4011C0 es printf si le das click al nombre y otra vez al nombre, verás una llamada a _studio_common_vfprintf.">
+  <meta name="twitter:title" content="Explotando un buffer overflow que provocado al querer restringir/comparar el tamaño del buffer sin considerar el signo.">
+  <meta name="twitter:description" content="Curso 1: Explotando un desbordamiento de buffer(buffer overflow) que fue provocado al querer restringir/comparar el tamaño del buffer sin considerar el signo. La comparación se realizó con jl. Luego pisamos la variable numero_random con 44434241 que luego se xorea con la variable numero_2 que es 0, y eso hará que pasemos el nivel.
+Inicio View -&gt; Open subviews -&gt; Strings Las strings son clickeables y apretando la x podemos ver adonde la utilizan.">
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>
     
-    Reversing IDA
+    Explotando un buffer overflow que provocado al querer restringir/comparar el tamaño del buffer sin considerar el signo.
     
   </title>
   <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
@@ -49,9 +49,8 @@ Podemos pintarla de algún color en la parte izquierda de la ventana. Cuando no 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="referrer" content="no-referrer">
   <meta name="author" content="Imlauer.">
-  <meta name="description" content="Curso 1: Explotando un desbordamiento de buffer(buffer overflow) provocado porque comparó el tamaño del buffer sin considerar el signo. La comparación se realizó con jl.
-View -&gt; Open subviews -&gt; Strings Las strings son clickeables y apretando la x podemos ver adonde la utilizan.
-Podemos pintarla de algún color en la parte izquierda de la ventana. Cuando no tenés símbolos NO son registradas, tenés que identificar las llamadas por ejemplo: call sub_4011C0 es printf si le das click al nombre y otra vez al nombre, verás una llamada a _studio_common_vfprintf.">
+  <meta name="description" content="Curso 1: Explotando un desbordamiento de buffer(buffer overflow) que fue provocado al querer restringir/comparar el tamaño del buffer sin considerar el signo. La comparación se realizó con jl. Luego pisamos la variable numero_random con 44434241 que luego se xorea con la variable numero_2 que es 0, y eso hará que pasemos el nivel.
+Inicio View -&gt; Open subviews -&gt; Strings Las strings son clickeables y apretando la x podemos ver adonde la utilizan.">
 </head>
 <body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
   <div class="navbar-brand">
@@ -73,12 +72,25 @@ Podemos pintarla de algún color en la parte izquierda de la ventana. Cuando no 
       <div class="hero-body">
 <div class="container">
   <h1 class="title">
-    Reversing IDA
+    Explotando un buffer overflow que provocado al querer restringir/comparar el tamaño del buffer sin considerar el signo.
   </h1>
   <h2 class="subtitle">
     <time datetime='2024-08-06T16:59:15-03:00'>
       August 06, 2024
     </time>
+    
+    <br>
+    
+    
+    
+    <a class="tag is-link" href="https://imlauera.github.io/tags/reversing/">Reversing</a>
+    
+    
+    
+    
+    <a class="tag is-link" href="https://imlauera.github.io/tags/ida/">Ida</a>
+    
+    
     
   </h2>
 </div>
@@ -88,8 +100,10 @@ Podemos pintarla de algún color en la parte izquierda de la ventana. Cuando no 
     <section class="section">
       <div class="container">
 <div class="content is-medium">
-  <h4 id="curso-1-explotando-un-desbordamiento-de-bufferbuffer-overflow-provocado-porque-comparó-el-tamaño-del-buffer-sin-considerar-el-signo">Curso 1: Explotando un desbordamiento de buffer(buffer overflow) provocado porque comparó el tamaño del buffer sin considerar el signo.</h4>
-<p>La comparación se realizó con <code>jl</code>.</p>
+  <h4 id="curso-1-explotando-un-desbordamiento-de-bufferbuffer-overflow-que-fue-provocado-al-querer-restringircomparar-el-tamaño-del-buffer-sin-considerar-el-signo">Curso 1: Explotando un desbordamiento de buffer(buffer overflow) que fue provocado al querer restringir/comparar el tamaño del buffer sin considerar el signo.</h4>
+<p>La comparación se realizó con <code>jl</code>.
+Luego pisamos la variable <code>numero_random</code> con <code>44434241</code> que luego se xorea con la variable <code>numero_2</code> que es 0, y eso hará que pasemos el nivel.</p>
+<h5 id="inicio">Inicio</h5>
 <p>View -&gt; Open subviews -&gt; Strings
 Las strings son clickeables y apretando la x podemos ver adonde la utilizan.<br>
 Podemos pintarla de algún color en la parte izquierda de la ventana.   <br>
@@ -116,6 +130,20 @@ Por lo tanto podemos cambiar el número.</p>
 <code>20 20 20 20 31 42 42 42</code></p>
 <p><img src="/img/cracking/curso1_hxd.png" alt=""></p>
 <p>Entonces ya sabemos que el número será negativo interpretado y pasado a dword. Pasará esa comparación porque el número es grande pero negativo y tratará de hacer un <code>fread</code> y escribir en el <code>Dst</code>.</p>
+<p>Como <code>Dst</code>(Destination) está arriba de todo podemos pisar, las demás variables.</p>
+<p>Para tomar la decisión de si aprobaste el nivel uno, toma el número random y lo xorea con la variable: <code>numero_2</code> y lo guarda en <code>resultado</code>, ese resultado lo compara con <code>41424344h</code>.
+Esto quiere decir que si nosotros podemos pisar el número random con lo que nosotros queremos, porque si ese número random es verdadero no sabemos con que xorearlo para que nos dé un valor constante, pero si pisamos ese número random que esta justo debajo del buffer lo podemos transformar en constante y al hacer xor con el <code>numero2</code> podemos lograr que sea <code>41424344h</code> ahora cuanto tenemos que pisar para llegar hasta número random desde <code>Dst</code> a <code>resultado</code> si marcamos vemos que en realidad serían 51 dword: <code>51*4=204 bytes</code> y a continuación vendría el número random.<br>
+Y ahora insertamos esa cantidad de bytes en el archivo <code>example.txt</code> y a continuación de esos bytes tenemos que pisar <code>numero_random</code> podemos poner que sea <code>41424344h</code> en realidad tiene que estar al revés por <code>little indian</code>.</p>
+<p>Y el otro valor <code>numero_random</code> ya es 0 y se xorea con el <code>numero_2</code>
+El <code>numero_2</code> es el 2do valor que lo pasa como atoi, lo podemos poner en 0 también pero como es una string tenemos que ponerlo como <code>20</code> en el editor hexadecimal.
+Y ese valor lo xorea con <code>414243</code>.</p>
+<p><img src="/img/cracking/resultado.png" alt="">
+Ahí tenemos el -1 del primer valor y el 0 del segundo.
+Y eso lo xorea con <code>414243</code> al revés y si hicimos bien la cuenta nos daría que está todo bien.</p>
+<p>Esa fue la forma de reversearlo.</p>
+<p>Pisamos el numero random con <code>44434241</code> y se xoree con la variable <code>numero_2</code> que es 0, y eso hará que pasemos el nivel</p>
+<p>Podemos apretar el número a la izquierda de la linea y apretar F2 para arrancar el debugger desde el menú luego debugger -&gt; start process.
+Vemos que el primer número fue tomado bien como -1 y el segundo 0 y luego el número random <code>41424344</code> y la comparación es <code>41424344</code> con <code>41424344</code></p>
 
 </div>
 
