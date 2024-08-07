@@ -9,8 +9,9 @@
   <meta property="og:url" content="https://imlauera.github.io/post/reversing_ida/">
   <meta property="og:site_name" content="Tech Blog">
   <meta property="og:title" content="Reversing IDA">
-  <meta property="og:description" content="View -&gt; Open subviews -&gt; Strings Las strings son clickeables y apretando la x podemos ver adonde la utilizan.
-Podemos pintarla de algún color en la parte izquierda de la ventana. Cuando no tenés símbolos NO son registradas, tenés que identificar las llamadas por ejemplo: call sub_4011C0 es printf si le das click al nombre y otra vez al nombre, verás una llamada a _studio_common_vfprintf. Por lo tanto podemos renombrarla boton derecho en la palabra sub_4011C0 y Rename o apretando N como _printf">
+  <meta property="og:description" content="Curso 1: Explotando un desbordamiento de buffer(buffer overflow) provocado porque comparó el tamaño del buffer sin considerar el signo. La comparación se realizó con jl.
+View -&gt; Open subviews -&gt; Strings Las strings son clickeables y apretando la x podemos ver adonde la utilizan.
+Podemos pintarla de algún color en la parte izquierda de la ventana. Cuando no tenés símbolos NO son registradas, tenés que identificar las llamadas por ejemplo: call sub_4011C0 es printf si le das click al nombre y otra vez al nombre, verás una llamada a _studio_common_vfprintf.">
   <meta property="og:locale" content="es_es">
   <meta property="og:type" content="article">
     <meta property="article:section" content="post">
@@ -19,16 +20,18 @@ Podemos pintarla de algún color en la parte izquierda de la ventana. Cuando no 
 
   
   <meta itemprop="name" content="Reversing IDA">
-  <meta itemprop="description" content="View -&gt; Open subviews -&gt; Strings Las strings son clickeables y apretando la x podemos ver adonde la utilizan.
-Podemos pintarla de algún color en la parte izquierda de la ventana. Cuando no tenés símbolos NO son registradas, tenés que identificar las llamadas por ejemplo: call sub_4011C0 es printf si le das click al nombre y otra vez al nombre, verás una llamada a _studio_common_vfprintf. Por lo tanto podemos renombrarla boton derecho en la palabra sub_4011C0 y Rename o apretando N como _printf">
+  <meta itemprop="description" content="Curso 1: Explotando un desbordamiento de buffer(buffer overflow) provocado porque comparó el tamaño del buffer sin considerar el signo. La comparación se realizó con jl.
+View -&gt; Open subviews -&gt; Strings Las strings son clickeables y apretando la x podemos ver adonde la utilizan.
+Podemos pintarla de algún color en la parte izquierda de la ventana. Cuando no tenés símbolos NO son registradas, tenés que identificar las llamadas por ejemplo: call sub_4011C0 es printf si le das click al nombre y otra vez al nombre, verás una llamada a _studio_common_vfprintf.">
   <meta itemprop="datePublished" content="2024-08-06T16:59:15-03:00">
   <meta itemprop="dateModified" content="2024-08-06T16:59:15-03:00">
-  <meta itemprop="wordCount" content="451">
+  <meta itemprop="wordCount" content="606">
   
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="Reversing IDA">
-  <meta name="twitter:description" content="View -&gt; Open subviews -&gt; Strings Las strings son clickeables y apretando la x podemos ver adonde la utilizan.
-Podemos pintarla de algún color en la parte izquierda de la ventana. Cuando no tenés símbolos NO son registradas, tenés que identificar las llamadas por ejemplo: call sub_4011C0 es printf si le das click al nombre y otra vez al nombre, verás una llamada a _studio_common_vfprintf. Por lo tanto podemos renombrarla boton derecho en la palabra sub_4011C0 y Rename o apretando N como _printf">
+  <meta name="twitter:description" content="Curso 1: Explotando un desbordamiento de buffer(buffer overflow) provocado porque comparó el tamaño del buffer sin considerar el signo. La comparación se realizó con jl.
+View -&gt; Open subviews -&gt; Strings Las strings son clickeables y apretando la x podemos ver adonde la utilizan.
+Podemos pintarla de algún color en la parte izquierda de la ventana. Cuando no tenés símbolos NO son registradas, tenés que identificar las llamadas por ejemplo: call sub_4011C0 es printf si le das click al nombre y otra vez al nombre, verás una llamada a _studio_common_vfprintf.">
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -46,8 +49,9 @@ Podemos pintarla de algún color en la parte izquierda de la ventana. Cuando no 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="referrer" content="no-referrer">
   <meta name="author" content="Imlauer.">
-  <meta name="description" content="View -&gt; Open subviews -&gt; Strings Las strings son clickeables y apretando la x podemos ver adonde la utilizan.
-Podemos pintarla de algún color en la parte izquierda de la ventana. Cuando no tenés símbolos NO son registradas, tenés que identificar las llamadas por ejemplo: call sub_4011C0 es printf si le das click al nombre y otra vez al nombre, verás una llamada a _studio_common_vfprintf. Por lo tanto podemos renombrarla boton derecho en la palabra sub_4011C0 y Rename o apretando N como _printf">
+  <meta name="description" content="Curso 1: Explotando un desbordamiento de buffer(buffer overflow) provocado porque comparó el tamaño del buffer sin considerar el signo. La comparación se realizó con jl.
+View -&gt; Open subviews -&gt; Strings Las strings son clickeables y apretando la x podemos ver adonde la utilizan.
+Podemos pintarla de algún color en la parte izquierda de la ventana. Cuando no tenés símbolos NO son registradas, tenés que identificar las llamadas por ejemplo: call sub_4011C0 es printf si le das click al nombre y otra vez al nombre, verás una llamada a _studio_common_vfprintf.">
 </head>
 <body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
   <div class="navbar-brand">
@@ -84,7 +88,9 @@ Podemos pintarla de algún color en la parte izquierda de la ventana. Cuando no 
     <section class="section">
       <div class="container">
 <div class="content is-medium">
-  <p>View -&gt; Open subviews -&gt; Strings
+  <h4 id="curso-1-explotando-un-desbordamiento-de-bufferbuffer-overflow-provocado-porque-comparó-el-tamaño-del-buffer-sin-considerar-el-signo">Curso 1: Explotando un desbordamiento de buffer(buffer overflow) provocado porque comparó el tamaño del buffer sin considerar el signo.</h4>
+<p>La comparación se realizó con <code>jl</code>.</p>
+<p>View -&gt; Open subviews -&gt; Strings
 Las strings son clickeables y apretando la x podemos ver adonde la utilizan.<br>
 Podemos pintarla de algún color en la parte izquierda de la ventana.   <br>
 Cuando no tenés símbolos NO son registradas, tenés que identificar las llamadas por ejemplo: <code>call sub_4011C0</code> es <code>printf</code> si le das click al nombre y otra vez al nombre, verás una llamada a <code>_studio_common_vfprintf</code>. Por lo tanto podemos renombrarla boton derecho en la palabra <code>sub_4011C0</code> y Rename o apretando <code>N</code> como <code>_printf</code><br>
@@ -103,7 +109,13 @@ y lo coloca en ElementSize.</p>
 <p>Le puso elementsize porque en un fread anterior luego de comparar con el size máximovamos a poner que elementsize es numero porque hay un mensaje que dice <code>numero:</code></p>
 <p>O sea que lee un primer número que luego lo comparará con un máximo y lee otro número con fread. El primer número lo compara con C8 si es menor. Si ese número es más grande que C8 y el buffer que teníamos era de C8 tenemos que tratar de desbordarlo.</p>
 <p><code>jl</code> toma en cuenta el signo, por lo tanto si ese número es negativo se toma como si fuera menor y podés desbordar el buffer.</p>
-<p>Luego en el fread los argumentos de fread son todos con signed</p>
+<p>Luego en el fread los argumentos de fread son todos con signed o sea que no se considera el signo, ese <code>-1</code> o ese <code>ffffff</code> lo tomará como valor positivo y podemos leer la cantidad de bytes que queramos porque es la cantidad de bytes leídos que es el count por el elementSize que en este caso es un valor negativo.
+Por lo tanto podemos cambiar el número.</p>
+<p>Al hacer el archivo tenemos que tener en cuenta de que atoi lee una string. Tenemos que armar una string por ejemplo usando un editor hexadecimal:   <br>
+31 para ponerle el menos adelante.<br>
+<code>20 20 20 20 31 42 42 42</code></p>
+<p><img src="/img/cracking/curso1_hxd.png" alt=""></p>
+<p>Entonces ya sabemos que el número será negativo interpretado y pasado a dword. Pasará esa comparación porque el número es grande pero negativo y tratará de hacer un <code>fread</code> y escribir en el <code>Dst</code>.</p>
 
 </div>
 
