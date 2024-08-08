@@ -8,7 +8,7 @@
 <head>
   <meta property="og:url" content="https://imlauera.github.io/post/bufferoverflow_4/">
   <meta property="og:site_name" content="Tech Blog">
-  <meta property="og:title" content="Bufferoverflow_4">
+  <meta property="og:title" content="Explotando buffer overflows: copia un buffer de 200 bytes a otro del mismo tamaño pero con una string agregada.">
   <meta property="og:description" content="El overflow se produce porque tenemos dos buffers de 200, tenemos un sprintf toma un buffer de 200 y le agrega un texto y lo guarda en el otro buffer de 200. Entonces como la otra puede ser cercana a 200 (200 menos el byte del &#39;\0&#39;), va a haber un overflow.
 Una posible primer solución (no funciona en este caso) Dos buffers de 200 bytes. Llenamos el buffer con 200, strcpy copiará hasta donde encuentre un 0 y como el store de bp no puede ser 0 porque guarda el valor de bp de la función padre entonces esa dirección va a pendear(concatenar) y la va a copiar al buffer de destino y podemos producir un overflow por no poner un 0 final en la string, porque como estamos leyendo de un archivo de texto binario podemos poner cualquier byte y los 200 puede ser todas As y no necesariamente terminar en 0, entonces luego al copiarlo se copian las 200 As más cualquier cosa que haya a continuación hasta que encuentre un 0.">
   <meta property="og:locale" content="es_es">
@@ -16,17 +16,24 @@ Una posible primer solución (no funciona en este caso) Dos buffers de 200 bytes
     <meta property="article:section" content="post">
     <meta property="article:published_time" content="2024-08-07T13:37:58-03:00">
     <meta property="article:modified_time" content="2024-08-07T13:37:58-03:00">
+    <meta property="article:tag" content="Reversing">
+    <meta property="article:tag" content="Ricardo">
+    <meta property="article:tag" content="Narvaja">
+    <meta property="article:tag" content="Examen">
+    <meta property="article:tag" content="4">
+    <meta property="article:tag" content="Bufferoverflow">
 
   
-  <meta itemprop="name" content="Bufferoverflow_4">
+  <meta itemprop="name" content="Explotando buffer overflows: copia un buffer de 200 bytes a otro del mismo tamaño pero con una string agregada.">
   <meta itemprop="description" content="El overflow se produce porque tenemos dos buffers de 200, tenemos un sprintf toma un buffer de 200 y le agrega un texto y lo guarda en el otro buffer de 200. Entonces como la otra puede ser cercana a 200 (200 menos el byte del &#39;\0&#39;), va a haber un overflow.
 Una posible primer solución (no funciona en este caso) Dos buffers de 200 bytes. Llenamos el buffer con 200, strcpy copiará hasta donde encuentre un 0 y como el store de bp no puede ser 0 porque guarda el valor de bp de la función padre entonces esa dirección va a pendear(concatenar) y la va a copiar al buffer de destino y podemos producir un overflow por no poner un 0 final en la string, porque como estamos leyendo de un archivo de texto binario podemos poner cualquier byte y los 200 puede ser todas As y no necesariamente terminar en 0, entonces luego al copiarlo se copian las 200 As más cualquier cosa que haya a continuación hasta que encuentre un 0.">
   <meta itemprop="datePublished" content="2024-08-07T13:37:58-03:00">
   <meta itemprop="dateModified" content="2024-08-07T13:37:58-03:00">
   <meta itemprop="wordCount" content="276">
+  <meta itemprop="keywords" content="Reversing,Ricardo,Narvaja,Examen,4,Bufferoverflow">
   
   <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="Bufferoverflow_4">
+  <meta name="twitter:title" content="Explotando buffer overflows: copia un buffer de 200 bytes a otro del mismo tamaño pero con una string agregada.">
   <meta name="twitter:description" content="El overflow se produce porque tenemos dos buffers de 200, tenemos un sprintf toma un buffer de 200 y le agrega un texto y lo guarda en el otro buffer de 200. Entonces como la otra puede ser cercana a 200 (200 menos el byte del &#39;\0&#39;), va a haber un overflow.
 Una posible primer solución (no funciona en este caso) Dos buffers de 200 bytes. Llenamos el buffer con 200, strcpy copiará hasta donde encuentre un 0 y como el store de bp no puede ser 0 porque guarda el valor de bp de la función padre entonces esa dirección va a pendear(concatenar) y la va a copiar al buffer de destino y podemos producir un overflow por no poner un 0 final en la string, porque como estamos leyendo de un archivo de texto binario podemos poner cualquier byte y los 200 puede ser todas As y no necesariamente terminar en 0, entonces luego al copiarlo se copian las 200 As más cualquier cosa que haya a continuación hasta que encuentre un 0.">
 
@@ -34,7 +41,7 @@ Una posible primer solución (no funciona en este caso) Dos buffers de 200 bytes
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>
     
-    Bufferoverflow_4
+    Explotando buffer overflows: copia un buffer de 200 bytes a otro del mismo tamaño pero con una string agregada.
     
   </title>
   <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
@@ -69,12 +76,45 @@ Una posible primer solución (no funciona en este caso) Dos buffers de 200 bytes
       <div class="hero-body">
 <div class="container">
   <h1 class="title">
-    Bufferoverflow_4
+    Explotando buffer overflows: copia un buffer de 200 bytes a otro del mismo tamaño pero con una string agregada.
   </h1>
   <h2 class="subtitle">
     <time datetime='2024-08-07T13:37:58-03:00'>
       August 07, 2024
     </time>
+    
+    <br>
+    
+    
+    
+    <a class="tag is-link" href="https://imlauera.github.io/tags/reversing/">Reversing</a>
+    
+    
+    
+    
+    <a class="tag is-link" href="https://imlauera.github.io/tags/ricardo/">Ricardo</a>
+    
+    
+    
+    
+    <a class="tag is-link" href="https://imlauera.github.io/tags/narvaja/">Narvaja</a>
+    
+    
+    
+    
+    <a class="tag is-link" href="https://imlauera.github.io/tags/examen/">Examen</a>
+    
+    
+    
+    
+    <a class="tag is-link" href="https://imlauera.github.io/tags/4/">4</a>
+    
+    
+    
+    
+    <a class="tag is-link" href="https://imlauera.github.io/tags/bufferoverflow/">Bufferoverflow</a>
+    
+    
     
   </h2>
 </div>
