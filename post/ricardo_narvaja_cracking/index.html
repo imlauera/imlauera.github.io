@@ -21,7 +21,7 @@
   <meta itemprop="description" content="Todos sus videos consisten en explotar diferentes tipos de buffer overflows de programas 32 bits, creo que a veces se enfoca demasiado en la utilización de la herramienta en lugar de explicar primero lo más importante que es ¿por qué la aplicación es vulnerable a esos ataques? Creo que entiendo eso, se tiene una mejor intuición de como funciona. Estoy hablando específicamente de los cursos que tiene en su canal">
   <meta itemprop="datePublished" content="2024-08-08T06:01:01-03:00">
   <meta itemprop="dateModified" content="2024-08-08T06:01:01-03:00">
-  <meta itemprop="wordCount" content="189">
+  <meta itemprop="wordCount" content="282">
   
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="Explicación ejercicios de los videos de Ricardo Narvaja Cracking">
@@ -84,7 +84,7 @@
 Estoy hablando específicamente de los cursos que tiene en su canal</p>
 <p><a href="https://redirect.invidious.io/channel/UCDeWwrp2LUWkDSymrmnfKDQ">https://redirect.invidious.io/channel/UCDeWwrp2LUWkDSymrmnfKDQ</a></p>
 <h4 id="curso-6">Curso 6:</h4>
-<p>Tiene dos buffers de 200 bytes, pero copia de un buffer al otro usando un sprintf que agrega una cadena al final de la cadena del 1er buffer al 2do buffer de 200 entonces se produce un overflow. <br>
+<p>Tiene dos buffers de 200 bytes, pero copia de un buffer al otro usando un sprintf que agrega una cadena al final de la cadena del 1er buffer al 2do buffer de 200 entonces se produce un overflow en el buffer2. <br>
 Algo así como:</p>
 <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-c" data-lang="c"><span class="line"><span class="cl"><span class="kt">char</span> <span class="n">buffer1</span><span class="p">[</span><span class="mi">200</span><span class="p">],</span> <span class="kt">char</span> <span class="n">buffer2</span><span class="p">[</span><span class="mi">200</span><span class="p">];</span>
 </span></span><span class="line"><span class="cl">
@@ -93,6 +93,9 @@ Algo así como:</p>
 </span></span></code></pre></div><h4 id="curso-7">Curso 7:</h4>
 <p>Lo mismo que el anterior.<br>
 Tiene dos buffers del mismo tamaño (200 bytes), pero se produce el overflow porque usa una sprintf que agrega una cadena al comienzo de la cadena y lo completa con una string: &ldquo;Bieeeeeeeeeeeeeeeeeeeeeeeeeeen ? con %s&rdquo;</p>
+<p>El problema de este exámen es que debajo del buffer2 no hay ninguna variable para pisar, porque en los exámenes anteriores al pisar el buffer como estaba arriba de todo podiamos pisar las variables de abajo, ahora no.</p>
+<p>Pero en este caso desbordando el buffer2 pisar el puntero <code>return address</code> de la función <code>check</code> y vamos a hacer que apunte a la dirección en donde dice <code>&quot;Aprobaste level 7&quot;</code></p>
+<p>Si desbordamos struct con 4 bytes más pisamos el store de bp, y otros 4 bytes más pisamos el return address.</p>
 
 </div>
 
