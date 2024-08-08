@@ -6,8 +6,15 @@
     <description>Recent content on Tech Blog</description>
     <generator>Hugo</generator>
     <language>es-es</language>
-    <lastBuildDate>Wed, 07 Aug 2024 17:34:23 -0300</lastBuildDate>
+    <lastBuildDate>Thu, 08 Aug 2024 06:01:01 -0300</lastBuildDate>
     <atom:link href="https://imlauera.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Explicación ejercicios de los videos de Ricardo Narvaja Cracking</title>
+      <link>https://imlauera.github.io/post/ricardo_narvaja_cracking/</link>
+      <pubDate>Thu, 08 Aug 2024 06:01:01 -0300</pubDate>
+      <guid>https://imlauera.github.io/post/ricardo_narvaja_cracking/</guid>
+      <description>Todos sus videos consisten en explotar diferentes tipos de buffer overflows de programas 32 bits, creo que a veces se enfoca demasiado en la utilización de la herramienta en lugar de explicar primero lo más importante que es ¿por qué la aplicación es vulnerable a esos ataques? Creo que entiendo eso, se tiene una mejor intuición de como funciona. Estoy hablando específicamente de los cursos que tiene en su canal</description>
+    </item>
     <item>
       <title>Edward Snowden: Vigilancia Masiva</title>
       <link>https://imlauera.github.io/post/edward_snowden/</link>
@@ -16,11 +23,32 @@
       <description>Video: https://m.youtube.com/watch?v=xTgF3mx20E0&#xA;O miralo en una instancia de invidious: https://redirect.invidious.io/watch?v=xTgF3mx20E0&#xA;En mi posición final trabajando directamente con las herramientas de vigilancia masiva de la NSA, puedo ver los correos de todas las personas puedo ver todos tus mensajes, los chicos con los que estoy trabajando giran su monitor para mostrarme las fotos desnudas de la esposa del tipo que están espiando y dicen &amp;ldquo;bonus!&amp;rdquo; XD. Pero luego veo un video de un niño en el regazo de su padre golpeando el teclado y ellos no entienden lo que estaba pasando pero el niño miró a la cámara y sentí que me estaba mirando a mi.</description>
     </item>
     <item>
+      <title>Bufferoverflow_4</title>
+      <link>https://imlauera.github.io/post/bufferoverflow_4/</link>
+      <pubDate>Wed, 07 Aug 2024 13:37:58 -0300</pubDate>
+      <guid>https://imlauera.github.io/post/bufferoverflow_4/</guid>
+      <description>El overflow se produce porque tenemos dos buffers de 200, tenemos un sprintf toma un buffer de 200 y le agrega un texto y lo guarda en el otro buffer de 200. Entonces como la otra puede ser cercana a 200 (200 menos el byte del &#39;\0&#39;), va a haber un overflow.&#xA;Una posible primer solución (no funciona en este caso) Dos buffers de 200 bytes. Llenamos el buffer con 200, strcpy copiará hasta donde encuentre un 0 y como el store de bp no puede ser 0 porque guarda el valor de bp de la función padre entonces esa dirección va a pendear(concatenar) y la va a copiar al buffer de destino y podemos producir un overflow por no poner un 0 final en la string, porque como estamos leyendo de un archivo de texto binario podemos poner cualquier byte y los 200 puede ser todas As y no necesariamente terminar en 0, entonces luego al copiarlo se copian las 200 As más cualquier cosa que haya a continuación hasta que encuentre un 0.</description>
+    </item>
+    <item>
       <title>Fin de bloqueadores de publicidad en Chrome</title>
       <link>https://imlauera.github.io/post/fin_bloqueador_publicidad/</link>
       <pubDate>Wed, 07 Aug 2024 13:05:19 -0300</pubDate>
       <guid>https://imlauera.github.io/post/fin_bloqueador_publicidad/</guid>
       <description>Esta extensión dentro de poco no será soportada porque no sigue las mejores prácticas para las extensiones de Chrome.&#xA;Alternativas: Firefox, Floorp (un fork de firefox japonés que es BASTANTE rápido), Brave.</description>
+    </item>
+    <item>
+      <title>Explotando buffer overflow provocado por copiar un buffer de 300 a uno de 200</title>
+      <link>https://imlauera.github.io/post/bufferoverflow_3/</link>
+      <pubDate>Wed, 07 Aug 2024 07:24:45 -0300</pubDate>
+      <guid>https://imlauera.github.io/post/bufferoverflow_3/</guid>
+      <description>Lo único que hacemos es pisar la variable que está abajo del buffer de 200 porque copia el contenido del buffer de 200 a un buffer de 300. Le ponemos de valor 0 a la variable que está debajo del buffer de 200 porque hace esta comparación cmp ptr [eax+0C8h],0 para ganar el reto. En donde 0C8h es un offset que hace referencia a una variable que está dentro de estructura en donde está también declarado el buffer.</description>
+    </item>
+    <item>
+      <title>Explotando el típico buffer overflow copia un buffer mas grande a uno más chico.</title>
+      <link>https://imlauera.github.io/post/bufferoverflow_strcpy/</link>
+      <pubDate>Wed, 07 Aug 2024 06:03:47 -0300</pubDate>
+      <guid>https://imlauera.github.io/post/bufferoverflow_strcpy/</guid>
+      <description>Lee 210 de un archivo en el 1er buffer, pero en el 2do buffer está el overflow porque Dst(Destination) es un buffer de 200 bytes. Le pasa un puntero, o sea la dirección del buffer Dst a la función check.&#xA;Si en una función se pasa un puntero y a partir de esa dirección se le suma un offset y se encuentran valores para comparar o distintos campos, sabemos que ahí hay una estructura, podría haber una estructura que abarque todas las variables de la primera función.</description>
     </item>
     <item>
       <title>Explotando un buffer overflow provocado al querer restringir/comparar el tamaño del buffer sin considerar el signo.</title>
@@ -520,6 +548,13 @@
       <description>¿UEFI o BIOS? La forma más sencilla de saber si el sistema se ha iniciado en modo UEFI o BIOS es buscar una carpeta /sys/firmware/efi. La carpeta estará presente si su sistema utiliza UEFI.&#xA;sudo grub-install /dev/sdX fdisk -l ó lsblk for i in /dev /dev/pts /proc /sys /run; do mount -B $i /mnt$i; done sudo chroot /mnt sudo grub-install /dev/sda sudo update-grub $ mount /dev/sdaY /mnt $ mount --bind /dev /mnt/dev $ mount --bind /dev/pts /mnt/dev/pts $ mount --bind /proc /mnt/proc $ mount --bind /sys /mnt/sys $ chroot /mnt $ grub-install /dev/sdX $ update-grub $ exit $ umount /mnt/dev/pts $ umount /mnt/dev $ umount /mnt/proc $ umount /mnt/sys $ umount /mnt Otra forma $ sudo mount /dev/sdXY /mnt $ sudo mount /dev/sda1/mnt/boot/efi #use only if /boot is on a different partition $ for i in /dev /dev/pts /proc /sys /run; do sudo mount -B $i /mnt$i; done $ sudo chroot /mnt $ grub-install /dev/sda $ update-grub Otra forma sudo mount /dev/sda1 /mnt sudo grub-install --boot-directory=/mnt/boot /dev/sda sudo mount /dev/sda1 /mnt Otra forma Precaución cambiá el nombre de las particiones.</description>
     </item>
     <item>
+      <title>Sistemas operativos originales diferentes basados en Unix</title>
+      <link>https://imlauera.github.io/post/sistemas_operativos_originales_diferentes_unix/</link>
+      <pubDate>Thu, 19 Oct 2023 05:51:22 -0300</pubDate>
+      <guid>https://imlauera.github.io/post/sistemas_operativos_originales_diferentes_unix/</guid>
+      <description>CollapseOS TempleOS SerenityOS Haiku ArcaOS Redox Plan9 KolibriOS Genera Fuente: https://www.genbeta.com/a-fondo/9-sistemas-operativos-originales-diferentes-plan9-a-collapseos</description>
+    </item>
+    <item>
       <title>YouTube Revanced: Parchear youtube desde la consola</title>
       <link>https://imlauera.github.io/post/revanced_parchear_youtube_desde_la_consola/</link>
       <pubDate>Mon, 16 Oct 2023 08:24:29 -0300</pubDate>
@@ -560,6 +595,13 @@
       <pubDate>Tue, 10 Oct 2023 16:23:49 -0300</pubDate>
       <guid>https://imlauera.github.io/post/everything_you_need_to_know_about_pointers/</guid>
       <description>#include &amp;lt;stdio.h&amp;gt; #include &amp;lt;stdlib.h&amp;gt; struct { int ancho; int alto; } typedef Rectangulo; struct queseyo{ char nombre[256]; char apellido[256]; char fecha_nacimiento[256]; int dni; } ; /*&#x9;Esto define una estructura Rectangulo **&#x9;struct { **&#x9;int ancho; **&#x9;int alto; **&#x9;} Rectangulo; ** */ int main(){ struct queseyo agenda; Rectangulo abc; Rectangulo prueba1; prueba1.ancho = 10; prueba1.alto = 20; printf(&amp;#34;ancho: %d, alto: %d\n&amp;#34;,prueba1.ancho,prueba1.alto); char * pointer_to_readonly_memory_string = &amp;#34;asdf&amp;#34;; //char pointer_to_memory_on_the_stack = malloc(sizeof(char)*5); char pointer_to_memory_on_the_stack[] = &amp;#34;asdf&amp;#34;; // pointer_to_readonly_memory_string[0] = &amp;#39;b&amp;#39;; // segmentation fault pointer_to_memory_on_the_stack[0] = &amp;#39;b&amp;#39;; printf(&amp;#34; pointer_to_readonly_memory_string: %s\n&amp;#34;, pointer_to_readonly_memory_string); printf(&amp;#34; pointer_to_memory_on_the_stack: %s\n&amp;#34;, pointer_to_memory_on_the_stack); // *pointer = *(pointer+0) = pointer[0] // Equivalentes int *pointer = malloc(sizeof(int)*4); // int *pointer1 = malloc(sizeof(*pointer1)*4); // int pointer2[4]; *pointer = 1; *(pointer+1) = 2; pointer[2]=3; *(pointer+3) = 4; *(pointer+4) = 5; for (int i=0; i&amp;lt;4; i++){ pointer[i]=i; } // malloc te crea en la memoria un espacio de 5 caracteres //char *hola = malloc(sizeof(char)*5); char *hola = malloc(sizeof(*hola)*5); // Todas estas expresiones son equivalentes *hola = &amp;#39;h&amp;#39;; hola[0] = &amp;#39;h&amp;#39;; *(hola+0) = &amp;#39;h&amp;#39;; *(hola+1) = &amp;#39;o&amp;#39;; *(hola+2) = &amp;#39;l&amp;#39;; *(hola+3) = &amp;#39;a&amp;#39;; *(hola+4) = &amp;#39;\0&amp;#39;; sprintf(hola,&amp;#34;%s&amp;#34;,&amp;#34;chau&amp;#34;); for (int i=0; i&amp;lt;4; i++){ printf(&amp;#34;pointer: %d\n&amp;#34;,pointer[i]); } printf(&amp;#34;pointer: %s\n&amp;#34;,hola); free(pointer); free(hola); return 0; } Invertir una lista enlazada https://www.</description>
+    </item>
+    <item>
+      <title>Dillo: un navegador extremadamente rapido sin soporte de JS</title>
+      <link>https://imlauera.github.io/post/dillo_navegador_extremadamente_rapido_sin_js/</link>
+      <pubDate>Sat, 07 Oct 2023 20:38:32 -0300</pubDate>
+      <guid>https://imlauera.github.io/post/dillo_navegador_extremadamente_rapido_sin_js/</guid>
+      <description>https://dillo.org/&#xA;¿Qué es Dillo?&#xA;Dillo es un navegador web gráfico multiplataforma conocido por su velocidad y su tamaño reducido. Dillo está escrito en C y C++. Dillo se basa en FLTK, Fast Light Toolkit (¡vinculado estáticamente de forma predeterminada!). Dillo es un software gratuito disponible según los términos de la Licencia Pública General GNU (GPLv3). Dillo se esfuerza por ser amigable tanto con los usuarios como con los desarrolladores. Dillo ayuda a los autores web a cumplir con los estándares web mediante el uso del medidor de errores.</description>
     </item>
     <item>
       <title>Construi una aplicación de Android y generá el APK sin Android Studio y desde la linea de comandos</title>
