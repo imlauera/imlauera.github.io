@@ -25,7 +25,7 @@
   <meta itemprop="description" content="Todos sus videos consisten en explotar diferentes tipos de buffer overflows en programas 32 bits, y me parece que a veces se enfoca demasiado en la utilización de la herramienta IDA en lugar de explicar primero lo más importante que es: ¿por qué la aplicación es vulnerable a esos ataques? Si se entiende eso, se tiene una mejor intuición de como funciona. Estoy hablando específicamente de los cursos que tiene en su canal Ricardo Narvaja.">
   <meta itemprop="datePublished" content="2024-08-08T06:01:01-03:00">
   <meta itemprop="dateModified" content="2024-08-08T06:01:01-03:00">
-  <meta itemprop="wordCount" content="916">
+  <meta itemprop="wordCount" content="915">
   <meta itemprop="keywords" content="Reversing,Ricardo,Narvaja,Examen">
   
   <meta name="twitter:card" content="summary">
@@ -129,7 +129,7 @@ Algo así como:</p>
 </span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="nf">sprintf</span><span class="p">(</span><span class="n">buffer2</span><span class="p">,</span> <span class="s">&#34;Bien ? con %s&#34;</span><span class="p">,</span> <span class="n">buffer1</span><span class="p">);</span>
 </span></span></code></pre></div><h4 id="examen-7">Examen 7</h4>
 <p>Casi lo mismo que el exámen 6, la diferencia es que ahora el buffer no está arriba de todo y no podés pisar todas las variables que están debajo porque el buffer vulnerable está al final de la pila.</p>
-<p>Tiene dos buffers del mismo tamaño (200 bytes), pero se produce el overflow porque usa una sprintf que agrega una cadena al comienzo de la cadena y lo completa con una string: &ldquo;Bieeeeeeeeeeeeeeeeeeeeeeeeeeen ? con %s&rdquo;</p>
+<p>Tiene dos buffers del mismo tamaño (200 bytes), pero se produce el overflow porque usa una sprintf que agrega una cadena al comienzo de la cadena y lo completa con una string: <code>&quot;Bieeeeeeeeeeeeeeeeeeeeeeeeeeen ? con %s&quot;</code></p>
 <p>El problema de este exámen es que debajo del buffer2 no hay ninguna variable para pisar, porque en los exámenes anteriores al pisar el buffer como estaba arriba de todo podiamos pisar las variables de abajo, ahora no.</p>
 <p>Pero en este caso desbordando el buffer2 pisar el puntero <code>return address</code> de la función <code>check</code> y vamos a hacer que apunte a la dirección en donde dice <code>&quot;Aprobaste level 7&quot;</code></p>
 <p>Tenemos que desbordar el buffer2 y desbordar la struct que está debajo y con 4 bytes más pisamos el store de bp, y otros 4 bytes más pisamos el return address y ahí tenés que poner la dirección de memoria adonde querés que tu programa salte.</p>
@@ -144,20 +144,20 @@ El objetivo ejecutar una calculadora.
 Lee 200 bytes esos 200 lo lee a buffer2 y despues lo copia al incio de la estructura.</p>
 <h4 id="examen-9">Examen 9</h4>
 <p>Es un poco mas complicado.</p>
-<p>No se si hay un buffer overflow aca, el objetivo es ejecutar una calculadora también.
-Dos buffers de 200.
-Puntero a una funcion llamada system que nos permitira ejecutar la calculadora si podemos modificar el return address.
+<p>No se si hay un buffer overflow acá, el objetivo es ejecutar una calculadora también.</p>
+<p>Dos buffers de 200 bytes.
+Puntero a una funcion llamada system que nos permitirá ejecutar la calculadora si podemos modificar el return address.
 El 1er byte del buffer1 tiene que ser 30 para que no saltee una función.
-Luego concatena strings con strcat pero verifica la longitud, entonces para saltear esa proteccion pone un &lsquo;\0&rsquo; en el medio porque strcpy copia hasta ahi
-Le pone un &lsquo;00&rsquo; en la posicion 12 del buffer1, con el strcpy solo copiara hasta esa posicion.
+Luego concatena strings con strcat pero verifica la longitud, entonces para saltear esa protección pone un <code>'\0'</code> en el medio porque strcpy copia hasta ahí.<br>
+Le pone un <code>'00'</code> en la posicion 12 del buffer1, con el strcpy solo copiara hasta esa posicion.  <br>
 Pero en el buffer2 se va leer todo porque es un fread y no se corta con el 0.
-Tenemos que hacer que la suma nos de 38 al concatenar con string_a_ejecutar.</p>
+Tenemos que hacer que la suma nos de 38 al concatenar con <code>string_a_ejecutar</code>.</p>
 <h4 id="examen-10">Examen 10</h4>
 <p>Apretando t si armamos toda la estructura podemos convertir
-dword ptr [eax+1A8h] a dword a mov [eax+My_struct.var_C], offset aAEjecutarLaCal</p>
-<p>Hace lo mismo que el ejercicio anterior, hace un strcat lee la string a ejecutar con el buffer1, que es la string que tiene en el buffer1 es hasta el 1er 0 y el largo tiene que ser 38.
-La string a ejecutar tiene 36 de largo y el total que tengo que tener es 38, entonces el lugar en donde tengo que poner el 00 es la posicion 12 como en el video anterior.
-Por lo cual en el buffer2 vamos a tener todo pero en el buffer1 solo hasta la posicion 12 porque tenemos el 00, porque strcpy solo copia hasta el 0.</p>
+<code>dword ptr [eax+1A8h]</code> a <code>mov [eax+My_struct.var_C], offset aAEjecutarLaCal</code></p>
+<p>Hace lo mismo que el ejercicio anterior, hace un <code>strcat</code> lee la string a ejecutar con el buffer1, que es la string que tiene en el buffer1 es hasta el 1er 0 y el largo tiene que ser 38.
+La string a ejecutar tiene 36 de largo y el total que tengo que tener es 38, entonces el lugar en donde tengo que poner el 00 es la posición 12 como en el video anterior.
+Por lo cual en el buffer2 vamos a tener todo pero en el buffer1 solo hasta la posición 12 porque tenemos el 00, porque strcpy solo copia hasta el 0.</p>
 
 </div>
 
