@@ -56,22 +56,7 @@ El horno eléctrico es una replica de una estufa
 
 # Si una o más velas no encienden, menciona la causa, y cuál sería la solución y/o la reparación.
 
-Fallo en las Resistencias: Las resistencias pueden estar quemadas o dañadas, lo que impide que se calienten y, por ende, que el horno funcione correctamente.
-
-Conexiones Sueltas: Un cable suelto o mal conectado puede interrumpir el flujo eléctrico hacia las resistencias.
-
-Problemas Eléctricos: Puede haber problemas con la alimentación eléctrica, como un mal contacto en el enchufe o en el cableado interno del horno. Esto puede causar que algunas resistencias no reciban energía.
-
-Avería en el Termostato: Si el termostato no funciona correctamente, puede no permitir que las resistencias se activen como deberían.
-
-Esto dimos en la clase 7
-
-Es bueno quedarse con las dos velas, por si alguna falla, no cambien las 4. Las dos velas de arriba valen 44.000 pesos, no sé si querés cambiar las de abajo o esperar a que se queme. El termostato controla velas y temperatura, y el temporizador controla el encendido del horno.
-
-Si una o más velas no encienden:
-
-Causa: Puede ser un problema con el interruptor o una vela quemada.
-Solución: Revisar el interruptor y reemplazar las velas dañadas.
+Las resistencias pueden estar quemadas o dañadas, un cable suelto o mal conectado puede interrumpir el flujo eléctrico hacia las resistencias. Puede haber problemas con la alimentación eléctrica, como un mal contacto en el enchufe o en el cableado interno del horno. Avería en el Termostato. El termostato controla velas y temperatura, y el temporizador controla el encendido del horno. Solución: Revisar todo eso y reemplazar o reparar lo dañado.
 
 ---
 
@@ -113,8 +98,8 @@ Un ventilador puede frenarse por:
 ---
 
 # ¿Cómo medir continuidad de un ventilador?
+La medición se realiza igual que con la plancha, usando un multímetro para verificar si hay flujo eléctrico a través del motor.   
 
-La medición se realiza igual que con la plancha, usando un multímetro para verificar si hay flujo eléctrico a través del motor.
 * Desconectar el Ventilador:
 * Acceder a la Bobina:
 * Configurar el Multímetro: Ajusta el multímetro en la función de prueba de continuidad. Este modo a menudo se indica con un símbolo de diodo o un sonido (pitido) que se activa al detectar continuidad.
@@ -152,17 +137,7 @@ El temporizador está defectuoso. Solución: Reemplazar el temporizador.
 
 # Nombra los componentes de un lavarropa automático.
 
-* Cuba de Lavado: Similar al semiautomático, pero generalmente con un diseño más complejo.
-* Cuba de Centrifugado: Integrada en el mismo sistema, permite ciclos automáticos.
-* Motor: Más sofisticado, a menudo con variaciones en velocidad y dirección.
-* Agitador o Tambor: Dependiendo del modelo, puede ser un tambor que gira o un agitador que mueve la ropa.
-* Electroválvulas: Controlan automáticamente el llenado y vaciado de agua según los ciclos programados.
-* Sensor de Carga (Presostato): Detecta el nivel del agua y ajusta automáticamente el llenado.
-* 5.
-* Panel de Control Electrónico: Permite seleccionar programas automáticos, temperaturas y otros ajustes.
-* Bomba de Desagüe: Extrae el agua sucia al final del ciclo.
-* Termostato: Regula la temperatura del agua durante el lavado.
-* Módulo de Potencia: Controla la energía eléctrica que se suministra a los componentes eléctricos.
+Cuba de Lavado. Cuba de Centrifugado. Motor: Más sofisticado que el semiautomático, a menudo con variaciones en velocidad y dirección. Agitador o Tambor. Electroválvulas: Controlan automáticamente el llenado y vaciado de agua según los ciclos programados. Sensor de Carga (Presostato): Detecta el nivel del agua y ajusta automáticamente el llenado. Panel de Control Electrónico. Bomba de Desagüe. Termostato: Regula la temperatura del agua durante el lavado. Módulo de Potencia: Controla la energía eléctrica que se suministra a los componentes eléctricos.
 
 ---
 
@@ -170,12 +145,7 @@ El temporizador está defectuoso. Solución: Reemplazar el temporizador.
 
 Los lavarropas pueden manifestar "ERROR" de diversas formas, generalmente a través de códigos en el panel de control o mediante señales auditivas. A continuación se detallan las formas más comunes en que un lavarropas puede indicar un error:   
 
-1. Códigos de Error
-Los códigos de error son alfanuméricos que aparecen en la pantalla del lavarropas. Cada fabricante tiene su propio conjunto de códigos, pero algunos ejemplos comunes incluyen:
-* E10/E11: Indica problemas con la entrada de agua, como suministro insuficiente o mangueras obstruidas.   
-* E20/C2: Señala problemas de bombeo, indicando que la lavadora no desagua correctamente.  
-* IE: Error de suministro, que ocurre cuando no hay agua disponible para el lavado.   
-* dE/dE1: Error relacionado con la puerta, indicando que no está bien cerrada o que hay ropa atrapada.
+1. Diferentes Códigos de Error
 2. Señales Auditivas
 Algunos modelos emiten pitidos o sonidos específicos como parte del sistema de aviso. Por ejemplo:
 Un pitido puede indicar un error menor o que el ciclo ha terminado.
@@ -183,13 +153,8 @@ Dos pitidos pueden señalar problemas más serios, como fallos en el drenaje.
 3. Luces Intermitentes
 Los lavarropas a menudo utilizan luces intermitentes para indicar errores. Por ejemplo:
 Una luz parpadeante puede señalar que hay un problema con el ciclo actual o un componente específico.
-4. Mensajes en Pantalla
-En modelos más avanzados, se pueden mostrar mensajes descriptivos en lugar de códigos, proporcionando información más clara sobre el problema.
-5. Comportamiento Anómalo
-Además de los códigos y señales, un lavarropas puede manifestar errores a través de comportamientos anómalos, como:
-* No iniciar el ciclo.
-* Detenerse inesperadamente.
-* No drenar o centrifugar adecuadamente.
+4. Mensajes en Pantalla.
+5. Comportamiento Anómalo.
 
 ---
 
