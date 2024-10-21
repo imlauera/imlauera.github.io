@@ -204,16 +204,9 @@ Causa de Inestabilidad en Centrifugado
 # Nombra la causa de un lavarropa sin estabilidad en el centrifugado.
 
 * Carga Desbalanceada:Si la ropa está mal distribuida dentro del tambor, puede causar que el lavarropas se sacuda excesivamente. 
-* Exceso de Carga:
+* Exceso de Carga.
 * Desgaste en Componentes Mecánicos:
-* El desgaste en la base de la canasta o en el sistema de transmisión puede resultar en movimientos inusuales durante el centrifugado. Esto incluye problemas con la "araña" o soporte del tambor, que pueden perder su forma y causar vibraciones2
-* Condensador de Arranque Deteriorado: Un condensador envejecido puede no proporcionar suficiente energía al motor durante el centrifugado, lo que resulta en un rendimiento deficiente y vibraciones anormales3.
-* Problemas con el Motor: Si el motor no está funcionando correctamente o si las escobillas están desgastadas, esto puede afectar la capacidad del tambor para girar a la velocidad adecuada, causando inestabilidad3.
-* Fugas o Bloqueos en el Sistema de Drenaje: Si hay obstrucciones en el tubo de desagüe, esto puede causar que el agua no se elimine adecuadamente, afectando el equilibrio durante el centrifugado13.
-* Fallo en los Amortiguadores: Los amortiguadores son responsables de controlar las vibraciones d
-
-
-
-
----
-
+* El desgaste en la base de la canasta o en el sistema de transmisión puede resultar en movimientos inusuales durante el centrifugado. 
+* Condensador de Arranque Deteriorado
+* Problemas con el Motor: Si las escobillas están desgastadas. Si hay obstrucciones en el tubo de desagüe, esto puede causar que el agua no se elimine adecuadamente, afectando el equilibrio durante el centrifugado.
+* Fallo en los Amortiguadores
