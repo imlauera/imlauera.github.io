@@ -1,8 +1,6 @@
 ---
 title:
 - Exámen Electrodomésticos.
-author:
-- Andrés Imlauer
 theme:
 - Copenhagen
 ---
