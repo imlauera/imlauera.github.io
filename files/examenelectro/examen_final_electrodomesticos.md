@@ -95,8 +95,8 @@ Para medir continuidad:
 
 # Si una plancha funciona pero no se logra la temperatura adecuada, nombre la causa, y cual es la solución.
 
-* Causa: Termostato defectuoso o elemento calefactor dañado.
-* Solución: Reemplazar el termostato o el elemento calefactor.
+* Causa: Termostato defectuoso.
+* Solución: Reemplazar el termostato.
 
 ---
 
