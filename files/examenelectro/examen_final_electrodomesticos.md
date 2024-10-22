@@ -192,12 +192,8 @@ Microcontrolador, Relé de Control, Electroválvulas, Sensor de Carga, Sensor de
 
 # Realiza un circuito de comprobación de lavarropa.
 
-Un circuito simple incluiría:
-
-Fuente de alimentación
-Interruptores para cada función (lavado, centrifugado)
-Sensores para monitorear el nivel del agua.
-Causa de Inestabilidad en Centrifugado
+La placa antes de arrancar comprueba el blocapuertas, comprueba la electroválvula (carga y saca el agua), comprueba el presostato, y comprueba la bomba de agua.
+¿O sea el circuito que me está pidiendo es el circuito del lavarropas?
 
 ---
 
