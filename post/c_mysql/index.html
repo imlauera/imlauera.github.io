@@ -14,7 +14,7 @@ Hay que aprender lenguaje ensamblador para saber por qué existe C, hay que apre
 https://www.youtube.com/watch?v=jACHG6tZakw
 https://www.ucl.ac.uk/isd/services/websites-apps/databases/mysql/calling-mysql-c
 https://github.com/bloominstituteoftechnology/C-Web-Server
-Archivo mysql.c: // sudo apt install -y libmariadb-dev-compat libmariadb-dev // Compile: gcc -o mysql-test mysql.">
+Archivo mysql.c: // sudo apt install -y libmariadb-dev-compat libmariadb-dev // Compile: gcc -o mysql-test mysql.c $(mysql_config --libs) #include &lt;stdio.h&gt; #include &lt;mysql/mysql.h&gt; int main() { MYSQL *conn; MYSQL_RES *res; MYSQL_ROW row; char *server = &#34;localhost&#34;; char *user = &#34;admin&#34;; char *password = &#34;myawesomepass&#34;; char *database = &#34;db1&#34;; conn = mysql_init(NULL); /* Connect to database */ if (!mysql_real_connect(conn, server, user, password, database, 0, NULL, 0)) { fprintf(stderr, &#34;%s\n&#34;, mysql_error(conn)); return(0); } /* send SQL query */ if (mysql_query(conn, &#34;SELECT * FROM wp_users WHERE id = 1&#34;)) { fprintf(stderr, &#34;%s\n&#34;, mysql_error(conn)); return(0); } res = mysql_use_result(conn); /* output fields 1 and 2 of each row */ while ((row = mysql_fetch_row(res)) != NULL) printf(&#34;%s %s\n&#34;, row[1], row[2]); /* Release memory used to store results and close connection */ mysql_free_result(res); mysql_close(conn); }">
   <meta property="og:locale" content="es_es">
   <meta property="og:type" content="article">
     <meta property="article:section" content="post">
@@ -29,7 +29,7 @@ Hay que aprender lenguaje ensamblador para saber por qué existe C, hay que apre
 https://www.youtube.com/watch?v=jACHG6tZakw
 https://www.ucl.ac.uk/isd/services/websites-apps/databases/mysql/calling-mysql-c
 https://github.com/bloominstituteoftechnology/C-Web-Server
-Archivo mysql.c: // sudo apt install -y libmariadb-dev-compat libmariadb-dev // Compile: gcc -o mysql-test mysql.">
+Archivo mysql.c: // sudo apt install -y libmariadb-dev-compat libmariadb-dev // Compile: gcc -o mysql-test mysql.c $(mysql_config --libs) #include &lt;stdio.h&gt; #include &lt;mysql/mysql.h&gt; int main() { MYSQL *conn; MYSQL_RES *res; MYSQL_ROW row; char *server = &#34;localhost&#34;; char *user = &#34;admin&#34;; char *password = &#34;myawesomepass&#34;; char *database = &#34;db1&#34;; conn = mysql_init(NULL); /* Connect to database */ if (!mysql_real_connect(conn, server, user, password, database, 0, NULL, 0)) { fprintf(stderr, &#34;%s\n&#34;, mysql_error(conn)); return(0); } /* send SQL query */ if (mysql_query(conn, &#34;SELECT * FROM wp_users WHERE id = 1&#34;)) { fprintf(stderr, &#34;%s\n&#34;, mysql_error(conn)); return(0); } res = mysql_use_result(conn); /* output fields 1 and 2 of each row */ while ((row = mysql_fetch_row(res)) != NULL) printf(&#34;%s %s\n&#34;, row[1], row[2]); /* Release memory used to store results and close connection */ mysql_free_result(res); mysql_close(conn); }">
   <meta itemprop="datePublished" content="2024-10-03T12:19:50-03:00">
   <meta itemprop="dateModified" content="2024-10-03T12:19:50-03:00">
   <meta itemprop="wordCount" content="191">
@@ -42,7 +42,7 @@ Hay que aprender lenguaje ensamblador para saber por qué existe C, hay que apre
 https://www.youtube.com/watch?v=jACHG6tZakw
 https://www.ucl.ac.uk/isd/services/websites-apps/databases/mysql/calling-mysql-c
 https://github.com/bloominstituteoftechnology/C-Web-Server
-Archivo mysql.c: // sudo apt install -y libmariadb-dev-compat libmariadb-dev // Compile: gcc -o mysql-test mysql.">
+Archivo mysql.c: // sudo apt install -y libmariadb-dev-compat libmariadb-dev // Compile: gcc -o mysql-test mysql.c $(mysql_config --libs) #include &lt;stdio.h&gt; #include &lt;mysql/mysql.h&gt; int main() { MYSQL *conn; MYSQL_RES *res; MYSQL_ROW row; char *server = &#34;localhost&#34;; char *user = &#34;admin&#34;; char *password = &#34;myawesomepass&#34;; char *database = &#34;db1&#34;; conn = mysql_init(NULL); /* Connect to database */ if (!mysql_real_connect(conn, server, user, password, database, 0, NULL, 0)) { fprintf(stderr, &#34;%s\n&#34;, mysql_error(conn)); return(0); } /* send SQL query */ if (mysql_query(conn, &#34;SELECT * FROM wp_users WHERE id = 1&#34;)) { fprintf(stderr, &#34;%s\n&#34;, mysql_error(conn)); return(0); } res = mysql_use_result(conn); /* output fields 1 and 2 of each row */ while ((row = mysql_fetch_row(res)) != NULL) printf(&#34;%s %s\n&#34;, row[1], row[2]); /* Release memory used to store results and close connection */ mysql_free_result(res); mysql_close(conn); }">
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -65,7 +65,49 @@ Hay que aprender lenguaje ensamblador para saber por qué existe C, hay que apre
 https://www.youtube.com/watch?v=jACHG6tZakw
 https://www.ucl.ac.uk/isd/services/websites-apps/databases/mysql/calling-mysql-c
 https://github.com/bloominstituteoftechnology/C-Web-Server
-Archivo mysql.c: // sudo apt install -y libmariadb-dev-compat libmariadb-dev // Compile: gcc -o mysql-test mysql.">
+Archivo mysql.c:
+// sudo apt install -y libmariadb-dev-compat libmariadb-dev
+// Compile: gcc -o mysql-test mysql.c $(mysql_config --libs)
+
+#include &lt;stdio.h&gt;
+#include &lt;mysql/mysql.h&gt;
+
+int main() {
+   MYSQL *conn;
+   MYSQL_RES *res;
+   MYSQL_ROW row;
+
+   char *server = &#34;localhost&#34;;
+   char *user = &#34;admin&#34;;
+   char *password = &#34;myawesomepass&#34;;
+   char *database = &#34;db1&#34;;
+   
+   conn = mysql_init(NULL);
+   
+   /* Connect to database */
+   if (!mysql_real_connect(conn, server,
+         user, password, database, 0, NULL, 0)) {
+      fprintf(stderr, &#34;%s\n&#34;, mysql_error(conn));
+      return(0);
+   }
+
+   /* send SQL query */
+   if (mysql_query(conn, &#34;SELECT * FROM wp_users WHERE id = 1&#34;)) {
+      fprintf(stderr, &#34;%s\n&#34;, mysql_error(conn));
+      return(0);
+   }
+
+   res = mysql_use_result(conn);
+   
+   /* output fields 1 and 2 of each row */
+   while ((row = mysql_fetch_row(res)) != NULL)
+      printf(&#34;%s %s\n&#34;, row[1], row[2]);
+
+   /* Release memory used to store results and close connection */
+   mysql_free_result(res);
+   mysql_close(conn);
+}
+">
 </head>
 <body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
   <div class="navbar-brand">

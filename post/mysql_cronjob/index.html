@@ -11,7 +11,7 @@
   <meta property="og:title" content="Mysql cronjob">
   <meta property="og:description" content="Esto es una pésima forma de hacer backups.
 mkdir -p /home/miusuario/backup/database-backups &amp;&amp; cd /home/miusuario/backup/database-backups touch cron_backup.sh chmod &#43;x cron_backup.sh Hay muchas mejores formas de hacer esto pero este es el script que lo usé un par de veces.
-#!/bin/sh # # @author: Jabran Rafique &lt;hello@jabran.me&gt; # @link: http://jabran.me/articles/automatic-database-backup-using-git-hosting/ # Set variables FULLDATE = $(date &#43;&#34;%Y-%d-%m %H:%M&#34;) NOW = $(date &#43;&#34;%Y-%m-%d-%H-%M&#34;) # MYSQL_DUMP = `which mysqldump` MYSQL_DUMP = &#34;docker compose -f /home/miusuario/kimkelen/ exec db /usr/bin/mysqldump&#34; GIT = `which git` DB_NAME = &#34;kimkelen&#34; CRON_USER = &#34;root&#34; CRON_PASSWORD = &#34;xxxx&#34; TEMP_BACKUP = &#34;latest_backup.">
+#!/bin/sh # # @author: Jabran Rafique &lt;hello@jabran.me&gt; # @link: http://jabran.me/articles/automatic-database-backup-using-git-hosting/ # Set variables FULLDATE = $(date &#43;&#34;%Y-%d-%m %H:%M&#34;) NOW = $(date &#43;&#34;%Y-%m-%d-%H-%M&#34;) # MYSQL_DUMP = `which mysqldump` MYSQL_DUMP = &#34;docker compose -f /home/miusuario/kimkelen/ exec db /usr/bin/mysqldump&#34; GIT = `which git` DB_NAME = &#34;kimkelen&#34; CRON_USER = &#34;root&#34; CRON_PASSWORD = &#34;xxxx&#34; TEMP_BACKUP = &#34;latest_backup.sql&#34; BACKUP_DIR = $(date &#43;&#34;%Y/%m&#34;) # Check current Git status and update ${GIT} status ${GIT} pull origin HEAD # Dump database ${MYSQL_DUMP} -u &#34;$CRON_USER&#34; -p &#34;$CRON_PASSWORD&#34; $DB_NAME &gt; $TEMP_BACKUP wait # Make backup directory if not exists (format: {year}/{month}/) if [ ! -d &#34;$BACKUP_DIR&#34; ]; then mkdir -p $BACKUP_DIR fi # Compress SQL dump tar -cvzf $BACKUP_DIR/$DB_NAME-$NOW-sql.tar.gz $TEMP_BACKUP # Remove original SQL dump rm -f $TEMP_BACKUP # Add to Git and commit ${GIT} add -A ${GIT} commit -m &#34;Automatic backup - $FULLDATE&#34; ${GIT} push origin HEAD Al final lo terminé dejando así: Esto es necesario para que find lo ignore: mv cron_backup.sh .cron_backup.sh">
   <meta property="og:locale" content="es_es">
   <meta property="og:type" content="article">
     <meta property="article:section" content="post">
@@ -23,7 +23,7 @@ mkdir -p /home/miusuario/backup/database-backups &amp;&amp; cd /home/miusuario/b
   <meta itemprop="name" content="Mysql cronjob">
   <meta itemprop="description" content="Esto es una pésima forma de hacer backups.
 mkdir -p /home/miusuario/backup/database-backups &amp;&amp; cd /home/miusuario/backup/database-backups touch cron_backup.sh chmod &#43;x cron_backup.sh Hay muchas mejores formas de hacer esto pero este es el script que lo usé un par de veces.
-#!/bin/sh # # @author: Jabran Rafique &lt;hello@jabran.me&gt; # @link: http://jabran.me/articles/automatic-database-backup-using-git-hosting/ # Set variables FULLDATE = $(date &#43;&#34;%Y-%d-%m %H:%M&#34;) NOW = $(date &#43;&#34;%Y-%m-%d-%H-%M&#34;) # MYSQL_DUMP = `which mysqldump` MYSQL_DUMP = &#34;docker compose -f /home/miusuario/kimkelen/ exec db /usr/bin/mysqldump&#34; GIT = `which git` DB_NAME = &#34;kimkelen&#34; CRON_USER = &#34;root&#34; CRON_PASSWORD = &#34;xxxx&#34; TEMP_BACKUP = &#34;latest_backup.">
+#!/bin/sh # # @author: Jabran Rafique &lt;hello@jabran.me&gt; # @link: http://jabran.me/articles/automatic-database-backup-using-git-hosting/ # Set variables FULLDATE = $(date &#43;&#34;%Y-%d-%m %H:%M&#34;) NOW = $(date &#43;&#34;%Y-%m-%d-%H-%M&#34;) # MYSQL_DUMP = `which mysqldump` MYSQL_DUMP = &#34;docker compose -f /home/miusuario/kimkelen/ exec db /usr/bin/mysqldump&#34; GIT = `which git` DB_NAME = &#34;kimkelen&#34; CRON_USER = &#34;root&#34; CRON_PASSWORD = &#34;xxxx&#34; TEMP_BACKUP = &#34;latest_backup.sql&#34; BACKUP_DIR = $(date &#43;&#34;%Y/%m&#34;) # Check current Git status and update ${GIT} status ${GIT} pull origin HEAD # Dump database ${MYSQL_DUMP} -u &#34;$CRON_USER&#34; -p &#34;$CRON_PASSWORD&#34; $DB_NAME &gt; $TEMP_BACKUP wait # Make backup directory if not exists (format: {year}/{month}/) if [ ! -d &#34;$BACKUP_DIR&#34; ]; then mkdir -p $BACKUP_DIR fi # Compress SQL dump tar -cvzf $BACKUP_DIR/$DB_NAME-$NOW-sql.tar.gz $TEMP_BACKUP # Remove original SQL dump rm -f $TEMP_BACKUP # Add to Git and commit ${GIT} add -A ${GIT} commit -m &#34;Automatic backup - $FULLDATE&#34; ${GIT} push origin HEAD Al final lo terminé dejando así: Esto es necesario para que find lo ignore: mv cron_backup.sh .cron_backup.sh">
   <meta itemprop="datePublished" content="2024-09-20T19:57:30-03:00">
   <meta itemprop="dateModified" content="2024-09-20T19:57:30-03:00">
   <meta itemprop="wordCount" content="337">
@@ -33,7 +33,7 @@ mkdir -p /home/miusuario/backup/database-backups &amp;&amp; cd /home/miusuario/b
   <meta name="twitter:title" content="Mysql cronjob">
   <meta name="twitter:description" content="Esto es una pésima forma de hacer backups.
 mkdir -p /home/miusuario/backup/database-backups &amp;&amp; cd /home/miusuario/backup/database-backups touch cron_backup.sh chmod &#43;x cron_backup.sh Hay muchas mejores formas de hacer esto pero este es el script que lo usé un par de veces.
-#!/bin/sh # # @author: Jabran Rafique &lt;hello@jabran.me&gt; # @link: http://jabran.me/articles/automatic-database-backup-using-git-hosting/ # Set variables FULLDATE = $(date &#43;&#34;%Y-%d-%m %H:%M&#34;) NOW = $(date &#43;&#34;%Y-%m-%d-%H-%M&#34;) # MYSQL_DUMP = `which mysqldump` MYSQL_DUMP = &#34;docker compose -f /home/miusuario/kimkelen/ exec db /usr/bin/mysqldump&#34; GIT = `which git` DB_NAME = &#34;kimkelen&#34; CRON_USER = &#34;root&#34; CRON_PASSWORD = &#34;xxxx&#34; TEMP_BACKUP = &#34;latest_backup.">
+#!/bin/sh # # @author: Jabran Rafique &lt;hello@jabran.me&gt; # @link: http://jabran.me/articles/automatic-database-backup-using-git-hosting/ # Set variables FULLDATE = $(date &#43;&#34;%Y-%d-%m %H:%M&#34;) NOW = $(date &#43;&#34;%Y-%m-%d-%H-%M&#34;) # MYSQL_DUMP = `which mysqldump` MYSQL_DUMP = &#34;docker compose -f /home/miusuario/kimkelen/ exec db /usr/bin/mysqldump&#34; GIT = `which git` DB_NAME = &#34;kimkelen&#34; CRON_USER = &#34;root&#34; CRON_PASSWORD = &#34;xxxx&#34; TEMP_BACKUP = &#34;latest_backup.sql&#34; BACKUP_DIR = $(date &#43;&#34;%Y/%m&#34;) # Check current Git status and update ${GIT} status ${GIT} pull origin HEAD # Dump database ${MYSQL_DUMP} -u &#34;$CRON_USER&#34; -p &#34;$CRON_PASSWORD&#34; $DB_NAME &gt; $TEMP_BACKUP wait # Make backup directory if not exists (format: {year}/{month}/) if [ ! -d &#34;$BACKUP_DIR&#34; ]; then mkdir -p $BACKUP_DIR fi # Compress SQL dump tar -cvzf $BACKUP_DIR/$DB_NAME-$NOW-sql.tar.gz $TEMP_BACKUP # Remove original SQL dump rm -f $TEMP_BACKUP # Add to Git and commit ${GIT} add -A ${GIT} commit -m &#34;Automatic backup - $FULLDATE&#34; ${GIT} push origin HEAD Al final lo terminé dejando así: Esto es necesario para que find lo ignore: mv cron_backup.sh .cron_backup.sh">
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -52,8 +52,54 @@ mkdir -p /home/miusuario/backup/database-backups &amp;&amp; cd /home/miusuario/b
   <meta name="referrer" content="no-referrer">
   <meta name="author" content="Imlauer.">
   <meta name="description" content="Esto es una pésima forma de hacer backups.
-mkdir -p /home/miusuario/backup/database-backups &amp;&amp; cd /home/miusuario/backup/database-backups touch cron_backup.sh chmod &#43;x cron_backup.sh Hay muchas mejores formas de hacer esto pero este es el script que lo usé un par de veces.
-#!/bin/sh # # @author: Jabran Rafique &lt;hello@jabran.me&gt; # @link: http://jabran.me/articles/automatic-database-backup-using-git-hosting/ # Set variables FULLDATE = $(date &#43;&#34;%Y-%d-%m %H:%M&#34;) NOW = $(date &#43;&#34;%Y-%m-%d-%H-%M&#34;) # MYSQL_DUMP = `which mysqldump` MYSQL_DUMP = &#34;docker compose -f /home/miusuario/kimkelen/ exec db /usr/bin/mysqldump&#34; GIT = `which git` DB_NAME = &#34;kimkelen&#34; CRON_USER = &#34;root&#34; CRON_PASSWORD = &#34;xxxx&#34; TEMP_BACKUP = &#34;latest_backup.">
+mkdir -p /home/miusuario/backup/database-backups &amp;&amp; cd /home/miusuario/backup/database-backups
+touch cron_backup.sh
+chmod &#43;x cron_backup.sh
+Hay muchas mejores formas de hacer esto pero este es el script que lo usé un par de veces.
+#!/bin/sh
+#
+# @author: Jabran Rafique &lt;hello@jabran.me&gt;
+# @link: http://jabran.me/articles/automatic-database-backup-using-git-hosting/
+
+# Set variables
+FULLDATE      = $(date &#43;&#34;%Y-%d-%m %H:%M&#34;)
+NOW           = $(date &#43;&#34;%Y-%m-%d-%H-%M&#34;)
+# MYSQL_DUMP    = `which mysqldump`
+MYSQL_DUMP    = &#34;docker compose -f /home/miusuario/kimkelen/ exec db /usr/bin/mysqldump&#34;
+GIT           = `which git`
+DB_NAME       = &#34;kimkelen&#34;
+CRON_USER     = &#34;root&#34;
+CRON_PASSWORD = &#34;xxxx&#34;
+TEMP_BACKUP   = &#34;latest_backup.sql&#34;
+BACKUP_DIR    = $(date &#43;&#34;%Y/%m&#34;)
+
+# Check current Git status and update
+${GIT} status
+${GIT} pull origin HEAD
+
+# Dump database
+${MYSQL_DUMP} -u &#34;$CRON_USER&#34; -p &#34;$CRON_PASSWORD&#34; $DB_NAME &gt; $TEMP_BACKUP 
+wait
+
+# Make backup directory if not exists (format: {year}/{month}/)
+if [ ! -d &#34;$BACKUP_DIR&#34; ]; then
+  mkdir -p $BACKUP_DIR
+  fi
+
+  # Compress SQL dump
+  tar -cvzf $BACKUP_DIR/$DB_NAME-$NOW-sql.tar.gz $TEMP_BACKUP
+
+  # Remove original SQL dump
+  rm -f $TEMP_BACKUP
+
+  # Add to Git and commit
+  ${GIT} add -A
+  ${GIT} commit -m &#34;Automatic backup - $FULLDATE&#34;
+  ${GIT} push origin HEAD
+
+Al final lo terminé dejando así:
+Esto es necesario para que find lo ignore:  
+mv cron_backup.sh .cron_backup.sh">
 </head>
 <body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
   <div class="navbar-brand">
