@@ -34,7 +34,7 @@ Explicación de por qué gpt:
 To boot MBR under UEFI, you need CSM. Intel pushed for its removal years ago, so it’s unlikely to find it in anything modern. Es recomendable para UEFI con hdd mayores a 2teras, dos también funciona con UEFI pero para bootear un disco duro con MBR(dos) desde UEFI se usa CSM que es algo viejo deprecado por intel). En MBR(DOS) no podés tener una partición de 3 teras. GPT es el futuro. UEFI Firware necesita GPT.">
   <meta itemprop="datePublished" content="2023-11-22T02:05:50-03:00">
   <meta itemprop="dateModified" content="2023-11-22T02:05:50-03:00">
-  <meta itemprop="wordCount" content="3805">
+  <meta itemprop="wordCount" content="3853">
   <meta itemprop="keywords" content="Archlinux,Full,Installation">
   
   <meta name="twitter:card" content="summary">
@@ -230,6 +230,11 @@ Tenés que ubicar el efi y ejecutarlo</p>
 </span></span></code></pre></div><h5 id="legacy-dosmbr">legacy dos/mbr</h5>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>grub-install /dev/sda --recheck
 </span></span></code></pre></div><h6 id="luego-de-instalar-el-grub-se-lo-configura-con-el-siguiente-comando">Luego de instalar el grub se lo configura con el siguiente comando:</h6>
+<h3 id="para-que-os-prober-reconozca-las-demás-distros-tenés-que-montar-las-otras-particiones-luego-de-inicar-arch-y-en-etcdefaultgrub-agregá-la-siguiente-línea">Para que os-prober reconozca las demás distros tenés que montar las otras particiones luego de inicar arch y en <code>/etc/default/grub</code> agregá la siguiente línea:</h3>
+<p><code>GRUB_DISABLE_OS_PROBER=false</code></p>
+<pre tabindex="0"><code>sudo mount --mkdir /dev/sdax /mnt/linux
+</code></pre><p>Ejecutá: <code>sudo os-prober</code> para verificar que detecte la partición de las demás distribuciones de linux que tengas.</p>
+<p>Luego</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>grub-mkconfig -o /boot/grub/grub.cfg
 </span></span><span style="display:flex;"><span>exit
 </span></span></code></pre></div><h5 id="ahora-salimos-del-chroot-y-reiniciamos">Ahora salimos del chroot y reiniciamos</h5>
