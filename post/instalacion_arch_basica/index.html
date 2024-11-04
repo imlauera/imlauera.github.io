@@ -8,7 +8,7 @@
 <head>
   <meta property="og:url" content="https://imlauera.github.io/post/instalacion_arch_basica/">
   <meta property="og:site_name" content="Tech Blog">
-  <meta property="og:title" content="Instalación de ArchLinux completa">
+  <meta property="og:title" content="Instalación de ArchLinux completa y cheatsheet de pacman">
   <meta property="og:description" content="loadkeys es timedatectl set-ntp true Configurar wifi después de bootear a arch iwctl device list station wlan0 scan station wlan0 get-networks station wlan0 connect asdf station wlan0 show exit Probar la conexión ping dgg.gg
 Listá tus particiones fdisk -l
 Para empezar a particionar ejecutamos cfdisk /dev/sda o usando fdisk /dev/sda explicado más abajo
@@ -25,7 +25,7 @@ To boot MBR under UEFI, you need CSM. Intel pushed for its removal years ago, so
     <meta property="article:tag" content="Installation">
 
   
-  <meta itemprop="name" content="Instalación de ArchLinux completa">
+  <meta itemprop="name" content="Instalación de ArchLinux completa y cheatsheet de pacman">
   <meta itemprop="description" content="loadkeys es timedatectl set-ntp true Configurar wifi después de bootear a arch iwctl device list station wlan0 scan station wlan0 get-networks station wlan0 connect asdf station wlan0 show exit Probar la conexión ping dgg.gg
 Listá tus particiones fdisk -l
 Para empezar a particionar ejecutamos cfdisk /dev/sda o usando fdisk /dev/sda explicado más abajo
@@ -34,11 +34,11 @@ Explicación de por qué gpt:
 To boot MBR under UEFI, you need CSM. Intel pushed for its removal years ago, so it’s unlikely to find it in anything modern. Es recomendable para UEFI con hdd mayores a 2teras, dos también funciona con UEFI pero para bootear un disco duro con MBR(dos) desde UEFI se usa CSM que es algo viejo deprecado por intel). En MBR(DOS) no podés tener una partición de 3 teras. GPT es el futuro. UEFI Firware necesita GPT.">
   <meta itemprop="datePublished" content="2023-11-22T02:05:50-03:00">
   <meta itemprop="dateModified" content="2023-11-22T02:05:50-03:00">
-  <meta itemprop="wordCount" content="3853">
+  <meta itemprop="wordCount" content="3916">
   <meta itemprop="keywords" content="Archlinux,Full,Installation">
   
   <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="Instalación de ArchLinux completa">
+  <meta name="twitter:title" content="Instalación de ArchLinux completa y cheatsheet de pacman">
   <meta name="twitter:description" content="loadkeys es timedatectl set-ntp true Configurar wifi después de bootear a arch iwctl device list station wlan0 scan station wlan0 get-networks station wlan0 connect asdf station wlan0 show exit Probar la conexión ping dgg.gg
 Listá tus particiones fdisk -l
 Para empezar a particionar ejecutamos cfdisk /dev/sda o usando fdisk /dev/sda explicado más abajo
@@ -50,7 +50,7 @@ To boot MBR under UEFI, you need CSM. Intel pushed for its removal years ago, so
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>
     
-    Instalación de ArchLinux completa
+    Instalación de ArchLinux completa y cheatsheet de pacman
     
   </title>
   <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
@@ -107,7 +107,7 @@ Es recomendable para UEFI con hdd mayores a 2teras, dos también funciona con UE
       <div class="hero-body">
 <div class="container">
   <h1 class="title">
-    Instalación de ArchLinux completa
+    Instalación de ArchLinux completa y cheatsheet de pacman
   </h1>
   <h2 class="subtitle">
     <time datetime='2023-11-22T02:05:50-03:00'>
@@ -202,6 +202,8 @@ Es recomendable para UEFI con hdd mayores a 2teras, dos también funciona con UE
 </span></span><span style="display:flex;"><span>locale-gen
 </span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;LANG=en_US.UTF-8&#34;</span> &gt; /etc/locale.conf
 </span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;KEYMAP=es&#34;</span> &gt; /etc/vconsole.conf
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### Mirá en el directorio /usr/share/kbd/consolefonts/ para ver tus letras disponibles</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;FONT=latarcyrheb-sun32&#34;</span> &gt;&gt; /etc/vconsole.conf
 </span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;arch&#34;</span> &gt; /etc/hostname
 </span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>vim /etc/hosts
 </span></span><span style="display:flex;"><span>127.0.0.1       localhost
@@ -230,9 +232,9 @@ Tenés que ubicar el efi y ejecutarlo</p>
 </span></span></code></pre></div><h5 id="legacy-dosmbr">legacy dos/mbr</h5>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>grub-install /dev/sda --recheck
 </span></span></code></pre></div><h6 id="luego-de-instalar-el-grub-se-lo-configura-con-el-siguiente-comando">Luego de instalar el grub se lo configura con el siguiente comando:</h6>
-<h3 id="para-que-os-prober-reconozca-las-demás-distros-tenés-que-montar-las-otras-particiones-luego-de-inicar-arch-y-en-etcdefaultgrub-agregá-la-siguiente-línea">Para que os-prober reconozca las demás distros tenés que montar las otras particiones luego de inicar arch y en <code>/etc/default/grub</code> agregá la siguiente línea:</h3>
+<h2 id="para-que-os-prober-reconozca-las-demás-distros-tenés-que-montar-las-otras-particiones-luego-de-inicar-arch-y-en-etcdefaultgrub-agregá-la-siguiente-línea">Para que os-prober reconozca las demás distros tenés que montar las otras particiones luego de inicar arch y en <code>/etc/default/grub</code> agregá la siguiente línea:</h2>
 <p><code>GRUB_DISABLE_OS_PROBER=false</code></p>
-<pre tabindex="0"><code>sudo mount --mkdir /dev/sdax /mnt/linux
+<pre tabindex="0"><code>sudo mount --mkdir /dev/sdaX /mnt/linux
 </code></pre><p>Ejecutá: <code>sudo os-prober</code> para verificar que detecte la partición de las demás distribuciones de linux que tengas.</p>
 <p>Luego</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>grub-mkconfig -o /boot/grub/grub.cfg
@@ -251,7 +253,11 @@ Tenés que ubicar el efi y ejecutarlo</p>
 </span></span><span style="display:flex;"><span># pipewire &amp;
 </span></span><span style="display:flex;"><span># pipewire-pulse &amp;
 </span></span><span style="display:flex;"><span># pipewire-media-session &amp;
+</span></span><span style="display:flex;"><span>#<span style="color:#75715e">### Esto yo no lo volvería a instalar, solo xorg y xorg-xinit porque uso dwm, o ahora estoy usando sólo la TTY.</span>
 </span></span><span style="display:flex;"><span># pacman -Syu xorg xfce4 xfce4-goodies 
+</span></span><span style="display:flex;"><span># pacman -S fish 
+</span></span><span style="display:flex;"><span>#<span style="color:#75715e">## La configuración de fish está en .fish/config/config.fish, uso fish por el autosuggestions.</span>
+</span></span><span style="display:flex;"><span># chsh para cambiar la shell del usuario actual
 </span></span></code></pre></div><p>Ingresá desde tu usuario y creá un archivo .xinitrc adentro poné</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>exec xfce4-session
 </span></span></code></pre></div><h3 id="agregar-keymap-keyboard-y-touchpad-synaptics">agregar keymap keyboard y touchpad synaptics</h3>
