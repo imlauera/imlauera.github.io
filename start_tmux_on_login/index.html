@@ -9,8 +9,11 @@
   <meta property="og:url" content="https://imlauera.github.io/start_tmux_on_login/">
   <meta property="og:site_name" content="Tech Blog">
   <meta property="og:title" content="Iniciar TMUX en el login en la TTY">
-  <meta property="og:description" content="Con fish En el .config/fish/fish.conf agregá:
-if status --is-login if test -z &#34;$DISPLAY&#34; -a $XDG_VTNR = 1 tmux attach-session -t mysession 2&gt;/dev/null || tmux new-session -s mysession end end Con bash if [ -z &#34;$TMUX&#34; ] &amp;&amp; [ -n &#34;$SSH_TTY&#34; ] &amp;&amp; [[ $- =~ i ]]; then tmux attach-session -t mysession 2&gt;/dev/null || tmux new-session -s mysession fi">
+  <meta property="og:description" content="Agregando esta linea a tu bashrc.
+[ -z &#34;$TMUX&#34; ] &amp;&amp; { tmux attach || exec tmux new-session &amp;&amp; exit;}
+Fijate que esta línea cerrará el ssh o el login en la tty cuando termines tu session de TMUX. Si no te gusta esta configuración eliminá el “exit” del final.
+[ -z &#34;$TMUX&#34; ] &amp;&amp; { tmux attach || exec tmux new-session;}
+No deberías envolver a tmux con exec, esto causará que la conexión se cierre cuando no haya sessiones de tmux para unir (attach).">
   <meta property="og:locale" content="es_es">
   <meta property="og:type" content="article">
     <meta property="article:published_time" content="2024-11-19T07:31:32-03:00">
@@ -19,17 +22,23 @@ if status --is-login if test -z &#34;$DISPLAY&#34; -a $XDG_VTNR = 1 tmux attach-
 
   
   <meta itemprop="name" content="Iniciar TMUX en el login en la TTY">
-  <meta itemprop="description" content="Con fish En el .config/fish/fish.conf agregá:
-if status --is-login if test -z &#34;$DISPLAY&#34; -a $XDG_VTNR = 1 tmux attach-session -t mysession 2&gt;/dev/null || tmux new-session -s mysession end end Con bash if [ -z &#34;$TMUX&#34; ] &amp;&amp; [ -n &#34;$SSH_TTY&#34; ] &amp;&amp; [[ $- =~ i ]]; then tmux attach-session -t mysession 2&gt;/dev/null || tmux new-session -s mysession fi">
+  <meta itemprop="description" content="Agregando esta linea a tu bashrc.
+[ -z &#34;$TMUX&#34; ] &amp;&amp; { tmux attach || exec tmux new-session &amp;&amp; exit;}
+Fijate que esta línea cerrará el ssh o el login en la tty cuando termines tu session de TMUX. Si no te gusta esta configuración eliminá el “exit” del final.
+[ -z &#34;$TMUX&#34; ] &amp;&amp; { tmux attach || exec tmux new-session;}
+No deberías envolver a tmux con exec, esto causará que la conexión se cierre cuando no haya sessiones de tmux para unir (attach).">
   <meta itemprop="datePublished" content="2024-11-19T07:31:32-03:00">
   <meta itemprop="dateModified" content="2024-11-19T07:31:32-03:00">
-  <meta itemprop="wordCount" content="59">
+  <meta itemprop="wordCount" content="197">
   <meta itemprop="keywords" content="Linux">
   
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="Iniciar TMUX en el login en la TTY">
-  <meta name="twitter:description" content="Con fish En el .config/fish/fish.conf agregá:
-if status --is-login if test -z &#34;$DISPLAY&#34; -a $XDG_VTNR = 1 tmux attach-session -t mysession 2&gt;/dev/null || tmux new-session -s mysession end end Con bash if [ -z &#34;$TMUX&#34; ] &amp;&amp; [ -n &#34;$SSH_TTY&#34; ] &amp;&amp; [[ $- =~ i ]]; then tmux attach-session -t mysession 2&gt;/dev/null || tmux new-session -s mysession fi">
+  <meta name="twitter:description" content="Agregando esta linea a tu bashrc.
+[ -z &#34;$TMUX&#34; ] &amp;&amp; { tmux attach || exec tmux new-session &amp;&amp; exit;}
+Fijate que esta línea cerrará el ssh o el login en la tty cuando termines tu session de TMUX. Si no te gusta esta configuración eliminá el “exit” del final.
+[ -z &#34;$TMUX&#34; ] &amp;&amp; { tmux attach || exec tmux new-session;}
+No deberías envolver a tmux con exec, esto causará que la conexión se cierre cuando no haya sessiones de tmux para unir (attach).">
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -47,18 +56,11 @@ if status --is-login if test -z &#34;$DISPLAY&#34; -a $XDG_VTNR = 1 tmux attach-
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="referrer" content="no-referrer">
   <meta name="author" content="Imlauer.">
-  <meta name="description" content="Con fish
-En el .config/fish/fish.conf agregá:
-if status --is-login
-  if test -z &#34;$DISPLAY&#34; -a $XDG_VTNR = 1
-    tmux attach-session -t mysession 2&gt;/dev/null || tmux new-session -s mysession
-  end
-end
-Con bash
-if [ -z &#34;$TMUX&#34; ] &amp;&amp; [ -n &#34;$SSH_TTY&#34; ] &amp;&amp; [[ $- =~ i ]]; then
-  tmux attach-session -t mysession 2&gt;/dev/null || tmux new-session -s mysession
-fi
-">
+  <meta name="description" content="Agregando esta linea a tu bashrc.
+[ -z &quot;$TMUX&quot;  ] &amp;&amp; { tmux attach || exec tmux new-session &amp;&amp; exit;}
+Fijate que esta línea cerrará el ssh o el login en la tty cuando termines tu session de TMUX. Si no te gusta esta configuración eliminá el &ldquo;exit&rdquo; del final.
+[ -z &quot;$TMUX&quot;  ] &amp;&amp; { tmux attach || exec tmux new-session;}
+No deberías envolver a tmux con exec, esto causará que la conexión se cierre cuando no haya sessiones de tmux para unir (attach).">
 </head>
 <body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
   <div class="navbar-brand">
@@ -106,7 +108,19 @@ fi
     <section class="section">
       <div class="container">
 <div class="content is-medium">
-  <h4 id="con-fish">Con fish</h4>
+  <p>Agregando esta linea a tu <code>bashrc</code>.</p>
+<p><code>[ -z &quot;$TMUX&quot;  ] &amp;&amp; { tmux attach || exec tmux new-session &amp;&amp; exit;}</code></p>
+<p>Fijate que esta línea cerrará el ssh o el login en la tty cuando termines tu session de TMUX. Si no te gusta esta configuración eliminá el &ldquo;exit&rdquo; del final.</p>
+<p><code>[ -z &quot;$TMUX&quot;  ] &amp;&amp; { tmux attach || exec tmux new-session;}</code></p>
+<p>No deberías envolver a tmux con exec, esto causará que la conexión se cierre cuando no haya sessiones de tmux para unir (attach).</p>
+<hr>
+<h3 id="así-lo-terminé-configurando-en-fish-configfishconfigfish">Así lo terminé configurando en fish: <code>.config/fish/config.fish</code>:</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-console" data-lang="console"><span style="display:flex;"><span>if test -z &#34;$TMUX&#34; -a $XDG_VTNR = 1
+</span></span><span style="display:flex;"><span>  tmux attach || exec tmux new-session
+</span></span><span style="display:flex;"><span>end
+</span></span></code></pre></div><p>Con el <code>$XDG_VTNR</code> hago que solo me abra TMUX en la 1er TTY.</p>
+<h2 id="esto-funciona-pero-me-dió-este-problema-sessions-should-be-nested-with-care-unset-tmux-to-force">Esto funciona pero me dió este problema: sessions should be nested with care, unset $TMUX to force</h2>
+<h4 id="con-fish">Con fish</h4>
 <p>En el <code>.config/fish/fish.conf</code> agregá:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#66d9ef">if</span> status --is-login
 </span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> test -z <span style="color:#e6db74">&#34;</span>$DISPLAY<span style="color:#e6db74">&#34;</span> -a $XDG_VTNR <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>
@@ -117,7 +131,8 @@ fi
 <pre tabindex="0"><code>if [ -z &#34;$TMUX&#34; ] &amp;&amp; [ -n &#34;$SSH_TTY&#34; ] &amp;&amp; [[ $- =~ i ]]; then
   tmux attach-session -t mysession 2&gt;/dev/null || tmux new-session -s mysession
 fi
-</code></pre>
+</code></pre><p>Saludos</p>
+
 </div>
 
 
