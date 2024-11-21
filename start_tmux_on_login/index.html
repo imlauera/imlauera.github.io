@@ -29,7 +29,7 @@ Fijate que esta línea cerrará el ssh o el login en la tty cuando termines tu s
 No deberías envolver a tmux con exec, esto causará que la conexión se cierre cuando no haya sessiones de tmux para unir (attach).">
   <meta itemprop="datePublished" content="2024-11-19T07:31:32-03:00">
   <meta itemprop="dateModified" content="2024-11-19T07:31:32-03:00">
-  <meta itemprop="wordCount" content="197">
+  <meta itemprop="wordCount" content="233">
   <meta itemprop="keywords" content="Linux">
   
   <meta name="twitter:card" content="summary">
@@ -131,7 +131,12 @@ No deberías envolver a tmux con exec, esto causará que la conexión se cierre 
 <pre tabindex="0"><code>if [ -z &#34;$TMUX&#34; ] &amp;&amp; [ -n &#34;$SSH_TTY&#34; ] &amp;&amp; [[ $- =~ i ]]; then
   tmux attach-session -t mysession 2&gt;/dev/null || tmux new-session -s mysession
 fi
-</code></pre><p>Saludos</p>
+</code></pre><h3 id="al-final-terminé-agregando-mbsync--a-para-que-descargue-mis-nuevos-correos-cuando-estoy-usando-neomutt">Al final terminé agregando <code>mbsync -a</code> para que descargue mis nuevos correos cuando estoy usando neomutt.</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#66d9ef">if</span> test -z <span style="color:#e6db74">&#34;</span>$TMUX<span style="color:#e6db74">&#34;</span> -a $XDG_VTNR <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>  mbsync -a &gt; /dev/null &amp;
+</span></span><span style="display:flex;"><span>  tmux attach <span style="color:#f92672">||</span> exec tmux new-session
+</span></span><span style="display:flex;"><span>end
+</span></span></code></pre></div><p>Saludos</p>
 
 </div>
 
