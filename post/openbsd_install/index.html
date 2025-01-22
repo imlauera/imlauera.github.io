@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/post/openbsd_install/">
+  <meta property="og:site_name" content="Imlauer">
+  <meta property="og:title" content="Openbsd: Instalación y configuración">
+  <meta property="og:description" content="Mejores computadoras para correr openbsd: lenovo thinkpad t420 agregale un ssd, 8 gbde ram. nvidia no funciona bien con openbsd.
+Computadoras que corren bien con openbsd: https://jcs.org/tagged/openbsd
+https://jcs.org/2021/07/19/desktop
+Zaney: https://redirect.invidious.io/channel/UCmw-QGOHbHA5cDAvwwqUTKQ Dejó de usar openbsd por un problema de temperatura, pero hay una solución que se explicará acá: obsdfreqd
+https://redirect.invidious.io/playlist?list=PLbET-7keUM8qiNs0D7ya2cnu-n2y1JRwC
+https://redirect.invidious.io/watch?v=DQrXvjV9lyQ
+https://redirect.invidious.io/watch?v=c5WnhxFx6P8
+Primero descargamos install-number.iso de la arquitectura de pc que estemos usando y también descargá el SHA256 y SHA256.sig
+De esta primer parte me faltó lo que hace en archlinux en el 1er video.">
+  <meta property="og:locale" content="es_es">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="post">
+    <meta property="article:published_time" content="2024-09-14T18:41:20-03:00">
+    <meta property="article:modified_time" content="2024-09-14T18:41:20-03:00">
+
+  
+  <meta itemprop="name" content="Openbsd: Instalación y configuración">
+  <meta itemprop="description" content="Mejores computadoras para correr openbsd: lenovo thinkpad t420 agregale un ssd, 8 gbde ram. nvidia no funciona bien con openbsd.
+Computadoras que corren bien con openbsd: https://jcs.org/tagged/openbsd
+https://jcs.org/2021/07/19/desktop
+Zaney: https://redirect.invidious.io/channel/UCmw-QGOHbHA5cDAvwwqUTKQ Dejó de usar openbsd por un problema de temperatura, pero hay una solución que se explicará acá: obsdfreqd
+https://redirect.invidious.io/playlist?list=PLbET-7keUM8qiNs0D7ya2cnu-n2y1JRwC
+https://redirect.invidious.io/watch?v=DQrXvjV9lyQ
+https://redirect.invidious.io/watch?v=c5WnhxFx6P8
+Primero descargamos install-number.iso de la arquitectura de pc que estemos usando y también descargá el SHA256 y SHA256.sig
+De esta primer parte me faltó lo que hace en archlinux en el 1er video.">
+  <meta itemprop="datePublished" content="2024-09-14T18:41:20-03:00">
+  <meta itemprop="dateModified" content="2024-09-14T18:41:20-03:00">
+  <meta itemprop="wordCount" content="2061">
+  
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Openbsd: Instalación y configuración">
+  <meta name="twitter:description" content="Mejores computadoras para correr openbsd: lenovo thinkpad t420 agregale un ssd, 8 gbde ram. nvidia no funciona bien con openbsd.
+Computadoras que corren bien con openbsd: https://jcs.org/tagged/openbsd
+https://jcs.org/2021/07/19/desktop
+Zaney: https://redirect.invidious.io/channel/UCmw-QGOHbHA5cDAvwwqUTKQ Dejó de usar openbsd por un problema de temperatura, pero hay una solución que se explicará acá: obsdfreqd
+https://redirect.invidious.io/playlist?list=PLbET-7keUM8qiNs0D7ya2cnu-n2y1JRwC
+https://redirect.invidious.io/watch?v=DQrXvjV9lyQ
+https://redirect.invidious.io/watch?v=c5WnhxFx6P8
+Primero descargamos install-number.iso de la arquitectura de pc que estemos usando y también descargá el SHA256 y SHA256.sig
+De esta primer parte me faltó lo que hace en archlinux en el 1er video.">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Openbsd: Instalación y configuración
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/post/openbsd_install/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="Mejores computadoras para correr openbsd: lenovo thinkpad t420 agregale un ssd, 8 gbde ram. nvidia no funciona bien con openbsd.
+Computadoras que corren bien con openbsd:  
+https://jcs.org/tagged/openbsd
+https://jcs.org/2021/07/19/desktop
+Zaney: https://redirect.invidious.io/channel/UCmw-QGOHbHA5cDAvwwqUTKQ
+Dejó de usar openbsd por un problema de temperatura, pero hay una solución que se explicará acá: obsdfreqd
+https://redirect.invidious.io/playlist?list=PLbET-7keUM8qiNs0D7ya2cnu-n2y1JRwC
+https://redirect.invidious.io/watch?v=DQrXvjV9lyQ
+https://redirect.invidious.io/watch?v=c5WnhxFx6P8
+Primero descargamos install-number.iso de la arquitectura de pc que estemos usando y también descargá el SHA256 y SHA256.sig
+De esta primer parte me faltó lo que hace en archlinux en el 1er video.">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Openbsd: Instalación y configuración
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2024-09-14T18:41:20-03:00'>
+      September 14, 2024
+    </time>
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <p>Mejores computadoras para correr openbsd: lenovo thinkpad t420 agregale un ssd, 8 gbde ram. nvidia no funciona bien con openbsd.</p>
+<p>Computadoras que corren bien con openbsd:  <br>
+<a href="https://jcs.org/tagged/openbsd">https://jcs.org/tagged/openbsd</a><br>
+<a href="https://jcs.org/2021/07/19/desktop">https://jcs.org/2021/07/19/desktop</a></p>
+<p>Zaney: <a href="https://redirect.invidious.io/channel/UCmw-QGOHbHA5cDAvwwqUTKQ">https://redirect.invidious.io/channel/UCmw-QGOHbHA5cDAvwwqUTKQ</a>
+Dejó de usar openbsd por un problema de temperatura, pero hay una solución que se explicará acá: obsdfreqd</p>
+<p><a href="https://redirect.invidious.io/playlist?list=PLbET-7keUM8qiNs0D7ya2cnu-n2y1JRwC">https://redirect.invidious.io/playlist?list=PLbET-7keUM8qiNs0D7ya2cnu-n2y1JRwC</a></p>
+<p><a href="https://redirect.invidious.io/watch?v=DQrXvjV9lyQ">https://redirect.invidious.io/watch?v=DQrXvjV9lyQ</a></p>
+<p><a href="https://redirect.invidious.io/watch?v=c5WnhxFx6P8">https://redirect.invidious.io/watch?v=c5WnhxFx6P8</a></p>
+<p>Primero descargamos install-number.iso de la arquitectura de pc que estemos usando y también descargá el SHA256 y SHA256.sig</p>
+<p>De esta primer parte me faltó lo que hace en archlinux en el 1er video.</p>
+<p><a href="https://www.openbsd.org/faq/faq4.html#Download">https://www.openbsd.org/faq/faq4.html#Download</a> &gt; mirror sites &gt; seleccioná el mirror &gt; última versión de openbsd &gt; amd64 &gt; install-number.iso y SHA256 y el SHA256.sig.
+Ahora tenés que comprobar si la iso que bajaste se bajó correctamente usando <code>sha256</code> está descripto como hacerlo en Downloads.</p>
+<p>También hay otra forma de comprobarlo con signify.</p>
+<p>Después tenés que instalar <code>apt install -y signify-openbsd</code>:      <br>
+Y tenés que descargar la llave pública que está en esa misma página de Downloads:</p>
+<p><code>signify -Cp openbsd-number-base.pub -x SHA256.sig install-number.iso</code></p>
+<p>Ahora hay que limpiar el discoduro, no es necesario salvo que compraste una pc usada y querés borrar todo por si las duda tenía algo ilegal.</p>
+<p>Para limpiar el hdd: disk setup &gt; RAID and disk encryption &gt; y desde el usb live o el medio de instalación ejecutá <code>dd if=/dev/urandom of=/dev/rsd3c bs=1m</code></p>
+<p><a href="https://www.openbsd.org/faq/faq14.html#softraid">https://www.openbsd.org/faq/faq14.html#softraid</a></p>
+<p>Ahora mostramos como hacerlo desde un archlinux live usando openssl, porque openssl no está en openbsd, openssl lo podés usar para escribir información criptográfica y es mucho más rápido.</p>
+<p>El comando en cuestión:
+<strong>Peligro, si tenés muchos discos duros fijate bien cual querés limpiar.</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># DEVICE=&#34;/dev/sdX&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># PASS=$(tr -cd &#39;[:alnum:]&#39; &lt; /dev/urandom | head -c128)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># openssl enc -aes-256-ctr -pass pass:&#34;$PASS&#34; -nosalt &lt;/dev/zero | dd obs=64K ibs=4K of=$DEVICE oflag=direct status=progress</span>
+</span></span></code></pre></div><p>Si no querés ver el error tenés que usar la flag: <code>-pbkdf2</code> antes del <code>/dev/zero</code></p>
+<h3 id="tarda-alrededor-de-1-hora-y-20-minutos">Tarda alrededor de 1 hora y 20 minutos.</h3>
+<p><a href="https://wiki.archlinux.org/title/Securely_wipe_disk/Tips_and_tricks#dd_-_advanced_example">https://wiki.archlinux.org/title/Securely_wipe_disk/Tips_and_tricks#dd_-_advanced_example</a></p>
+<h4 id="luego-de-bootear-openbsd">Luego de bootear OpenBSD:</h4>
+<pre tabindex="0"><code>Welcome to the OpenBSD/amd64 7.1 installation program.  
+(I)nstall, (U)pgrade, (A)utoinstall, (S)hell? S  
+</code></pre><p>Para saber como se llama tu disco duro:</p>
+<pre tabindex="0"><code># dmesg | grep &#34;sd&#34;  
+# cd /dev &amp;&amp; sh MAKEDEV sd0  
+# fdisk -gy -b 960 sd0 (gpt)  
+# disklabel -E sd0  
+sd0 &gt; p g  
+sd0 &gt; d a  
+sd0 &gt; ?  
+sd0 &gt; a a  
+offset: [1024]  
+size: [...] *  
+FS Type: [4.2BSD] RAID  
+sd0 &gt; w  
+sd0 &gt; q  
+# bioctl -c C -l sd0a softraid0  
+Creará un &#34;crypto volume&#34; como sd3  
+# dmesg | grep &#34;sd&#34;  
+# cd /dev &amp;&amp; sh MAKEDEV sd3  
+# dd if=/dev/zero of=/dev/rsd3c bs=1m count=1  
+# exit  
+</code></pre><pre tabindex="0"><code>Welcome to the OpenBSD/amd64 7.1 installation program.  
+1. (I)nstall, (U)pgrade, (A)utoinstall, (S)hell? I  
+2. Keyboard layout: es  
+3. System hostname: obsdlaptop  
+4. Which network interface do you wish to configure? done  
+Es facil de crear una interfaz de red luego de la instalación así que no te preocupes.  
+5. DNS domain name? Enter  
+6. DNS nameservers? Usá por defecto luego lo cambiamos. (Enter)  
+7. Password for root?  
+8. Do you want the X window system to be started by xenodm(1)?   
+* no (si querés usar startx)  
+* yes (si querés una pantalla de login)  
+9. Setup a user? esotericwarfare  
+10. Allow root ssh login? no  
+11. Which disk is the root disk? sd3 (el volumen crypto que creamos)  
+12. gpt (ya expliqué en la publicación de instalacion de gentoo la diferencia entre gpt y msdos)  
+13. E(edit)   
+14. ?  
+15. p g (print gigabytes)  
+16. R l (resize)  
+-2G  
+17. p g  
+18. R h  
++2G  
+19. p g  
+20. w  
+21. q  
+22. done  
+23. disk (si usaste install-number.img, miniroot-number.img requiere internet)  
+24. Is the disk partition already mounted? no  
+25. Which disk contains the install media? Acá seleccioná tu pendrive (sd1 o sd2 tenés que haberlo mirado con dmesg)  
+26. Which partition has the install sets? [a] a  
+27. Pathname to the sets? [7.1/amd64] (Enter)  
+28. -x* (eliminará todo lo relacionado con el servidor Xorg) NO lo hagas si estás instalando openbsd para desktop otro ejemplo: -game*  
+29. Directory does not contain SHA256 sig. Continue without verification? YES.  
+30. Location of the sets? [done]  
+31. What timezone are you in ? America/Boise  
+Acá falla al descargar el firmware XD vas a tener que conectarte a través de ethernet y bajarlo o usar un pendrive.  
+32. Exit to (S) ,... [reboot] (Enter) Primero sacá el pendrive o el medio de instalación.  
+</code></pre><p>corebooting las thinkpad es un dolor de huevos hay muchos problemas y podés brikear la laptop.</p>
+<p>k openbsd está roto, hay que usar el archivo de openbsd efi (método que se mostró en el video de dual openbsd linux) &ldquo;chain load&rdquo; ese archivo hay que usar c-bios o tiana core como payload, coreboot rompe la maquina, se pierde funcionalidad de la máquina.<br>
+Solía tener una maquina con coreboot y usaba c-bios como payload y la vendí</p>
+<pre tabindex="0"><code>33. Nos logueamos como root en la tty.  
+34. # mail.  
+&amp; 1  
+&amp; ?  
+&amp; more  
+Podés mandar a openbsd.org tu dmesg para asegurarte que corre bien en tu PC.  
+exit (ctrl+c)  
+  
+35. vi /etc/doas.conf  
+permit persist :wheel  
+exit  
+exit  
+</code></pre><p>Y reingresá a tu usuario.</p>
+<pre tabindex="0"><code>36. Ahora hay que conectarse a internet.  
+37. doas pkg_add sakura  
+38. reboot  
+</code></pre><p>Ahora tendremos que instalar el firmware y ver si podemos tener internet.</p>
+<ol start="39">
+<li>ping google.com</li>
+<li>fw_update (con ethernet conectado o vas a tener que hacerlo usando USB)</li>
+<li>vi /etc/hostname.em0 (tenés que saber cual es tu interfaz ejecutando ifconfig esto es para el ethernet) y escribí &ldquo;dhcp&rdquo; y guardá</li>
+<li>Ahora mirá la interfaz que es wifi con el comando ifconfig (iwn0 probablemente)</li>
+<li>Escribí en: <code>vi /etc/hostname.iwn0</code> (tu interfaz wifi)</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># lladdr random es para obtener una mac address random   </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># lladdr = link layer address (otra forma de decir mac)  </span>
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>lladdr random nwid network wpakey <span style="color:#e6db74">&#34;passphase&#34;</span>  
+</span></span><span style="display:flex;"><span>dhcp  
+</span></span></code></pre></div><ol start="44">
+<li>
+<p>sh /etc/netstart (ya deberíamos tener internet a no ser que tengamos un problema con los dns)</p>
+</li>
+<li>
+<p>Ahora configuramos local inbound.</p>
+</li>
+<li>
+<p>ping google.com</p>
+</li>
+<li>
+<p>Ven lo simple que es? Mucho mejor que usar <code>iw</code> o <code>wpa_supplicant</code>, <code>netplan</code>, <code>networdmanager</code>.</p>
+</li>
+<li>
+<p>syspatch es una herramienta que se usa cuando parcheas el sistema, si yo continuo con esto que es una &ldquo;release branch&rdquo; (rama de lanzamiento) y la convertiría en una stable branch (rama estable) ejecutando syspatch y eso aplicará parches de seguridad y correcciones de confiabilidad.</p>
+</li>
+<li>
+<p>Ahora actualizaremos a la rama actual:<br>
+<code>sysupgrade -s</code> (-s para snapshots)<br>
+<code>reboot</code><br>
+Se reiniciará 2 veces.</p>
+</li>
+<li>
+<p>ping google.com</p>
+</li>
+<li>
+<p>doas pkg_add sakura</p>
+</li>
+<li>
+<p>Para instalar dwm tenés que usar opensuck: <a href="https://github.com/swindlesmccoop/opensuck">https://github.com/swindlesmccoop/opensuck</a> (o aprendelo a compilarlo manualmente vos)</p>
+</li>
+</ol>
+<p><a href="https://old.reddit.com/r/openbsd/comments/rfzjge/how_to_install_dwm_on_openbsd/">https://old.reddit.com/r/openbsd/comments/rfzjge/how_to_install_dwm_on_openbsd/</a><br>
+Para compilar dwm en openbsd tenés que descomentar esta línea:</p>
+<pre tabindex="0"><code># OpenBSD (uncomment)  
+#FREETYPEINC = ${X11INC}/freetype2  
+</code></pre><ol start="53">
+<li>
+<p><code>doas fw_update</code></p>
+</li>
+<li>
+<p><code>doas sysmerge</code></p>
+</li>
+<li>
+<p>Ahora vamos a configurar x11 y usar openbsd frequency utils para regular la temperatura y el uso del ventilador, hay un script o un demonio para ponerle un tope a la temperatura, sin importar lo que haga no quiero que pase los 55 grados.</p>
+</li>
+<li>
+<p>Podemos ver el uso con el comando <code>systat</code></p>
+</li>
+<li>
+<p><code>doas usermod -L staff esotericwarfare</code>. Hacemos esto porque si mirás dentro del archivo <code>/etc/login.conf</code> hay una diferencia entre los recursos que un usuario <code>default</code> puede usar y un usuario staff.</p>
+</li>
+<li>
+<p>En /etc/login.conf te encontrarás con el ulimit umask, todos los límites para el tamaño máximo del proceso y de los datos, todos los límites para la memoria del stack (pila), son conservadores con el usuario por defecto, por eso es recomendable agregarlo al <code>staff</code> y te dará valores más altos.</p>
+</li>
+<li>
+<p><code>doas pkg_add git</code></p>
+</li>
+<li>
+<p>mkdir .opt (optional)</p>
+</li>
+<li>
+<p>cd .opt</p>
+</li>
+<li>
+<p><code>git clone https://tildegit.org/solene/obsdfreqd.git</code></p>
+</li>
+<li>
+<p>cd obsdfreqd</p>
+</li>
+<li>
+<p><code>make &amp;&amp; doas make install</code></p>
+</li>
+<li>
+<p>Esto ayuda a regular el calor a través de regular la frecuencia del CPU: <code>rcctl ls on | grep ^apmd &amp;&amp; doas rcctl set apmd flags -L &amp;&amp; doas rcctl restart apmd</code><br>
+Para algunas computadora funciona mal y en modo inactivo la computadora estará mucho más caliente que en linux y incrementará el ruido de los ventiladores. No me gusta que la temperatura pase los 60.</p>
+</li>
+<li>
+<p><code>doas rcctl enable obsdfreqd</code></p>
+</li>
+<li>
+<p><code>doas rcctl start obsdfreqd</code></p>
+</li>
+<li>
+<p>Habilitemos dependencias blandas para para velocidades de disco más rápidas de lectura y escritura: <code>doas vi /etc/fstab</code> (tené mucho cuidado con este archivo si te mandas una cagada podés arreglarlo desde el usb live)</p>
+</li>
+<li>
+<p>Agregá <code>softdep</code> a todo menos a swap: <code>/ /home /tmp /usr /usr/X11R6 /usr/local /usr/obj /usr/src /var</code>, después del readwrite (rw) y antes del nodev dentro de <code>/etc/fstab</code>    <br>
+Tené cuidado, escribís algo mal y vas a tener que bootear desde el usb para arreglarlo y usar <code>chroot</code> en el directorio boot que es sd1a o sd0a o sd2a, c es la particion general, a es la partición root, luego tendrás que ejecutar <code>export TERM=vt200</code> y luego podés editar el fstab usando <code>doas vim /etc/fstab</code>.</p>
+</li>
+<li>
+<p>Luego configuramos un RAMDISK usando el sistema de archivos de memoria integrado en openbsd. Lo configuraremos con 500 megabytes porque tengo 8 gb y usaremos eso para que chromium haga almacenamiento local de caché en la ram y eso ayuda a que el ssd no se desgaste.</p>
+</li>
+<li>
+<p>Siempre editaremos <code>/etc/rc.conf.local</code> NO <code>/etc/rc.conf</code></p>
+</li>
+<li>
+<p><code>rcctl check apmd</code></p>
+</li>
+<li>
+<p><code>doas rcctl set apmd flags -L</code></p>
+</li>
+<li>
+<p><code>doas rcctl get apmd</code></p>
+</li>
+<li>
+<p>Ahora abrí <code>/etc/rc.conf.local</code> y debería aparecer apmd</p>
+</li>
+<li>
+<p><code>doas rcctl set obsdfreqd flags -T 65,60</code> (65 cuando está enchufado, 60 cuando está con la batería sola)</p>
+</li>
+<li>
+<p><code>doas rcctl restart obsdfreqd</code></p>
+</li>
+<li>
+<p><code>less /etc/rc.conf.local</code></p>
+</li>
+<li>
+<p>Por defecto openbsd usa los drivers mode settings en vez de intel.</p>
+</li>
+<li>
+<p>Instalamos picom: <code>doas pkg_add picom</code></p>
+</li>
+<li>
+<p><code>picom --backend glx --vsync -f -b</code> (no hace falta -f: fade in fade out, -b background)</p>
+</li>
+<li>
+<p><code>doas pkg_add chromium</code></p>
+</li>
+<li>
+<p><code>chrome</code></p>
+</li>
+<li>
+<p>Ahora instalá dwm y otras herramientas: <code>doas pkg_add feh dmenu mpv ffmpeg pcmanfm </code><br>
+Para saber que discos duros tenemos disponibles</p>
+</li>
+<li>
+<p><code>dmesg | grep &quot;sd&quot;</code></p>
+</li>
+<li>
+<p><code>doas chown esotericwarfare /mnt</code> (así el usuario tiene permisos de escritura.</p>
+</li>
+<li>
+<p>MAL <code>doas mount /dev/rsd3c /mnt</code> a representa la partición root, c es el discoduro en total, r es raw</p>
+</li>
+<li>
+<p>BIEN <code>doas mount /dev/sd3c /mnt</code> a representa partición root, r es raw<br>
+mnt = mount</p>
+</li>
+<li>
+<p><code>cd .opt/openbsd-configs/etc</code></p>
+</li>
+<li>
+<p>En <code>doas vi /etc/boot.conf</code> escribí <code>set timeout 1</code></p>
+</li>
+<li>
+<p>doas rcctl set sndiod flags=-r 48000 -z 400 -e s24le4lsb -s default -m play,mon -s mon (mon monitoreará el audio cuando usas ffmpeg) si usas streamcast si tenés musica de fondo. (sndiod = sound io demon)</p>
+</li>
+<li>
+<p><code>doas rcctl restart sndiod </code></p>
+</li>
+<li>
+<p><code>doas sysctl kern.audio.record=1</code></p>
+</li>
+<li>
+<p><code>doas su   echo kern.audio.record=1 &gt;&gt; /etc/sysctl.conf</code></p>
+</li>
+<li>
+<p>exit exit</p>
+</li>
+<li>
+<p>Ahora copiamos los archivos necesarios <code>/mnt/newinstall</code></p>
+</li>
+<li>
+<p>Ahora podés configurar vim, dvtm, .profile, dwm, bash, fish, zsh o la shell que quieras</p>
+</li>
+<li>
+<p>En <code>.xsession:</code> (si usas el xenodm login manager sino en <code>.xinitrc</code>) escribí:</p>
+</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># rm -R /home/esotericwarfare/.cache/chromium  </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># mkdir /ramdisk/chromium  </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ln -s /ramdisk/chromium /home/esotericwarfare/.cache/chromium  </span>
+</span></span><span style="display:flex;"><span>ulimit -Sc <span style="color:#ae81ff">0</span> <span style="color:#75715e"># desactiva quartums  </span>
+</span></span><span style="display:flex;"><span>xrandr --dpi <span style="color:#ae81ff">96</span>  <span style="color:#75715e"># para las letras  </span>
+</span></span><span style="display:flex;"><span>feh --bg-fil -z ~/.wall2/  
+</span></span><span style="display:flex;"><span>dwm  
+</span></span></code></pre></div><p>Luego explicaremos como configurar ramdisk, por eso comentamos las primeras 3 líneas.<br>
+99. El usa el comando <code>cp -Rfv chromium /home/esotericwarfare/.config</code><br>
+Si copiás todos los archivos que tenés en <code>/home/esotericwarfare/.config/chromium</code> tenés toda la configuración y la podés usar facilmente en otra computadora.<br>
+100. El usa el comando <code>cp -Rfv Clementine /home/esotericwarfare/.config</code><br>
+101. El usa el comando <code>cp -Rfv sakura /home/esotericwarfare/.config</code><br>
+102. <code>chrome &amp;</code><br>
+103. <code>cp -Rfv .wall2/ ~</code><br>
+104. <code>doas pkg_add lxappearance</code><br>
+105. En tu <code>/etc/rc.conf.local</code> debería aparecer <code>obsdfreqd_flags=-T 65,60</code><br>
+106. En el <code>/etc/fstab</code> agregá: <code>swap /ramdisk mfs rw,nodev,nosuid,-s=300m 0 0</code><br>
+107. <code>mfs = memory file system</code><br>
+108. No planeo usar fnafi que usa mono para jugar juegos steam que usan mono y no planeo usar el emulador gamecube eso son los únicos programas que están afectados por usar wxallowed en el fstab así que eliminamos <code>wxallowed</code> en <code>/etc/fstab</code> del <code>/usr/local</code><br>
+109. Ahora en el <code>.xsession</code> descomentá las 3 primeras líneas.  <br>
+Cada vez que reinicias la computadora el ramdisk se pierde.<br>
+110. <code>doas reboot</code><br>
+111. Ahora podrás ver el <code>ls /ramdisk/chromium/</code> <code>df -h /ramdisk</code> se ve que está siendo escrito en mfs.<br>
+112. Es recomendable desmotar <code>mfs</code> y hacer un <code>chmod 1777</code> para configurar los permisos correctos a esa carpeta (<code>/ramdisk</code>)<br>
+<a href="https://dataswamp.org/~solene/2022-04-21-openbsd-71-fan-noise-temperature.html">https://dataswamp.org/~solene/2022-04-21-openbsd-71-fan-noise-temperature.html</a><br>
+<a href="https://dataswamp.org/~solene/2018-05-08-mfs-tmp.html">https://dataswamp.org/~solene/2018-05-08-mfs-tmp.html</a><br>
+113. Podés comprobar si todo funciona bien mirando un video de youtube, <code>systat</code> para mirar la temperatura.
+114. Una vez a la semana: <code>sysupgrade -s</code> (descargará el último snapshot y actualizará)</p>
+<p>A OpenBSD no le importa romper toda la compatibilidad con los &ldquo;vendors&rdquo; porque no los tiene como Linux para tener el sistema operativo más seguro posible y altamente customizable código. Es muy similar a linux pero por debajo tiene diferentes valores, principios.
+OpenBSD developers: theodore rat, todd miller</p>
+<p>En el próximo video veremos como configurar local unbound dns resolver: <code>man unbound</code>
+armbian vamos a configurarlo, armboards, pine phone y freebsd.</p>
+
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+</footer>
+
+
+</body>
+</html>

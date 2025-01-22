@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/post/como_convertir_archivos_ibd_frm_a_sql/">
+  <meta property="og:site_name" content="Imlauer">
+  <meta property="og:title" content="Restaurar la base de datos MySQL desde archivos .ibd y .frm">
+  <meta property="og:description" content="https://stackoverflow.com/questions/26868956/restore-table-structure-from-frm-and-ibd-files
+https://stackoverflow.com/questions/10934745/restore-the-mysql-database-from-frm-files
+https://stackoverflow.com/questions/51997127/restore-mysql-database-using-only-frm-and-ibd-files
+https://stackoverflow.com/questions/26868956/restore-table-structure-from-frm-and-ibd-files
+Interesante: https://stackoverflow.com/questions/6804397/how-do-i-recreate-an-frm-file-for-an-mysql-innodb-table-with-only-the-ibdata-and
+https://stackoverflow.com/questions/75090681/restore-table-from-frm-and-ibd-file
+https://community.spiceworks.com/t/recover-mysql-database-from-frm-and-ibd-files/1014394
+https://dba.stackexchange.com/questions/282448/recreating-database-from-ibd-files-no-frm
+https://dba.stackexchange.com/questions/16875/restore-table-from-frm-and-ibd-file
+https://dba.stackexchange.com/questions/316354/restoring-databases-using-only-frm-ibd-files
+https://dba.stackexchange.com/questions/71596/restoring-mysql-tables-from-ibd-frm-and-mysqllogbin-files
+https://dba.stackexchange.com/questions/241260/mysql-innodb-recover-from-frm-and-ibd
+https://www.stellarinfo.com/article/restore-data-from-frm-ibd-files.php
+https://serverfault.com/questions/1050154/how-to-restore-mysql-database-from-frm-and-ibd-files-on-localhost
+https://serverfault.com/questions/115260/if-i-have-the-mysql-frm-myd-and-myi-files-can-i-recreate-the-db-without-sq
+https://serverfault.com/questions/841983/how-to-combine-frm-and-ibd-file-in-mysql
+https://serverfault.com/questions/364391/huge-sql-xxxx-xxxx-ibd-files-in-mysql-data-folder
+https://serverfault.com/questions/225092/import-from-sql-into-mysql-ibd-files-missing
+https://medium.com/@ilhamrisky21/restore-database-from-frm-and-ibd-files-easy-way-using-laragon-mysql-8b8d8cb73ffe
+https://learn.microsoft.com/en-us/answers/questions/387106/how-to-recover-sql-just-from-frm-and-ibd-files
+https://old.reddit.com/r/mysql/comments/15yzjrf/rebuild_a_broken_mysql_database_using_frm_or_ibd/
+https://www.cigatisolutions.com/blog/recover-mysql-database-from-frm-and-ibd-files/
+https://gist.github.com/luqmansungkar/a291fa4e9bf4b2b0dd011ad286cbcb13
+Descargá dbsake:
+curl -s http://get.dbsake.net &gt; dbsake chmod u&#43;x dbsake ./dbsake --version Extraé la información de la estructura de la tabla del archivo .frm usando dbsake: ./dbsake frmdump /path/to/file.frm
+Usá la estructura de la tabla extraída para recrear la tabla. También podés recrear múltiples tablas usando el siguiente comando:">
+  <meta property="og:locale" content="es_es">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="post">
+    <meta property="article:published_time" content="2024-09-18T14:15:01-03:00">
+    <meta property="article:modified_time" content="2024-09-18T14:15:01-03:00">
+    <meta property="article:tag" content="Sql">
+
+  
+  <meta itemprop="name" content="Restaurar la base de datos MySQL desde archivos .ibd y .frm">
+  <meta itemprop="description" content="https://stackoverflow.com/questions/26868956/restore-table-structure-from-frm-and-ibd-files
+https://stackoverflow.com/questions/10934745/restore-the-mysql-database-from-frm-files
+https://stackoverflow.com/questions/51997127/restore-mysql-database-using-only-frm-and-ibd-files
+https://stackoverflow.com/questions/26868956/restore-table-structure-from-frm-and-ibd-files
+Interesante: https://stackoverflow.com/questions/6804397/how-do-i-recreate-an-frm-file-for-an-mysql-innodb-table-with-only-the-ibdata-and
+https://stackoverflow.com/questions/75090681/restore-table-from-frm-and-ibd-file
+https://community.spiceworks.com/t/recover-mysql-database-from-frm-and-ibd-files/1014394
+https://dba.stackexchange.com/questions/282448/recreating-database-from-ibd-files-no-frm
+https://dba.stackexchange.com/questions/16875/restore-table-from-frm-and-ibd-file
+https://dba.stackexchange.com/questions/316354/restoring-databases-using-only-frm-ibd-files
+https://dba.stackexchange.com/questions/71596/restoring-mysql-tables-from-ibd-frm-and-mysqllogbin-files
+https://dba.stackexchange.com/questions/241260/mysql-innodb-recover-from-frm-and-ibd
+https://www.stellarinfo.com/article/restore-data-from-frm-ibd-files.php
+https://serverfault.com/questions/1050154/how-to-restore-mysql-database-from-frm-and-ibd-files-on-localhost
+https://serverfault.com/questions/115260/if-i-have-the-mysql-frm-myd-and-myi-files-can-i-recreate-the-db-without-sq
+https://serverfault.com/questions/841983/how-to-combine-frm-and-ibd-file-in-mysql
+https://serverfault.com/questions/364391/huge-sql-xxxx-xxxx-ibd-files-in-mysql-data-folder
+https://serverfault.com/questions/225092/import-from-sql-into-mysql-ibd-files-missing
+https://medium.com/@ilhamrisky21/restore-database-from-frm-and-ibd-files-easy-way-using-laragon-mysql-8b8d8cb73ffe
+https://learn.microsoft.com/en-us/answers/questions/387106/how-to-recover-sql-just-from-frm-and-ibd-files
+https://old.reddit.com/r/mysql/comments/15yzjrf/rebuild_a_broken_mysql_database_using_frm_or_ibd/
+https://www.cigatisolutions.com/blog/recover-mysql-database-from-frm-and-ibd-files/
+https://gist.github.com/luqmansungkar/a291fa4e9bf4b2b0dd011ad286cbcb13
+Descargá dbsake:
+curl -s http://get.dbsake.net &gt; dbsake chmod u&#43;x dbsake ./dbsake --version Extraé la información de la estructura de la tabla del archivo .frm usando dbsake: ./dbsake frmdump /path/to/file.frm
+Usá la estructura de la tabla extraída para recrear la tabla. También podés recrear múltiples tablas usando el siguiente comando:">
+  <meta itemprop="datePublished" content="2024-09-18T14:15:01-03:00">
+  <meta itemprop="dateModified" content="2024-09-18T14:15:01-03:00">
+  <meta itemprop="wordCount" content="174">
+  <meta itemprop="keywords" content="Sql">
+  
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Restaurar la base de datos MySQL desde archivos .ibd y .frm">
+  <meta name="twitter:description" content="https://stackoverflow.com/questions/26868956/restore-table-structure-from-frm-and-ibd-files
+https://stackoverflow.com/questions/10934745/restore-the-mysql-database-from-frm-files
+https://stackoverflow.com/questions/51997127/restore-mysql-database-using-only-frm-and-ibd-files
+https://stackoverflow.com/questions/26868956/restore-table-structure-from-frm-and-ibd-files
+Interesante: https://stackoverflow.com/questions/6804397/how-do-i-recreate-an-frm-file-for-an-mysql-innodb-table-with-only-the-ibdata-and
+https://stackoverflow.com/questions/75090681/restore-table-from-frm-and-ibd-file
+https://community.spiceworks.com/t/recover-mysql-database-from-frm-and-ibd-files/1014394
+https://dba.stackexchange.com/questions/282448/recreating-database-from-ibd-files-no-frm
+https://dba.stackexchange.com/questions/16875/restore-table-from-frm-and-ibd-file
+https://dba.stackexchange.com/questions/316354/restoring-databases-using-only-frm-ibd-files
+https://dba.stackexchange.com/questions/71596/restoring-mysql-tables-from-ibd-frm-and-mysqllogbin-files
+https://dba.stackexchange.com/questions/241260/mysql-innodb-recover-from-frm-and-ibd
+https://www.stellarinfo.com/article/restore-data-from-frm-ibd-files.php
+https://serverfault.com/questions/1050154/how-to-restore-mysql-database-from-frm-and-ibd-files-on-localhost
+https://serverfault.com/questions/115260/if-i-have-the-mysql-frm-myd-and-myi-files-can-i-recreate-the-db-without-sq
+https://serverfault.com/questions/841983/how-to-combine-frm-and-ibd-file-in-mysql
+https://serverfault.com/questions/364391/huge-sql-xxxx-xxxx-ibd-files-in-mysql-data-folder
+https://serverfault.com/questions/225092/import-from-sql-into-mysql-ibd-files-missing
+https://medium.com/@ilhamrisky21/restore-database-from-frm-and-ibd-files-easy-way-using-laragon-mysql-8b8d8cb73ffe
+https://learn.microsoft.com/en-us/answers/questions/387106/how-to-recover-sql-just-from-frm-and-ibd-files
+https://old.reddit.com/r/mysql/comments/15yzjrf/rebuild_a_broken_mysql_database_using_frm_or_ibd/
+https://www.cigatisolutions.com/blog/recover-mysql-database-from-frm-and-ibd-files/
+https://gist.github.com/luqmansungkar/a291fa4e9bf4b2b0dd011ad286cbcb13
+Descargá dbsake:
+curl -s http://get.dbsake.net &gt; dbsake chmod u&#43;x dbsake ./dbsake --version Extraé la información de la estructura de la tabla del archivo .frm usando dbsake: ./dbsake frmdump /path/to/file.frm
+Usá la estructura de la tabla extraída para recrear la tabla. También podés recrear múltiples tablas usando el siguiente comando:">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Restaurar la base de datos MySQL desde archivos .ibd y .frm
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/post/como_convertir_archivos_ibd_frm_a_sql/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="https://stackoverflow.com/questions/26868956/restore-table-structure-from-frm-and-ibd-files
+https://stackoverflow.com/questions/10934745/restore-the-mysql-database-from-frm-files
+https://stackoverflow.com/questions/51997127/restore-mysql-database-using-only-frm-and-ibd-files
+https://stackoverflow.com/questions/26868956/restore-table-structure-from-frm-and-ibd-files
+Interesante: https://stackoverflow.com/questions/6804397/how-do-i-recreate-an-frm-file-for-an-mysql-innodb-table-with-only-the-ibdata-and
+https://stackoverflow.com/questions/75090681/restore-table-from-frm-and-ibd-file
+https://community.spiceworks.com/t/recover-mysql-database-from-frm-and-ibd-files/1014394
+https://dba.stackexchange.com/questions/282448/recreating-database-from-ibd-files-no-frm
+https://dba.stackexchange.com/questions/16875/restore-table-from-frm-and-ibd-file
+https://dba.stackexchange.com/questions/316354/restoring-databases-using-only-frm-ibd-files
+https://dba.stackexchange.com/questions/71596/restoring-mysql-tables-from-ibd-frm-and-mysqllogbin-files
+https://dba.stackexchange.com/questions/241260/mysql-innodb-recover-from-frm-and-ibd
+https://www.stellarinfo.com/article/restore-data-from-frm-ibd-files.php
+https://serverfault.com/questions/1050154/how-to-restore-mysql-database-from-frm-and-ibd-files-on-localhost
+https://serverfault.com/questions/115260/if-i-have-the-mysql-frm-myd-and-myi-files-can-i-recreate-the-db-without-sq
+https://serverfault.com/questions/841983/how-to-combine-frm-and-ibd-file-in-mysql
+https://serverfault.com/questions/364391/huge-sql-xxxx-xxxx-ibd-files-in-mysql-data-folder
+https://serverfault.com/questions/225092/import-from-sql-into-mysql-ibd-files-missing
+https://medium.com/@ilhamrisky21/restore-database-from-frm-and-ibd-files-easy-way-using-laragon-mysql-8b8d8cb73ffe
+https://learn.microsoft.com/en-us/answers/questions/387106/how-to-recover-sql-just-from-frm-and-ibd-files
+https://old.reddit.com/r/mysql/comments/15yzjrf/rebuild_a_broken_mysql_database_using_frm_or_ibd/
+https://www.cigatisolutions.com/blog/recover-mysql-database-from-frm-and-ibd-files/
+https://gist.github.com/luqmansungkar/a291fa4e9bf4b2b0dd011ad286cbcb13
+
+Descargá dbsake:
+curl -s http://get.dbsake.net &gt; dbsake
+chmod u&#43;x dbsake
+./dbsake --version
+Extraé la información de la estructura de la tabla del archivo .frm usando dbsake:
+./dbsake frmdump /path/to/file.frm
+Usá la estructura de la tabla extraída para recrear la tabla. También podés recrear múltiples tablas usando el siguiente comando:">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Restaurar la base de datos MySQL desde archivos .ibd y .frm
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2024-09-18T14:15:01-03:00'>
+      September 18, 2024
+    </time>
+    
+    <br>
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/sql/">Sql</a>
+    
+    
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <p><a href="https://stackoverflow.com/questions/26868956/restore-table-structure-from-frm-and-ibd-files">https://stackoverflow.com/questions/26868956/restore-table-structure-from-frm-and-ibd-files</a></p>
+<p><a href="https://stackoverflow.com/questions/10934745/restore-the-mysql-database-from-frm-files">https://stackoverflow.com/questions/10934745/restore-the-mysql-database-from-frm-files</a></p>
+<p><a href="https://stackoverflow.com/questions/51997127/restore-mysql-database-using-only-frm-and-ibd-files">https://stackoverflow.com/questions/51997127/restore-mysql-database-using-only-frm-and-ibd-files</a></p>
+<p><a href="https://stackoverflow.com/questions/26868956/restore-table-structure-from-frm-and-ibd-files">https://stackoverflow.com/questions/26868956/restore-table-structure-from-frm-and-ibd-files</a></p>
+<p>Interesante: <a href="https://stackoverflow.com/questions/6804397/how-do-i-recreate-an-frm-file-for-an-mysql-innodb-table-with-only-the-ibdata-and">https://stackoverflow.com/questions/6804397/how-do-i-recreate-an-frm-file-for-an-mysql-innodb-table-with-only-the-ibdata-and</a></p>
+<p><a href="https://stackoverflow.com/questions/75090681/restore-table-from-frm-and-ibd-file">https://stackoverflow.com/questions/75090681/restore-table-from-frm-and-ibd-file</a></p>
+<p><a href="https://community.spiceworks.com/t/recover-mysql-database-from-frm-and-ibd-files/1014394">https://community.spiceworks.com/t/recover-mysql-database-from-frm-and-ibd-files/1014394</a></p>
+<p><a href="https://dba.stackexchange.com/questions/282448/recreating-database-from-ibd-files-no-frm">https://dba.stackexchange.com/questions/282448/recreating-database-from-ibd-files-no-frm</a></p>
+<p><a href="https://dba.stackexchange.com/questions/16875/restore-table-from-frm-and-ibd-file">https://dba.stackexchange.com/questions/16875/restore-table-from-frm-and-ibd-file</a></p>
+<p><a href="https://dba.stackexchange.com/questions/316354/restoring-databases-using-only-frm-ibd-files">https://dba.stackexchange.com/questions/316354/restoring-databases-using-only-frm-ibd-files</a></p>
+<p><a href="https://dba.stackexchange.com/questions/71596/restoring-mysql-tables-from-ibd-frm-and-mysqllogbin-files">https://dba.stackexchange.com/questions/71596/restoring-mysql-tables-from-ibd-frm-and-mysqllogbin-files</a></p>
+<p><a href="https://dba.stackexchange.com/questions/241260/mysql-innodb-recover-from-frm-and-ibd">https://dba.stackexchange.com/questions/241260/mysql-innodb-recover-from-frm-and-ibd</a></p>
+<p><a href="https://www.stellarinfo.com/article/restore-data-from-frm-ibd-files.php">https://www.stellarinfo.com/article/restore-data-from-frm-ibd-files.php</a></p>
+<p><a href="https://serverfault.com/questions/1050154/how-to-restore-mysql-database-from-frm-and-ibd-files-on-localhost">https://serverfault.com/questions/1050154/how-to-restore-mysql-database-from-frm-and-ibd-files-on-localhost</a></p>
+<p><a href="https://serverfault.com/questions/115260/if-i-have-the-mysql-frm-myd-and-myi-files-can-i-recreate-the-db-without-sq">https://serverfault.com/questions/115260/if-i-have-the-mysql-frm-myd-and-myi-files-can-i-recreate-the-db-without-sq</a></p>
+<p><a href="https://serverfault.com/questions/841983/how-to-combine-frm-and-ibd-file-in-mysql">https://serverfault.com/questions/841983/how-to-combine-frm-and-ibd-file-in-mysql</a></p>
+<p><a href="https://serverfault.com/questions/364391/huge-sql-xxxx-xxxx-ibd-files-in-mysql-data-folder">https://serverfault.com/questions/364391/huge-sql-xxxx-xxxx-ibd-files-in-mysql-data-folder</a></p>
+<p><a href="https://serverfault.com/questions/225092/import-from-sql-into-mysql-ibd-files-missing">https://serverfault.com/questions/225092/import-from-sql-into-mysql-ibd-files-missing</a></p>
+<p><a href="https://medium.com/@ilhamrisky21/restore-database-from-frm-and-ibd-files-easy-way-using-laragon-mysql-8b8d8cb73ffe">https://medium.com/@ilhamrisky21/restore-database-from-frm-and-ibd-files-easy-way-using-laragon-mysql-8b8d8cb73ffe</a></p>
+<p><a href="https://learn.microsoft.com/en-us/answers/questions/387106/how-to-recover-sql-just-from-frm-and-ibd-files">https://learn.microsoft.com/en-us/answers/questions/387106/how-to-recover-sql-just-from-frm-and-ibd-files</a></p>
+<p><a href="https://old.reddit.com/r/mysql/comments/15yzjrf/rebuild_a_broken_mysql_database_using_frm_or_ibd/">https://old.reddit.com/r/mysql/comments/15yzjrf/rebuild_a_broken_mysql_database_using_frm_or_ibd/</a></p>
+<p><a href="https://www.cigatisolutions.com/blog/recover-mysql-database-from-frm-and-ibd-files/">https://www.cigatisolutions.com/blog/recover-mysql-database-from-frm-and-ibd-files/</a></p>
+<p><a href="https://gist.github.com/luqmansungkar/a291fa4e9bf4b2b0dd011ad286cbcb13">https://gist.github.com/luqmansungkar/a291fa4e9bf4b2b0dd011ad286cbcb13</a></p>
+<hr>
+<p>Descargá dbsake:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>curl -s http://get.dbsake.net &gt; dbsake
+</span></span><span style="display:flex;"><span>chmod u+x dbsake
+</span></span><span style="display:flex;"><span>./dbsake --version
+</span></span></code></pre></div><p>Extraé la información de la estructura de la tabla del archivo .frm usando dbsake:
+<code>./dbsake frmdump /path/to/file.frm</code></p>
+<p>Usá la estructura de la tabla extraída para recrear la tabla. También podés recrear múltiples tablas usando el siguiente comando:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#66d9ef">for</span> tbl in <span style="color:#e6db74">`</span>ls -1 /path/to/*.frm<span style="color:#e6db74">`</span>; <span style="color:#66d9ef">do</span> ./dbsake frmdump $tbl | mysql -u <span style="color:#f92672">[</span>user<span style="color:#f92672">]</span> -p<span style="color:#f92672">[</span>password<span style="color:#f92672">]</span> <span style="color:#f92672">[</span>database_name<span style="color:#f92672">]</span>; <span style="color:#66d9ef">done</span>;
+</span></span></code></pre></div><p>Abrí la consola de mysql y ejecutá <code>ALTER TABLE [tbl_name] DISCARD TABLESPACE;</code>
+Este comando eliminará el actual <code>/var/lib/mysql/[schema_name]/[tbl_name].ibd</code></p>
+<p>Copiá tu archivo backup .ibd a <code>/var/lib/mysql/[schema_name]/</code><br>
+Necesita copiar los archivos <code>ib_logfiles</code> e <code>ibdata</code> en su carpeta de datos</p>
+<p>Asegurate que el owner sea <code>mysql:mysql</code> con el comando <code>sudo chown -R mysql:mysql /var/lib/mysql</code> y ponele de permiso 660 con <code>chmod -R 660 /var/lib/mysql</code>.</p>
+<p>Abrí otra vez la consola de mysql y ejecutá <code>ALTER TABLE [tbl_name] IMPORT TABLESPACE;</code></p>
+<p><code>tbl_name</code>: se refiere al nombre de la tabla.</p>
+<p>Listo.</p>
+
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+</footer>
+
+
+</body>
+</html>

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/post/gitlab_auto_deployment/">
+  <meta property="og:site_name" content="Imlauer">
+  <meta property="og:title" content="Gitlab auto deployment">
+  <meta property="og:description" content="Need CI/CD pipeline to deploy the code on merge request approval on target server. The Target sever is running Ubuntu. On every deployment the code need to be updated on the server , npm update , PM2 restart the node or start after purging the existing logs.
+configure the GIT to send email on pipeline success.
+NOTE: Git branch are specific to a server ( DEV or QA ) Etc.">
+  <meta property="og:locale" content="es_es">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="post">
+    <meta property="article:published_time" content="2024-09-24T00:01:02-03:00">
+    <meta property="article:modified_time" content="2024-09-24T00:01:02-03:00">
+    <meta property="article:tag" content="Gitlab">
+
+  
+  <meta itemprop="name" content="Gitlab auto deployment">
+  <meta itemprop="description" content="Need CI/CD pipeline to deploy the code on merge request approval on target server. The Target sever is running Ubuntu. On every deployment the code need to be updated on the server , npm update , PM2 restart the node or start after purging the existing logs.
+configure the GIT to send email on pipeline success.
+NOTE: Git branch are specific to a server ( DEV or QA ) Etc.">
+  <meta itemprop="datePublished" content="2024-09-24T00:01:02-03:00">
+  <meta itemprop="dateModified" content="2024-09-24T00:01:02-03:00">
+  <meta itemprop="wordCount" content="172">
+  <meta itemprop="keywords" content="Gitlab">
+  
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Gitlab auto deployment">
+  <meta name="twitter:description" content="Need CI/CD pipeline to deploy the code on merge request approval on target server. The Target sever is running Ubuntu. On every deployment the code need to be updated on the server , npm update , PM2 restart the node or start after purging the existing logs.
+configure the GIT to send email on pipeline success.
+NOTE: Git branch are specific to a server ( DEV or QA ) Etc.">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Gitlab auto deployment
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/post/gitlab_auto_deployment/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="
+Need CI/CD pipeline to deploy the code on merge request approval on target server. The Target sever is running Ubuntu. On every deployment the code need to be updated on the server , npm update , PM2 restart the node or start after purging the existing logs.
+
+configure the GIT to send email on pipeline success.
+NOTE: Git branch are specific to a server ( DEV or QA ) Etc.">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Gitlab auto deployment
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2024-09-24T00:01:02-03:00'>
+      September 24, 2024
+    </time>
+    
+    <br>
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/gitlab/">Gitlab</a>
+    
+    
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <blockquote>
+<p>Need CI/CD pipeline to deploy the code on merge request approval on target server. The Target sever is running Ubuntu. On every deployment the code need to be updated on the server , npm update , PM2 restart the node or start after purging the existing logs.</p>
+</blockquote>
+<p>configure the GIT to send email on pipeline success.</p>
+<p>NOTE: Git branch are specific to a server ( DEV or QA ) Etc.</p>
+<hr>
+<pre tabindex="0"><code>stages:
+  - deploy
+
+deploy_to_production:
+  stage: deploy
+  script:
+    - echo &#34;Deploying to production server...&#34;
+    - cd /path/to/your/app
+    - git pull origin master
+    - npm install
+    - npm update
+    - pm2 restart your-app-name --update-env
+    - pm2 flush
+  environment:
+    name: production
+    url: http://your-production-url.com
+  only:
+    - master
+  rules:
+    - if: $CI_MERGE_REQUEST_APPROVED
+</code></pre><p>PM2:
+<a href="https://www.youtube.com/watch?v=ebdKIU6SDHI">https://www.youtube.com/watch?v=ebdKIU6SDHI</a></p>
+<p>Te permite mantener tu aplicación viva por más que ocurra un error.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>npm install pm2@latest -g
+</span></span><span style="display:flex;"><span>pm2 start app.js
+</span></span><span style="display:flex;"><span>pm2 logs
+</span></span><span style="display:flex;"><span>pm2 stop app
+</span></span><span style="display:flex;"><span>pm2 start app.js <span style="color:#e6db74">&#34;MY APP&#34;</span> --watch
+</span></span><span style="display:flex;"><span>pm2 logs
+</span></span><span style="display:flex;"><span>pm2 stop <span style="color:#e6db74">&#34;MY APP&#34;</span>
+</span></span><span style="display:flex;"><span>pm2 stop <span style="color:#e6db74">&#34;app&#34;</span>
+</span></span><span style="display:flex;"><span>pm2 delete all
+</span></span><span style="display:flex;"><span>pm2 start app.js <span style="color:#e6db74">&#34;MY APP&#34;</span> --watch
+</span></span><span style="display:flex;"><span>pm2 ls
+</span></span><span style="display:flex;"><span>pm2 logs
+</span></span></code></pre></div><p><a href="https://pm2.keymetrics.io/docs/usage/quick-start/">https://pm2.keymetrics.io/docs/usage/quick-start/</a></p>
+
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+</footer>
+
+
+</body>
+</html>

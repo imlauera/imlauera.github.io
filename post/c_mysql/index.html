@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/post/c_mysql/">
+  <meta property="og:site_name" content="Imlauer">
+  <meta property="og:title" content="Consultas MySQL en C y un simple servidor web">
+  <meta property="og:description" content="Para entender por qué se usan lenguajes de alto nivel aprender primero a entender todos los problemas que trae programar en un lenguaje de bajo nivel.
+Hay que aprender lenguaje ensamblador para saber por qué existe C, hay que aprender C para entender por qué existe C&#43;&#43;, rust, python, php, etc. y cuales son los problemas que estos lenguajes intentan solucionar.
+https://www.youtube.com/watch?v=jACHG6tZakw
+https://www.ucl.ac.uk/isd/services/websites-apps/databases/mysql/calling-mysql-c
+https://github.com/bloominstituteoftechnology/C-Web-Server
+Archivo mysql.c: // sudo apt install -y libmariadb-dev-compat libmariadb-dev // Compile: gcc -o mysql-test mysql.c $(mysql_config --libs) #include &lt;stdio.h&gt; #include &lt;mysql/mysql.h&gt; int main() { MYSQL *conn; MYSQL_RES *res; MYSQL_ROW row; char *server = &#34;localhost&#34;; char *user = &#34;admin&#34;; char *password = &#34;myawesomepass&#34;; char *database = &#34;db1&#34;; conn = mysql_init(NULL); /* Connect to database */ if (!mysql_real_connect(conn, server, user, password, database, 0, NULL, 0)) { fprintf(stderr, &#34;%s\n&#34;, mysql_error(conn)); return(0); } /* send SQL query */ if (mysql_query(conn, &#34;SELECT * FROM wp_users WHERE id = 1&#34;)) { fprintf(stderr, &#34;%s\n&#34;, mysql_error(conn)); return(0); } res = mysql_use_result(conn); /* output fields 1 and 2 of each row */ while ((row = mysql_fetch_row(res)) != NULL) printf(&#34;%s %s\n&#34;, row[1], row[2]); /* Release memory used to store results and close connection */ mysql_free_result(res); mysql_close(conn); }">
+  <meta property="og:locale" content="es_es">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="post">
+    <meta property="article:published_time" content="2024-10-03T12:19:50-03:00">
+    <meta property="article:modified_time" content="2024-10-03T12:19:50-03:00">
+    <meta property="article:tag" content="C">
+
+  
+  <meta itemprop="name" content="Consultas MySQL en C y un simple servidor web">
+  <meta itemprop="description" content="Para entender por qué se usan lenguajes de alto nivel aprender primero a entender todos los problemas que trae programar en un lenguaje de bajo nivel.
+Hay que aprender lenguaje ensamblador para saber por qué existe C, hay que aprender C para entender por qué existe C&#43;&#43;, rust, python, php, etc. y cuales son los problemas que estos lenguajes intentan solucionar.
+https://www.youtube.com/watch?v=jACHG6tZakw
+https://www.ucl.ac.uk/isd/services/websites-apps/databases/mysql/calling-mysql-c
+https://github.com/bloominstituteoftechnology/C-Web-Server
+Archivo mysql.c: // sudo apt install -y libmariadb-dev-compat libmariadb-dev // Compile: gcc -o mysql-test mysql.c $(mysql_config --libs) #include &lt;stdio.h&gt; #include &lt;mysql/mysql.h&gt; int main() { MYSQL *conn; MYSQL_RES *res; MYSQL_ROW row; char *server = &#34;localhost&#34;; char *user = &#34;admin&#34;; char *password = &#34;myawesomepass&#34;; char *database = &#34;db1&#34;; conn = mysql_init(NULL); /* Connect to database */ if (!mysql_real_connect(conn, server, user, password, database, 0, NULL, 0)) { fprintf(stderr, &#34;%s\n&#34;, mysql_error(conn)); return(0); } /* send SQL query */ if (mysql_query(conn, &#34;SELECT * FROM wp_users WHERE id = 1&#34;)) { fprintf(stderr, &#34;%s\n&#34;, mysql_error(conn)); return(0); } res = mysql_use_result(conn); /* output fields 1 and 2 of each row */ while ((row = mysql_fetch_row(res)) != NULL) printf(&#34;%s %s\n&#34;, row[1], row[2]); /* Release memory used to store results and close connection */ mysql_free_result(res); mysql_close(conn); }">
+  <meta itemprop="datePublished" content="2024-10-03T12:19:50-03:00">
+  <meta itemprop="dateModified" content="2024-10-03T12:19:50-03:00">
+  <meta itemprop="wordCount" content="191">
+  <meta itemprop="keywords" content="C">
+  
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Consultas MySQL en C y un simple servidor web">
+  <meta name="twitter:description" content="Para entender por qué se usan lenguajes de alto nivel aprender primero a entender todos los problemas que trae programar en un lenguaje de bajo nivel.
+Hay que aprender lenguaje ensamblador para saber por qué existe C, hay que aprender C para entender por qué existe C&#43;&#43;, rust, python, php, etc. y cuales son los problemas que estos lenguajes intentan solucionar.
+https://www.youtube.com/watch?v=jACHG6tZakw
+https://www.ucl.ac.uk/isd/services/websites-apps/databases/mysql/calling-mysql-c
+https://github.com/bloominstituteoftechnology/C-Web-Server
+Archivo mysql.c: // sudo apt install -y libmariadb-dev-compat libmariadb-dev // Compile: gcc -o mysql-test mysql.c $(mysql_config --libs) #include &lt;stdio.h&gt; #include &lt;mysql/mysql.h&gt; int main() { MYSQL *conn; MYSQL_RES *res; MYSQL_ROW row; char *server = &#34;localhost&#34;; char *user = &#34;admin&#34;; char *password = &#34;myawesomepass&#34;; char *database = &#34;db1&#34;; conn = mysql_init(NULL); /* Connect to database */ if (!mysql_real_connect(conn, server, user, password, database, 0, NULL, 0)) { fprintf(stderr, &#34;%s\n&#34;, mysql_error(conn)); return(0); } /* send SQL query */ if (mysql_query(conn, &#34;SELECT * FROM wp_users WHERE id = 1&#34;)) { fprintf(stderr, &#34;%s\n&#34;, mysql_error(conn)); return(0); } res = mysql_use_result(conn); /* output fields 1 and 2 of each row */ while ((row = mysql_fetch_row(res)) != NULL) printf(&#34;%s %s\n&#34;, row[1], row[2]); /* Release memory used to store results and close connection */ mysql_free_result(res); mysql_close(conn); }">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Consultas MySQL en C y un simple servidor web
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/post/c_mysql/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="Para entender por qué se usan lenguajes de alto nivel aprender primero a entender todos los problemas que trae programar en un lenguaje de bajo nivel.
+Hay que aprender lenguaje ensamblador para saber por qué existe C, hay que aprender C para entender por qué existe C&#43;&#43;, rust, python, php, etc. y cuales son los problemas que estos lenguajes intentan solucionar.
+https://www.youtube.com/watch?v=jACHG6tZakw
+https://www.ucl.ac.uk/isd/services/websites-apps/databases/mysql/calling-mysql-c
+https://github.com/bloominstituteoftechnology/C-Web-Server
+Archivo mysql.c:
+// sudo apt install -y libmariadb-dev-compat libmariadb-dev
+// Compile: gcc -o mysql-test mysql.c $(mysql_config --libs)
+
+#include &lt;stdio.h&gt;
+#include &lt;mysql/mysql.h&gt;
+
+int main() {
+   MYSQL *conn;
+   MYSQL_RES *res;
+   MYSQL_ROW row;
+
+   char *server = &#34;localhost&#34;;
+   char *user = &#34;admin&#34;;
+   char *password = &#34;myawesomepass&#34;;
+   char *database = &#34;db1&#34;;
+   
+   conn = mysql_init(NULL);
+   
+   /* Connect to database */
+   if (!mysql_real_connect(conn, server,
+         user, password, database, 0, NULL, 0)) {
+      fprintf(stderr, &#34;%s\n&#34;, mysql_error(conn));
+      return(0);
+   }
+
+   /* send SQL query */
+   if (mysql_query(conn, &#34;SELECT * FROM wp_users WHERE id = 1&#34;)) {
+      fprintf(stderr, &#34;%s\n&#34;, mysql_error(conn));
+      return(0);
+   }
+
+   res = mysql_use_result(conn);
+   
+   /* output fields 1 and 2 of each row */
+   while ((row = mysql_fetch_row(res)) != NULL)
+      printf(&#34;%s %s\n&#34;, row[1], row[2]);
+
+   /* Release memory used to store results and close connection */
+   mysql_free_result(res);
+   mysql_close(conn);
+}
+">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Consultas MySQL en C y un simple servidor web
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2024-10-03T12:19:50-03:00'>
+      October 03, 2024
+    </time>
+    
+    <br>
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/c/">C</a>
+    
+    
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <p>Para entender por qué se usan lenguajes de alto nivel aprender primero a entender todos los problemas que trae programar en un lenguaje de bajo nivel.</p>
+<p>Hay que aprender lenguaje ensamblador para saber por qué existe C, hay que aprender C para entender por qué existe C++, rust, python, php, etc. y cuales son los problemas que estos lenguajes intentan solucionar.</p>
+<p><a href="https://www.youtube.com/watch?v=jACHG6tZakw">https://www.youtube.com/watch?v=jACHG6tZakw</a></p>
+<p><a href="https://www.ucl.ac.uk/isd/services/websites-apps/databases/mysql/calling-mysql-c">https://www.ucl.ac.uk/isd/services/websites-apps/databases/mysql/calling-mysql-c</a></p>
+<p><a href="https://github.com/bloominstituteoftechnology/C-Web-Server">https://github.com/bloominstituteoftechnology/C-Web-Server</a></p>
+<h4 id="archivo-mysqlc">Archivo <code>mysql.c</code>:</h4>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">// sudo apt install -y libmariadb-dev-compat libmariadb-dev
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// Compile: gcc -o mysql-test mysql.c $(mysql_config --libs)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;mysql/mysql.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>   MYSQL <span style="color:#f92672">*</span>conn;
+</span></span><span style="display:flex;"><span>   MYSQL_RES <span style="color:#f92672">*</span>res;
+</span></span><span style="display:flex;"><span>   MYSQL_ROW row;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>   <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>server <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;localhost&#34;</span>;
+</span></span><span style="display:flex;"><span>   <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>user <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;admin&#34;</span>;
+</span></span><span style="display:flex;"><span>   <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>password <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;myawesomepass&#34;</span>;
+</span></span><span style="display:flex;"><span>   <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>database <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;db1&#34;</span>;
+</span></span><span style="display:flex;"><span>   
+</span></span><span style="display:flex;"><span>   conn <span style="color:#f92672">=</span> <span style="color:#a6e22e">mysql_init</span>(NULL);
+</span></span><span style="display:flex;"><span>   
+</span></span><span style="display:flex;"><span>   <span style="color:#75715e">/* Connect to database */</span>
+</span></span><span style="display:flex;"><span>   <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">mysql_real_connect</span>(conn, server,
+</span></span><span style="display:flex;"><span>         user, password, database, <span style="color:#ae81ff">0</span>, NULL, <span style="color:#ae81ff">0</span>)) {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">fprintf</span>(stderr, <span style="color:#e6db74">&#34;%s</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, <span style="color:#a6e22e">mysql_error</span>(conn));
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">return</span>(<span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>   }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>   <span style="color:#75715e">/* send SQL query */</span>
+</span></span><span style="display:flex;"><span>   <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">mysql_query</span>(conn, <span style="color:#e6db74">&#34;SELECT * FROM wp_users WHERE id = 1&#34;</span>)) {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">fprintf</span>(stderr, <span style="color:#e6db74">&#34;%s</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, <span style="color:#a6e22e">mysql_error</span>(conn));
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">return</span>(<span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>   }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>   res <span style="color:#f92672">=</span> <span style="color:#a6e22e">mysql_use_result</span>(conn);
+</span></span><span style="display:flex;"><span>   
+</span></span><span style="display:flex;"><span>   <span style="color:#75715e">/* output fields 1 and 2 of each row */</span>
+</span></span><span style="display:flex;"><span>   <span style="color:#66d9ef">while</span> ((row <span style="color:#f92672">=</span> <span style="color:#a6e22e">mysql_fetch_row</span>(res)) <span style="color:#f92672">!=</span> NULL)
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;%s %s</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, row[<span style="color:#ae81ff">1</span>], row[<span style="color:#ae81ff">2</span>]);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>   <span style="color:#75715e">/* Release memory used to store results and close connection */</span>
+</span></span><span style="display:flex;"><span>   <span style="color:#a6e22e">mysql_free_result</span>(res);
+</span></span><span style="display:flex;"><span>   <span style="color:#a6e22e">mysql_close</span>(conn);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div>
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+</footer>
+
+
+</body>
+</html>

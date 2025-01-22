@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/post/cisco_ios_port_forwarding_y_dynamic_dns/">
+  <meta property="og:site_name" content="Imlauer">
+  <meta property="og:title" content="CISCO ios port forwarding y dynamic dns(DDNS)">
+  <meta property="og:description" content="Basic Configuration: https://youtube.com/watch?v=3wuFFYVWnbc
+Port Forwarding: https://youtube.com/watch?v=8WVWoW86Uhw
+Dynamic DNS: https://youtube.com/watch?v=Zh39hgRJwGE
+https://content.cisco.com/chapter.sjs?uri=/searchable/chapter/content/en/us/td/docs/ios-xml/ios/ipaddr_dns/configuration/15-sy/dns-15-sy-book/Dynamic-DNS-Support.html.xml
+https://ipwithease.com/how-to-configure-ddns-in-a-cisco-router/
+DDNS y NoIP: https://www.firewall.cx/cisco/cisco-routers/cisco-router-ddns.html
+Setup DNNS on a Cisco IOS Router: https://www.bytesolutions.com/setup-ddns-dynamic-dns-cisco-ios-router/
+================================= Basic Router Commands ================================= Router(greater than sign) ---User EXEC mode exit Router(greater than sign) ? Router(greater than sign) enable --------------- Router# ---Privileged EXEC mode disable, exit Router# ? ----------------- Router# configure terminal Router(config)# ---Global Config mode exit, end, Ctrl&#43;c, Ctrl&#43;z Router(config)# ? ----------------- Router(config)# line vty 0 15 Router(config)# line console 0 Router(config-line)# ---Line configuration mode exit, end, Ctrl&#43;c, Ctrl&#43;z Router(config-line)# ? ---------------------------- Router(config)# interface gigabitEthernet 0/0/0 Router(config-if)# ---Interface configuration mode exit, end, Ctrl&#43;c, Ctrl&#43;z Router(config-if)# ? ---------------------------- Router# Router# configure terminal Router# show ? Router# show running-config Router# copy running-config startup-config Router# ping 192.168.1.100 Router# traceroute 192.168.1.100 Router# ssh 192.168.1.100 Router# telnet 192.168.1.100 Router# debug ? Router# clock set 07:14:00 October 15 2019 Router# reload --------------------------------- Router(conf)# Router(conf)# hostname R1 Router(conf)# banner motd &#34;No unauthorized access allowed!&#34; Router(conf)# enable password class Router(conf)# enable secret class Router(conf)# service password-encryption Router(config)# line vty 0 15 Router(config)# line console 0 Router(config)# interface gigabitEthernet 0/0/0 ---------------------------------------------------- Router(config-line)# Router(config-line)# password cisco Router(config-line)# login Router(config-line)# transport input all (line vty) ---------------------------------------------------- Router(config-if)# Router(config-if)# interface gigabitEthernet 0/0/0 Router(config-if)# int g0/0 //command abbreviation Router(config-if)# ip address 192.168.1.1 255.255.255.0 Router(config-if)# no shutdown ================================= Basic Switch Commands ================================= Switch(greater than sign) ---User EXEC mode exit Switch(greater than sign) enable --------------- Switch# ---Privileged EXEC mode disable, exit ----------------- Switch# configure terminal Switch(config)# ---Global Config mode exit, end, Ctrl&#43;c, Ctrl&#43;z ----------------- Switch(config)# line vty 0 15 Switch(config)# line console 0 Switch(config-line)# ---Line configuration mode exit, end, Ctrl&#43;c, Ctrl&#43;z ---------------------------- Switch(config)# interface vlan 1 Switch(config-if)# ---Interface configuration mode exit, end, Ctrl&#43;c, Ctrl&#43;z ---------------------------- Switch# Switch# configure terminal Switch# show ? Switch# show running-config Switch# copy running-config startup-config Switch# ping 192.168.1.100 Switch# traceroute 192.168.1.100 Switch# ssh 192.168.1.100 Switch# telnet 192.168.1.100 Switch# debug ? Switch# clock set 07:14:00 October 15 2019 Switch# reload --------------------------------- Switch(conf)# Switch(conf)# hostname R1 Switch(conf)# banner motd &#34;No unauthorized access allowed!&#34; Switch(conf)# enable password class Switch(conf)# enable secret class Switch(conf)# service password-encryption Switch(config)# line vty 0 15 Switch(config)# line console 0 Switch(config)# interface vlan 1 ---------------------------------------------------- Switch(config-line)# Switch(config-line)# password cisco Switch(config-line)# login Switch(config-line)# transport input all (line vty) ---------------------------------------------------- Switch(config-if)# Switch(config-if)# interface vlan 1 Switch(config-if)# ip address 192.168.1.2 255.255.255.0 Switch(config-if)# no shutdown Switch(config-if)# exit Switch(config)# ip default-gateway 192.168.1.1">
+  <meta property="og:locale" content="es_es">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="post">
+    <meta property="article:published_time" content="2023-11-10T04:52:04-03:00">
+    <meta property="article:modified_time" content="2023-11-10T04:52:04-03:00">
+    <meta property="article:tag" content="CISCO">
+    <meta property="article:tag" content="IOS">
+    <meta property="article:tag" content="Port">
+    <meta property="article:tag" content="Forwarding">
+    <meta property="article:tag" content="Ddns">
+
+  
+  <meta itemprop="name" content="CISCO ios port forwarding y dynamic dns(DDNS)">
+  <meta itemprop="description" content="Basic Configuration: https://youtube.com/watch?v=3wuFFYVWnbc
+Port Forwarding: https://youtube.com/watch?v=8WVWoW86Uhw
+Dynamic DNS: https://youtube.com/watch?v=Zh39hgRJwGE
+https://content.cisco.com/chapter.sjs?uri=/searchable/chapter/content/en/us/td/docs/ios-xml/ios/ipaddr_dns/configuration/15-sy/dns-15-sy-book/Dynamic-DNS-Support.html.xml
+https://ipwithease.com/how-to-configure-ddns-in-a-cisco-router/
+DDNS y NoIP: https://www.firewall.cx/cisco/cisco-routers/cisco-router-ddns.html
+Setup DNNS on a Cisco IOS Router: https://www.bytesolutions.com/setup-ddns-dynamic-dns-cisco-ios-router/
+================================= Basic Router Commands ================================= Router(greater than sign) ---User EXEC mode exit Router(greater than sign) ? Router(greater than sign) enable --------------- Router# ---Privileged EXEC mode disable, exit Router# ? ----------------- Router# configure terminal Router(config)# ---Global Config mode exit, end, Ctrl&#43;c, Ctrl&#43;z Router(config)# ? ----------------- Router(config)# line vty 0 15 Router(config)# line console 0 Router(config-line)# ---Line configuration mode exit, end, Ctrl&#43;c, Ctrl&#43;z Router(config-line)# ? ---------------------------- Router(config)# interface gigabitEthernet 0/0/0 Router(config-if)# ---Interface configuration mode exit, end, Ctrl&#43;c, Ctrl&#43;z Router(config-if)# ? ---------------------------- Router# Router# configure terminal Router# show ? Router# show running-config Router# copy running-config startup-config Router# ping 192.168.1.100 Router# traceroute 192.168.1.100 Router# ssh 192.168.1.100 Router# telnet 192.168.1.100 Router# debug ? Router# clock set 07:14:00 October 15 2019 Router# reload --------------------------------- Router(conf)# Router(conf)# hostname R1 Router(conf)# banner motd &#34;No unauthorized access allowed!&#34; Router(conf)# enable password class Router(conf)# enable secret class Router(conf)# service password-encryption Router(config)# line vty 0 15 Router(config)# line console 0 Router(config)# interface gigabitEthernet 0/0/0 ---------------------------------------------------- Router(config-line)# Router(config-line)# password cisco Router(config-line)# login Router(config-line)# transport input all (line vty) ---------------------------------------------------- Router(config-if)# Router(config-if)# interface gigabitEthernet 0/0/0 Router(config-if)# int g0/0 //command abbreviation Router(config-if)# ip address 192.168.1.1 255.255.255.0 Router(config-if)# no shutdown ================================= Basic Switch Commands ================================= Switch(greater than sign) ---User EXEC mode exit Switch(greater than sign) enable --------------- Switch# ---Privileged EXEC mode disable, exit ----------------- Switch# configure terminal Switch(config)# ---Global Config mode exit, end, Ctrl&#43;c, Ctrl&#43;z ----------------- Switch(config)# line vty 0 15 Switch(config)# line console 0 Switch(config-line)# ---Line configuration mode exit, end, Ctrl&#43;c, Ctrl&#43;z ---------------------------- Switch(config)# interface vlan 1 Switch(config-if)# ---Interface configuration mode exit, end, Ctrl&#43;c, Ctrl&#43;z ---------------------------- Switch# Switch# configure terminal Switch# show ? Switch# show running-config Switch# copy running-config startup-config Switch# ping 192.168.1.100 Switch# traceroute 192.168.1.100 Switch# ssh 192.168.1.100 Switch# telnet 192.168.1.100 Switch# debug ? Switch# clock set 07:14:00 October 15 2019 Switch# reload --------------------------------- Switch(conf)# Switch(conf)# hostname R1 Switch(conf)# banner motd &#34;No unauthorized access allowed!&#34; Switch(conf)# enable password class Switch(conf)# enable secret class Switch(conf)# service password-encryption Switch(config)# line vty 0 15 Switch(config)# line console 0 Switch(config)# interface vlan 1 ---------------------------------------------------- Switch(config-line)# Switch(config-line)# password cisco Switch(config-line)# login Switch(config-line)# transport input all (line vty) ---------------------------------------------------- Switch(config-if)# Switch(config-if)# interface vlan 1 Switch(config-if)# ip address 192.168.1.2 255.255.255.0 Switch(config-if)# no shutdown Switch(config-if)# exit Switch(config)# ip default-gateway 192.168.1.1">
+  <meta itemprop="datePublished" content="2023-11-10T04:52:04-03:00">
+  <meta itemprop="dateModified" content="2023-11-10T04:52:04-03:00">
+  <meta itemprop="wordCount" content="382">
+  <meta itemprop="keywords" content="CISCO,IOS,Port,Forwarding,Ddns">
+  
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="CISCO ios port forwarding y dynamic dns(DDNS)">
+  <meta name="twitter:description" content="Basic Configuration: https://youtube.com/watch?v=3wuFFYVWnbc
+Port Forwarding: https://youtube.com/watch?v=8WVWoW86Uhw
+Dynamic DNS: https://youtube.com/watch?v=Zh39hgRJwGE
+https://content.cisco.com/chapter.sjs?uri=/searchable/chapter/content/en/us/td/docs/ios-xml/ios/ipaddr_dns/configuration/15-sy/dns-15-sy-book/Dynamic-DNS-Support.html.xml
+https://ipwithease.com/how-to-configure-ddns-in-a-cisco-router/
+DDNS y NoIP: https://www.firewall.cx/cisco/cisco-routers/cisco-router-ddns.html
+Setup DNNS on a Cisco IOS Router: https://www.bytesolutions.com/setup-ddns-dynamic-dns-cisco-ios-router/
+================================= Basic Router Commands ================================= Router(greater than sign) ---User EXEC mode exit Router(greater than sign) ? Router(greater than sign) enable --------------- Router# ---Privileged EXEC mode disable, exit Router# ? ----------------- Router# configure terminal Router(config)# ---Global Config mode exit, end, Ctrl&#43;c, Ctrl&#43;z Router(config)# ? ----------------- Router(config)# line vty 0 15 Router(config)# line console 0 Router(config-line)# ---Line configuration mode exit, end, Ctrl&#43;c, Ctrl&#43;z Router(config-line)# ? ---------------------------- Router(config)# interface gigabitEthernet 0/0/0 Router(config-if)# ---Interface configuration mode exit, end, Ctrl&#43;c, Ctrl&#43;z Router(config-if)# ? ---------------------------- Router# Router# configure terminal Router# show ? Router# show running-config Router# copy running-config startup-config Router# ping 192.168.1.100 Router# traceroute 192.168.1.100 Router# ssh 192.168.1.100 Router# telnet 192.168.1.100 Router# debug ? Router# clock set 07:14:00 October 15 2019 Router# reload --------------------------------- Router(conf)# Router(conf)# hostname R1 Router(conf)# banner motd &#34;No unauthorized access allowed!&#34; Router(conf)# enable password class Router(conf)# enable secret class Router(conf)# service password-encryption Router(config)# line vty 0 15 Router(config)# line console 0 Router(config)# interface gigabitEthernet 0/0/0 ---------------------------------------------------- Router(config-line)# Router(config-line)# password cisco Router(config-line)# login Router(config-line)# transport input all (line vty) ---------------------------------------------------- Router(config-if)# Router(config-if)# interface gigabitEthernet 0/0/0 Router(config-if)# int g0/0 //command abbreviation Router(config-if)# ip address 192.168.1.1 255.255.255.0 Router(config-if)# no shutdown ================================= Basic Switch Commands ================================= Switch(greater than sign) ---User EXEC mode exit Switch(greater than sign) enable --------------- Switch# ---Privileged EXEC mode disable, exit ----------------- Switch# configure terminal Switch(config)# ---Global Config mode exit, end, Ctrl&#43;c, Ctrl&#43;z ----------------- Switch(config)# line vty 0 15 Switch(config)# line console 0 Switch(config-line)# ---Line configuration mode exit, end, Ctrl&#43;c, Ctrl&#43;z ---------------------------- Switch(config)# interface vlan 1 Switch(config-if)# ---Interface configuration mode exit, end, Ctrl&#43;c, Ctrl&#43;z ---------------------------- Switch# Switch# configure terminal Switch# show ? Switch# show running-config Switch# copy running-config startup-config Switch# ping 192.168.1.100 Switch# traceroute 192.168.1.100 Switch# ssh 192.168.1.100 Switch# telnet 192.168.1.100 Switch# debug ? Switch# clock set 07:14:00 October 15 2019 Switch# reload --------------------------------- Switch(conf)# Switch(conf)# hostname R1 Switch(conf)# banner motd &#34;No unauthorized access allowed!&#34; Switch(conf)# enable password class Switch(conf)# enable secret class Switch(conf)# service password-encryption Switch(config)# line vty 0 15 Switch(config)# line console 0 Switch(config)# interface vlan 1 ---------------------------------------------------- Switch(config-line)# Switch(config-line)# password cisco Switch(config-line)# login Switch(config-line)# transport input all (line vty) ---------------------------------------------------- Switch(config-if)# Switch(config-if)# interface vlan 1 Switch(config-if)# ip address 192.168.1.2 255.255.255.0 Switch(config-if)# no shutdown Switch(config-if)# exit Switch(config)# ip default-gateway 192.168.1.1">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    CISCO ios port forwarding y dynamic dns(DDNS)
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/post/cisco_ios_port_forwarding_y_dynamic_dns/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="Basic Configuration: https://youtube.com/watch?v=3wuFFYVWnbc
+Port Forwarding: https://youtube.com/watch?v=8WVWoW86Uhw
+Dynamic DNS: https://youtube.com/watch?v=Zh39hgRJwGE
+https://content.cisco.com/chapter.sjs?uri=/searchable/chapter/content/en/us/td/docs/ios-xml/ios/ipaddr_dns/configuration/15-sy/dns-15-sy-book/Dynamic-DNS-Support.html.xml
+https://ipwithease.com/how-to-configure-ddns-in-a-cisco-router/
+DDNS y NoIP: https://www.firewall.cx/cisco/cisco-routers/cisco-router-ddns.html
+Setup DNNS on a Cisco IOS Router: https://www.bytesolutions.com/setup-ddns-dynamic-dns-cisco-ios-router/
+=================================
+Basic Router Commands
+=================================
+Router(greater than sign)        ---User EXEC mode               exit
+Router(greater than sign) ?
+Router(greater than sign) enable     
+---------------
+Router#                          ---Privileged EXEC mode         disable, exit
+Router# ?
+-----------------
+Router# configure terminal
+Router(config)#                  ---Global Config mode           exit, end, Ctrl&#43;c, Ctrl&#43;z
+Router(config)# ?
+-----------------
+Router(config)# line vty 0 15
+Router(config)# line console 0
+Router(config-line)#             ---Line configuration mode      exit, end, Ctrl&#43;c, Ctrl&#43;z
+Router(config-line)# ?
+----------------------------
+Router(config)# interface gigabitEthernet 0/0/0
+Router(config-if)#               ---Interface configuration mode exit, end, Ctrl&#43;c, Ctrl&#43;z
+Router(config-if)# ?
+----------------------------
+Router#
+Router# configure terminal
+Router# show ?
+Router# show running-config
+Router# copy running-config startup-config
+Router# ping 192.168.1.100
+Router# traceroute 192.168.1.100
+Router# ssh 192.168.1.100 
+Router# telnet 192.168.1.100
+Router# debug ?
+Router# clock set 07:14:00 October 15 2019
+Router# reload
+---------------------------------
+Router(conf)#
+Router(conf)# hostname R1
+Router(conf)# banner motd &#34;No unauthorized access allowed!&#34;
+Router(conf)# enable password class
+Router(conf)# enable secret class
+Router(conf)# service password-encryption
+Router(config)# line vty 0 15
+Router(config)# line console 0
+Router(config)# interface gigabitEthernet 0/0/0
+----------------------------------------------------
+Router(config-line)# 
+Router(config-line)# password cisco
+Router(config-line)# login
+Router(config-line)# transport input all   (line vty)
+----------------------------------------------------
+Router(config-if)# 
+Router(config-if)# interface gigabitEthernet 0/0/0
+Router(config-if)# int g0/0                              //command abbreviation
+Router(config-if)# ip address 192.168.1.1 255.255.255.0 
+Router(config-if)# no shutdown
+
+
+=================================
+Basic Switch Commands
+=================================
+Switch(greater than sign)        ---User EXEC mode               exit
+Switch(greater than sign) enable     
+---------------
+Switch#                          ---Privileged EXEC mode         disable, exit
+-----------------
+Switch# configure terminal
+Switch(config)#                  ---Global Config mode           exit, end, Ctrl&#43;c, Ctrl&#43;z
+-----------------
+Switch(config)# line vty 0 15
+Switch(config)# line console 0
+Switch(config-line)#             ---Line configuration mode      exit, end, Ctrl&#43;c, Ctrl&#43;z
+----------------------------
+Switch(config)# interface vlan 1
+Switch(config-if)#               ---Interface configuration mode exit, end, Ctrl&#43;c, Ctrl&#43;z
+----------------------------
+Switch#
+Switch# configure terminal
+Switch# show ?                
+Switch# show running-config
+Switch# copy running-config startup-config
+Switch# ping 192.168.1.100
+Switch# traceroute 192.168.1.100
+Switch# ssh 192.168.1.100 
+Switch# telnet 192.168.1.100
+Switch# debug ?
+Switch# clock set 07:14:00 October 15 2019
+Switch# reload
+---------------------------------
+Switch(conf)#
+Switch(conf)# hostname R1
+Switch(conf)# banner motd &#34;No unauthorized access allowed!&#34;
+Switch(conf)# enable password class
+Switch(conf)# enable secret class
+Switch(conf)# service password-encryption
+Switch(config)# line vty 0 15
+Switch(config)# line console 0
+Switch(config)# interface vlan 1
+----------------------------------------------------
+Switch(config-line)# 
+Switch(config-line)# password cisco
+Switch(config-line)# login
+Switch(config-line)# transport input all   (line vty)
+----------------------------------------------------
+Switch(config-if)# 
+Switch(config-if)# interface vlan 1
+Switch(config-if)# ip address 192.168.1.2 255.255.255.0 
+Switch(config-if)# no shutdown
+Switch(config-if)# exit
+Switch(config)# ip default-gateway 192.168.1.1
+">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    CISCO ios port forwarding y dynamic dns(DDNS)
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2023-11-10T04:52:04-03:00'>
+      November 10, 2023
+    </time>
+    
+    <br>
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/cisco/">CISCO</a>
+    
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/ios/">IOS</a>
+    
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/port/">Port</a>
+    
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/forwarding/">Forwarding</a>
+    
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/ddns/">Ddns</a>
+    
+    
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <p>Basic Configuration: <a href="https://youtube.com/watch?v=3wuFFYVWnbc">https://youtube.com/watch?v=3wuFFYVWnbc</a></p>
+<p>Port Forwarding: <a href="https://youtube.com/watch?v=8WVWoW86Uhw">https://youtube.com/watch?v=8WVWoW86Uhw</a></p>
+<p>Dynamic DNS: <a href="https://youtube.com/watch?v=Zh39hgRJwGE">https://youtube.com/watch?v=Zh39hgRJwGE</a></p>
+<p><a href="https://content.cisco.com/chapter.sjs?uri=/searchable/chapter/content/en/us/td/docs/ios-xml/ios/ipaddr_dns/configuration/15-sy/dns-15-sy-book/Dynamic-DNS-Support.html.xml">https://content.cisco.com/chapter.sjs?uri=/searchable/chapter/content/en/us/td/docs/ios-xml/ios/ipaddr_dns/configuration/15-sy/dns-15-sy-book/Dynamic-DNS-Support.html.xml</a></p>
+<p><a href="https://ipwithease.com/how-to-configure-ddns-in-a-cisco-router/">https://ipwithease.com/how-to-configure-ddns-in-a-cisco-router/</a></p>
+<p>DDNS y NoIP: <a href="https://www.firewall.cx/cisco/cisco-routers/cisco-router-ddns.html">https://www.firewall.cx/cisco/cisco-routers/cisco-router-ddns.html</a></p>
+<p>Setup DNNS on a Cisco IOS Router: <a href="https://www.bytesolutions.com/setup-ddns-dynamic-dns-cisco-ios-router/">https://www.bytesolutions.com/setup-ddns-dynamic-dns-cisco-ios-router/</a></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-console" data-lang="console"><span style="display:flex;"><span>=================================
+</span></span><span style="display:flex;"><span>Basic Router Commands
+</span></span><span style="display:flex;"><span>=================================
+</span></span><span style="display:flex;"><span>Router(greater than sign)        ---User EXEC mode               exit
+</span></span><span style="display:flex;"><span>Router(greater than sign) ?
+</span></span><span style="display:flex;"><span>Router(greater than sign) enable     
+</span></span><span style="display:flex;"><span>---------------
+</span></span><span style="display:flex;"><span>Router#                          ---Privileged EXEC mode         disable, exit
+</span></span><span style="display:flex;"><span>Router# ?
+</span></span><span style="display:flex;"><span>-----------------
+</span></span><span style="display:flex;"><span>Router# configure terminal
+</span></span><span style="display:flex;"><span>Router(config)#                  ---Global Config mode           exit, end, Ctrl+c, Ctrl+z
+</span></span><span style="display:flex;"><span>Router(config)# ?
+</span></span><span style="display:flex;"><span>-----------------
+</span></span><span style="display:flex;"><span>Router(config)# line vty 0 15
+</span></span><span style="display:flex;"><span>Router(config)# line console 0
+</span></span><span style="display:flex;"><span>Router(config-line)#             ---Line configuration mode      exit, end, Ctrl+c, Ctrl+z
+</span></span><span style="display:flex;"><span>Router(config-line)# ?
+</span></span><span style="display:flex;"><span>----------------------------
+</span></span><span style="display:flex;"><span>Router(config)# interface gigabitEthernet 0/0/0
+</span></span><span style="display:flex;"><span>Router(config-if)#               ---Interface configuration mode exit, end, Ctrl+c, Ctrl+z
+</span></span><span style="display:flex;"><span>Router(config-if)# ?
+</span></span><span style="display:flex;"><span>----------------------------
+</span></span><span style="display:flex;"><span>Router#
+</span></span><span style="display:flex;"><span>Router# configure terminal
+</span></span><span style="display:flex;"><span>Router# show ?
+</span></span><span style="display:flex;"><span>Router# show running-config
+</span></span><span style="display:flex;"><span>Router# copy running-config startup-config
+</span></span><span style="display:flex;"><span>Router# ping 192.168.1.100
+</span></span><span style="display:flex;"><span>Router# traceroute 192.168.1.100
+</span></span><span style="display:flex;"><span>Router# ssh 192.168.1.100 
+</span></span><span style="display:flex;"><span>Router# telnet 192.168.1.100
+</span></span><span style="display:flex;"><span>Router# debug ?
+</span></span><span style="display:flex;"><span>Router# clock set 07:14:00 October 15 2019
+</span></span><span style="display:flex;"><span>Router# reload
+</span></span><span style="display:flex;"><span>---------------------------------
+</span></span><span style="display:flex;"><span>Router(conf)#
+</span></span><span style="display:flex;"><span>Router(conf)# hostname R1
+</span></span><span style="display:flex;"><span>Router(conf)# banner motd &#34;No unauthorized access allowed!&#34;
+</span></span><span style="display:flex;"><span>Router(conf)# enable password class
+</span></span><span style="display:flex;"><span>Router(conf)# enable secret class
+</span></span><span style="display:flex;"><span>Router(conf)# service password-encryption
+</span></span><span style="display:flex;"><span>Router(config)# line vty 0 15
+</span></span><span style="display:flex;"><span>Router(config)# line console 0
+</span></span><span style="display:flex;"><span>Router(config)# interface gigabitEthernet 0/0/0
+</span></span><span style="display:flex;"><span>----------------------------------------------------
+</span></span><span style="display:flex;"><span>Router(config-line)# 
+</span></span><span style="display:flex;"><span>Router(config-line)# password cisco
+</span></span><span style="display:flex;"><span>Router(config-line)# login
+</span></span><span style="display:flex;"><span>Router(config-line)# transport input all   (line vty)
+</span></span><span style="display:flex;"><span>----------------------------------------------------
+</span></span><span style="display:flex;"><span>Router(config-if)# 
+</span></span><span style="display:flex;"><span>Router(config-if)# interface gigabitEthernet 0/0/0
+</span></span><span style="display:flex;"><span>Router(config-if)# int g0/0                              //command abbreviation
+</span></span><span style="display:flex;"><span>Router(config-if)# ip address 192.168.1.1 255.255.255.0 
+</span></span><span style="display:flex;"><span>Router(config-if)# no shutdown
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span>=================================
+</span></span><span style="display:flex;"><span>Basic Switch Commands
+</span></span><span style="display:flex;"><span>=================================
+</span></span><span style="display:flex;"><span>Switch(greater than sign)        ---User EXEC mode               exit
+</span></span><span style="display:flex;"><span>Switch(greater than sign) enable     
+</span></span><span style="display:flex;"><span>---------------
+</span></span><span style="display:flex;"><span>Switch#                          ---Privileged EXEC mode         disable, exit
+</span></span><span style="display:flex;"><span>-----------------
+</span></span><span style="display:flex;"><span>Switch# configure terminal
+</span></span><span style="display:flex;"><span>Switch(config)#                  ---Global Config mode           exit, end, Ctrl+c, Ctrl+z
+</span></span><span style="display:flex;"><span>-----------------
+</span></span><span style="display:flex;"><span>Switch(config)# line vty 0 15
+</span></span><span style="display:flex;"><span>Switch(config)# line console 0
+</span></span><span style="display:flex;"><span>Switch(config-line)#             ---Line configuration mode      exit, end, Ctrl+c, Ctrl+z
+</span></span><span style="display:flex;"><span>----------------------------
+</span></span><span style="display:flex;"><span>Switch(config)# interface vlan 1
+</span></span><span style="display:flex;"><span>Switch(config-if)#               ---Interface configuration mode exit, end, Ctrl+c, Ctrl+z
+</span></span><span style="display:flex;"><span>----------------------------
+</span></span><span style="display:flex;"><span>Switch#
+</span></span><span style="display:flex;"><span>Switch# configure terminal
+</span></span><span style="display:flex;"><span>Switch# show ?                
+</span></span><span style="display:flex;"><span>Switch# show running-config
+</span></span><span style="display:flex;"><span>Switch# copy running-config startup-config
+</span></span><span style="display:flex;"><span>Switch# ping 192.168.1.100
+</span></span><span style="display:flex;"><span>Switch# traceroute 192.168.1.100
+</span></span><span style="display:flex;"><span>Switch# ssh 192.168.1.100 
+</span></span><span style="display:flex;"><span>Switch# telnet 192.168.1.100
+</span></span><span style="display:flex;"><span>Switch# debug ?
+</span></span><span style="display:flex;"><span>Switch# clock set 07:14:00 October 15 2019
+</span></span><span style="display:flex;"><span>Switch# reload
+</span></span><span style="display:flex;"><span>---------------------------------
+</span></span><span style="display:flex;"><span>Switch(conf)#
+</span></span><span style="display:flex;"><span>Switch(conf)# hostname R1
+</span></span><span style="display:flex;"><span>Switch(conf)# banner motd &#34;No unauthorized access allowed!&#34;
+</span></span><span style="display:flex;"><span>Switch(conf)# enable password class
+</span></span><span style="display:flex;"><span>Switch(conf)# enable secret class
+</span></span><span style="display:flex;"><span>Switch(conf)# service password-encryption
+</span></span><span style="display:flex;"><span>Switch(config)# line vty 0 15
+</span></span><span style="display:flex;"><span>Switch(config)# line console 0
+</span></span><span style="display:flex;"><span>Switch(config)# interface vlan 1
+</span></span><span style="display:flex;"><span>----------------------------------------------------
+</span></span><span style="display:flex;"><span>Switch(config-line)# 
+</span></span><span style="display:flex;"><span>Switch(config-line)# password cisco
+</span></span><span style="display:flex;"><span>Switch(config-line)# login
+</span></span><span style="display:flex;"><span>Switch(config-line)# transport input all   (line vty)
+</span></span><span style="display:flex;"><span>----------------------------------------------------
+</span></span><span style="display:flex;"><span>Switch(config-if)# 
+</span></span><span style="display:flex;"><span>Switch(config-if)# interface vlan 1
+</span></span><span style="display:flex;"><span>Switch(config-if)# ip address 192.168.1.2 255.255.255.0 
+</span></span><span style="display:flex;"><span>Switch(config-if)# no shutdown
+</span></span><span style="display:flex;"><span>Switch(config-if)# exit
+</span></span><span style="display:flex;"><span>Switch(config)# ip default-gateway 192.168.1.1
+</span></span></code></pre></div>
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+</footer>
+
+
+</body>
+</html>

@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/race_conditions/">
+  <meta property="og:site_name" content="Imlauer">
+  <meta property="og:title" content="Race conditions, ejemplo en C">
+  <meta property="og:description" content="Race conditions en C son situaciones en las que, al ejecutar múltiples hilos o subprocesos de forma concurrente, la secuencia de ejecución de las operaciones puede generar un comportamiento inesperado o incorrecto. Esto se deber a que los hilos acceden y modifican variables compartidas sin sincronizar apropiadamente.
+Ejemplo en C: Supongamos dos hilos que intentan cambiar el valor de una variable compartida, x, entre 0 y 1:
+#include &lt;stdio.h&gt; #include &lt;threads.h&gt; // Variable compartida int x = 0; void *hilo1(void *arg) { // Cambiar x de 0 a 1 x = 1; // Esperar un tiempo aleatorio thrd_sleep((struct timespec[]){{1, 0}}, NULL); return NULL; } void *hilo2(void *arg) { // Cambiar x de 1 a 0 x = 0; return NULL; } int main() { thrd_t h1, h2; thrd_create(&amp;h1, hilo1, NULL); thrd_create(&amp;h2, hilo2, NULL); thrd_join(h1, NULL); thrd_join(h2, NULL); // Imprimir el valor de x printf(&#34;x = %d\n&#34;, x); } Sin sincronización adecuada, el resultado final de x podría ser inesperado, ya que los hilos pueden ejecutarse en orden erróneo. Por ejemplo, puede que hilo2 cambie x a 0 antes de que hilo1 cambie x a 1. Un posible resultado incorrecto sería que x sea 0.">
+  <meta property="og:locale" content="es_es">
+  <meta property="og:type" content="article">
+    <meta property="article:published_time" content="2024-11-24T19:41:56-03:00">
+    <meta property="article:modified_time" content="2024-11-24T19:41:56-03:00">
+    <meta property="article:tag" content="Hacking">
+
+  
+  <meta itemprop="name" content="Race conditions, ejemplo en C">
+  <meta itemprop="description" content="Race conditions en C son situaciones en las que, al ejecutar múltiples hilos o subprocesos de forma concurrente, la secuencia de ejecución de las operaciones puede generar un comportamiento inesperado o incorrecto. Esto se deber a que los hilos acceden y modifican variables compartidas sin sincronizar apropiadamente.
+Ejemplo en C: Supongamos dos hilos que intentan cambiar el valor de una variable compartida, x, entre 0 y 1:
+#include &lt;stdio.h&gt; #include &lt;threads.h&gt; // Variable compartida int x = 0; void *hilo1(void *arg) { // Cambiar x de 0 a 1 x = 1; // Esperar un tiempo aleatorio thrd_sleep((struct timespec[]){{1, 0}}, NULL); return NULL; } void *hilo2(void *arg) { // Cambiar x de 1 a 0 x = 0; return NULL; } int main() { thrd_t h1, h2; thrd_create(&amp;h1, hilo1, NULL); thrd_create(&amp;h2, hilo2, NULL); thrd_join(h1, NULL); thrd_join(h2, NULL); // Imprimir el valor de x printf(&#34;x = %d\n&#34;, x); } Sin sincronización adecuada, el resultado final de x podría ser inesperado, ya que los hilos pueden ejecutarse en orden erróneo. Por ejemplo, puede que hilo2 cambie x a 0 antes de que hilo1 cambie x a 1. Un posible resultado incorrecto sería que x sea 0.">
+  <meta itemprop="datePublished" content="2024-11-24T19:41:56-03:00">
+  <meta itemprop="dateModified" content="2024-11-24T19:41:56-03:00">
+  <meta itemprop="wordCount" content="220">
+  <meta itemprop="keywords" content="Hacking">
+  
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Race conditions, ejemplo en C">
+  <meta name="twitter:description" content="Race conditions en C son situaciones en las que, al ejecutar múltiples hilos o subprocesos de forma concurrente, la secuencia de ejecución de las operaciones puede generar un comportamiento inesperado o incorrecto. Esto se deber a que los hilos acceden y modifican variables compartidas sin sincronizar apropiadamente.
+Ejemplo en C: Supongamos dos hilos que intentan cambiar el valor de una variable compartida, x, entre 0 y 1:
+#include &lt;stdio.h&gt; #include &lt;threads.h&gt; // Variable compartida int x = 0; void *hilo1(void *arg) { // Cambiar x de 0 a 1 x = 1; // Esperar un tiempo aleatorio thrd_sleep((struct timespec[]){{1, 0}}, NULL); return NULL; } void *hilo2(void *arg) { // Cambiar x de 1 a 0 x = 0; return NULL; } int main() { thrd_t h1, h2; thrd_create(&amp;h1, hilo1, NULL); thrd_create(&amp;h2, hilo2, NULL); thrd_join(h1, NULL); thrd_join(h2, NULL); // Imprimir el valor de x printf(&#34;x = %d\n&#34;, x); } Sin sincronización adecuada, el resultado final de x podría ser inesperado, ya que los hilos pueden ejecutarse en orden erróneo. Por ejemplo, puede que hilo2 cambie x a 0 antes de que hilo1 cambie x a 1. Un posible resultado incorrecto sería que x sea 0.">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Race conditions, ejemplo en C
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/race_conditions/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="Race conditions en C son situaciones en las que, al ejecutar múltiples hilos o subprocesos de forma concurrente, la secuencia de ejecución de las operaciones puede generar un comportamiento inesperado o incorrecto. Esto se deber a que los hilos acceden y modifican variables compartidas sin sincronizar apropiadamente.
+Ejemplo en C:
+Supongamos dos hilos que intentan cambiar el valor de una variable compartida, x, entre 0 y 1:
+#include &lt;stdio.h&gt;
+#include &lt;threads.h&gt;
+
+// Variable compartida
+int x = 0;
+
+void *hilo1(void *arg) {
+    // Cambiar x de 0 a 1
+    x = 1;
+    // Esperar un tiempo aleatorio
+    thrd_sleep((struct timespec[]){{1, 0}}, NULL);
+    return NULL;
+}
+
+void *hilo2(void *arg) {
+    // Cambiar x de 1 a 0
+    x = 0;
+    return NULL;
+}
+
+int main() {
+    thrd_t h1, h2;
+    thrd_create(&amp;h1, hilo1, NULL);
+    thrd_create(&amp;h2, hilo2, NULL);
+    thrd_join(h1, NULL);
+    thrd_join(h2, NULL);
+
+    // Imprimir el valor de x
+    printf(&#34;x = %d\n&#34;, x);
+}
+Sin sincronización adecuada, el resultado final de x podría ser inesperado, ya que los hilos pueden ejecutarse en orden erróneo. Por ejemplo, puede que hilo2 cambie x a 0 antes de que hilo1 cambie x a 1. Un posible resultado incorrecto sería que x sea 0.">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Race conditions, ejemplo en C
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2024-11-24T19:41:56-03:00'>
+      November 24, 2024
+    </time>
+    
+    <br>
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/hacking/">Hacking</a>
+    
+    
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <p>Race conditions en C son situaciones en las que, al ejecutar múltiples hilos o subprocesos de forma concurrente, la secuencia de ejecución de las operaciones puede generar un comportamiento inesperado o incorrecto. <strong>Esto se deber a que los hilos acceden y modifican variables compartidas sin sincronizar apropiadamente.</strong></p>
+<h3 id="ejemplo-en-c">Ejemplo en C:</h3>
+<p>Supongamos dos hilos que intentan cambiar el valor de una variable compartida, x, entre 0 y 1:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;threads.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Variable compartida
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">int</span> x <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">hilo1</span>(<span style="color:#66d9ef">void</span> <span style="color:#f92672">*</span>arg) {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Cambiar x de 0 a 1
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    x <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Esperar un tiempo aleatorio
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">thrd_sleep</span>((<span style="color:#66d9ef">struct</span> timespec[]){{<span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">0</span>}}, NULL);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> NULL;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">hilo2</span>(<span style="color:#66d9ef">void</span> <span style="color:#f92672">*</span>arg) {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Cambiar x de 1 a 0
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    x <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> NULL;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">thrd_t</span> h1, h2;
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">thrd_create</span>(<span style="color:#f92672">&amp;</span>h1, hilo1, NULL);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">thrd_create</span>(<span style="color:#f92672">&amp;</span>h2, hilo2, NULL);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">thrd_join</span>(h1, NULL);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">thrd_join</span>(h2, NULL);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Imprimir el valor de x
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;x = %d</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, x);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Sin sincronización adecuada, el resultado final de x podría ser inesperado, ya que los hilos pueden ejecutarse en orden erróneo. Por ejemplo, puede que hilo2 cambie x a 0 antes de que hilo1 cambie x a 1. Un posible resultado incorrecto sería que x sea 0.</p>
+<p>Para resolver este problema, se deberían utilizar mecanismos de sincronización, como semáforos, mutexes o condiciones de variación, para asegurar el acceso apropiado a las variables compartidas.</p>
+
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+</footer>
+
+
+</body>
+</html>

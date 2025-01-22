@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/post/buffer_overflow_9/">
+  <meta property="og:site_name" content="Imlauer">
+  <meta property="og:title" content="Ricardo Narvaja Reversing: Buffer overflow examen 9">
+  <meta property="og:description" content="Este reto usa vfprintf #include &lt;stdarg.h&gt; #include &lt;stdio.h&gt; void vout(FILE *stream, char *fmt, ...); char fmt1 [] = &#34;%s %s %s\n&#34;; int main(void) { FILE *stream; stream = fopen(&#34;myfile.dat&#34;, &#34;w&#34;); vout(stream, fmt1, &#34;Sat&#34;, &#34;Sun&#34;, &#34;Mon&#34;); } void vout(FILE *stream, char *fmt, ...) { va_list arg_ptr; va_start(arg_ptr, fmt); vfprintf(stream, fmt, arg_ptr); va_end(arg_ptr); } printf que me decompilo el ida:
+int printf(char *Format, ...) { FILE *v1; // eax va_list va; // [esp&#43;14h] [ebp&#43;Ch] BYREF va_start(va, Format); sub_401000(); v1 = _acrt_iob_func(1u); return vfprintf(v1, Format, 0, va); } Esto me generó el IDA con algunos retoques: // Overfloodea cuando cargo el caracter 169 char *this_106(char *this) { this[106] = &#34;A ejecutar la calculadora de nuevo...\n&#34;; // De acá tenés que saltar a Destination[4] == &#39;Q&#39; return this; } int check_0(char *Destination, int a2) { // Concatena(une) la cadena Destination con la posición 106 de la cadena destination // Estas siguientes expresiones son equivalentes. // *(Destination&#43;100) = Destination[100] // NO está concatenandolo con Destination&#43;106, lo está concatenando con sólo un byte // strcat espera un puntero como 1er y 2do argumento, acá le pasan es una posición del buffer, o sea le estás pasando la posición de memoria de donde querés que lea, podemos apuntar Destination[106] a cualquier lado strcat(Destination, Destination[106]); // Supuestamente le agrega 1 byte que es el byte modificado por la función this_106, en realidad esto rompe todo. Todo lo que está abajo no se ejecutará. // Compara si el valor del tamaño del buffer Destination vale 56 bytes. // Este if nunca será verdadero porque no existe el caracter nulo porque strcat lo eliminó, por lo tanto tenemos que pisar el return address y saltar a if Destination[4] == &#39;Q&#39; // ME EQUIVOQUÉ SI ES VERDADERO AUNQUE ES RARISIMO PORQUE this[106] sólo debería permitirme cargar 1 byte y en Linux con gcc todo lo que está debajo del strcat no se ejecuta. if ( strlen(Destination) == 56 ) { if ( Destination[4] == &#39;I&#39; ) { // Si lo es llama a printf e imprime la cadena a partir de la posición 254 para adelante. *(Destination &#43; 52) = printf; // Esto (*(Destination &#43; 52))(Destination &#43; 254); // es lo mismo que : printf(Destination &#43; 254); } // Lo mismo con los demás, sólo imprime texto. if ( Destination[4] == &#39;P&#39; ) { *(Destination &#43; 53) = printf; (*(Destination &#43; 53))(Destination &#43; 254); } if ( Destination[4] == &#39;Q&#39; ) { // a2 = system. system(Destination&#43;254) acá llama a system y pasa como argumento cualquier cosa que hay después de Destination&#43;254. Entonces tenemos que pisar esa dirección con &#34;calc.exe&#34; *(Destination &#43; 54) = a2; // a2 es un puntero a system // Tenemos que hacer una llamada como: // system(&#34;calc.exe&#34;); // Esto (*(Destination &#43; 54))(Destination &#43; 254); // Es lo mismo que system(Destination &#43; 254); // Destination &#43; 254 = hace referencia al buffer, si miramos en el ida en la pila del stack, para llegar al buffer necesitamos 25 bytes más es decir: Destination&#43;225 = buffer, lo podemos comprobar mirando la pila de la variable botón derecho array y dándole 224 bytes hasta que el buffer queda abajo. Destination[225] = Buffer[0] // 54-25 = 29 entonces Destination[254] = Buffer[29] entonces buffer[29] = &#34;calc.exe&#34; } if ( Destination[4] == &#39;R&#39; ) { *(Destination &#43; 55) = printf; (*(Destination &#43; 55))(Destination &#43; 254); } } return 0; } int __cdecl check(char *Destination, int a2) { // v7 pasa a ser a2 en esta función // a2 es un puntero a system, ¿como hacemos para que se ejecute la calculadora? check_0(Destination, a2); return 0; } int __cdecl main(int argc, const char **argv, const char **envp) { FILE *Destination[56]; // [esp&#43;0h] [ebp-1B0h] BYREF char Buffer[200]; // [esp&#43;E0h] [ebp-D0h] BYREF const char *v6; // [esp&#43;1A8h] [ebp-8h] int v7; // [esp&#43;1ACh] [ebp-4h] this_106(Destination); Destination[52] = printf; printf(v6); v7 = printf; memset(Buffer, 0, sizeof(Buffer)); memset(Destination, 0, 200u); // Empieza a leer el contenido del archivo y lo carga a partir de la posición 51 Destination[51] = fopen(&#34;example.txt&#34;, &#34;rb&#34;); if ( !Destination[51] ) { (Destination[52])(&#34;No se puede leer el archivo bye bye \n&#34;); exit(1); } // De destination lo carga a buffer fread(Buffer, 200u, 1u, Destination[51]); // y de buffer a destination otra vez. strcpy(Destination, Buffer); // Verifica si la posición 0 del buffer vale 0, es decir hay que desbordarla para pisar esa parte. if ( SLOBYTE(Destination[0]) == &#39;0&#39; ) v7 = system; check(Destination, v7); (Destination[52])(&amp;Buffer[30]); return 0; } Pequeño estudio de lo que pasa cuando usamos strcat con una posición de un buffer #include &lt;stdio.h&gt; #include &lt;string.h&gt; int main(){ char prueba[6] = {&#39;h&#39;,&#39;o&#39;,&#39;l&#39;,&#39;a&#39;,&#39;\0&#39;}; strcat(prueba,prueba[3]); // Lo que hará será transformar &#39;a&#39; a hexadecimal que es 61. Entonces va a puntar a 0x61 va a concatenar prueba con lo que sea que está en la posición de memoria 0x61 (o sea nada). printf(&#34;prueba: %x\n&#34;,prueba); return 0; } Otro pequeño estudio de strcat #include &lt;stdio.h&gt; #include &lt;string.h&gt; int main(){ char prueba[7] = {&#39;h&#39;,&#39;o&#39;,&#39;l&#39;,&#39;a&#39;,&#39; &#39;,&#39;\0&#39;}; // Estas expresiones son equivalentes char asdf[] = &#34;mundo\n&#34;; char asdf1[7] = {&#39;m&#39;,&#39;u&#39;,&#39;n&#39;,&#39;d&#39;,&#39;o&#39;,&#39;\n&#39;,&#39;\0&#39;}; // strcat borra el caracter nulo del 1er argumento, entonces cuando vos concatenás con un caracter estás borrando el caracter nulo del primer argumento y lo dejás sin fin de cadena, eso hace que el strlen no funcione porque no encuentra el fin de cadena. strcat(prueba,asdf); // Lo que hará será transformar &#39;a&#39; a hexadecimal que es 61. Entonces va a puntar a 0x61 va a concatenar prueba con lo que sea que está en la posición de memoria 0x61 (o sea nada). printf(&#34;prueba: %s\n&#34;,prueba); return 0; } Implementación de strcat en C char * strcat(char *dest, const char *src) { size_t i,j; for (i = 0; dest[i] != &#39;\0&#39;; i&#43;&#43;) ; for (j = 0; src[j] != &#39;\0&#39;; j&#43;&#43;) dest[i&#43;j] = src[j]; dest[i&#43;j] = &#39;\0&#39;; return dest; } Implementación de strlen en C size_t custom_strlen(const char* str) { size_t len = 0; while (*str != &#39;\0&#39;) { len&#43;&#43;; str&#43;&#43;; } return len; } Exploit En vez de ejecutar la calculadora ejecuté cmd porque estoy bajo linux y wine no tiene calc. Tuve que poner un 00 en la posición 17 porque strcpy copia hasta encontrar un 00 y así 18&#43;38=56 38 es la longitud de A ejecutar la calculadora de nuevo...\n">
+  <meta property="og:locale" content="es_es">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="post">
+    <meta property="article:published_time" content="2024-08-24T05:09:01-03:00">
+    <meta property="article:modified_time" content="2024-08-24T05:09:01-03:00">
+    <meta property="article:tag" content="Ricardo">
+    <meta property="article:tag" content="Narvaja">
+    <meta property="article:tag" content="Reversing">
+    <meta property="article:tag" content="Examen">
+    <meta property="article:tag" content="Ida">
+
+  
+  <meta itemprop="name" content="Ricardo Narvaja Reversing: Buffer overflow examen 9">
+  <meta itemprop="description" content="Este reto usa vfprintf #include &lt;stdarg.h&gt; #include &lt;stdio.h&gt; void vout(FILE *stream, char *fmt, ...); char fmt1 [] = &#34;%s %s %s\n&#34;; int main(void) { FILE *stream; stream = fopen(&#34;myfile.dat&#34;, &#34;w&#34;); vout(stream, fmt1, &#34;Sat&#34;, &#34;Sun&#34;, &#34;Mon&#34;); } void vout(FILE *stream, char *fmt, ...) { va_list arg_ptr; va_start(arg_ptr, fmt); vfprintf(stream, fmt, arg_ptr); va_end(arg_ptr); } printf que me decompilo el ida:
+int printf(char *Format, ...) { FILE *v1; // eax va_list va; // [esp&#43;14h] [ebp&#43;Ch] BYREF va_start(va, Format); sub_401000(); v1 = _acrt_iob_func(1u); return vfprintf(v1, Format, 0, va); } Esto me generó el IDA con algunos retoques: // Overfloodea cuando cargo el caracter 169 char *this_106(char *this) { this[106] = &#34;A ejecutar la calculadora de nuevo...\n&#34;; // De acá tenés que saltar a Destination[4] == &#39;Q&#39; return this; } int check_0(char *Destination, int a2) { // Concatena(une) la cadena Destination con la posición 106 de la cadena destination // Estas siguientes expresiones son equivalentes. // *(Destination&#43;100) = Destination[100] // NO está concatenandolo con Destination&#43;106, lo está concatenando con sólo un byte // strcat espera un puntero como 1er y 2do argumento, acá le pasan es una posición del buffer, o sea le estás pasando la posición de memoria de donde querés que lea, podemos apuntar Destination[106] a cualquier lado strcat(Destination, Destination[106]); // Supuestamente le agrega 1 byte que es el byte modificado por la función this_106, en realidad esto rompe todo. Todo lo que está abajo no se ejecutará. // Compara si el valor del tamaño del buffer Destination vale 56 bytes. // Este if nunca será verdadero porque no existe el caracter nulo porque strcat lo eliminó, por lo tanto tenemos que pisar el return address y saltar a if Destination[4] == &#39;Q&#39; // ME EQUIVOQUÉ SI ES VERDADERO AUNQUE ES RARISIMO PORQUE this[106] sólo debería permitirme cargar 1 byte y en Linux con gcc todo lo que está debajo del strcat no se ejecuta. if ( strlen(Destination) == 56 ) { if ( Destination[4] == &#39;I&#39; ) { // Si lo es llama a printf e imprime la cadena a partir de la posición 254 para adelante. *(Destination &#43; 52) = printf; // Esto (*(Destination &#43; 52))(Destination &#43; 254); // es lo mismo que : printf(Destination &#43; 254); } // Lo mismo con los demás, sólo imprime texto. if ( Destination[4] == &#39;P&#39; ) { *(Destination &#43; 53) = printf; (*(Destination &#43; 53))(Destination &#43; 254); } if ( Destination[4] == &#39;Q&#39; ) { // a2 = system. system(Destination&#43;254) acá llama a system y pasa como argumento cualquier cosa que hay después de Destination&#43;254. Entonces tenemos que pisar esa dirección con &#34;calc.exe&#34; *(Destination &#43; 54) = a2; // a2 es un puntero a system // Tenemos que hacer una llamada como: // system(&#34;calc.exe&#34;); // Esto (*(Destination &#43; 54))(Destination &#43; 254); // Es lo mismo que system(Destination &#43; 254); // Destination &#43; 254 = hace referencia al buffer, si miramos en el ida en la pila del stack, para llegar al buffer necesitamos 25 bytes más es decir: Destination&#43;225 = buffer, lo podemos comprobar mirando la pila de la variable botón derecho array y dándole 224 bytes hasta que el buffer queda abajo. Destination[225] = Buffer[0] // 54-25 = 29 entonces Destination[254] = Buffer[29] entonces buffer[29] = &#34;calc.exe&#34; } if ( Destination[4] == &#39;R&#39; ) { *(Destination &#43; 55) = printf; (*(Destination &#43; 55))(Destination &#43; 254); } } return 0; } int __cdecl check(char *Destination, int a2) { // v7 pasa a ser a2 en esta función // a2 es un puntero a system, ¿como hacemos para que se ejecute la calculadora? check_0(Destination, a2); return 0; } int __cdecl main(int argc, const char **argv, const char **envp) { FILE *Destination[56]; // [esp&#43;0h] [ebp-1B0h] BYREF char Buffer[200]; // [esp&#43;E0h] [ebp-D0h] BYREF const char *v6; // [esp&#43;1A8h] [ebp-8h] int v7; // [esp&#43;1ACh] [ebp-4h] this_106(Destination); Destination[52] = printf; printf(v6); v7 = printf; memset(Buffer, 0, sizeof(Buffer)); memset(Destination, 0, 200u); // Empieza a leer el contenido del archivo y lo carga a partir de la posición 51 Destination[51] = fopen(&#34;example.txt&#34;, &#34;rb&#34;); if ( !Destination[51] ) { (Destination[52])(&#34;No se puede leer el archivo bye bye \n&#34;); exit(1); } // De destination lo carga a buffer fread(Buffer, 200u, 1u, Destination[51]); // y de buffer a destination otra vez. strcpy(Destination, Buffer); // Verifica si la posición 0 del buffer vale 0, es decir hay que desbordarla para pisar esa parte. if ( SLOBYTE(Destination[0]) == &#39;0&#39; ) v7 = system; check(Destination, v7); (Destination[52])(&amp;Buffer[30]); return 0; } Pequeño estudio de lo que pasa cuando usamos strcat con una posición de un buffer #include &lt;stdio.h&gt; #include &lt;string.h&gt; int main(){ char prueba[6] = {&#39;h&#39;,&#39;o&#39;,&#39;l&#39;,&#39;a&#39;,&#39;\0&#39;}; strcat(prueba,prueba[3]); // Lo que hará será transformar &#39;a&#39; a hexadecimal que es 61. Entonces va a puntar a 0x61 va a concatenar prueba con lo que sea que está en la posición de memoria 0x61 (o sea nada). printf(&#34;prueba: %x\n&#34;,prueba); return 0; } Otro pequeño estudio de strcat #include &lt;stdio.h&gt; #include &lt;string.h&gt; int main(){ char prueba[7] = {&#39;h&#39;,&#39;o&#39;,&#39;l&#39;,&#39;a&#39;,&#39; &#39;,&#39;\0&#39;}; // Estas expresiones son equivalentes char asdf[] = &#34;mundo\n&#34;; char asdf1[7] = {&#39;m&#39;,&#39;u&#39;,&#39;n&#39;,&#39;d&#39;,&#39;o&#39;,&#39;\n&#39;,&#39;\0&#39;}; // strcat borra el caracter nulo del 1er argumento, entonces cuando vos concatenás con un caracter estás borrando el caracter nulo del primer argumento y lo dejás sin fin de cadena, eso hace que el strlen no funcione porque no encuentra el fin de cadena. strcat(prueba,asdf); // Lo que hará será transformar &#39;a&#39; a hexadecimal que es 61. Entonces va a puntar a 0x61 va a concatenar prueba con lo que sea que está en la posición de memoria 0x61 (o sea nada). printf(&#34;prueba: %s\n&#34;,prueba); return 0; } Implementación de strcat en C char * strcat(char *dest, const char *src) { size_t i,j; for (i = 0; dest[i] != &#39;\0&#39;; i&#43;&#43;) ; for (j = 0; src[j] != &#39;\0&#39;; j&#43;&#43;) dest[i&#43;j] = src[j]; dest[i&#43;j] = &#39;\0&#39;; return dest; } Implementación de strlen en C size_t custom_strlen(const char* str) { size_t len = 0; while (*str != &#39;\0&#39;) { len&#43;&#43;; str&#43;&#43;; } return len; } Exploit En vez de ejecutar la calculadora ejecuté cmd porque estoy bajo linux y wine no tiene calc. Tuve que poner un 00 en la posición 17 porque strcpy copia hasta encontrar un 00 y así 18&#43;38=56 38 es la longitud de A ejecutar la calculadora de nuevo...\n">
+  <meta itemprop="datePublished" content="2024-08-24T05:09:01-03:00">
+  <meta itemprop="dateModified" content="2024-08-24T05:09:01-03:00">
+  <meta itemprop="wordCount" content="1055">
+  <meta itemprop="keywords" content="Ricardo,Narvaja,Reversing,Examen,Ida">
+  
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Ricardo Narvaja Reversing: Buffer overflow examen 9">
+  <meta name="twitter:description" content="Este reto usa vfprintf #include &lt;stdarg.h&gt; #include &lt;stdio.h&gt; void vout(FILE *stream, char *fmt, ...); char fmt1 [] = &#34;%s %s %s\n&#34;; int main(void) { FILE *stream; stream = fopen(&#34;myfile.dat&#34;, &#34;w&#34;); vout(stream, fmt1, &#34;Sat&#34;, &#34;Sun&#34;, &#34;Mon&#34;); } void vout(FILE *stream, char *fmt, ...) { va_list arg_ptr; va_start(arg_ptr, fmt); vfprintf(stream, fmt, arg_ptr); va_end(arg_ptr); } printf que me decompilo el ida:
+int printf(char *Format, ...) { FILE *v1; // eax va_list va; // [esp&#43;14h] [ebp&#43;Ch] BYREF va_start(va, Format); sub_401000(); v1 = _acrt_iob_func(1u); return vfprintf(v1, Format, 0, va); } Esto me generó el IDA con algunos retoques: // Overfloodea cuando cargo el caracter 169 char *this_106(char *this) { this[106] = &#34;A ejecutar la calculadora de nuevo...\n&#34;; // De acá tenés que saltar a Destination[4] == &#39;Q&#39; return this; } int check_0(char *Destination, int a2) { // Concatena(une) la cadena Destination con la posición 106 de la cadena destination // Estas siguientes expresiones son equivalentes. // *(Destination&#43;100) = Destination[100] // NO está concatenandolo con Destination&#43;106, lo está concatenando con sólo un byte // strcat espera un puntero como 1er y 2do argumento, acá le pasan es una posición del buffer, o sea le estás pasando la posición de memoria de donde querés que lea, podemos apuntar Destination[106] a cualquier lado strcat(Destination, Destination[106]); // Supuestamente le agrega 1 byte que es el byte modificado por la función this_106, en realidad esto rompe todo. Todo lo que está abajo no se ejecutará. // Compara si el valor del tamaño del buffer Destination vale 56 bytes. // Este if nunca será verdadero porque no existe el caracter nulo porque strcat lo eliminó, por lo tanto tenemos que pisar el return address y saltar a if Destination[4] == &#39;Q&#39; // ME EQUIVOQUÉ SI ES VERDADERO AUNQUE ES RARISIMO PORQUE this[106] sólo debería permitirme cargar 1 byte y en Linux con gcc todo lo que está debajo del strcat no se ejecuta. if ( strlen(Destination) == 56 ) { if ( Destination[4] == &#39;I&#39; ) { // Si lo es llama a printf e imprime la cadena a partir de la posición 254 para adelante. *(Destination &#43; 52) = printf; // Esto (*(Destination &#43; 52))(Destination &#43; 254); // es lo mismo que : printf(Destination &#43; 254); } // Lo mismo con los demás, sólo imprime texto. if ( Destination[4] == &#39;P&#39; ) { *(Destination &#43; 53) = printf; (*(Destination &#43; 53))(Destination &#43; 254); } if ( Destination[4] == &#39;Q&#39; ) { // a2 = system. system(Destination&#43;254) acá llama a system y pasa como argumento cualquier cosa que hay después de Destination&#43;254. Entonces tenemos que pisar esa dirección con &#34;calc.exe&#34; *(Destination &#43; 54) = a2; // a2 es un puntero a system // Tenemos que hacer una llamada como: // system(&#34;calc.exe&#34;); // Esto (*(Destination &#43; 54))(Destination &#43; 254); // Es lo mismo que system(Destination &#43; 254); // Destination &#43; 254 = hace referencia al buffer, si miramos en el ida en la pila del stack, para llegar al buffer necesitamos 25 bytes más es decir: Destination&#43;225 = buffer, lo podemos comprobar mirando la pila de la variable botón derecho array y dándole 224 bytes hasta que el buffer queda abajo. Destination[225] = Buffer[0] // 54-25 = 29 entonces Destination[254] = Buffer[29] entonces buffer[29] = &#34;calc.exe&#34; } if ( Destination[4] == &#39;R&#39; ) { *(Destination &#43; 55) = printf; (*(Destination &#43; 55))(Destination &#43; 254); } } return 0; } int __cdecl check(char *Destination, int a2) { // v7 pasa a ser a2 en esta función // a2 es un puntero a system, ¿como hacemos para que se ejecute la calculadora? check_0(Destination, a2); return 0; } int __cdecl main(int argc, const char **argv, const char **envp) { FILE *Destination[56]; // [esp&#43;0h] [ebp-1B0h] BYREF char Buffer[200]; // [esp&#43;E0h] [ebp-D0h] BYREF const char *v6; // [esp&#43;1A8h] [ebp-8h] int v7; // [esp&#43;1ACh] [ebp-4h] this_106(Destination); Destination[52] = printf; printf(v6); v7 = printf; memset(Buffer, 0, sizeof(Buffer)); memset(Destination, 0, 200u); // Empieza a leer el contenido del archivo y lo carga a partir de la posición 51 Destination[51] = fopen(&#34;example.txt&#34;, &#34;rb&#34;); if ( !Destination[51] ) { (Destination[52])(&#34;No se puede leer el archivo bye bye \n&#34;); exit(1); } // De destination lo carga a buffer fread(Buffer, 200u, 1u, Destination[51]); // y de buffer a destination otra vez. strcpy(Destination, Buffer); // Verifica si la posición 0 del buffer vale 0, es decir hay que desbordarla para pisar esa parte. if ( SLOBYTE(Destination[0]) == &#39;0&#39; ) v7 = system; check(Destination, v7); (Destination[52])(&amp;Buffer[30]); return 0; } Pequeño estudio de lo que pasa cuando usamos strcat con una posición de un buffer #include &lt;stdio.h&gt; #include &lt;string.h&gt; int main(){ char prueba[6] = {&#39;h&#39;,&#39;o&#39;,&#39;l&#39;,&#39;a&#39;,&#39;\0&#39;}; strcat(prueba,prueba[3]); // Lo que hará será transformar &#39;a&#39; a hexadecimal que es 61. Entonces va a puntar a 0x61 va a concatenar prueba con lo que sea que está en la posición de memoria 0x61 (o sea nada). printf(&#34;prueba: %x\n&#34;,prueba); return 0; } Otro pequeño estudio de strcat #include &lt;stdio.h&gt; #include &lt;string.h&gt; int main(){ char prueba[7] = {&#39;h&#39;,&#39;o&#39;,&#39;l&#39;,&#39;a&#39;,&#39; &#39;,&#39;\0&#39;}; // Estas expresiones son equivalentes char asdf[] = &#34;mundo\n&#34;; char asdf1[7] = {&#39;m&#39;,&#39;u&#39;,&#39;n&#39;,&#39;d&#39;,&#39;o&#39;,&#39;\n&#39;,&#39;\0&#39;}; // strcat borra el caracter nulo del 1er argumento, entonces cuando vos concatenás con un caracter estás borrando el caracter nulo del primer argumento y lo dejás sin fin de cadena, eso hace que el strlen no funcione porque no encuentra el fin de cadena. strcat(prueba,asdf); // Lo que hará será transformar &#39;a&#39; a hexadecimal que es 61. Entonces va a puntar a 0x61 va a concatenar prueba con lo que sea que está en la posición de memoria 0x61 (o sea nada). printf(&#34;prueba: %s\n&#34;,prueba); return 0; } Implementación de strcat en C char * strcat(char *dest, const char *src) { size_t i,j; for (i = 0; dest[i] != &#39;\0&#39;; i&#43;&#43;) ; for (j = 0; src[j] != &#39;\0&#39;; j&#43;&#43;) dest[i&#43;j] = src[j]; dest[i&#43;j] = &#39;\0&#39;; return dest; } Implementación de strlen en C size_t custom_strlen(const char* str) { size_t len = 0; while (*str != &#39;\0&#39;) { len&#43;&#43;; str&#43;&#43;; } return len; } Exploit En vez de ejecutar la calculadora ejecuté cmd porque estoy bajo linux y wine no tiene calc. Tuve que poner un 00 en la posición 17 porque strcpy copia hasta encontrar un 00 y así 18&#43;38=56 38 es la longitud de A ejecutar la calculadora de nuevo...\n">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Ricardo Narvaja Reversing: Buffer overflow examen 9
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/post/buffer_overflow_9/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="Este reto usa vfprintf
+#include &lt;stdarg.h&gt;                                                             
+#include &lt;stdio.h&gt;                                                              
+                                                                                
+void vout(FILE *stream, char *fmt, ...);                                        
+char fmt1 [] = &#34;%s  %s  %s\n&#34;;                                                  
+                                                                                
+int main(void)                                                                  
+{                                                                               
+   FILE *stream;                                                                
+   stream = fopen(&#34;myfile.dat&#34;, &#34;w&#34;);                                           
+                                                                                
+   vout(stream, fmt1, &#34;Sat&#34;, &#34;Sun&#34;, &#34;Mon&#34;);                                     
+}                                                                               
+                                                                                
+void vout(FILE *stream, char *fmt, ...)                                         
+                                                                                
+{                                                                               
+   va_list arg_ptr;                                                             
+                                                                                
+   va_start(arg_ptr, fmt);                                                      
+   vfprintf(stream, fmt, arg_ptr);                                              
+   va_end(arg_ptr);                                                             
+}                                                                               
+printf que me decompilo el ida:
+int printf(char *Format, ...)
+{
+  FILE *v1; // eax
+  va_list va; // [esp&#43;14h] [ebp&#43;Ch] BYREF
+
+  va_start(va, Format);
+  sub_401000();
+  v1 = _acrt_iob_func(1u);
+  return vfprintf(v1, Format, 0, va);
+}
+Esto me generó el IDA con algunos retoques:
+
+// Overfloodea cuando cargo el caracter 169
+char *this_106(char *this)
+{
+  this[106] = &#34;A ejecutar la calculadora de nuevo...\n&#34;;
+  // De acá tenés que saltar a Destination[4] == &#39;Q&#39; 
+  return this;
+}
+
+int check_0(char *Destination, int a2)
+{
+  // Concatena(une) la cadena Destination con la posición 106 de la cadena destination
+  // Estas siguientes expresiones son equivalentes.
+  // *(Destination&#43;100) = Destination[100]
+
+  // NO está concatenandolo con Destination&#43;106, lo está concatenando con sólo un byte
+
+  // strcat espera un puntero como 1er y 2do argumento, acá le pasan es una posición del buffer, o sea le estás pasando la posición de memoria de donde querés que lea, podemos apuntar Destination[106] a cualquier lado
+  strcat(Destination, Destination[106]); // Supuestamente le agrega 1 byte que es el byte modificado por la función this_106, en realidad esto rompe todo. Todo lo que está abajo no se ejecutará.
+
+  // Compara si el valor del tamaño del buffer Destination vale 56 bytes.
+  // Este if nunca será verdadero porque no existe el caracter nulo porque strcat lo eliminó, por lo tanto tenemos que pisar el return address y saltar a if Destination[4] == &#39;Q&#39;
+  // ME EQUIVOQUÉ SI ES VERDADERO AUNQUE ES RARISIMO PORQUE this[106] sólo debería permitirme cargar 1 byte y en Linux con gcc todo lo que está debajo del strcat no se ejecuta.
+  if ( strlen(Destination) == 56 )
+  {
+    if ( Destination[4] == &#39;I&#39; )
+    {
+      // Si lo es llama a printf e imprime la cadena a partir de la posición 254 para adelante.
+      *(Destination &#43; 52) = printf;
+
+      // Esto 
+      (*(Destination &#43; 52))(Destination &#43; 254);
+      // es lo mismo que :
+      printf(Destination &#43; 254);
+
+    }
+    // Lo mismo con los demás, sólo imprime texto.
+
+    if ( Destination[4] == &#39;P&#39; )
+    {
+      *(Destination &#43; 53) = printf;
+      (*(Destination &#43; 53))(Destination &#43; 254);
+    }
+    if ( Destination[4] == &#39;Q&#39; )
+    {
+      // a2 = system. system(Destination&#43;254) acá llama a system y pasa como argumento cualquier cosa que hay después de Destination&#43;254. Entonces tenemos que pisar esa dirección con &#34;calc.exe&#34;
+
+      *(Destination &#43; 54) = a2;
+      // a2 es un puntero a system
+
+      // Tenemos que hacer una llamada como:
+      // system(&#34;calc.exe&#34;);
+
+      // Esto
+      (*(Destination &#43; 54))(Destination &#43; 254);
+      // Es lo mismo que 
+      system(Destination &#43; 254);
+      // Destination &#43; 254 = hace referencia al buffer, si miramos en el ida en la pila del stack, para llegar al buffer necesitamos 25 bytes más es decir: Destination&#43;225 = buffer, lo podemos comprobar mirando la pila de la variable botón derecho array y dándole 224 bytes hasta que el buffer queda abajo. Destination[225] = Buffer[0] 
+      // 54-25 = 29 entonces Destination[254] = Buffer[29] entonces buffer[29] = &#34;calc.exe&#34;
+
+    }
+
+    if ( Destination[4] == &#39;R&#39; )
+    {
+      *(Destination &#43; 55) = printf;
+      (*(Destination &#43; 55))(Destination &#43; 254);
+    }
+  }
+  return 0;
+}
+
+
+int __cdecl check(char *Destination, int a2)
+{
+  // v7 pasa a ser a2 en esta función
+  // a2 es un puntero a system, ¿como hacemos para que se ejecute la calculadora?
+  check_0(Destination, a2);
+
+  return 0;
+}
+
+
+int __cdecl main(int argc, const char **argv, const char **envp)
+{
+  FILE *Destination[56]; // [esp&#43;0h] [ebp-1B0h] BYREF
+  char Buffer[200]; // [esp&#43;E0h] [ebp-D0h] BYREF
+  const char *v6; // [esp&#43;1A8h] [ebp-8h]
+  int v7; // [esp&#43;1ACh] [ebp-4h]
+
+  this_106(Destination);
+  Destination[52] = printf;
+  printf(v6);
+  v7 = printf;
+  memset(Buffer, 0, sizeof(Buffer));
+  memset(Destination, 0, 200u);
+  // Empieza a leer el contenido del archivo y lo carga a partir de la posición 51
+  Destination[51] = fopen(&#34;example.txt&#34;, &#34;rb&#34;);
+  if ( !Destination[51] )
+  {
+    (Destination[52])(&#34;No se puede leer el archivo bye bye \n&#34;);
+    exit(1);
+  }
+  // De destination lo carga a buffer 
+  fread(Buffer, 200u, 1u, Destination[51]);
+  // y de buffer a destination otra vez.
+  strcpy(Destination, Buffer);
+  // Verifica si la posición 0 del buffer vale 0, es decir hay que desbordarla para pisar esa parte.
+  if ( SLOBYTE(Destination[0]) == &#39;0&#39; )
+    v7 = system;
+  check(Destination, v7);
+  (Destination[52])(&amp;Buffer[30]);
+  return 0;
+}
+Pequeño estudio de lo que pasa cuando usamos strcat con una posición de un buffer
+#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+int main(){
+	char prueba[6] = {&#39;h&#39;,&#39;o&#39;,&#39;l&#39;,&#39;a&#39;,&#39;\0&#39;};
+
+	strcat(prueba,prueba[3]);
+	// Lo que hará será transformar &#39;a&#39; a hexadecimal que es 61. Entonces va a puntar a 0x61 va a concatenar prueba con lo que sea que está en la posición de memoria 0x61 (o sea nada).
+
+	printf(&#34;prueba: %x\n&#34;,prueba);
+	return 0;
+}
+Otro pequeño estudio de strcat
+
+#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+
+int main(){
+	char prueba[7] = {&#39;h&#39;,&#39;o&#39;,&#39;l&#39;,&#39;a&#39;,&#39; &#39;,&#39;\0&#39;};
+	// Estas expresiones son equivalentes
+	char asdf[] = &#34;mundo\n&#34;;
+	char asdf1[7] = {&#39;m&#39;,&#39;u&#39;,&#39;n&#39;,&#39;d&#39;,&#39;o&#39;,&#39;\n&#39;,&#39;\0&#39;};
+
+	// strcat borra el caracter nulo del 1er argumento, entonces cuando vos concatenás con un caracter estás borrando el caracter nulo del primer argumento y lo dejás sin fin de cadena, eso hace que el strlen no funcione porque no encuentra el fin de cadena.
+	strcat(prueba,asdf);
+	
+	// Lo que hará será transformar &#39;a&#39; a hexadecimal que es 61. Entonces va a puntar a 0x61 va a concatenar prueba con lo que sea que está en la posición de memoria 0x61 (o sea nada).
+
+	printf(&#34;prueba: %s\n&#34;,prueba);
+	return 0;
+}
+Implementación de strcat en C
+char * strcat(char *dest, const char *src)
+{
+    size_t i,j;
+    for (i = 0; dest[i] != &#39;\0&#39;; i&#43;&#43;)
+        ;
+    for (j = 0; src[j] != &#39;\0&#39;; j&#43;&#43;)
+        dest[i&#43;j] = src[j];
+    dest[i&#43;j] = &#39;\0&#39;;
+    return dest;
+}
+Implementación de strlen en C
+size_t custom_strlen(const char* str) {
+    size_t len = 0;
+    while (*str != &#39;\0&#39;) {
+        len&#43;&#43;;
+        str&#43;&#43;;
+    }
+    return len;
+}
+Exploit
+En vez de ejecutar la calculadora ejecuté cmd porque estoy bajo linux y wine no tiene calc. Tuve que poner un 00 en la posición 17 porque strcpy copia hasta encontrar un 00 y así 18&#43;38=56 38 es la longitud de A ejecutar la calculadora de nuevo...\n">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Ricardo Narvaja Reversing: Buffer overflow examen 9
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2024-08-24T05:09:01-03:00'>
+      August 24, 2024
+    </time>
+    
+    <br>
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/ricardo/">Ricardo</a>
+    
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/narvaja/">Narvaja</a>
+    
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/reversing/">Reversing</a>
+    
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/examen/">Examen</a>
+    
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/ida/">Ida</a>
+    
+    
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <h3 id="este-reto-usa-vfprintf">Este reto usa vfprintf</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdarg.h&gt;                                                             </span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;                                                              </span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                                                                                
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">vout</span>(FILE <span style="color:#f92672">*</span>stream, <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>fmt, ...);                                        
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">char</span> fmt1 [] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;%s  %s  %s</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>;                                                  
+</span></span><span style="display:flex;"><span>                                                                                
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>(<span style="color:#66d9ef">void</span>)                                                                  
+</span></span><span style="display:flex;"><span>{                                                                               
+</span></span><span style="display:flex;"><span>   FILE <span style="color:#f92672">*</span>stream;                                                                
+</span></span><span style="display:flex;"><span>   stream <span style="color:#f92672">=</span> <span style="color:#a6e22e">fopen</span>(<span style="color:#e6db74">&#34;myfile.dat&#34;</span>, <span style="color:#e6db74">&#34;w&#34;</span>);                                           
+</span></span><span style="display:flex;"><span>                                                                                
+</span></span><span style="display:flex;"><span>   <span style="color:#a6e22e">vout</span>(stream, fmt1, <span style="color:#e6db74">&#34;Sat&#34;</span>, <span style="color:#e6db74">&#34;Sun&#34;</span>, <span style="color:#e6db74">&#34;Mon&#34;</span>);                                     
+</span></span><span style="display:flex;"><span>}                                                                               
+</span></span><span style="display:flex;"><span>                                                                                
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">vout</span>(FILE <span style="color:#f92672">*</span>stream, <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>fmt, ...)                                         
+</span></span><span style="display:flex;"><span>                                                                                
+</span></span><span style="display:flex;"><span>{                                                                               
+</span></span><span style="display:flex;"><span>   va_list arg_ptr;                                                             
+</span></span><span style="display:flex;"><span>                                                                                
+</span></span><span style="display:flex;"><span>   <span style="color:#a6e22e">va_start</span>(arg_ptr, fmt);                                                      
+</span></span><span style="display:flex;"><span>   <span style="color:#a6e22e">vfprintf</span>(stream, fmt, arg_ptr);                                              
+</span></span><span style="display:flex;"><span>   <span style="color:#a6e22e">va_end</span>(arg_ptr);                                                             
+</span></span><span style="display:flex;"><span>}                                                                               
+</span></span></code></pre></div><p>printf que me decompilo el ida:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">printf</span>(<span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>Format, ...)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  FILE <span style="color:#f92672">*</span>v1; <span style="color:#75715e">// eax
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  va_list va; <span style="color:#75715e">// [esp+14h] [ebp+Ch] BYREF
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">va_start</span>(va, Format);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">sub_401000</span>();
+</span></span><span style="display:flex;"><span>  v1 <span style="color:#f92672">=</span> <span style="color:#a6e22e">_acrt_iob_func</span>(<span style="color:#ae81ff">1u</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">vfprintf</span>(v1, Format, <span style="color:#ae81ff">0</span>, va);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="esto-me-generó-el-ida-con-algunos-retoques">Esto me generó el IDA con algunos retoques:</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Overfloodea cuando cargo el caracter 169
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">this_106</span>(<span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>this)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  this[<span style="color:#ae81ff">106</span>] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;A ejecutar la calculadora de nuevo...</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// De acá tenés que saltar a Destination[4] == &#39;Q&#39; 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">return</span> this;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">check_0</span>(<span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>Destination, <span style="color:#66d9ef">int</span> a2)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// Concatena(une) la cadena Destination con la posición 106 de la cadena destination
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#75715e">// Estas siguientes expresiones son equivalentes.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#75715e">// *(Destination+100) = Destination[100]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// NO está concatenandolo con Destination+106, lo está concatenando con sólo un byte
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// strcat espera un puntero como 1er y 2do argumento, acá le pasan es una posición del buffer, o sea le estás pasando la posición de memoria de donde querés que lea, podemos apuntar Destination[106] a cualquier lado
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">strcat</span>(Destination, Destination[<span style="color:#ae81ff">106</span>]); <span style="color:#75715e">// Supuestamente le agrega 1 byte que es el byte modificado por la función this_106, en realidad esto rompe todo. Todo lo que está abajo no se ejecutará.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// Compara si el valor del tamaño del buffer Destination vale 56 bytes.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#75715e">// Este if nunca será verdadero porque no existe el caracter nulo porque strcat lo eliminó, por lo tanto tenemos que pisar el return address y saltar a if Destination[4] == &#39;Q&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#75715e">// ME EQUIVOQUÉ SI ES VERDADERO AUNQUE ES RARISIMO PORQUE this[106] sólo debería permitirme cargar 1 byte y en Linux con gcc todo lo que está debajo del strcat no se ejecuta.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">if</span> ( <span style="color:#a6e22e">strlen</span>(Destination) <span style="color:#f92672">==</span> <span style="color:#ae81ff">56</span> )
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> ( Destination[<span style="color:#ae81ff">4</span>] <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;I&#39;</span> )
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e">// Si lo es llama a printf e imprime la cadena a partir de la posición 254 para adelante.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      <span style="color:#f92672">*</span>(Destination <span style="color:#f92672">+</span> <span style="color:#ae81ff">52</span>) <span style="color:#f92672">=</span> printf;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e">// Esto 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      (<span style="color:#f92672">*</span>(Destination <span style="color:#f92672">+</span> <span style="color:#ae81ff">52</span>))(Destination <span style="color:#f92672">+</span> <span style="color:#ae81ff">254</span>);
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e">// es lo mismo que :
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      <span style="color:#a6e22e">printf</span>(Destination <span style="color:#f92672">+</span> <span style="color:#ae81ff">254</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Lo mismo con los demás, sólo imprime texto.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> ( Destination[<span style="color:#ae81ff">4</span>] <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;P&#39;</span> )
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">*</span>(Destination <span style="color:#f92672">+</span> <span style="color:#ae81ff">53</span>) <span style="color:#f92672">=</span> printf;
+</span></span><span style="display:flex;"><span>      (<span style="color:#f92672">*</span>(Destination <span style="color:#f92672">+</span> <span style="color:#ae81ff">53</span>))(Destination <span style="color:#f92672">+</span> <span style="color:#ae81ff">254</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> ( Destination[<span style="color:#ae81ff">4</span>] <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;Q&#39;</span> )
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e">// a2 = system. system(Destination+254) acá llama a system y pasa como argumento cualquier cosa que hay después de Destination+254. Entonces tenemos que pisar esa dirección con &#34;calc.exe&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">*</span>(Destination <span style="color:#f92672">+</span> <span style="color:#ae81ff">54</span>) <span style="color:#f92672">=</span> a2;
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e">// a2 es un puntero a system
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e">// Tenemos que hacer una llamada como:
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      <span style="color:#75715e">// system(&#34;calc.exe&#34;);
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e">// Esto
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      (<span style="color:#f92672">*</span>(Destination <span style="color:#f92672">+</span> <span style="color:#ae81ff">54</span>))(Destination <span style="color:#f92672">+</span> <span style="color:#ae81ff">254</span>);
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e">// Es lo mismo que 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      <span style="color:#a6e22e">system</span>(Destination <span style="color:#f92672">+</span> <span style="color:#ae81ff">254</span>);
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e">// Destination + 254 = hace referencia al buffer, si miramos en el ida en la pila del stack, para llegar al buffer necesitamos 25 bytes más es decir: Destination+225 = buffer, lo podemos comprobar mirando la pila de la variable botón derecho array y dándole 224 bytes hasta que el buffer queda abajo. Destination[225] = Buffer[0] 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      <span style="color:#75715e">// 54-25 = 29 entonces Destination[254] = Buffer[29] entonces buffer[29] = &#34;calc.exe&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> ( Destination[<span style="color:#ae81ff">4</span>] <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;R&#39;</span> )
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">*</span>(Destination <span style="color:#f92672">+</span> <span style="color:#ae81ff">55</span>) <span style="color:#f92672">=</span> printf;
+</span></span><span style="display:flex;"><span>      (<span style="color:#f92672">*</span>(Destination <span style="color:#f92672">+</span> <span style="color:#ae81ff">55</span>))(Destination <span style="color:#f92672">+</span> <span style="color:#ae81ff">254</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#66d9ef">__cdecl</span> <span style="color:#a6e22e">check</span>(<span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>Destination, <span style="color:#66d9ef">int</span> a2)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// v7 pasa a ser a2 en esta función
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#75715e">// a2 es un puntero a system, ¿como hacemos para que se ejecute la calculadora?
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">check_0</span>(Destination, a2);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#66d9ef">__cdecl</span> <span style="color:#a6e22e">main</span>(<span style="color:#66d9ef">int</span> argc, <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">**</span>argv, <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">**</span>envp)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  FILE <span style="color:#f92672">*</span>Destination[<span style="color:#ae81ff">56</span>]; <span style="color:#75715e">// [esp+0h] [ebp-1B0h] BYREF
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">char</span> Buffer[<span style="color:#ae81ff">200</span>]; <span style="color:#75715e">// [esp+E0h] [ebp-D0h] BYREF
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>v6; <span style="color:#75715e">// [esp+1A8h] [ebp-8h]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">int</span> v7; <span style="color:#75715e">// [esp+1ACh] [ebp-4h]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">this_106</span>(Destination);
+</span></span><span style="display:flex;"><span>  Destination[<span style="color:#ae81ff">52</span>] <span style="color:#f92672">=</span> printf;
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(v6);
+</span></span><span style="display:flex;"><span>  v7 <span style="color:#f92672">=</span> printf;
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">memset</span>(Buffer, <span style="color:#ae81ff">0</span>, <span style="color:#66d9ef">sizeof</span>(Buffer));
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">memset</span>(Destination, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">200u</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// Empieza a leer el contenido del archivo y lo carga a partir de la posición 51
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  Destination[<span style="color:#ae81ff">51</span>] <span style="color:#f92672">=</span> <span style="color:#a6e22e">fopen</span>(<span style="color:#e6db74">&#34;example.txt&#34;</span>, <span style="color:#e6db74">&#34;rb&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> ( <span style="color:#f92672">!</span>Destination[<span style="color:#ae81ff">51</span>] )
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    (Destination[<span style="color:#ae81ff">52</span>])(<span style="color:#e6db74">&#34;No se puede leer el archivo bye bye </span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">exit</span>(<span style="color:#ae81ff">1</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// De destination lo carga a buffer 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">fread</span>(Buffer, <span style="color:#ae81ff">200u</span>, <span style="color:#ae81ff">1u</span>, Destination[<span style="color:#ae81ff">51</span>]);
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// y de buffer a destination otra vez.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">strcpy</span>(Destination, Buffer);
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// Verifica si la posición 0 del buffer vale 0, es decir hay que desbordarla para pisar esa parte.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">if</span> ( <span style="color:#a6e22e">SLOBYTE</span>(Destination[<span style="color:#ae81ff">0</span>]) <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;0&#39;</span> )
+</span></span><span style="display:flex;"><span>    v7 <span style="color:#f92672">=</span> system;
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">check</span>(Destination, v7);
+</span></span><span style="display:flex;"><span>  (Destination[<span style="color:#ae81ff">52</span>])(<span style="color:#f92672">&amp;</span>Buffer[<span style="color:#ae81ff">30</span>]);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="pequeño-estudio-de-lo-que-pasa-cuando-usamos-strcat-con-una-posición-de-un-buffer">Pequeño estudio de lo que pasa cuando usamos strcat con una posición de un buffer</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;string.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>(){
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">char</span> prueba[<span style="color:#ae81ff">6</span>] <span style="color:#f92672">=</span> {<span style="color:#e6db74">&#39;h&#39;</span>,<span style="color:#e6db74">&#39;o&#39;</span>,<span style="color:#e6db74">&#39;l&#39;</span>,<span style="color:#e6db74">&#39;a&#39;</span>,<span style="color:#e6db74">&#39;\0&#39;</span>};
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">strcat</span>(prueba,prueba[<span style="color:#ae81ff">3</span>]);
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Lo que hará será transformar &#39;a&#39; a hexadecimal que es 61. Entonces va a puntar a 0x61 va a concatenar prueba con lo que sea que está en la posición de memoria 0x61 (o sea nada).
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;prueba: %x</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>,prueba);
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="otro-pequeño-estudio-de-strcat">Otro pequeño estudio de strcat</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;string.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>(){
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">char</span> prueba[<span style="color:#ae81ff">7</span>] <span style="color:#f92672">=</span> {<span style="color:#e6db74">&#39;h&#39;</span>,<span style="color:#e6db74">&#39;o&#39;</span>,<span style="color:#e6db74">&#39;l&#39;</span>,<span style="color:#e6db74">&#39;a&#39;</span>,<span style="color:#e6db74">&#39; &#39;</span>,<span style="color:#e6db74">&#39;\0&#39;</span>};
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Estas expresiones son equivalentes
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">char</span> asdf[] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;mundo</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>;
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">char</span> asdf1[<span style="color:#ae81ff">7</span>] <span style="color:#f92672">=</span> {<span style="color:#e6db74">&#39;m&#39;</span>,<span style="color:#e6db74">&#39;u&#39;</span>,<span style="color:#e6db74">&#39;n&#39;</span>,<span style="color:#e6db74">&#39;d&#39;</span>,<span style="color:#e6db74">&#39;o&#39;</span>,<span style="color:#e6db74">&#39;\n&#39;</span>,<span style="color:#e6db74">&#39;\0&#39;</span>};
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// strcat borra el caracter nulo del 1er argumento, entonces cuando vos concatenás con un caracter estás borrando el caracter nulo del primer argumento y lo dejás sin fin de cadena, eso hace que el strlen no funcione porque no encuentra el fin de cadena.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">strcat</span>(prueba,asdf);
+</span></span><span style="display:flex;"><span>	
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Lo que hará será transformar &#39;a&#39; a hexadecimal que es 61. Entonces va a puntar a 0x61 va a concatenar prueba con lo que sea que está en la posición de memoria 0x61 (o sea nada).
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;prueba: %s</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>,prueba);
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="implementación-de-strcat-en-c">Implementación de strcat en C</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span> <span style="color:#a6e22e">strcat</span>(<span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>dest, <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>src)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">size_t</span> i,j;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; dest[i] <span style="color:#f92672">!=</span> <span style="color:#e6db74">&#39;\0&#39;</span>; i<span style="color:#f92672">++</span>)
+</span></span><span style="display:flex;"><span>        ;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (j <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; src[j] <span style="color:#f92672">!=</span> <span style="color:#e6db74">&#39;\0&#39;</span>; j<span style="color:#f92672">++</span>)
+</span></span><span style="display:flex;"><span>        dest[i<span style="color:#f92672">+</span>j] <span style="color:#f92672">=</span> src[j];
+</span></span><span style="display:flex;"><span>    dest[i<span style="color:#f92672">+</span>j] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;\0&#39;</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> dest;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="implementación-de-strlen-en-c">Implementación de strlen en C</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#66d9ef">size_t</span> <span style="color:#a6e22e">custom_strlen</span>(<span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span><span style="color:#f92672">*</span> str) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">size_t</span> len <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> (<span style="color:#f92672">*</span>str <span style="color:#f92672">!=</span> <span style="color:#e6db74">&#39;\0&#39;</span>) {
+</span></span><span style="display:flex;"><span>        len<span style="color:#f92672">++</span>;
+</span></span><span style="display:flex;"><span>        str<span style="color:#f92672">++</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> len;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h4 id="exploit">Exploit</h4>
+<p>En vez de ejecutar la calculadora ejecuté cmd porque estoy bajo linux y wine no tiene calc. Tuve que poner un 00 en la posición 17 porque strcpy copia hasta encontrar un <code>00</code> y así <code>18+38=56</code> 38 es la longitud de <code>A ejecutar la calculadora de nuevo...\n</code></p>
+<pre tabindex="0"><code>00000000: 3051 5151 5151 5151 5151 5151 5151 5151  0QQQQQQQQQQQQQQQ
+00000010: 5151 0051 5151 5151 5151 5151 5151 636d  QQ.QQQQQQQQQQQcm
+00000020: 6400                                     d.
+</code></pre>
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+</footer>
+
+
+</body>
+</html>

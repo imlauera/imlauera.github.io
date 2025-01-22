@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/post/ghidra/">
+  <meta property="og:site_name" content="Imlauer">
+  <meta property="og:title" content="Reversing CrackMe simple con el decompilador de Ghidra">
+  <meta property="og:description" content="Instalá ghidra: sudo apt install -y ghidra O lo podés descargar e instalar desde acá: https://github.com/NationalSecurityAgency/ghidra
+Descargá el archivo del desafío unlock_me1, acá: https://secur3.us/GhidraFiles/unlock_me1
+Los pasos básicos para afrontar un desafío como este son:
+Crea un proyecto Ghidra e importa el programa de desafío. Abrí unlock_me1 en CodeBrowser e inicia el análisis automático. Busca la función principal (primer argumento de __libc_start_main() Renombra el nombre de las variables y funciones hasta que comprendas la lógica. Reconstruí la lógica utilizada para verificar los códigos de entrada. Genere y pruebe un código de entrada válido. Encontrando el main Después de importar y analizar unlock_me1, necesitarás ubicar el punto de entrada para la función. Para una aplicación libc como ésta, __libc_start_main() se utiliza para cargar main() dentro de un entorno apropiado. Puedes encontrar esto en el binario usando el método abreviado de teclado ‘G’ desde la vista de listado de Ghidra para unlock_me1 y saltando a __libc_start_main() que se encontrará como una función Thunked como se muestra aquí:">
+  <meta property="og:locale" content="es_es">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="post">
+    <meta property="article:published_time" content="2024-08-06T07:37:45-03:00">
+    <meta property="article:modified_time" content="2024-08-06T07:37:45-03:00">
+    <meta property="article:tag" content="Reversing">
+    <meta property="article:tag" content="Ghidra">
+
+  
+  <meta itemprop="name" content="Reversing CrackMe simple con el decompilador de Ghidra">
+  <meta itemprop="description" content="Instalá ghidra: sudo apt install -y ghidra O lo podés descargar e instalar desde acá: https://github.com/NationalSecurityAgency/ghidra
+Descargá el archivo del desafío unlock_me1, acá: https://secur3.us/GhidraFiles/unlock_me1
+Los pasos básicos para afrontar un desafío como este son:
+Crea un proyecto Ghidra e importa el programa de desafío. Abrí unlock_me1 en CodeBrowser e inicia el análisis automático. Busca la función principal (primer argumento de __libc_start_main() Renombra el nombre de las variables y funciones hasta que comprendas la lógica. Reconstruí la lógica utilizada para verificar los códigos de entrada. Genere y pruebe un código de entrada válido. Encontrando el main Después de importar y analizar unlock_me1, necesitarás ubicar el punto de entrada para la función. Para una aplicación libc como ésta, __libc_start_main() se utiliza para cargar main() dentro de un entorno apropiado. Puedes encontrar esto en el binario usando el método abreviado de teclado ‘G’ desde la vista de listado de Ghidra para unlock_me1 y saltando a __libc_start_main() que se encontrará como una función Thunked como se muestra aquí:">
+  <meta itemprop="datePublished" content="2024-08-06T07:37:45-03:00">
+  <meta itemprop="dateModified" content="2024-08-06T07:37:45-03:00">
+  <meta itemprop="wordCount" content="633">
+  <meta itemprop="keywords" content="Reversing,Ghidra">
+  
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Reversing CrackMe simple con el decompilador de Ghidra">
+  <meta name="twitter:description" content="Instalá ghidra: sudo apt install -y ghidra O lo podés descargar e instalar desde acá: https://github.com/NationalSecurityAgency/ghidra
+Descargá el archivo del desafío unlock_me1, acá: https://secur3.us/GhidraFiles/unlock_me1
+Los pasos básicos para afrontar un desafío como este son:
+Crea un proyecto Ghidra e importa el programa de desafío. Abrí unlock_me1 en CodeBrowser e inicia el análisis automático. Busca la función principal (primer argumento de __libc_start_main() Renombra el nombre de las variables y funciones hasta que comprendas la lógica. Reconstruí la lógica utilizada para verificar los códigos de entrada. Genere y pruebe un código de entrada válido. Encontrando el main Después de importar y analizar unlock_me1, necesitarás ubicar el punto de entrada para la función. Para una aplicación libc como ésta, __libc_start_main() se utiliza para cargar main() dentro de un entorno apropiado. Puedes encontrar esto en el binario usando el método abreviado de teclado ‘G’ desde la vista de listado de Ghidra para unlock_me1 y saltando a __libc_start_main() que se encontrará como una función Thunked como se muestra aquí:">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Reversing CrackMe simple con el decompilador de Ghidra
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/post/ghidra/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="Instalá ghidra: sudo apt install -y ghidra
+O lo podés descargar e instalar desde acá: https://github.com/NationalSecurityAgency/ghidra
+Descargá el archivo del desafío unlock_me1, acá: https://secur3.us/GhidraFiles/unlock_me1
+Los pasos básicos para afrontar un desafío como este son:
+
+Crea un proyecto Ghidra e importa el programa de desafío.
+Abrí unlock_me1 en CodeBrowser e inicia el análisis automático.
+Busca la función principal (primer argumento de __libc_start_main()
+Renombra el nombre de las variables y funciones hasta que comprendas la lógica.
+Reconstruí la lógica utilizada para verificar los códigos de entrada.
+Genere y pruebe un código de entrada válido.
+
+Encontrando el main
+Después de importar y analizar unlock_me1, necesitarás ubicar el punto de entrada para la función. Para una aplicación libc como ésta, __libc_start_main() se utiliza para cargar main() dentro de un entorno apropiado. Puedes encontrar esto en el binario usando el método abreviado de teclado &lsquo;G&rsquo; desde la vista de listado de Ghidra para unlock_me1 y saltando a __libc_start_main() que se encontrará como una función Thunked como se muestra aquí:">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Reversing CrackMe simple con el decompilador de Ghidra
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2024-08-06T07:37:45-03:00'>
+      August 06, 2024
+    </time>
+    
+    <br>
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/reversing/">Reversing</a>
+    
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/ghidra/">Ghidra</a>
+    
+    
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <p>Instalá ghidra: <code>sudo apt install -y ghidra</code>
+O lo podés descargar e instalar desde acá: <a href="https://github.com/NationalSecurityAgency/ghidra">https://github.com/NationalSecurityAgency/ghidra</a></p>
+<p>Descargá el archivo del desafío <code>unlock_me1</code>, acá: <a href="https://secur3.us/GhidraFiles/unlock_me1">https://secur3.us/GhidraFiles/unlock_me1</a></p>
+<p>Los pasos básicos para afrontar un desafío como este son:</p>
+<ol>
+<li>Crea un proyecto Ghidra e importa el programa de desafío.</li>
+<li>Abrí <code>unlock_me1</code> en CodeBrowser e inicia el análisis automático.</li>
+<li>Busca la función principal (primer argumento de <code>__libc_start_main()</code></li>
+<li>Renombra el nombre de las variables y funciones hasta que comprendas la lógica.</li>
+<li>Reconstruí la lógica utilizada para verificar los códigos de entrada.</li>
+<li>Genere y pruebe un código de entrada válido.</li>
+</ol>
+<h3 id="encontrando-el-main">Encontrando el main</h3>
+<p>Después de importar y analizar <code>unlock_me1</code>, necesitarás ubicar el punto de entrada para la función. Para una aplicación libc como ésta, <code>__libc_start_main()</code> se utiliza para cargar <code>main()</code> dentro de un entorno apropiado. Puedes encontrar esto en el binario usando el método abreviado de teclado &lsquo;G&rsquo; desde la vista de listado de Ghidra para <code>unlock_me1</code> y saltando a <code>__libc_start_main()</code> que se encontrará como una función Thunked como se muestra aquí:</p>
+<p><img src="/img/ghidra/goto.webp" alt="goto"></p>
+<p><img src="/img/ghidra/libc_start_main.webp" alt="libc start main">    <br>
+Thunked-Function tiene un XREF de <code>FUN_00101080</code></p>
+<p>Al abrir el XREF de llamada desde <code>FUN_00101080:001010a4</code> se muestra lo siguiente:<br>
+<img src="/img/ghidra/libc_start_main_decompile.webp" alt="">
+Entrada descompilada en main()</p>
+<p>Según la <a href="https://refspecs.linuxbase.org/LSB_3.1.0/LSB-generic/LSB-generic/baselib---libc-start-main-.html">documentación</a>, el primer argumento de <code>__libc_start_main()</code> es la función main(). Puede hacer doble clic en <code>FUN_00101165</code> para acceder a la vista descompilada de esta función y actualizar la firma para que coincida con la convención estándar:</p>
+<p><img src="/img/ghidra/decompile_fun.webp" alt=""></p>
+<p><img src="/img/ghidra/edit_function.png" alt=""></p>
+<p>Ahora podemos mirar el resultado descompilado y comenzar a buscar variables para cambiar el nombre dentro de la función. Para empezar Ghidra nos muestra el siguiente código:</p>
+<p><img src="/imgi/ghidra/decompile_main.webp" alt=""></p>
+<p>Comenzando desde arriba, vemos que la entrada del usuario se recopila mediante scanf en la línea 13 y se almacena en <code>local_38</code> y la longitud de la cadena se coloca en sVar2. A estas variables se les puede cambiar el nombre de <code>input</code> y <code>input_len</code> respectivamente, generando el resultado descompilado como se muestra aquí:</p>
+<p><img src="/img/ghidra/decompile_main2.webp" alt=""></p>
+<p>Ahora está claro que la línea 15 está verificando la longitud de la entrada y rechazará cualquier entrada a menos que tenga una longitud exacta de 0x14 (20 en decimal). Podemos ver que <code>local_1c</code> y <code>local_20</code> se inicializan a 0 antes de ingresar a un ciclo while. Dentro del bucle podemos ver que <code>local_20</code> se utiliza como índice en la entrada en la línea 22 y luego <code>local_20</code> se incrementa en la línea 23. También en la línea 22 vemos que los caracteres de la cadena de entrada se suman en <code>local_1c</code>, lo que nos da la lógica nombres <code>input_sum</code> e <code>index</code> para <code>local_1c</code> y <code>local_20</code> respectivamente, como se muestra en la descompilación actualizada:</p>
+<p><img src="decompile_main3.webp" alt=""></p>
+<p>Al leer el código ahora, debería quedar claro que la entrada debe satisfacer dos propiedades para llegar al mensaje &lsquo;Unlock!&rsquo; en la línea 26. Por línea 15, la entrada debe tener exactamente 20 bytes de longitud. Según la línea 25, la suma de los bytes en la entrada debe ser un múltiplo de 7.</p>
+<h2 id="solución">Solución</h2>
+<p>A partir de este punto, el desafío crackme se ha transformado en un problema matemático básico. Debería ser posible sumar 20 caracteres imprimibles y luego usar el módulo para determinar cuántos bytes sumar o restar para producir un múltiplo de 7.</p>
+<p>Por ejemplo, podemos calcular la suma de 20 caracteres &ldquo;0&rdquo; y encontrar que es uno de un múltiplo de 7.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">&gt;&gt;&gt;</span> ord(<span style="color:#e6db74">&#34;0&#34;</span>)<span style="color:#f92672">*</span><span style="color:#ae81ff">20</span> <span style="color:#f92672">%</span> <span style="color:#ae81ff">7</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">1</span>
+</span></span></code></pre></div><p>Esto significa que sólo necesitamos agregar 6 bytes a la suma total. Esto se hace fácilmente cambiando un &lsquo;0&rsquo; (0x30) por &lsquo;6&rsquo; (0x36) dándonos la siguiente solución:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">$</span> <span style="color:#f92672">./</span>unlock_me1
+</span></span><span style="display:flex;"><span>Enter the unlock key: <span style="color:#ae81ff">00000000000000000006</span>
+</span></span><span style="display:flex;"><span>Unlocked<span style="color:#960050;background-color:#1e0010">!</span>
+</span></span></code></pre></div><h3 id="tarea">Tarea</h3>
+<p>El ejemplo de tarea para esta publicación sigue la misma idea básica, pero tiene algunas comprobaciones adicionales que necesitarás realizar para producir una entrada válida. La función principal descompilada en este ejemplo se muestra a continuación:</p>
+<p><img src="/img/ghidra/decompile_main_homework.png" alt=""></p>
+<p><a href="https://secur3.us/GhidraFiles/unlock_me2">Descargá el 2do reto acá</a></p>
+<p>Fuente: <a href="https://medium.com/@cy1337/reversing-a-simple-crackme-with-ghidra-decompiler-5dd1b1c3c0ba">https://medium.com/@cy1337/reversing-a-simple-crackme-with-ghidra-decompiler-5dd1b1c3c0ba</a></p>
+<h4 id="querés-aprender-más-de-reversing">Querés aprender más de reversing?</h4>
+<p><a href="https://youtube.com/channel/UCPNPSP20z4FGfgMJ71VOJjw/playlists">https://youtube.com/channel/UCPNPSP20z4FGfgMJ71VOJjw/playlists</a></p>
+<p>O miralo en alguna instanacia de invidious: <a href="https://redirect.invidious.io/channel/UCPNPSP20z4FGfgMJ71VOJjw/playlists">https://redirect.invidious.io/channel/UCPNPSP20z4FGfgMJ71VOJjw/playlists</a></p>
+
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+</footer>
+
+
+</body>
+</html>

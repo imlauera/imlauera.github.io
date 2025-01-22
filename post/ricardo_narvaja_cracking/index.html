@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/post/ricardo_narvaja_cracking/">
+  <meta property="og:site_name" content="Imlauer">
+  <meta property="og:title" content="Explicación de todos los exámenes de buffer overflow de Ricardo Narvaja Reversing">
+  <meta property="og:description" content="Todos sus videos consisten en explotar diferentes tipos de buffer overflows en programas 32 bits, y me parece que a veces se enfoca demasiado en la utilización de la herramienta IDA en lugar de explicar primero lo más importante que es: ¿por qué la aplicación es vulnerable a esos ataques? Si se entiende eso, se tiene una mejor intuición de como funciona. Estoy hablando específicamente de los cursos que tiene en su canal Ricardo Narvaja. Otra cosa es que no muestra el código C vulnerable, creo que si mostrara el código C vulnerable sería más entendible. Claramente no está hecho para principiantes, parece que hizo esos videos para no olvidarse de los métodos que usa no con el objetivo de enseñar, es muy improvisado. De todas formas es valiosa la información.">
+  <meta property="og:locale" content="es_es">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="post">
+    <meta property="article:published_time" content="2024-08-08T06:01:01-03:00">
+    <meta property="article:modified_time" content="2024-08-08T06:01:01-03:00">
+    <meta property="article:tag" content="Reversing">
+    <meta property="article:tag" content="Ricardo">
+    <meta property="article:tag" content="Narvaja">
+    <meta property="article:tag" content="Examen">
+
+  
+  <meta itemprop="name" content="Explicación de todos los exámenes de buffer overflow de Ricardo Narvaja Reversing">
+  <meta itemprop="description" content="Todos sus videos consisten en explotar diferentes tipos de buffer overflows en programas 32 bits, y me parece que a veces se enfoca demasiado en la utilización de la herramienta IDA en lugar de explicar primero lo más importante que es: ¿por qué la aplicación es vulnerable a esos ataques? Si se entiende eso, se tiene una mejor intuición de como funciona. Estoy hablando específicamente de los cursos que tiene en su canal Ricardo Narvaja. Otra cosa es que no muestra el código C vulnerable, creo que si mostrara el código C vulnerable sería más entendible. Claramente no está hecho para principiantes, parece que hizo esos videos para no olvidarse de los métodos que usa no con el objetivo de enseñar, es muy improvisado. De todas formas es valiosa la información.">
+  <meta itemprop="datePublished" content="2024-08-08T06:01:01-03:00">
+  <meta itemprop="dateModified" content="2024-08-08T06:01:01-03:00">
+  <meta itemprop="wordCount" content="949">
+  <meta itemprop="keywords" content="Reversing,Ricardo,Narvaja,Examen">
+  
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Explicación de todos los exámenes de buffer overflow de Ricardo Narvaja Reversing">
+  <meta name="twitter:description" content="Todos sus videos consisten en explotar diferentes tipos de buffer overflows en programas 32 bits, y me parece que a veces se enfoca demasiado en la utilización de la herramienta IDA en lugar de explicar primero lo más importante que es: ¿por qué la aplicación es vulnerable a esos ataques? Si se entiende eso, se tiene una mejor intuición de como funciona. Estoy hablando específicamente de los cursos que tiene en su canal Ricardo Narvaja. Otra cosa es que no muestra el código C vulnerable, creo que si mostrara el código C vulnerable sería más entendible. Claramente no está hecho para principiantes, parece que hizo esos videos para no olvidarse de los métodos que usa no con el objetivo de enseñar, es muy improvisado. De todas formas es valiosa la información.">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Explicación de todos los exámenes de buffer overflow de Ricardo Narvaja Reversing
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/post/ricardo_narvaja_cracking/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="Todos sus videos consisten en explotar diferentes tipos de buffer overflows en programas 32 bits, y me parece que a veces se enfoca demasiado en la utilización de la herramienta IDA en lugar de explicar primero lo más importante que es: ¿por qué la aplicación es vulnerable a esos ataques? Si se entiende eso, se tiene una mejor intuición de como funciona. Estoy hablando específicamente de los cursos que tiene en su canal Ricardo Narvaja. Otra cosa es que no muestra el código C vulnerable, creo que si mostrara el código C vulnerable sería más entendible. Claramente no está hecho para principiantes, parece que hizo esos videos para no olvidarse de los métodos que usa no con el objetivo de enseñar, es muy improvisado. De todas formas es valiosa la información.">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Explicación de todos los exámenes de buffer overflow de Ricardo Narvaja Reversing
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2024-08-08T06:01:01-03:00'>
+      August 08, 2024
+    </time>
+    
+    <br>
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/reversing/">Reversing</a>
+    
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/ricardo/">Ricardo</a>
+    
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/narvaja/">Narvaja</a>
+    
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/examen/">Examen</a>
+    
+    
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <p>Todos sus videos consisten en explotar diferentes tipos de buffer overflows en programas 32 bits, y me parece que a veces se enfoca demasiado en la utilización de la herramienta IDA en lugar de explicar primero lo más importante que es: ¿por qué la aplicación es vulnerable a esos ataques? Si se entiende eso, se tiene una mejor intuición de como funciona. Estoy hablando específicamente de los cursos que tiene en su canal Ricardo Narvaja. Otra cosa es que no muestra el código C vulnerable, creo que si mostrara el código C vulnerable sería más entendible. Claramente no está hecho para principiantes, parece que hizo esos videos para no olvidarse de los métodos que usa no con el objetivo de enseñar, es muy improvisado. De todas formas es valiosa la información.</p>
+<p><a href="https://redirect.invidious.io/channel/UCDeWwrp2LUWkDSymrmnfKDQ">https://redirect.invidious.io/channel/UCDeWwrp2LUWkDSymrmnfKDQ</a></p>
+<h4 id="examen-1">Examen 1</h4>
+<p><a href="/post/buffer_overflow_curso1/">Explotando un buffer overflow provocado al querer restringir/comparar el tamaño del buffer sin considerar el signo.</a></p>
+<h4 id="examen-2">Examen 2</h4>
+<p><a href="/post/bufferoverflow_strcpy/">Explotando el típico buffer overflow copia un buffer mas grande a uno más chico.</a></p>
+<h4 id="examen-3">Examen 3</h4>
+<p><a href="/post/bufferoverflow_3/">Explotando buffer overflow provocado por copiar un buffer de 300 a uno de 200</a></p>
+<h4 id="examen-4">Examen 4</h4>
+<p><a href="/post/bufferoverflow_4/">Explotando buffer overflows: copia un buffer de 200 bytes a otro del mismo tamaño pero con una string agregada.</a></p>
+<h4 id="examen-5">Examen 5</h4>
+<p><a href="/post/bufferoverflow_5/">Un poco más complejo, juega copiando contenido del archivo en diferentes posiciones del buffer e insertando texto comienzo</a></p>
+<h4 id="examen-6">Examen 6</h4>
+<p><a href="/post/buffer_overflow_6/">No es un bufferoverflow simplemente comparaciones para familiarizarte con ASM</a></p>
+<p>Tiene dos buffers de 200 bytes, pero copia de un buffer al otro usando un sprintf que agrega una cadena al final de la cadena del 1er buffer al 2do buffer de 200 entonces se produce un overflow en el buffer2. <br>
+Algo así como:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#66d9ef">char</span> buffer1[<span style="color:#ae81ff">200</span>], <span style="color:#66d9ef">char</span> buffer2[<span style="color:#ae81ff">200</span>];
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Copia el contenido del buffer1 al buffer2 pero le agrega &#34;Bien ? con&#34; que hace desboardarlo porque sobrepasa los 200 bytes.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">sprintf</span>(buffer2, <span style="color:#e6db74">&#34;Bien ? con %s&#34;</span>, buffer1);
+</span></span></code></pre></div><h4 id="examen-7">Examen 7</h4>
+<p><a href="/post/buffer_overflow_7/">Exploit</a></p>
+<p>Casi lo mismo que el exámen 6, la diferencia es que ahora el buffer no está arriba de todo y no podés pisar todas las variables que están debajo porque el buffer vulnerable está al final de la pila.</p>
+<p>Tiene dos buffers del mismo tamaño (200 bytes), pero se produce el overflow porque usa una sprintf que agrega una cadena al comienzo de la cadena y lo completa con una string: <code>&quot;Bieeeeeeeeeeeeeeeeeeeeeeeeeeen ? con %s&quot;</code></p>
+<p>El problema de este exámen es que debajo del buffer2 no hay ninguna variable para pisar, porque en los exámenes anteriores al pisar el buffer como estaba arriba de todo podiamos pisar las variables de abajo, ahora no.</p>
+<p>Pero en este caso desbordando el buffer2 pisar el puntero <code>return address</code> de la función <code>check</code> y vamos a hacer que apunte a la dirección en donde dice <code>&quot;Aprobaste level 7&quot;</code></p>
+<p>Tenemos que desbordar el buffer2 y desbordar la struct que está debajo y con 4 bytes más pisamos el store de bp, y otros 4 bytes más pisamos el return address y ahí tenés que poner la dirección de memoria adonde querés que tu programa salte.</p>
+<hr>
+<p>En este video te enseña a usar el debugger y poner breakpoints en el return address y mirar el stack view con IDA, para verificar que la cuenta estaba bien.</p>
+<p>En estos tutoriales el tema es reversearlos lo mas estaticamente posible con la menor cantidad de debugging.
+Hay algunos shellcodes que dejaron de funcionar a partir de ciertos udpates de windows posteriores a la fecha de publicacion del video, si es asi reemplazarlo por otro shellcode, en Internet hay miles, o pueden armar uno propio, el GOAL es ejecutar codigo y eso se logra aunque el shellcode haya dejado de funcionar.</p>
+<hr>
+<h4 id="examen-8">Examen 8</h4>
+<p>Buffer overflow provocado por una concatenación (strcat), va a overfloodear porque tenemos dos buffers cada uno de 200 bytes, pero el strcat concatena ambas cadenas y la guarda en el primer buffer y esto overflodea porque el buffer solo permite 200 y concatenandolo le agregamos 200 bytes mas.<br>
+El objetivo ejecutar una calculadora.
+Lee 200 bytes esos 200 lo lee a buffer2 y despues lo copia al incio de la estructura.</p>
+<h4 id="examen-9">Examen 9</h4>
+<p>Es un poco mas complicado.</p>
+<p>No se si hay un buffer overflow acá, el objetivo es ejecutar una calculadora también.</p>
+<p>Dos buffers de 200 bytes.
+Puntero a una funcion llamada system que nos permitirá ejecutar la calculadora si podemos modificar el return address.
+El 1er byte del buffer1 tiene que ser 30 para que no saltee una función.
+Luego concatena strings con strcat pero verifica la longitud, entonces para saltear esa protección pone un <code>'\0'</code> en el medio porque strcpy copia hasta ahí.<br>
+Le pone un <code>'00'</code> en la posicion 12 del buffer1, con el strcpy solo copiara hasta esa posicion.  <br>
+Pero en el buffer2 se va leer todo porque es un fread y no se corta con el 0.
+Tenemos que hacer que la suma nos de 38 al concatenar con <code>string_a_ejecutar</code>.</p>
+<h4 id="examen-10">Examen 10</h4>
+<p>Apretando t si armamos toda la estructura podemos convertir
+<code>dword ptr [eax+1A8h]</code> a <code>mov [eax+My_struct.var_C], offset aAEjecutarLaCal</code></p>
+<p>Hace lo mismo que el ejercicio anterior, hace un <code>strcat</code> lee la string a ejecutar con el buffer1, que es la string que tiene en el buffer1 es hasta el 1er 0 y el largo tiene que ser 38.
+La string a ejecutar tiene 36 de largo y el total que tengo que tener es 38, entonces el lugar en donde tengo que poner el 00 es la posición 12 como en el video anterior.
+Por lo cual en el buffer2 vamos a tener todo pero en el buffer1 solo hasta la posición 12 porque tenemos el 00, porque strcpy solo copia hasta el 0.</p>
+<hr>
+<p>El resto de los videos son una pérdida de tiempo para mi.</p>
+
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+</footer>
+
+
+</body>
+</html>

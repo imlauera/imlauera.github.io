@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/post/robust_powerful_email_server/">
+  <meta property="og:site_name" content="Imlauer">
+  <meta property="og:title" content="Robust powerful email server: postfix">
+  <meta property="og:description" content="We need to create an email server that can handle a volume of 500k emails a day to inbox for cold email marketing.Must be capable of handling bounces and spam reports
+Luke smith: https://www.youtube.com/watch?v=Zg9z8k8pkuM
+Este es el script de luke smith:
+#!/bin/sh # BEFORE INSTALLING # Have a Debian or Ubuntu server with a static IP and DNS records (usually # A/AAAA) that point your domain name to it. # NOTE WHILE INSTALLING # On installation of Postfix, select &#34;Internet Site&#34; and put in TLD (without # `mail.` before it). # AFTER INSTALLING # More DNS records will be given to you to install. One of them will be # different for every installation and is uniquely generated on your machine. umask 0022 install_packages=&#34;postfix postfix-pcre dovecot-imapd dovecot-pop3d dovecot-sieve opendkim opendkim-tools spamassassin spamc net-tools fail2ban bind9-host&#34; systemctl -q stop dovecot systemctl -q stop postfix apt-get purge ?config-files -y $install_packages apt-get install -y $install_packages domain=&#34;$(cat /etc/mailname)&#34; subdom=${MAIL_SUBDOM:-mail} maildomain=&#34;$subdom.$domain&#34; certdir=&#34;/etc/letsencrypt/live/$maildomain&#34; selfsigned=&#34;no&#34; # yes no allow_suboptimal_ciphers=&#34;yes&#34; #yes no mailbox_format=&#34;maildir&#34; # maildir sdbox allowed_protocols=&#34; imap pop3 &#34; #imap pop3 use_cert_config=&#34;no&#34; country_name=&#34;&#34; # IT US UK IN etc etc state_or_province_name=&#34;&#34; organization_name=&#34;&#34; common_name=&#34;$( hostname -f )&#34; if [ &#34;$use_cert_config&#34; = &#34;yes&#34; ]; then echo &#34;[req] default_bit = 4096 distinguished_name = req_distinguished_name prompt = no [req_distinguished_name] countryName = $country_name stateOrProvinceName = $state_or_province_name organizationName = $organization_name commonName = $common_name &#34; &gt; $certdir/certconfig.conf fi # Preliminary record checks ipv4=$(host &#34;$domain&#34; | grep -m1 -Eo &#39;([0-9]&#43;\.){3}[0-9]&#43;&#39;) [ -z &#34;$ipv4&#34; ] &amp;&amp; echo &#34;\033[0;31mPlease point your domain (&#34;$domain&#34;) to your server&#39;s ipv4 address.&#34; &amp;&amp; exit 1 ipv6=$(host &#34;$domain&#34; | grep &#34;IPv6&#34; | awk &#39;{print $NF}&#39;) [ -z &#34;$ipv6&#34; ] &amp;&amp; echo &#34;\033[0;31mPlease point your domain (&#34;$domain&#34;) to your server&#39;s ipv6 address.&#34; &amp;&amp; exit 1 # Open required mail ports for port in 80 993 465 25 587 110 995; do ufw allow &#34;$port&#34; 2&gt;/dev/null done if [ &#34;$selfsigned&#34; = &#34;yes&#34; ]; then rm -f $certdir/privkey.pem rm -f $certdir/csr.pem rm -f $certdir/fullchain.pem echo &#34;Generating a 4096 rsa key and a self-signed certificate that lasts 100 years&#34; mkdir -p $certdir openssl genrsa -out $certdir/privkey.pem 4096 if [ &#34;$use_cert_config&#34; = &#34;yes&#34; ]; then openssl req -new -key $certdir/privkey.pem -out $certdir/csr.pem -config $certdir/certconfig.conf else openssl req -new -key $certdir/privkey.pem -out $certdir/csr.pem fi openssl req -x509 -days 36500 -key $certdir/privkey.pem -in $certdir/csr.pem -out $certdir/fullchain.pem else # Open port 80 for Certbot. ufw allow 80 2&gt;/dev/null [ ! -d &#34;$certdir&#34; ] &amp;&amp; possiblecert=&#34;$(certbot certificates 2&gt;/dev/null | grep &#34;Domains:\.* \(\*\.$domain\|$maildomain\)\(\s\|$\)&#34; -A 2 | awk &#39;/Certificate Path/ {print $3}&#39; | head -n1)&#34; &amp;&amp; certdir=&#34;${possiblecert%/*}&#34; [ ! -d &#34;$certdir&#34; ] &amp;&amp; certdir=&#34;/etc/letsencrypt/live/$maildomain&#34; &amp;&amp; case &#34;$(netstat -tulpn | grep &#34;:80\s&#34;)&#34; in *nginx*) apt install -y python3-certbot-nginx certbot -d &#34;$maildomain&#34; certonly --nginx --register-unsafely-without-email --agree-tos ;; *apache*) apt install -y python3-certbot-apache certbot -d &#34;$maildomain&#34; certonly --apache --register-unsafely-without-email --agree-tos ;; *) apt install -y python3-certbot certbot -d &#34;$maildomain&#34; certonly --standalone --register-unsafely-without-email --agree-tos ;; esac fi [ ! -f &#34;$certdir/fullchain.pem&#34; ] &amp;&amp; echo &#34;Error locating or installing SSL certificate.&#34; &amp;&amp; exit 1 [ ! -f &#34;$certdir/privkey.pem&#34; ] &amp;&amp; echo &#34;Error locating or installing SSL certificate.&#34; &amp;&amp; exit 1 if [ &#34;$selfsigned&#34; != &#34;yes&#34; ]; then [ ! -f &#34;$certdir/cert.pem&#34; ] &amp;&amp; echo &#34;Error locating or installing SSL certificate.&#34; &amp;&amp; exit 1 fi [ ! -d &#34;$certdir&#34; ] &amp;&amp; echo &#34;Error locating or installing SSL certificate.&#34; &amp;&amp; exit 1 echo &#34;Configuring Postfix&#39;s main.cf...&#34; # Adding additional vars to fix an issue with receiving emails (relay access denied) and adding it to mydestination. postconf -e &#34;myhostname = $maildomain&#34; postconf -e &#34;mail_name = $domain&#34; #This is for the smtpd_banner postconf -e &#34;mydomain = $domain&#34; postconf -e &#39;mydestination = $myhostname, $mydomain, mail, localhost.localdomain, localhost, localhost.$mydomain&#39; # Change the cert/key files to the default locations of the Let&#39;s Encrypt cert/key postconf -e &#34;smtpd_tls_key_file=$certdir/privkey.pem&#34; postconf -e &#34;smtpd_tls_cert_file=$certdir/fullchain.pem&#34; if [ &#34;$selfsigned&#34; != &#34;yes&#34; ]; then postconf -e &#34;smtp_tls_CAfile=$certdir/cert.pem&#34; fi # Enable, but do not require TLS. Requiring it with other servers would cause # mail delivery problems and requiring it locally would cause many other # issues. postconf -e &#39;smtpd_tls_security_level = may&#39; postconf -e &#39;smtp_tls_security_level = may&#39; # TLS required for authentication. postconf -e &#39;smtpd_tls_auth_only = yes&#39; # Exclude insecure and obsolete encryption protocols. postconf -e &#39;smtpd_tls_mandatory_protocols = !SSLv2, !SSLv3, !TLSv1, !TLSv1.1&#39; postconf -e &#39;smtp_tls_mandatory_protocols = !SSLv2, !SSLv3, !TLSv1, !TLSv1.1&#39; postconf -e &#39;smtpd_tls_protocols = !SSLv2, !SSLv3, !TLSv1, !TLSv1.1&#39; postconf -e &#39;smtp_tls_protocols = !SSLv2, !SSLv3, !TLSv1, !TLSv1.1&#39; # Exclude suboptimal ciphers. if [ &#34;$allow_suboptimal_ciphers&#34; = &#34;no&#34; ]; then postconf -e &#39;tls_preempt_cipherlist = yes&#39; postconf -e &#39;smtpd_tls_exclude_ciphers = aNULL, LOW, EXP, MEDIUM, ADH, AECDH, MD5, DSS, ECDSA, CAMELLIA128, 3DES, CAMELLIA256, RSA&#43;AES, eNULL&#39; fi # Here we tell Postfix to look to Dovecot for authenticating users/passwords. # Dovecot will be putting an authentication socket in /var/spool/postfix/private/auth postconf -e &#39;smtpd_sasl_auth_enable = yes&#39; postconf -e &#39;smtpd_sasl_type = dovecot&#39; postconf -e &#39;smtpd_sasl_path = private/auth&#39; # helo, sender, relay and recipient restrictions postconf -e &#34;smtpd_sender_login_maps = pcre:/etc/postfix/login_maps.pcre&#34; postconf -e &#39;smtpd_sender_restrictions = permit_sasl_authenticated, permit_mynetworks, reject_sender_login_mismatch, reject_unknown_reverse_client_hostname, reject_unknown_sender_domain&#39; postconf -e &#39;smtpd_recipient_restrictions = permit_sasl_authenticated, permit_mynetworks, reject_unauth_destination, reject_unknown_recipient_domain&#39; postconf -e &#39;smtpd_relay_restrictions = permit_sasl_authenticated, reject_unauth_destination&#39; postconf -e &#39;smtpd_helo_required = yes&#39; postconf -e &#39;smtpd_helo_restrictions = permit_mynetworks, permit_sasl_authenticated, reject_invalid_helo_hostname, reject_non_fqdn_helo_hostname, reject_unknown_helo_hostname&#39; # NOTE: the trailing slash here, or for any directory name in the home_mailbox # command, is necessary as it distinguishes a maildir (which is the actual # directory that we want) from a spoolfile (which is what old unix boomers want # and no one else). postconf -e &#39;home_mailbox = Mail/Inbox/&#39; # Prevent &#34;Received From:&#34; header in sent emails in order to prevent leakage of public ip addresses postconf -e &#34;header_checks = regexp:/etc/postfix/header_checks&#34; # strips &#34;Received From:&#34; in sent emails echo &#34;/^Received:.*/ IGNORE /^X-Originating-IP:/ IGNORE&#34; &gt;&gt; /etc/postfix/header_checks # Create a login map file that ensures that if a sender wants to send a mail from a user at our local # domain, they must be authenticated as that user echo &#34;/^(.*)@$(sh -c &#34;echo $domain | sed &#39;s/\./\\\./&#39;&#34;)$/ \${1}&#34; &gt; /etc/postfix/login_maps.pcre # master.cf echo &#34;Configuring Postfix&#39;s master.cf...&#34; sed -i &#39;/^\s*-o/d;/^\s*submission/d;/^\s*smtp/d&#39; /etc/postfix/master.cf echo &#34;smtp unix - - n - - smtp smtp inet n - y - - smtpd -o content_filter=spamassassin submission inet n - y - - smtpd -o syslog_name=postfix/submission -o smtpd_tls_security_level=encrypt -o smtpd_tls_auth_only=yes -o smtpd_enforce_tls=yes -o smtpd_client_restrictions=permit_sasl_authenticated,reject -o smtpd_sender_restrictions=reject_sender_login_mismatch -o smtpd_sender_login_maps=pcre:/etc/postfix/login_maps.pcre -o smtpd_recipient_restrictions=permit_sasl_authenticated,reject_unauth_destination smtps inet n - y - - smtpd -o syslog_name=postfix/smtps -o smtpd_tls_wrappermode=yes -o smtpd_sasl_auth_enable=yes spamassassin unix - n n - - pipe user=debian-spamd argv=/usr/bin/spamc -f -e /usr/sbin/sendmail -oi -f \${sender} \${recipient}&#34; &gt;&gt; /etc/postfix/master.cf # By default, dovecot has a bunch of configs in /etc/dovecot/conf.d/ These # files have nice documentation if you want to read it, but it&#39;s a huge pain to # go through them to organize. Instead, we simply overwrite # /etc/dovecot/dovecot.conf because it&#39;s easier to manage. You can get a backup # of the original in /usr/share/dovecot if you want. mv /etc/dovecot/dovecot.conf /etc/dovecot/dovecot.backup.conf echo &#34;Creating Dovecot config...&#34; echo &#34;# Dovecot config # Note that in the dovecot conf, you can use: # %u for username # %n for the name in name@domain.tld # %d for the domain # %h the user&#39;s home directory ssl = required ssl_cert = &lt;$certdir/fullchain.pem ssl_key = &lt;$certdir/privkey.pem ssl_min_protocol = TLSv1.2 ssl_cipher_list = &#34;&#39;EECDH&#43;ECDSA&#43;AESGCM:EECDH&#43;aRSA&#43;AESGCM:EECDH&#43;ECDSA&#43;SHA256:EECDH&#43;aRSA&#43;SHA256:EECDH&#43;ECDSA&#43;SHA384:EECDH&#43;ECDSA&#43;SHA256:EECDH&#43;aRSA&#43;SHA384:EDH&#43;aRSA&#43;AESGCM:EDH&#43;aRSA&#43;SHA256:EDH&#43;aRSA:EECDH:!aNULL:!eNULL:!MEDIUM:!LOW:!3DES:!MD5:!EXP:!PSK:!SRP:!DSS:!RC4:!SEED&#39;&#34; ssl_prefer_server_ciphers = yes ssl_dh = &lt;/usr/share/dovecot/dh.pem auth_mechanisms = plain login auth_username_format = %n protocols = \$protocols $allowed_protocols # Search for valid users in /etc/passwd userdb { driver = passwd } #Fallback: Use plain old PAM to find user passwords passdb { driver = pam } # Our mail for each user will be in ~/Mail, and the inbox will be ~/Mail/Inbox # The LAYOUT option is also important because otherwise, the boxes will be \`.Sent\` instead of \`Sent\`. mail_location = $mailbox_format:~/Mail:INBOX=~/Mail/Inbox:LAYOUT=fs namespace inbox { inbox = yes mailbox Drafts { special_use = \\Drafts auto = subscribe } mailbox Junk { special_use = \\Junk auto = subscribe autoexpunge = 30d } mailbox Sent { special_use = \\Sent auto = subscribe } mailbox Trash { special_use = \\Trash } mailbox Archive { special_use = \\Archive } } # Here we let Postfix use Dovecot&#39;s authentication system. service auth { unix_listener /var/spool/postfix/private/auth { mode = 0660 user = postfix group = postfix } } protocol lda { mail_plugins = \$mail_plugins sieve } protocol lmtp { mail_plugins = \$mail_plugins sieve } protocol pop3 { pop3_uidl_format = %08Xu%08Xv pop3_no_flag_updates = yes } plugin { sieve = ~/.dovecot.sieve sieve_default = /var/lib/dovecot/sieve/default.sieve #sieve_global_path = /var/lib/dovecot/sieve/default.sieve sieve_dir = ~/.sieve sieve_global_dir = /var/lib/dovecot/sieve/ } &#34; &gt; /etc/dovecot/dovecot.conf # If using an old version of Dovecot, remove the ssl_dl line. case &#34;$(dovecot --version)&#34; in 1|2.1*|2.2*) sed -i &#39;/^ssl_dh/d&#39; /etc/dovecot/dovecot.conf ;; esac mkdir /var/lib/dovecot/sieve/ echo &#34;require [\&#34;fileinto\&#34;, \&#34;mailbox\&#34;]; if header :contains \&#34;X-Spam-Flag\&#34; \&#34;YES\&#34; { fileinto \&#34;Junk\&#34;; }&#34; &gt; /var/lib/dovecot/sieve/default.sieve grep -q &#39;^vmail:&#39; /etc/passwd || useradd vmail chown -R vmail:vmail /var/lib/dovecot sievec /var/lib/dovecot/sieve/default.sieve echo &#39;Preparing user authentication...&#39; grep -q nullok /etc/pam.d/dovecot || echo &#39;auth required pam_unix.so nullok account required pam_unix.so&#39; &gt;&gt; /etc/pam.d/dovecot # OpenDKIM # A lot of the big name email services, like Google, will automatically reject # as spam unfamiliar and unauthenticated email addresses. As in, the server # will flatly reject the email, not even delivering it to someone&#39;s Spam # folder. # OpenDKIM is a way to authenticate your email so you can send to such services # without a problem. # Create an OpenDKIM key in the proper place with proper permissions. echo &#39;Generating OpenDKIM keys...&#39; mkdir -p &#34;/etc/postfix/dkim/$domain&#34; opendkim-genkey -D &#34;/etc/postfix/dkim/$domain&#34; -d &#34;$domain&#34; -s &#34;$subdom&#34; chgrp -R opendkim /etc/postfix/dkim/* chmod -R g&#43;r /etc/postfix/dkim/* # Generate the OpenDKIM info: echo &#39;Configuring OpenDKIM...&#39; grep -q &#34;$domain&#34; /etc/postfix/dkim/keytable 2&gt;/dev/null || echo &#34;$subdom._domainkey.$domain $domain:$subdom:/etc/postfix/dkim/$domain/$subdom.private&#34; &gt;&gt; /etc/postfix/dkim/keytable grep -q &#34;$domain&#34; /etc/postfix/dkim/signingtable 2&gt;/dev/null || echo &#34;*@$domain $subdom._domainkey.$domain&#34; &gt;&gt; /etc/postfix/dkim/signingtable grep -q &#39;127.0.0.1&#39; /etc/postfix/dkim/trustedhosts 2&gt;/dev/null || echo &#39;127.0.0.1 10.1.0.0/16&#39; &gt;&gt; /etc/postfix/dkim/trustedhosts # ...and source it from opendkim.conf grep -q &#39;^KeyTable&#39; /etc/opendkim.conf 2&gt;/dev/null || echo &#39;KeyTable file:/etc/postfix/dkim/keytable SigningTable refile:/etc/postfix/dkim/signingtable InternalHosts refile:/etc/postfix/dkim/trustedhosts&#39; &gt;&gt; /etc/opendkim.conf sed -i &#39;/^#Canonicalization/s/simple/relaxed\/simple/&#39; /etc/opendkim.conf sed -i &#39;/^#Canonicalization/s/^#//&#39; /etc/opendkim.conf sed -i &#39;/Socket/s/^#*/#/&#39; /etc/opendkim.conf grep -q &#39;^Socket\s*inet:12301@localhost&#39; /etc/opendkim.conf || echo &#39;Socket inet:12301@localhost&#39; &gt;&gt; /etc/opendkim.conf # OpenDKIM daemon settings, removing previously activated socket. sed -i &#39;/^SOCKET/d&#39; /etc/default/opendkim &amp;&amp; echo &#34;SOCKET=\&#34;inet:12301@localhost\&#34;&#34; &gt;&gt; /etc/default/opendkim # Here we add to postconf the needed settings for working with OpenDKIM echo &#39;Configuring Postfix with OpenDKIM settings...&#39; postconf -e &#39;smtpd_sasl_security_options = noanonymous, noplaintext&#39; postconf -e &#39;smtpd_sasl_tls_security_options = noanonymous&#39; postconf -e &#34;myhostname = $maildomain&#34; postconf -e &#39;milter_default_action = accept&#39; postconf -e &#39;milter_protocol = 6&#39; postconf -e &#39;smtpd_milters = inet:localhost:12301&#39; postconf -e &#39;non_smtpd_milters = inet:localhost:12301&#39; postconf -e &#39;mailbox_command = /usr/lib/dovecot/deliver&#39; # Long-term fix to prevent SMTP smuggling postconf -e &#39;smtpd_forbid_bare_newline = normalize&#39; postconf -e &#39;smtpd_forbid_bare_newline_exclusions = $mynetworks&#39; # A fix for &#34;Opendkim won&#39;t start: can&#39;t open PID file?&#34;, as specified here: https://serverfault.com/a/847442 /lib/opendkim/opendkim.service.generate systemctl daemon-reload # Enable fail2ban security for dovecot and postfix. [ ! -f /etc/fail2ban/jail.d/emailwiz.local ] &amp;&amp; echo &#34;[postfix] enabled = true [postfix-sasl] enabled = true [sieve] enabled = true [dovecot] enabled = true&#34; &gt; /etc/fail2ban/jail.d/emailwiz.local sed -i &#34;s|^backend = auto$|backend = systemd|&#34; /etc/fail2ban/jail.conf # Enable SpamAssassin update cronjob. if [ -f /etc/default/spamassassin ] then sed -i &#34;s|^CRON=0|CRON=1|&#34; /etc/default/spamassassin printf &#34;Restarting spamassassin...&#34; service spamassassin restart &amp;&amp; printf &#34; ...done\\n&#34; systemctl enable spamassassin elif [ -f /etc/default/spamd ] then sed -i &#34;s|^CRON=0|CRON=1|&#34; /etc/default/spamd printf &#34;Restarting spamd...&#34; service spamd restart &amp;&amp; printf &#34; ...done\\n&#34; systemctl enable spamd else printf &#34;!!! Neither /etc/default/spamassassin or /etc/default/spamd exists, this is unexpected and needs to be investigated&#34; fi for x in opendkim dovecot postfix fail2ban; do printf &#34;Restarting %s...&#34; &#34;$x&#34; service &#34;$x&#34; restart &amp;&amp; printf &#34; ...done\\n&#34; systemctl enable &#34;$x&#34; done pval=&#34;$(tr -d &#39;\n&#39; &lt;&#34;/etc/postfix/dkim/$domain/$subdom.txt&#34; | sed &#34;s/k=rsa.* \&#34;p=/k=rsa; p=/;s/\&#34;\s*\&#34;//;s/\&#34;\s*).*//&#34; | grep -o &#39;p=.*&#39;)&#34; dkimentry=&#34;$subdom._domainkey.$domain	TXT	v=DKIM1; k=rsa; $pval&#34; dmarcentry=&#34;_dmarc.$domain	TXT	v=DMARC1; p=reject; rua=mailto:postmaster@$domain; fo=1&#34; spfentry=&#34;$domain	TXT	v=spf1 mx a:$maildomain ip4:$ipv4 ip6:$ipv6 -all&#34; mxentry=&#34;$domain	MX	10	$maildomain	300&#34; useradd -m -G mail postmaster # Create a cronjob that deletes month-old postmaster mails: cat &lt;&lt;EOF &gt; /etc/cron.weekly/postmaster-clean #!/bin/sh find /home/postmaster/Mail -type f -mtime &#43;30 -name &#39;*.mail*&#39; -delete &gt;/dev/null 2&gt;&amp;1 exit 0 EOF chmod 755 /etc/cron.weekly/postmaster-clean grep -q &#39;^deploy-hook = echo &#34;$RENEWED_DOMAINS&#34; | grep -q&#39; /etc/letsencrypt/cli.ini || echo &#34; deploy-hook = echo \&#34;\$RENEWED_DOMAINS\&#34; | grep -q &#39;$maildomain&#39; &amp;&amp; service postfix reload &amp;&amp; service dovecot reload&#34; &gt;&gt; /etc/letsencrypt/cli.ini echo &#34;NOTE: Elements in the entries might appear in a different order in your registrar&#39;s DNS settings. $dkimentry $dmarcentry $spfentry $mxentry&#34; &gt; &#34;$HOME/dns_emailwizard&#34; printf &#34;\033[31m _ _ | \ | | _____ ___ | \| |/ _ \ \ /\ / (_) | |\ | (_) \ V V / _ |_| \_|\___/ \_/\_/ (_)\033[0m Add these three records to your DNS TXT records on either your registrar&#39;s site or your DNS server: \033[32m $dkimentry $dmarcentry $spfentry $mxentry \033[0m NOTE: You may need to omit the \`.$domain\` portion at the beginning if inputting them in a registrar&#39;s web interface. Also, these are now saved to \033[34m~/dns_emailwizard\033[0m in case you want them in a file. Once you do that, you&#39;re done! Check the README for how to add users/accounts and how to log in.\n&#34; https://www.youtube.com/watch?v=9H_kz71MGwE">
+  <meta property="og:locale" content="es_es">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="post">
+    <meta property="article:published_time" content="2024-09-24T12:07:06-03:00">
+    <meta property="article:modified_time" content="2024-09-24T12:07:06-03:00">
+    <meta property="article:tag" content="Robust">
+    <meta property="article:tag" content="Email">
+    <meta property="article:tag" content="Server">
+
+  
+  <meta itemprop="name" content="Robust powerful email server: postfix">
+  <meta itemprop="description" content="We need to create an email server that can handle a volume of 500k emails a day to inbox for cold email marketing.Must be capable of handling bounces and spam reports
+Luke smith: https://www.youtube.com/watch?v=Zg9z8k8pkuM
+Este es el script de luke smith:
+#!/bin/sh # BEFORE INSTALLING # Have a Debian or Ubuntu server with a static IP and DNS records (usually # A/AAAA) that point your domain name to it. # NOTE WHILE INSTALLING # On installation of Postfix, select &#34;Internet Site&#34; and put in TLD (without # `mail.` before it). # AFTER INSTALLING # More DNS records will be given to you to install. One of them will be # different for every installation and is uniquely generated on your machine. umask 0022 install_packages=&#34;postfix postfix-pcre dovecot-imapd dovecot-pop3d dovecot-sieve opendkim opendkim-tools spamassassin spamc net-tools fail2ban bind9-host&#34; systemctl -q stop dovecot systemctl -q stop postfix apt-get purge ?config-files -y $install_packages apt-get install -y $install_packages domain=&#34;$(cat /etc/mailname)&#34; subdom=${MAIL_SUBDOM:-mail} maildomain=&#34;$subdom.$domain&#34; certdir=&#34;/etc/letsencrypt/live/$maildomain&#34; selfsigned=&#34;no&#34; # yes no allow_suboptimal_ciphers=&#34;yes&#34; #yes no mailbox_format=&#34;maildir&#34; # maildir sdbox allowed_protocols=&#34; imap pop3 &#34; #imap pop3 use_cert_config=&#34;no&#34; country_name=&#34;&#34; # IT US UK IN etc etc state_or_province_name=&#34;&#34; organization_name=&#34;&#34; common_name=&#34;$( hostname -f )&#34; if [ &#34;$use_cert_config&#34; = &#34;yes&#34; ]; then echo &#34;[req] default_bit = 4096 distinguished_name = req_distinguished_name prompt = no [req_distinguished_name] countryName = $country_name stateOrProvinceName = $state_or_province_name organizationName = $organization_name commonName = $common_name &#34; &gt; $certdir/certconfig.conf fi # Preliminary record checks ipv4=$(host &#34;$domain&#34; | grep -m1 -Eo &#39;([0-9]&#43;\.){3}[0-9]&#43;&#39;) [ -z &#34;$ipv4&#34; ] &amp;&amp; echo &#34;\033[0;31mPlease point your domain (&#34;$domain&#34;) to your server&#39;s ipv4 address.&#34; &amp;&amp; exit 1 ipv6=$(host &#34;$domain&#34; | grep &#34;IPv6&#34; | awk &#39;{print $NF}&#39;) [ -z &#34;$ipv6&#34; ] &amp;&amp; echo &#34;\033[0;31mPlease point your domain (&#34;$domain&#34;) to your server&#39;s ipv6 address.&#34; &amp;&amp; exit 1 # Open required mail ports for port in 80 993 465 25 587 110 995; do ufw allow &#34;$port&#34; 2&gt;/dev/null done if [ &#34;$selfsigned&#34; = &#34;yes&#34; ]; then rm -f $certdir/privkey.pem rm -f $certdir/csr.pem rm -f $certdir/fullchain.pem echo &#34;Generating a 4096 rsa key and a self-signed certificate that lasts 100 years&#34; mkdir -p $certdir openssl genrsa -out $certdir/privkey.pem 4096 if [ &#34;$use_cert_config&#34; = &#34;yes&#34; ]; then openssl req -new -key $certdir/privkey.pem -out $certdir/csr.pem -config $certdir/certconfig.conf else openssl req -new -key $certdir/privkey.pem -out $certdir/csr.pem fi openssl req -x509 -days 36500 -key $certdir/privkey.pem -in $certdir/csr.pem -out $certdir/fullchain.pem else # Open port 80 for Certbot. ufw allow 80 2&gt;/dev/null [ ! -d &#34;$certdir&#34; ] &amp;&amp; possiblecert=&#34;$(certbot certificates 2&gt;/dev/null | grep &#34;Domains:\.* \(\*\.$domain\|$maildomain\)\(\s\|$\)&#34; -A 2 | awk &#39;/Certificate Path/ {print $3}&#39; | head -n1)&#34; &amp;&amp; certdir=&#34;${possiblecert%/*}&#34; [ ! -d &#34;$certdir&#34; ] &amp;&amp; certdir=&#34;/etc/letsencrypt/live/$maildomain&#34; &amp;&amp; case &#34;$(netstat -tulpn | grep &#34;:80\s&#34;)&#34; in *nginx*) apt install -y python3-certbot-nginx certbot -d &#34;$maildomain&#34; certonly --nginx --register-unsafely-without-email --agree-tos ;; *apache*) apt install -y python3-certbot-apache certbot -d &#34;$maildomain&#34; certonly --apache --register-unsafely-without-email --agree-tos ;; *) apt install -y python3-certbot certbot -d &#34;$maildomain&#34; certonly --standalone --register-unsafely-without-email --agree-tos ;; esac fi [ ! -f &#34;$certdir/fullchain.pem&#34; ] &amp;&amp; echo &#34;Error locating or installing SSL certificate.&#34; &amp;&amp; exit 1 [ ! -f &#34;$certdir/privkey.pem&#34; ] &amp;&amp; echo &#34;Error locating or installing SSL certificate.&#34; &amp;&amp; exit 1 if [ &#34;$selfsigned&#34; != &#34;yes&#34; ]; then [ ! -f &#34;$certdir/cert.pem&#34; ] &amp;&amp; echo &#34;Error locating or installing SSL certificate.&#34; &amp;&amp; exit 1 fi [ ! -d &#34;$certdir&#34; ] &amp;&amp; echo &#34;Error locating or installing SSL certificate.&#34; &amp;&amp; exit 1 echo &#34;Configuring Postfix&#39;s main.cf...&#34; # Adding additional vars to fix an issue with receiving emails (relay access denied) and adding it to mydestination. postconf -e &#34;myhostname = $maildomain&#34; postconf -e &#34;mail_name = $domain&#34; #This is for the smtpd_banner postconf -e &#34;mydomain = $domain&#34; postconf -e &#39;mydestination = $myhostname, $mydomain, mail, localhost.localdomain, localhost, localhost.$mydomain&#39; # Change the cert/key files to the default locations of the Let&#39;s Encrypt cert/key postconf -e &#34;smtpd_tls_key_file=$certdir/privkey.pem&#34; postconf -e &#34;smtpd_tls_cert_file=$certdir/fullchain.pem&#34; if [ &#34;$selfsigned&#34; != &#34;yes&#34; ]; then postconf -e &#34;smtp_tls_CAfile=$certdir/cert.pem&#34; fi # Enable, but do not require TLS. Requiring it with other servers would cause # mail delivery problems and requiring it locally would cause many other # issues. postconf -e &#39;smtpd_tls_security_level = may&#39; postconf -e &#39;smtp_tls_security_level = may&#39; # TLS required for authentication. postconf -e &#39;smtpd_tls_auth_only = yes&#39; # Exclude insecure and obsolete encryption protocols. postconf -e &#39;smtpd_tls_mandatory_protocols = !SSLv2, !SSLv3, !TLSv1, !TLSv1.1&#39; postconf -e &#39;smtp_tls_mandatory_protocols = !SSLv2, !SSLv3, !TLSv1, !TLSv1.1&#39; postconf -e &#39;smtpd_tls_protocols = !SSLv2, !SSLv3, !TLSv1, !TLSv1.1&#39; postconf -e &#39;smtp_tls_protocols = !SSLv2, !SSLv3, !TLSv1, !TLSv1.1&#39; # Exclude suboptimal ciphers. if [ &#34;$allow_suboptimal_ciphers&#34; = &#34;no&#34; ]; then postconf -e &#39;tls_preempt_cipherlist = yes&#39; postconf -e &#39;smtpd_tls_exclude_ciphers = aNULL, LOW, EXP, MEDIUM, ADH, AECDH, MD5, DSS, ECDSA, CAMELLIA128, 3DES, CAMELLIA256, RSA&#43;AES, eNULL&#39; fi # Here we tell Postfix to look to Dovecot for authenticating users/passwords. # Dovecot will be putting an authentication socket in /var/spool/postfix/private/auth postconf -e &#39;smtpd_sasl_auth_enable = yes&#39; postconf -e &#39;smtpd_sasl_type = dovecot&#39; postconf -e &#39;smtpd_sasl_path = private/auth&#39; # helo, sender, relay and recipient restrictions postconf -e &#34;smtpd_sender_login_maps = pcre:/etc/postfix/login_maps.pcre&#34; postconf -e &#39;smtpd_sender_restrictions = permit_sasl_authenticated, permit_mynetworks, reject_sender_login_mismatch, reject_unknown_reverse_client_hostname, reject_unknown_sender_domain&#39; postconf -e &#39;smtpd_recipient_restrictions = permit_sasl_authenticated, permit_mynetworks, reject_unauth_destination, reject_unknown_recipient_domain&#39; postconf -e &#39;smtpd_relay_restrictions = permit_sasl_authenticated, reject_unauth_destination&#39; postconf -e &#39;smtpd_helo_required = yes&#39; postconf -e &#39;smtpd_helo_restrictions = permit_mynetworks, permit_sasl_authenticated, reject_invalid_helo_hostname, reject_non_fqdn_helo_hostname, reject_unknown_helo_hostname&#39; # NOTE: the trailing slash here, or for any directory name in the home_mailbox # command, is necessary as it distinguishes a maildir (which is the actual # directory that we want) from a spoolfile (which is what old unix boomers want # and no one else). postconf -e &#39;home_mailbox = Mail/Inbox/&#39; # Prevent &#34;Received From:&#34; header in sent emails in order to prevent leakage of public ip addresses postconf -e &#34;header_checks = regexp:/etc/postfix/header_checks&#34; # strips &#34;Received From:&#34; in sent emails echo &#34;/^Received:.*/ IGNORE /^X-Originating-IP:/ IGNORE&#34; &gt;&gt; /etc/postfix/header_checks # Create a login map file that ensures that if a sender wants to send a mail from a user at our local # domain, they must be authenticated as that user echo &#34;/^(.*)@$(sh -c &#34;echo $domain | sed &#39;s/\./\\\./&#39;&#34;)$/ \${1}&#34; &gt; /etc/postfix/login_maps.pcre # master.cf echo &#34;Configuring Postfix&#39;s master.cf...&#34; sed -i &#39;/^\s*-o/d;/^\s*submission/d;/^\s*smtp/d&#39; /etc/postfix/master.cf echo &#34;smtp unix - - n - - smtp smtp inet n - y - - smtpd -o content_filter=spamassassin submission inet n - y - - smtpd -o syslog_name=postfix/submission -o smtpd_tls_security_level=encrypt -o smtpd_tls_auth_only=yes -o smtpd_enforce_tls=yes -o smtpd_client_restrictions=permit_sasl_authenticated,reject -o smtpd_sender_restrictions=reject_sender_login_mismatch -o smtpd_sender_login_maps=pcre:/etc/postfix/login_maps.pcre -o smtpd_recipient_restrictions=permit_sasl_authenticated,reject_unauth_destination smtps inet n - y - - smtpd -o syslog_name=postfix/smtps -o smtpd_tls_wrappermode=yes -o smtpd_sasl_auth_enable=yes spamassassin unix - n n - - pipe user=debian-spamd argv=/usr/bin/spamc -f -e /usr/sbin/sendmail -oi -f \${sender} \${recipient}&#34; &gt;&gt; /etc/postfix/master.cf # By default, dovecot has a bunch of configs in /etc/dovecot/conf.d/ These # files have nice documentation if you want to read it, but it&#39;s a huge pain to # go through them to organize. Instead, we simply overwrite # /etc/dovecot/dovecot.conf because it&#39;s easier to manage. You can get a backup # of the original in /usr/share/dovecot if you want. mv /etc/dovecot/dovecot.conf /etc/dovecot/dovecot.backup.conf echo &#34;Creating Dovecot config...&#34; echo &#34;# Dovecot config # Note that in the dovecot conf, you can use: # %u for username # %n for the name in name@domain.tld # %d for the domain # %h the user&#39;s home directory ssl = required ssl_cert = &lt;$certdir/fullchain.pem ssl_key = &lt;$certdir/privkey.pem ssl_min_protocol = TLSv1.2 ssl_cipher_list = &#34;&#39;EECDH&#43;ECDSA&#43;AESGCM:EECDH&#43;aRSA&#43;AESGCM:EECDH&#43;ECDSA&#43;SHA256:EECDH&#43;aRSA&#43;SHA256:EECDH&#43;ECDSA&#43;SHA384:EECDH&#43;ECDSA&#43;SHA256:EECDH&#43;aRSA&#43;SHA384:EDH&#43;aRSA&#43;AESGCM:EDH&#43;aRSA&#43;SHA256:EDH&#43;aRSA:EECDH:!aNULL:!eNULL:!MEDIUM:!LOW:!3DES:!MD5:!EXP:!PSK:!SRP:!DSS:!RC4:!SEED&#39;&#34; ssl_prefer_server_ciphers = yes ssl_dh = &lt;/usr/share/dovecot/dh.pem auth_mechanisms = plain login auth_username_format = %n protocols = \$protocols $allowed_protocols # Search for valid users in /etc/passwd userdb { driver = passwd } #Fallback: Use plain old PAM to find user passwords passdb { driver = pam } # Our mail for each user will be in ~/Mail, and the inbox will be ~/Mail/Inbox # The LAYOUT option is also important because otherwise, the boxes will be \`.Sent\` instead of \`Sent\`. mail_location = $mailbox_format:~/Mail:INBOX=~/Mail/Inbox:LAYOUT=fs namespace inbox { inbox = yes mailbox Drafts { special_use = \\Drafts auto = subscribe } mailbox Junk { special_use = \\Junk auto = subscribe autoexpunge = 30d } mailbox Sent { special_use = \\Sent auto = subscribe } mailbox Trash { special_use = \\Trash } mailbox Archive { special_use = \\Archive } } # Here we let Postfix use Dovecot&#39;s authentication system. service auth { unix_listener /var/spool/postfix/private/auth { mode = 0660 user = postfix group = postfix } } protocol lda { mail_plugins = \$mail_plugins sieve } protocol lmtp { mail_plugins = \$mail_plugins sieve } protocol pop3 { pop3_uidl_format = %08Xu%08Xv pop3_no_flag_updates = yes } plugin { sieve = ~/.dovecot.sieve sieve_default = /var/lib/dovecot/sieve/default.sieve #sieve_global_path = /var/lib/dovecot/sieve/default.sieve sieve_dir = ~/.sieve sieve_global_dir = /var/lib/dovecot/sieve/ } &#34; &gt; /etc/dovecot/dovecot.conf # If using an old version of Dovecot, remove the ssl_dl line. case &#34;$(dovecot --version)&#34; in 1|2.1*|2.2*) sed -i &#39;/^ssl_dh/d&#39; /etc/dovecot/dovecot.conf ;; esac mkdir /var/lib/dovecot/sieve/ echo &#34;require [\&#34;fileinto\&#34;, \&#34;mailbox\&#34;]; if header :contains \&#34;X-Spam-Flag\&#34; \&#34;YES\&#34; { fileinto \&#34;Junk\&#34;; }&#34; &gt; /var/lib/dovecot/sieve/default.sieve grep -q &#39;^vmail:&#39; /etc/passwd || useradd vmail chown -R vmail:vmail /var/lib/dovecot sievec /var/lib/dovecot/sieve/default.sieve echo &#39;Preparing user authentication...&#39; grep -q nullok /etc/pam.d/dovecot || echo &#39;auth required pam_unix.so nullok account required pam_unix.so&#39; &gt;&gt; /etc/pam.d/dovecot # OpenDKIM # A lot of the big name email services, like Google, will automatically reject # as spam unfamiliar and unauthenticated email addresses. As in, the server # will flatly reject the email, not even delivering it to someone&#39;s Spam # folder. # OpenDKIM is a way to authenticate your email so you can send to such services # without a problem. # Create an OpenDKIM key in the proper place with proper permissions. echo &#39;Generating OpenDKIM keys...&#39; mkdir -p &#34;/etc/postfix/dkim/$domain&#34; opendkim-genkey -D &#34;/etc/postfix/dkim/$domain&#34; -d &#34;$domain&#34; -s &#34;$subdom&#34; chgrp -R opendkim /etc/postfix/dkim/* chmod -R g&#43;r /etc/postfix/dkim/* # Generate the OpenDKIM info: echo &#39;Configuring OpenDKIM...&#39; grep -q &#34;$domain&#34; /etc/postfix/dkim/keytable 2&gt;/dev/null || echo &#34;$subdom._domainkey.$domain $domain:$subdom:/etc/postfix/dkim/$domain/$subdom.private&#34; &gt;&gt; /etc/postfix/dkim/keytable grep -q &#34;$domain&#34; /etc/postfix/dkim/signingtable 2&gt;/dev/null || echo &#34;*@$domain $subdom._domainkey.$domain&#34; &gt;&gt; /etc/postfix/dkim/signingtable grep -q &#39;127.0.0.1&#39; /etc/postfix/dkim/trustedhosts 2&gt;/dev/null || echo &#39;127.0.0.1 10.1.0.0/16&#39; &gt;&gt; /etc/postfix/dkim/trustedhosts # ...and source it from opendkim.conf grep -q &#39;^KeyTable&#39; /etc/opendkim.conf 2&gt;/dev/null || echo &#39;KeyTable file:/etc/postfix/dkim/keytable SigningTable refile:/etc/postfix/dkim/signingtable InternalHosts refile:/etc/postfix/dkim/trustedhosts&#39; &gt;&gt; /etc/opendkim.conf sed -i &#39;/^#Canonicalization/s/simple/relaxed\/simple/&#39; /etc/opendkim.conf sed -i &#39;/^#Canonicalization/s/^#//&#39; /etc/opendkim.conf sed -i &#39;/Socket/s/^#*/#/&#39; /etc/opendkim.conf grep -q &#39;^Socket\s*inet:12301@localhost&#39; /etc/opendkim.conf || echo &#39;Socket inet:12301@localhost&#39; &gt;&gt; /etc/opendkim.conf # OpenDKIM daemon settings, removing previously activated socket. sed -i &#39;/^SOCKET/d&#39; /etc/default/opendkim &amp;&amp; echo &#34;SOCKET=\&#34;inet:12301@localhost\&#34;&#34; &gt;&gt; /etc/default/opendkim # Here we add to postconf the needed settings for working with OpenDKIM echo &#39;Configuring Postfix with OpenDKIM settings...&#39; postconf -e &#39;smtpd_sasl_security_options = noanonymous, noplaintext&#39; postconf -e &#39;smtpd_sasl_tls_security_options = noanonymous&#39; postconf -e &#34;myhostname = $maildomain&#34; postconf -e &#39;milter_default_action = accept&#39; postconf -e &#39;milter_protocol = 6&#39; postconf -e &#39;smtpd_milters = inet:localhost:12301&#39; postconf -e &#39;non_smtpd_milters = inet:localhost:12301&#39; postconf -e &#39;mailbox_command = /usr/lib/dovecot/deliver&#39; # Long-term fix to prevent SMTP smuggling postconf -e &#39;smtpd_forbid_bare_newline = normalize&#39; postconf -e &#39;smtpd_forbid_bare_newline_exclusions = $mynetworks&#39; # A fix for &#34;Opendkim won&#39;t start: can&#39;t open PID file?&#34;, as specified here: https://serverfault.com/a/847442 /lib/opendkim/opendkim.service.generate systemctl daemon-reload # Enable fail2ban security for dovecot and postfix. [ ! -f /etc/fail2ban/jail.d/emailwiz.local ] &amp;&amp; echo &#34;[postfix] enabled = true [postfix-sasl] enabled = true [sieve] enabled = true [dovecot] enabled = true&#34; &gt; /etc/fail2ban/jail.d/emailwiz.local sed -i &#34;s|^backend = auto$|backend = systemd|&#34; /etc/fail2ban/jail.conf # Enable SpamAssassin update cronjob. if [ -f /etc/default/spamassassin ] then sed -i &#34;s|^CRON=0|CRON=1|&#34; /etc/default/spamassassin printf &#34;Restarting spamassassin...&#34; service spamassassin restart &amp;&amp; printf &#34; ...done\\n&#34; systemctl enable spamassassin elif [ -f /etc/default/spamd ] then sed -i &#34;s|^CRON=0|CRON=1|&#34; /etc/default/spamd printf &#34;Restarting spamd...&#34; service spamd restart &amp;&amp; printf &#34; ...done\\n&#34; systemctl enable spamd else printf &#34;!!! Neither /etc/default/spamassassin or /etc/default/spamd exists, this is unexpected and needs to be investigated&#34; fi for x in opendkim dovecot postfix fail2ban; do printf &#34;Restarting %s...&#34; &#34;$x&#34; service &#34;$x&#34; restart &amp;&amp; printf &#34; ...done\\n&#34; systemctl enable &#34;$x&#34; done pval=&#34;$(tr -d &#39;\n&#39; &lt;&#34;/etc/postfix/dkim/$domain/$subdom.txt&#34; | sed &#34;s/k=rsa.* \&#34;p=/k=rsa; p=/;s/\&#34;\s*\&#34;//;s/\&#34;\s*).*//&#34; | grep -o &#39;p=.*&#39;)&#34; dkimentry=&#34;$subdom._domainkey.$domain	TXT	v=DKIM1; k=rsa; $pval&#34; dmarcentry=&#34;_dmarc.$domain	TXT	v=DMARC1; p=reject; rua=mailto:postmaster@$domain; fo=1&#34; spfentry=&#34;$domain	TXT	v=spf1 mx a:$maildomain ip4:$ipv4 ip6:$ipv6 -all&#34; mxentry=&#34;$domain	MX	10	$maildomain	300&#34; useradd -m -G mail postmaster # Create a cronjob that deletes month-old postmaster mails: cat &lt;&lt;EOF &gt; /etc/cron.weekly/postmaster-clean #!/bin/sh find /home/postmaster/Mail -type f -mtime &#43;30 -name &#39;*.mail*&#39; -delete &gt;/dev/null 2&gt;&amp;1 exit 0 EOF chmod 755 /etc/cron.weekly/postmaster-clean grep -q &#39;^deploy-hook = echo &#34;$RENEWED_DOMAINS&#34; | grep -q&#39; /etc/letsencrypt/cli.ini || echo &#34; deploy-hook = echo \&#34;\$RENEWED_DOMAINS\&#34; | grep -q &#39;$maildomain&#39; &amp;&amp; service postfix reload &amp;&amp; service dovecot reload&#34; &gt;&gt; /etc/letsencrypt/cli.ini echo &#34;NOTE: Elements in the entries might appear in a different order in your registrar&#39;s DNS settings. $dkimentry $dmarcentry $spfentry $mxentry&#34; &gt; &#34;$HOME/dns_emailwizard&#34; printf &#34;\033[31m _ _ | \ | | _____ ___ | \| |/ _ \ \ /\ / (_) | |\ | (_) \ V V / _ |_| \_|\___/ \_/\_/ (_)\033[0m Add these three records to your DNS TXT records on either your registrar&#39;s site or your DNS server: \033[32m $dkimentry $dmarcentry $spfentry $mxentry \033[0m NOTE: You may need to omit the \`.$domain\` portion at the beginning if inputting them in a registrar&#39;s web interface. Also, these are now saved to \033[34m~/dns_emailwizard\033[0m in case you want them in a file. Once you do that, you&#39;re done! Check the README for how to add users/accounts and how to log in.\n&#34; https://www.youtube.com/watch?v=9H_kz71MGwE">
+  <meta itemprop="datePublished" content="2024-09-24T12:07:06-03:00">
+  <meta itemprop="dateModified" content="2024-09-24T12:07:06-03:00">
+  <meta itemprop="wordCount" content="2598">
+  <meta itemprop="keywords" content="Robust,Email,Server">
+  
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Robust powerful email server: postfix">
+  <meta name="twitter:description" content="We need to create an email server that can handle a volume of 500k emails a day to inbox for cold email marketing.Must be capable of handling bounces and spam reports
+Luke smith: https://www.youtube.com/watch?v=Zg9z8k8pkuM
+Este es el script de luke smith:
+#!/bin/sh # BEFORE INSTALLING # Have a Debian or Ubuntu server with a static IP and DNS records (usually # A/AAAA) that point your domain name to it. # NOTE WHILE INSTALLING # On installation of Postfix, select &#34;Internet Site&#34; and put in TLD (without # `mail.` before it). # AFTER INSTALLING # More DNS records will be given to you to install. One of them will be # different for every installation and is uniquely generated on your machine. umask 0022 install_packages=&#34;postfix postfix-pcre dovecot-imapd dovecot-pop3d dovecot-sieve opendkim opendkim-tools spamassassin spamc net-tools fail2ban bind9-host&#34; systemctl -q stop dovecot systemctl -q stop postfix apt-get purge ?config-files -y $install_packages apt-get install -y $install_packages domain=&#34;$(cat /etc/mailname)&#34; subdom=${MAIL_SUBDOM:-mail} maildomain=&#34;$subdom.$domain&#34; certdir=&#34;/etc/letsencrypt/live/$maildomain&#34; selfsigned=&#34;no&#34; # yes no allow_suboptimal_ciphers=&#34;yes&#34; #yes no mailbox_format=&#34;maildir&#34; # maildir sdbox allowed_protocols=&#34; imap pop3 &#34; #imap pop3 use_cert_config=&#34;no&#34; country_name=&#34;&#34; # IT US UK IN etc etc state_or_province_name=&#34;&#34; organization_name=&#34;&#34; common_name=&#34;$( hostname -f )&#34; if [ &#34;$use_cert_config&#34; = &#34;yes&#34; ]; then echo &#34;[req] default_bit = 4096 distinguished_name = req_distinguished_name prompt = no [req_distinguished_name] countryName = $country_name stateOrProvinceName = $state_or_province_name organizationName = $organization_name commonName = $common_name &#34; &gt; $certdir/certconfig.conf fi # Preliminary record checks ipv4=$(host &#34;$domain&#34; | grep -m1 -Eo &#39;([0-9]&#43;\.){3}[0-9]&#43;&#39;) [ -z &#34;$ipv4&#34; ] &amp;&amp; echo &#34;\033[0;31mPlease point your domain (&#34;$domain&#34;) to your server&#39;s ipv4 address.&#34; &amp;&amp; exit 1 ipv6=$(host &#34;$domain&#34; | grep &#34;IPv6&#34; | awk &#39;{print $NF}&#39;) [ -z &#34;$ipv6&#34; ] &amp;&amp; echo &#34;\033[0;31mPlease point your domain (&#34;$domain&#34;) to your server&#39;s ipv6 address.&#34; &amp;&amp; exit 1 # Open required mail ports for port in 80 993 465 25 587 110 995; do ufw allow &#34;$port&#34; 2&gt;/dev/null done if [ &#34;$selfsigned&#34; = &#34;yes&#34; ]; then rm -f $certdir/privkey.pem rm -f $certdir/csr.pem rm -f $certdir/fullchain.pem echo &#34;Generating a 4096 rsa key and a self-signed certificate that lasts 100 years&#34; mkdir -p $certdir openssl genrsa -out $certdir/privkey.pem 4096 if [ &#34;$use_cert_config&#34; = &#34;yes&#34; ]; then openssl req -new -key $certdir/privkey.pem -out $certdir/csr.pem -config $certdir/certconfig.conf else openssl req -new -key $certdir/privkey.pem -out $certdir/csr.pem fi openssl req -x509 -days 36500 -key $certdir/privkey.pem -in $certdir/csr.pem -out $certdir/fullchain.pem else # Open port 80 for Certbot. ufw allow 80 2&gt;/dev/null [ ! -d &#34;$certdir&#34; ] &amp;&amp; possiblecert=&#34;$(certbot certificates 2&gt;/dev/null | grep &#34;Domains:\.* \(\*\.$domain\|$maildomain\)\(\s\|$\)&#34; -A 2 | awk &#39;/Certificate Path/ {print $3}&#39; | head -n1)&#34; &amp;&amp; certdir=&#34;${possiblecert%/*}&#34; [ ! -d &#34;$certdir&#34; ] &amp;&amp; certdir=&#34;/etc/letsencrypt/live/$maildomain&#34; &amp;&amp; case &#34;$(netstat -tulpn | grep &#34;:80\s&#34;)&#34; in *nginx*) apt install -y python3-certbot-nginx certbot -d &#34;$maildomain&#34; certonly --nginx --register-unsafely-without-email --agree-tos ;; *apache*) apt install -y python3-certbot-apache certbot -d &#34;$maildomain&#34; certonly --apache --register-unsafely-without-email --agree-tos ;; *) apt install -y python3-certbot certbot -d &#34;$maildomain&#34; certonly --standalone --register-unsafely-without-email --agree-tos ;; esac fi [ ! -f &#34;$certdir/fullchain.pem&#34; ] &amp;&amp; echo &#34;Error locating or installing SSL certificate.&#34; &amp;&amp; exit 1 [ ! -f &#34;$certdir/privkey.pem&#34; ] &amp;&amp; echo &#34;Error locating or installing SSL certificate.&#34; &amp;&amp; exit 1 if [ &#34;$selfsigned&#34; != &#34;yes&#34; ]; then [ ! -f &#34;$certdir/cert.pem&#34; ] &amp;&amp; echo &#34;Error locating or installing SSL certificate.&#34; &amp;&amp; exit 1 fi [ ! -d &#34;$certdir&#34; ] &amp;&amp; echo &#34;Error locating or installing SSL certificate.&#34; &amp;&amp; exit 1 echo &#34;Configuring Postfix&#39;s main.cf...&#34; # Adding additional vars to fix an issue with receiving emails (relay access denied) and adding it to mydestination. postconf -e &#34;myhostname = $maildomain&#34; postconf -e &#34;mail_name = $domain&#34; #This is for the smtpd_banner postconf -e &#34;mydomain = $domain&#34; postconf -e &#39;mydestination = $myhostname, $mydomain, mail, localhost.localdomain, localhost, localhost.$mydomain&#39; # Change the cert/key files to the default locations of the Let&#39;s Encrypt cert/key postconf -e &#34;smtpd_tls_key_file=$certdir/privkey.pem&#34; postconf -e &#34;smtpd_tls_cert_file=$certdir/fullchain.pem&#34; if [ &#34;$selfsigned&#34; != &#34;yes&#34; ]; then postconf -e &#34;smtp_tls_CAfile=$certdir/cert.pem&#34; fi # Enable, but do not require TLS. Requiring it with other servers would cause # mail delivery problems and requiring it locally would cause many other # issues. postconf -e &#39;smtpd_tls_security_level = may&#39; postconf -e &#39;smtp_tls_security_level = may&#39; # TLS required for authentication. postconf -e &#39;smtpd_tls_auth_only = yes&#39; # Exclude insecure and obsolete encryption protocols. postconf -e &#39;smtpd_tls_mandatory_protocols = !SSLv2, !SSLv3, !TLSv1, !TLSv1.1&#39; postconf -e &#39;smtp_tls_mandatory_protocols = !SSLv2, !SSLv3, !TLSv1, !TLSv1.1&#39; postconf -e &#39;smtpd_tls_protocols = !SSLv2, !SSLv3, !TLSv1, !TLSv1.1&#39; postconf -e &#39;smtp_tls_protocols = !SSLv2, !SSLv3, !TLSv1, !TLSv1.1&#39; # Exclude suboptimal ciphers. if [ &#34;$allow_suboptimal_ciphers&#34; = &#34;no&#34; ]; then postconf -e &#39;tls_preempt_cipherlist = yes&#39; postconf -e &#39;smtpd_tls_exclude_ciphers = aNULL, LOW, EXP, MEDIUM, ADH, AECDH, MD5, DSS, ECDSA, CAMELLIA128, 3DES, CAMELLIA256, RSA&#43;AES, eNULL&#39; fi # Here we tell Postfix to look to Dovecot for authenticating users/passwords. # Dovecot will be putting an authentication socket in /var/spool/postfix/private/auth postconf -e &#39;smtpd_sasl_auth_enable = yes&#39; postconf -e &#39;smtpd_sasl_type = dovecot&#39; postconf -e &#39;smtpd_sasl_path = private/auth&#39; # helo, sender, relay and recipient restrictions postconf -e &#34;smtpd_sender_login_maps = pcre:/etc/postfix/login_maps.pcre&#34; postconf -e &#39;smtpd_sender_restrictions = permit_sasl_authenticated, permit_mynetworks, reject_sender_login_mismatch, reject_unknown_reverse_client_hostname, reject_unknown_sender_domain&#39; postconf -e &#39;smtpd_recipient_restrictions = permit_sasl_authenticated, permit_mynetworks, reject_unauth_destination, reject_unknown_recipient_domain&#39; postconf -e &#39;smtpd_relay_restrictions = permit_sasl_authenticated, reject_unauth_destination&#39; postconf -e &#39;smtpd_helo_required = yes&#39; postconf -e &#39;smtpd_helo_restrictions = permit_mynetworks, permit_sasl_authenticated, reject_invalid_helo_hostname, reject_non_fqdn_helo_hostname, reject_unknown_helo_hostname&#39; # NOTE: the trailing slash here, or for any directory name in the home_mailbox # command, is necessary as it distinguishes a maildir (which is the actual # directory that we want) from a spoolfile (which is what old unix boomers want # and no one else). postconf -e &#39;home_mailbox = Mail/Inbox/&#39; # Prevent &#34;Received From:&#34; header in sent emails in order to prevent leakage of public ip addresses postconf -e &#34;header_checks = regexp:/etc/postfix/header_checks&#34; # strips &#34;Received From:&#34; in sent emails echo &#34;/^Received:.*/ IGNORE /^X-Originating-IP:/ IGNORE&#34; &gt;&gt; /etc/postfix/header_checks # Create a login map file that ensures that if a sender wants to send a mail from a user at our local # domain, they must be authenticated as that user echo &#34;/^(.*)@$(sh -c &#34;echo $domain | sed &#39;s/\./\\\./&#39;&#34;)$/ \${1}&#34; &gt; /etc/postfix/login_maps.pcre # master.cf echo &#34;Configuring Postfix&#39;s master.cf...&#34; sed -i &#39;/^\s*-o/d;/^\s*submission/d;/^\s*smtp/d&#39; /etc/postfix/master.cf echo &#34;smtp unix - - n - - smtp smtp inet n - y - - smtpd -o content_filter=spamassassin submission inet n - y - - smtpd -o syslog_name=postfix/submission -o smtpd_tls_security_level=encrypt -o smtpd_tls_auth_only=yes -o smtpd_enforce_tls=yes -o smtpd_client_restrictions=permit_sasl_authenticated,reject -o smtpd_sender_restrictions=reject_sender_login_mismatch -o smtpd_sender_login_maps=pcre:/etc/postfix/login_maps.pcre -o smtpd_recipient_restrictions=permit_sasl_authenticated,reject_unauth_destination smtps inet n - y - - smtpd -o syslog_name=postfix/smtps -o smtpd_tls_wrappermode=yes -o smtpd_sasl_auth_enable=yes spamassassin unix - n n - - pipe user=debian-spamd argv=/usr/bin/spamc -f -e /usr/sbin/sendmail -oi -f \${sender} \${recipient}&#34; &gt;&gt; /etc/postfix/master.cf # By default, dovecot has a bunch of configs in /etc/dovecot/conf.d/ These # files have nice documentation if you want to read it, but it&#39;s a huge pain to # go through them to organize. Instead, we simply overwrite # /etc/dovecot/dovecot.conf because it&#39;s easier to manage. You can get a backup # of the original in /usr/share/dovecot if you want. mv /etc/dovecot/dovecot.conf /etc/dovecot/dovecot.backup.conf echo &#34;Creating Dovecot config...&#34; echo &#34;# Dovecot config # Note that in the dovecot conf, you can use: # %u for username # %n for the name in name@domain.tld # %d for the domain # %h the user&#39;s home directory ssl = required ssl_cert = &lt;$certdir/fullchain.pem ssl_key = &lt;$certdir/privkey.pem ssl_min_protocol = TLSv1.2 ssl_cipher_list = &#34;&#39;EECDH&#43;ECDSA&#43;AESGCM:EECDH&#43;aRSA&#43;AESGCM:EECDH&#43;ECDSA&#43;SHA256:EECDH&#43;aRSA&#43;SHA256:EECDH&#43;ECDSA&#43;SHA384:EECDH&#43;ECDSA&#43;SHA256:EECDH&#43;aRSA&#43;SHA384:EDH&#43;aRSA&#43;AESGCM:EDH&#43;aRSA&#43;SHA256:EDH&#43;aRSA:EECDH:!aNULL:!eNULL:!MEDIUM:!LOW:!3DES:!MD5:!EXP:!PSK:!SRP:!DSS:!RC4:!SEED&#39;&#34; ssl_prefer_server_ciphers = yes ssl_dh = &lt;/usr/share/dovecot/dh.pem auth_mechanisms = plain login auth_username_format = %n protocols = \$protocols $allowed_protocols # Search for valid users in /etc/passwd userdb { driver = passwd } #Fallback: Use plain old PAM to find user passwords passdb { driver = pam } # Our mail for each user will be in ~/Mail, and the inbox will be ~/Mail/Inbox # The LAYOUT option is also important because otherwise, the boxes will be \`.Sent\` instead of \`Sent\`. mail_location = $mailbox_format:~/Mail:INBOX=~/Mail/Inbox:LAYOUT=fs namespace inbox { inbox = yes mailbox Drafts { special_use = \\Drafts auto = subscribe } mailbox Junk { special_use = \\Junk auto = subscribe autoexpunge = 30d } mailbox Sent { special_use = \\Sent auto = subscribe } mailbox Trash { special_use = \\Trash } mailbox Archive { special_use = \\Archive } } # Here we let Postfix use Dovecot&#39;s authentication system. service auth { unix_listener /var/spool/postfix/private/auth { mode = 0660 user = postfix group = postfix } } protocol lda { mail_plugins = \$mail_plugins sieve } protocol lmtp { mail_plugins = \$mail_plugins sieve } protocol pop3 { pop3_uidl_format = %08Xu%08Xv pop3_no_flag_updates = yes } plugin { sieve = ~/.dovecot.sieve sieve_default = /var/lib/dovecot/sieve/default.sieve #sieve_global_path = /var/lib/dovecot/sieve/default.sieve sieve_dir = ~/.sieve sieve_global_dir = /var/lib/dovecot/sieve/ } &#34; &gt; /etc/dovecot/dovecot.conf # If using an old version of Dovecot, remove the ssl_dl line. case &#34;$(dovecot --version)&#34; in 1|2.1*|2.2*) sed -i &#39;/^ssl_dh/d&#39; /etc/dovecot/dovecot.conf ;; esac mkdir /var/lib/dovecot/sieve/ echo &#34;require [\&#34;fileinto\&#34;, \&#34;mailbox\&#34;]; if header :contains \&#34;X-Spam-Flag\&#34; \&#34;YES\&#34; { fileinto \&#34;Junk\&#34;; }&#34; &gt; /var/lib/dovecot/sieve/default.sieve grep -q &#39;^vmail:&#39; /etc/passwd || useradd vmail chown -R vmail:vmail /var/lib/dovecot sievec /var/lib/dovecot/sieve/default.sieve echo &#39;Preparing user authentication...&#39; grep -q nullok /etc/pam.d/dovecot || echo &#39;auth required pam_unix.so nullok account required pam_unix.so&#39; &gt;&gt; /etc/pam.d/dovecot # OpenDKIM # A lot of the big name email services, like Google, will automatically reject # as spam unfamiliar and unauthenticated email addresses. As in, the server # will flatly reject the email, not even delivering it to someone&#39;s Spam # folder. # OpenDKIM is a way to authenticate your email so you can send to such services # without a problem. # Create an OpenDKIM key in the proper place with proper permissions. echo &#39;Generating OpenDKIM keys...&#39; mkdir -p &#34;/etc/postfix/dkim/$domain&#34; opendkim-genkey -D &#34;/etc/postfix/dkim/$domain&#34; -d &#34;$domain&#34; -s &#34;$subdom&#34; chgrp -R opendkim /etc/postfix/dkim/* chmod -R g&#43;r /etc/postfix/dkim/* # Generate the OpenDKIM info: echo &#39;Configuring OpenDKIM...&#39; grep -q &#34;$domain&#34; /etc/postfix/dkim/keytable 2&gt;/dev/null || echo &#34;$subdom._domainkey.$domain $domain:$subdom:/etc/postfix/dkim/$domain/$subdom.private&#34; &gt;&gt; /etc/postfix/dkim/keytable grep -q &#34;$domain&#34; /etc/postfix/dkim/signingtable 2&gt;/dev/null || echo &#34;*@$domain $subdom._domainkey.$domain&#34; &gt;&gt; /etc/postfix/dkim/signingtable grep -q &#39;127.0.0.1&#39; /etc/postfix/dkim/trustedhosts 2&gt;/dev/null || echo &#39;127.0.0.1 10.1.0.0/16&#39; &gt;&gt; /etc/postfix/dkim/trustedhosts # ...and source it from opendkim.conf grep -q &#39;^KeyTable&#39; /etc/opendkim.conf 2&gt;/dev/null || echo &#39;KeyTable file:/etc/postfix/dkim/keytable SigningTable refile:/etc/postfix/dkim/signingtable InternalHosts refile:/etc/postfix/dkim/trustedhosts&#39; &gt;&gt; /etc/opendkim.conf sed -i &#39;/^#Canonicalization/s/simple/relaxed\/simple/&#39; /etc/opendkim.conf sed -i &#39;/^#Canonicalization/s/^#//&#39; /etc/opendkim.conf sed -i &#39;/Socket/s/^#*/#/&#39; /etc/opendkim.conf grep -q &#39;^Socket\s*inet:12301@localhost&#39; /etc/opendkim.conf || echo &#39;Socket inet:12301@localhost&#39; &gt;&gt; /etc/opendkim.conf # OpenDKIM daemon settings, removing previously activated socket. sed -i &#39;/^SOCKET/d&#39; /etc/default/opendkim &amp;&amp; echo &#34;SOCKET=\&#34;inet:12301@localhost\&#34;&#34; &gt;&gt; /etc/default/opendkim # Here we add to postconf the needed settings for working with OpenDKIM echo &#39;Configuring Postfix with OpenDKIM settings...&#39; postconf -e &#39;smtpd_sasl_security_options = noanonymous, noplaintext&#39; postconf -e &#39;smtpd_sasl_tls_security_options = noanonymous&#39; postconf -e &#34;myhostname = $maildomain&#34; postconf -e &#39;milter_default_action = accept&#39; postconf -e &#39;milter_protocol = 6&#39; postconf -e &#39;smtpd_milters = inet:localhost:12301&#39; postconf -e &#39;non_smtpd_milters = inet:localhost:12301&#39; postconf -e &#39;mailbox_command = /usr/lib/dovecot/deliver&#39; # Long-term fix to prevent SMTP smuggling postconf -e &#39;smtpd_forbid_bare_newline = normalize&#39; postconf -e &#39;smtpd_forbid_bare_newline_exclusions = $mynetworks&#39; # A fix for &#34;Opendkim won&#39;t start: can&#39;t open PID file?&#34;, as specified here: https://serverfault.com/a/847442 /lib/opendkim/opendkim.service.generate systemctl daemon-reload # Enable fail2ban security for dovecot and postfix. [ ! -f /etc/fail2ban/jail.d/emailwiz.local ] &amp;&amp; echo &#34;[postfix] enabled = true [postfix-sasl] enabled = true [sieve] enabled = true [dovecot] enabled = true&#34; &gt; /etc/fail2ban/jail.d/emailwiz.local sed -i &#34;s|^backend = auto$|backend = systemd|&#34; /etc/fail2ban/jail.conf # Enable SpamAssassin update cronjob. if [ -f /etc/default/spamassassin ] then sed -i &#34;s|^CRON=0|CRON=1|&#34; /etc/default/spamassassin printf &#34;Restarting spamassassin...&#34; service spamassassin restart &amp;&amp; printf &#34; ...done\\n&#34; systemctl enable spamassassin elif [ -f /etc/default/spamd ] then sed -i &#34;s|^CRON=0|CRON=1|&#34; /etc/default/spamd printf &#34;Restarting spamd...&#34; service spamd restart &amp;&amp; printf &#34; ...done\\n&#34; systemctl enable spamd else printf &#34;!!! Neither /etc/default/spamassassin or /etc/default/spamd exists, this is unexpected and needs to be investigated&#34; fi for x in opendkim dovecot postfix fail2ban; do printf &#34;Restarting %s...&#34; &#34;$x&#34; service &#34;$x&#34; restart &amp;&amp; printf &#34; ...done\\n&#34; systemctl enable &#34;$x&#34; done pval=&#34;$(tr -d &#39;\n&#39; &lt;&#34;/etc/postfix/dkim/$domain/$subdom.txt&#34; | sed &#34;s/k=rsa.* \&#34;p=/k=rsa; p=/;s/\&#34;\s*\&#34;//;s/\&#34;\s*).*//&#34; | grep -o &#39;p=.*&#39;)&#34; dkimentry=&#34;$subdom._domainkey.$domain	TXT	v=DKIM1; k=rsa; $pval&#34; dmarcentry=&#34;_dmarc.$domain	TXT	v=DMARC1; p=reject; rua=mailto:postmaster@$domain; fo=1&#34; spfentry=&#34;$domain	TXT	v=spf1 mx a:$maildomain ip4:$ipv4 ip6:$ipv6 -all&#34; mxentry=&#34;$domain	MX	10	$maildomain	300&#34; useradd -m -G mail postmaster # Create a cronjob that deletes month-old postmaster mails: cat &lt;&lt;EOF &gt; /etc/cron.weekly/postmaster-clean #!/bin/sh find /home/postmaster/Mail -type f -mtime &#43;30 -name &#39;*.mail*&#39; -delete &gt;/dev/null 2&gt;&amp;1 exit 0 EOF chmod 755 /etc/cron.weekly/postmaster-clean grep -q &#39;^deploy-hook = echo &#34;$RENEWED_DOMAINS&#34; | grep -q&#39; /etc/letsencrypt/cli.ini || echo &#34; deploy-hook = echo \&#34;\$RENEWED_DOMAINS\&#34; | grep -q &#39;$maildomain&#39; &amp;&amp; service postfix reload &amp;&amp; service dovecot reload&#34; &gt;&gt; /etc/letsencrypt/cli.ini echo &#34;NOTE: Elements in the entries might appear in a different order in your registrar&#39;s DNS settings. $dkimentry $dmarcentry $spfentry $mxentry&#34; &gt; &#34;$HOME/dns_emailwizard&#34; printf &#34;\033[31m _ _ | \ | | _____ ___ | \| |/ _ \ \ /\ / (_) | |\ | (_) \ V V / _ |_| \_|\___/ \_/\_/ (_)\033[0m Add these three records to your DNS TXT records on either your registrar&#39;s site or your DNS server: \033[32m $dkimentry $dmarcentry $spfentry $mxentry \033[0m NOTE: You may need to omit the \`.$domain\` portion at the beginning if inputting them in a registrar&#39;s web interface. Also, these are now saved to \033[34m~/dns_emailwizard\033[0m in case you want them in a file. Once you do that, you&#39;re done! Check the README for how to add users/accounts and how to log in.\n&#34; https://www.youtube.com/watch?v=9H_kz71MGwE">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Robust powerful email server: postfix
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/post/robust_powerful_email_server/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="We need to create an email server that can handle a volume of 500k emails a day to inbox for cold email marketing.Must be capable of handling bounces and spam reports
+Luke smith: https://www.youtube.com/watch?v=Zg9z8k8pkuM
+Este es el script de luke smith:
+
+#!/bin/sh
+
+# BEFORE INSTALLING
+
+# Have a Debian or Ubuntu server with a static IP and DNS records (usually
+# A/AAAA) that point your domain name to it.
+
+# NOTE WHILE INSTALLING
+
+# On installation of Postfix, select &#34;Internet Site&#34; and put in TLD (without
+# `mail.` before it).
+
+# AFTER INSTALLING
+
+# More DNS records will be given to you to install. One of them will be
+# different for every installation and is uniquely generated on your machine.
+
+umask 0022
+
+install_packages=&#34;postfix postfix-pcre dovecot-imapd dovecot-pop3d dovecot-sieve opendkim opendkim-tools spamassassin spamc net-tools fail2ban bind9-host&#34;
+
+systemctl -q stop dovecot
+systemctl -q stop postfix
+apt-get purge ?config-files -y $install_packages
+apt-get install -y $install_packages
+
+domain=&#34;$(cat /etc/mailname)&#34;
+subdom=${MAIL_SUBDOM:-mail}
+maildomain=&#34;$subdom.$domain&#34;
+certdir=&#34;/etc/letsencrypt/live/$maildomain&#34;
+
+selfsigned=&#34;no&#34; # yes no
+allow_suboptimal_ciphers=&#34;yes&#34; #yes no
+mailbox_format=&#34;maildir&#34; # maildir sdbox
+allowed_protocols=&#34; imap pop3 &#34;  #imap pop3
+
+use_cert_config=&#34;no&#34;
+country_name=&#34;&#34; # IT US UK IN etc etc
+state_or_province_name=&#34;&#34;
+organization_name=&#34;&#34;
+common_name=&#34;$( hostname -f )&#34;
+
+if [ &#34;$use_cert_config&#34; = &#34;yes&#34; ]; then
+	echo &#34;[req]
+	default_bit = 4096
+	distinguished_name = req_distinguished_name
+	prompt = no
+
+	[req_distinguished_name]
+	countryName             = $country_name
+	stateOrProvinceName     = $state_or_province_name
+	organizationName        = $organization_name
+	commonName              = $common_name &#34; &gt; $certdir/certconfig.conf
+
+fi
+
+# Preliminary record checks
+ipv4=$(host &#34;$domain&#34; | grep -m1 -Eo &#39;([0-9]&#43;\.){3}[0-9]&#43;&#39;)
+[ -z &#34;$ipv4&#34; ] &amp;&amp; echo &#34;\033[0;31mPlease point your domain (&#34;$domain&#34;) to your server&#39;s ipv4 address.&#34; &amp;&amp; exit 1
+ipv6=$(host &#34;$domain&#34; | grep &#34;IPv6&#34; | awk &#39;{print $NF}&#39;)
+[ -z &#34;$ipv6&#34; ] &amp;&amp; echo &#34;\033[0;31mPlease point your domain (&#34;$domain&#34;) to your server&#39;s ipv6 address.&#34; &amp;&amp; exit 1
+
+# Open required mail ports
+for port in 80 993 465 25 587 110 995; do
+	ufw allow &#34;$port&#34; 2&gt;/dev/null
+done
+
+if [ &#34;$selfsigned&#34; = &#34;yes&#34; ]; then
+	rm -f $certdir/privkey.pem
+	rm -f $certdir/csr.pem
+	rm -f $certdir/fullchain.pem
+
+	echo &#34;Generating a 4096 rsa key and a self-signed certificate that lasts 100 years&#34;
+	mkdir -p $certdir
+	openssl genrsa -out $certdir/privkey.pem 4096
+
+	if [ &#34;$use_cert_config&#34; = &#34;yes&#34; ]; then
+		openssl req -new -key $certdir/privkey.pem -out $certdir/csr.pem -config $certdir/certconfig.conf
+	else
+		openssl req -new -key $certdir/privkey.pem -out $certdir/csr.pem
+	fi
+	openssl req -x509 -days 36500 -key $certdir/privkey.pem -in $certdir/csr.pem -out $certdir/fullchain.pem
+else
+
+	# Open port 80 for Certbot.
+	ufw allow 80 2&gt;/dev/null
+
+	[ ! -d &#34;$certdir&#34; ] &amp;&amp;
+		possiblecert=&#34;$(certbot certificates 2&gt;/dev/null | grep &#34;Domains:\.* \(\*\.$domain\|$maildomain\)\(\s\|$\)&#34; -A 2 | awk &#39;/Certificate Path/ {print $3}&#39; | head -n1)&#34; &amp;&amp;
+		certdir=&#34;${possiblecert%/*}&#34;
+
+	[ ! -d &#34;$certdir&#34; ] &amp;&amp;
+		certdir=&#34;/etc/letsencrypt/live/$maildomain&#34; &amp;&amp;
+		case &#34;$(netstat -tulpn | grep &#34;:80\s&#34;)&#34; in
+		*nginx*)
+			apt install -y python3-certbot-nginx
+			certbot -d &#34;$maildomain&#34; certonly --nginx --register-unsafely-without-email --agree-tos
+			;;
+		*apache*)
+			apt install -y python3-certbot-apache
+			certbot -d &#34;$maildomain&#34; certonly --apache --register-unsafely-without-email --agree-tos
+			;;
+		*)
+			apt install -y python3-certbot
+			certbot -d &#34;$maildomain&#34; certonly --standalone --register-unsafely-without-email --agree-tos
+			;;
+	esac
+
+fi
+
+[ ! -f &#34;$certdir/fullchain.pem&#34; ] &amp;&amp; echo &#34;Error locating or installing SSL certificate.&#34; &amp;&amp; exit 1
+[ ! -f &#34;$certdir/privkey.pem&#34; ] &amp;&amp; echo &#34;Error locating or installing SSL certificate.&#34; &amp;&amp; exit 1
+if [ &#34;$selfsigned&#34; != &#34;yes&#34; ]; then
+	[ ! -f &#34;$certdir/cert.pem&#34; ] &amp;&amp; echo &#34;Error locating or installing SSL certificate.&#34; &amp;&amp; exit 1
+fi
+
+[ ! -d &#34;$certdir&#34; ] &amp;&amp; echo &#34;Error locating or installing SSL certificate.&#34; &amp;&amp; exit 1
+
+echo &#34;Configuring Postfix&#39;s main.cf...&#34;
+
+# Adding additional vars to fix an issue with receiving emails (relay access denied) and adding it to mydestination.
+postconf -e &#34;myhostname = $maildomain&#34;
+postconf -e &#34;mail_name = $domain&#34;  #This is for the smtpd_banner
+postconf -e &#34;mydomain = $domain&#34;
+postconf -e &#39;mydestination = $myhostname, $mydomain, mail, localhost.localdomain, localhost, localhost.$mydomain&#39;
+
+# Change the cert/key files to the default locations of the Let&#39;s Encrypt cert/key
+postconf -e &#34;smtpd_tls_key_file=$certdir/privkey.pem&#34;
+postconf -e &#34;smtpd_tls_cert_file=$certdir/fullchain.pem&#34;
+if [ &#34;$selfsigned&#34; != &#34;yes&#34; ]; then
+	postconf -e &#34;smtp_tls_CAfile=$certdir/cert.pem&#34;
+fi
+
+# Enable, but do not require TLS. Requiring it with other servers would cause
+# mail delivery problems and requiring it locally would cause many other
+# issues.
+postconf -e &#39;smtpd_tls_security_level = may&#39;
+postconf -e &#39;smtp_tls_security_level = may&#39;
+
+# TLS required for authentication.
+postconf -e &#39;smtpd_tls_auth_only = yes&#39;
+
+# Exclude insecure and obsolete encryption protocols.
+postconf -e &#39;smtpd_tls_mandatory_protocols = !SSLv2, !SSLv3, !TLSv1, !TLSv1.1&#39;
+postconf -e &#39;smtp_tls_mandatory_protocols = !SSLv2, !SSLv3, !TLSv1, !TLSv1.1&#39;
+postconf -e &#39;smtpd_tls_protocols = !SSLv2, !SSLv3, !TLSv1, !TLSv1.1&#39;
+postconf -e &#39;smtp_tls_protocols = !SSLv2, !SSLv3, !TLSv1, !TLSv1.1&#39;
+
+# Exclude suboptimal ciphers.
+if [ &#34;$allow_suboptimal_ciphers&#34; = &#34;no&#34; ]; then
+	postconf -e &#39;tls_preempt_cipherlist = yes&#39;
+	postconf -e &#39;smtpd_tls_exclude_ciphers = aNULL, LOW, EXP, MEDIUM, ADH, AECDH, MD5, DSS, ECDSA, CAMELLIA128, 3DES, CAMELLIA256, RSA&#43;AES, eNULL&#39;
+fi
+
+# Here we tell Postfix to look to Dovecot for authenticating users/passwords.
+# Dovecot will be putting an authentication socket in /var/spool/postfix/private/auth
+postconf -e &#39;smtpd_sasl_auth_enable = yes&#39;
+postconf -e &#39;smtpd_sasl_type = dovecot&#39;
+postconf -e &#39;smtpd_sasl_path = private/auth&#39;
+
+# helo, sender, relay and recipient restrictions
+postconf -e &#34;smtpd_sender_login_maps = pcre:/etc/postfix/login_maps.pcre&#34;
+postconf -e &#39;smtpd_sender_restrictions = permit_sasl_authenticated, permit_mynetworks, reject_sender_login_mismatch, reject_unknown_reverse_client_hostname, reject_unknown_sender_domain&#39;
+postconf -e &#39;smtpd_recipient_restrictions = permit_sasl_authenticated, permit_mynetworks, reject_unauth_destination, reject_unknown_recipient_domain&#39;
+postconf -e &#39;smtpd_relay_restrictions = permit_sasl_authenticated, reject_unauth_destination&#39;
+postconf -e &#39;smtpd_helo_required = yes&#39;
+postconf -e &#39;smtpd_helo_restrictions = permit_mynetworks, permit_sasl_authenticated, reject_invalid_helo_hostname, reject_non_fqdn_helo_hostname, reject_unknown_helo_hostname&#39;
+
+# NOTE: the trailing slash here, or for any directory name in the home_mailbox
+# command, is necessary as it distinguishes a maildir (which is the actual
+# directory that we want) from a spoolfile (which is what old unix boomers want
+# and no one else).
+postconf -e &#39;home_mailbox = Mail/Inbox/&#39;
+
+# Prevent &#34;Received From:&#34; header in sent emails in order to prevent leakage of public ip addresses
+postconf -e &#34;header_checks = regexp:/etc/postfix/header_checks&#34;
+
+# strips &#34;Received From:&#34; in sent emails
+echo &#34;/^Received:.*/     IGNORE
+/^X-Originating-IP:/    IGNORE&#34; &gt;&gt; /etc/postfix/header_checks
+
+# Create a login map file that ensures that if a sender wants to send a mail from a user at our local
+# domain, they must be authenticated as that user
+echo &#34;/^(.*)@$(sh -c &#34;echo $domain | sed &#39;s/\./\\\./&#39;&#34;)$/   \${1}&#34; &gt; /etc/postfix/login_maps.pcre
+
+# master.cf
+echo &#34;Configuring Postfix&#39;s master.cf...&#34;
+
+sed -i &#39;/^\s*-o/d;/^\s*submission/d;/^\s*smtp/d&#39; /etc/postfix/master.cf
+
+echo &#34;smtp unix - - n - - smtp
+smtp inet n - y - - smtpd
+  -o content_filter=spamassassin
+submission inet n       -       y       -       -       smtpd
+  -o syslog_name=postfix/submission
+  -o smtpd_tls_security_level=encrypt
+  -o smtpd_tls_auth_only=yes
+  -o smtpd_enforce_tls=yes
+  -o smtpd_client_restrictions=permit_sasl_authenticated,reject
+  -o smtpd_sender_restrictions=reject_sender_login_mismatch
+  -o smtpd_sender_login_maps=pcre:/etc/postfix/login_maps.pcre
+  -o smtpd_recipient_restrictions=permit_sasl_authenticated,reject_unauth_destination
+smtps     inet  n       -       y       -       -       smtpd
+  -o syslog_name=postfix/smtps
+  -o smtpd_tls_wrappermode=yes
+  -o smtpd_sasl_auth_enable=yes
+spamassassin unix -     n       n       -       -       pipe
+  user=debian-spamd argv=/usr/bin/spamc -f -e /usr/sbin/sendmail -oi -f \${sender} \${recipient}&#34; &gt;&gt; /etc/postfix/master.cf
+
+# By default, dovecot has a bunch of configs in /etc/dovecot/conf.d/ These
+# files have nice documentation if you want to read it, but it&#39;s a huge pain to
+# go through them to organize.  Instead, we simply overwrite
+# /etc/dovecot/dovecot.conf because it&#39;s easier to manage. You can get a backup
+# of the original in /usr/share/dovecot if you want.
+mv /etc/dovecot/dovecot.conf /etc/dovecot/dovecot.backup.conf
+
+echo &#34;Creating Dovecot config...&#34;
+
+echo &#34;# Dovecot config
+# Note that in the dovecot conf, you can use:
+# %u for username
+# %n for the name in name@domain.tld
+# %d for the domain
+# %h the user&#39;s home directory
+
+ssl = required
+ssl_cert = &lt;$certdir/fullchain.pem
+ssl_key = &lt;$certdir/privkey.pem
+ssl_min_protocol = TLSv1.2
+ssl_cipher_list = &#34;&#39;EECDH&#43;ECDSA&#43;AESGCM:EECDH&#43;aRSA&#43;AESGCM:EECDH&#43;ECDSA&#43;SHA256:EECDH&#43;aRSA&#43;SHA256:EECDH&#43;ECDSA&#43;SHA384:EECDH&#43;ECDSA&#43;SHA256:EECDH&#43;aRSA&#43;SHA384:EDH&#43;aRSA&#43;AESGCM:EDH&#43;aRSA&#43;SHA256:EDH&#43;aRSA:EECDH:!aNULL:!eNULL:!MEDIUM:!LOW:!3DES:!MD5:!EXP:!PSK:!SRP:!DSS:!RC4:!SEED&#39;&#34;
+ssl_prefer_server_ciphers = yes
+ssl_dh = &lt;/usr/share/dovecot/dh.pem
+auth_mechanisms = plain login
+auth_username_format = %n
+
+protocols = \$protocols $allowed_protocols
+
+# Search for valid users in /etc/passwd
+userdb {
+	driver = passwd
+}
+#Fallback: Use plain old PAM to find user passwords
+passdb {
+	driver = pam
+}
+
+# Our mail for each user will be in ~/Mail, and the inbox will be ~/Mail/Inbox
+# The LAYOUT option is also important because otherwise, the boxes will be \`.Sent\` instead of \`Sent\`.
+mail_location = $mailbox_format:~/Mail:INBOX=~/Mail/Inbox:LAYOUT=fs
+namespace inbox {
+	inbox = yes
+	mailbox Drafts {
+	special_use = \\Drafts
+	auto = subscribe
+}
+	mailbox Junk {
+	special_use = \\Junk
+	auto = subscribe
+	autoexpunge = 30d
+}
+	mailbox Sent {
+	special_use = \\Sent
+	auto = subscribe
+}
+	mailbox Trash {
+	special_use = \\Trash
+}
+	mailbox Archive {
+	special_use = \\Archive
+}
+}
+
+# Here we let Postfix use Dovecot&#39;s authentication system.
+service auth {
+  unix_listener /var/spool/postfix/private/auth {
+	mode = 0660
+	user = postfix
+	group = postfix
+}
+}
+
+protocol lda {
+  mail_plugins = \$mail_plugins sieve
+}
+
+protocol lmtp {
+  mail_plugins = \$mail_plugins sieve
+}
+
+protocol pop3 {
+  pop3_uidl_format = %08Xu%08Xv
+  pop3_no_flag_updates = yes
+}
+
+plugin {
+	sieve = ~/.dovecot.sieve
+	sieve_default = /var/lib/dovecot/sieve/default.sieve
+	#sieve_global_path = /var/lib/dovecot/sieve/default.sieve
+	sieve_dir = ~/.sieve
+	sieve_global_dir = /var/lib/dovecot/sieve/
+}
+&#34; &gt; /etc/dovecot/dovecot.conf
+
+# If using an old version of Dovecot, remove the ssl_dl line.
+case &#34;$(dovecot --version)&#34; in
+	1|2.1*|2.2*) sed -i &#39;/^ssl_dh/d&#39; /etc/dovecot/dovecot.conf ;;
+esac
+
+mkdir /var/lib/dovecot/sieve/
+
+echo &#34;require [\&#34;fileinto\&#34;, \&#34;mailbox\&#34;];
+if header :contains \&#34;X-Spam-Flag\&#34; \&#34;YES\&#34;
+	{
+		fileinto \&#34;Junk\&#34;;
+	}&#34; &gt; /var/lib/dovecot/sieve/default.sieve
+
+grep -q &#39;^vmail:&#39; /etc/passwd || useradd vmail
+chown -R vmail:vmail /var/lib/dovecot
+sievec /var/lib/dovecot/sieve/default.sieve
+
+echo &#39;Preparing user authentication...&#39;
+grep -q nullok /etc/pam.d/dovecot ||
+echo &#39;auth    required        pam_unix.so nullok
+account required        pam_unix.so&#39; &gt;&gt; /etc/pam.d/dovecot
+
+# OpenDKIM
+
+# A lot of the big name email services, like Google, will automatically reject
+# as spam unfamiliar and unauthenticated email addresses. As in, the server
+# will flatly reject the email, not even delivering it to someone&#39;s Spam
+# folder.
+
+# OpenDKIM is a way to authenticate your email so you can send to such services
+# without a problem.
+
+# Create an OpenDKIM key in the proper place with proper permissions.
+echo &#39;Generating OpenDKIM keys...&#39;
+mkdir -p &#34;/etc/postfix/dkim/$domain&#34;
+opendkim-genkey -D &#34;/etc/postfix/dkim/$domain&#34; -d &#34;$domain&#34; -s &#34;$subdom&#34;
+chgrp -R opendkim /etc/postfix/dkim/*
+chmod -R g&#43;r /etc/postfix/dkim/*
+
+# Generate the OpenDKIM info:
+echo &#39;Configuring OpenDKIM...&#39;
+grep -q &#34;$domain&#34; /etc/postfix/dkim/keytable 2&gt;/dev/null ||
+echo &#34;$subdom._domainkey.$domain $domain:$subdom:/etc/postfix/dkim/$domain/$subdom.private&#34; &gt;&gt; /etc/postfix/dkim/keytable
+
+grep -q &#34;$domain&#34; /etc/postfix/dkim/signingtable 2&gt;/dev/null ||
+echo &#34;*@$domain $subdom._domainkey.$domain&#34; &gt;&gt; /etc/postfix/dkim/signingtable
+
+grep -q &#39;127.0.0.1&#39; /etc/postfix/dkim/trustedhosts 2&gt;/dev/null ||
+	echo &#39;127.0.0.1
+10.1.0.0/16&#39; &gt;&gt; /etc/postfix/dkim/trustedhosts
+
+# ...and source it from opendkim.conf
+grep -q &#39;^KeyTable&#39; /etc/opendkim.conf 2&gt;/dev/null || echo &#39;KeyTable file:/etc/postfix/dkim/keytable
+SigningTable refile:/etc/postfix/dkim/signingtable
+InternalHosts refile:/etc/postfix/dkim/trustedhosts&#39; &gt;&gt; /etc/opendkim.conf
+
+sed -i &#39;/^#Canonicalization/s/simple/relaxed\/simple/&#39; /etc/opendkim.conf
+sed -i &#39;/^#Canonicalization/s/^#//&#39; /etc/opendkim.conf
+
+sed -i &#39;/Socket/s/^#*/#/&#39; /etc/opendkim.conf
+grep -q &#39;^Socket\s*inet:12301@localhost&#39; /etc/opendkim.conf || echo &#39;Socket inet:12301@localhost&#39; &gt;&gt; /etc/opendkim.conf
+
+# OpenDKIM daemon settings, removing previously activated socket.
+sed -i &#39;/^SOCKET/d&#39; /etc/default/opendkim &amp;&amp; echo &#34;SOCKET=\&#34;inet:12301@localhost\&#34;&#34; &gt;&gt; /etc/default/opendkim
+
+# Here we add to postconf the needed settings for working with OpenDKIM
+echo &#39;Configuring Postfix with OpenDKIM settings...&#39;
+postconf -e &#39;smtpd_sasl_security_options = noanonymous, noplaintext&#39;
+postconf -e &#39;smtpd_sasl_tls_security_options = noanonymous&#39;
+postconf -e &#34;myhostname = $maildomain&#34;
+postconf -e &#39;milter_default_action = accept&#39;
+postconf -e &#39;milter_protocol = 6&#39;
+postconf -e &#39;smtpd_milters = inet:localhost:12301&#39;
+postconf -e &#39;non_smtpd_milters = inet:localhost:12301&#39;
+postconf -e &#39;mailbox_command = /usr/lib/dovecot/deliver&#39;
+
+# Long-term fix to prevent SMTP smuggling
+postconf -e &#39;smtpd_forbid_bare_newline = normalize&#39;
+postconf -e &#39;smtpd_forbid_bare_newline_exclusions = $mynetworks&#39;
+
+# A fix for &#34;Opendkim won&#39;t start: can&#39;t open PID file?&#34;, as specified here: https://serverfault.com/a/847442
+/lib/opendkim/opendkim.service.generate
+systemctl daemon-reload
+
+# Enable fail2ban security for dovecot and postfix.
+[ ! -f /etc/fail2ban/jail.d/emailwiz.local ] &amp;&amp; echo &#34;[postfix]
+enabled = true
+[postfix-sasl]
+enabled = true
+[sieve]
+enabled = true
+[dovecot]
+enabled = true&#34; &gt; /etc/fail2ban/jail.d/emailwiz.local
+
+sed -i &#34;s|^backend = auto$|backend = systemd|&#34; /etc/fail2ban/jail.conf
+
+# Enable SpamAssassin update cronjob.
+if [ -f /etc/default/spamassassin ]
+then
+	sed -i &#34;s|^CRON=0|CRON=1|&#34; /etc/default/spamassassin
+	printf &#34;Restarting spamassassin...&#34;
+	service spamassassin restart &amp;&amp; printf &#34; ...done\\n&#34;
+	systemctl enable spamassassin
+elif [ -f /etc/default/spamd ]
+then
+	sed -i &#34;s|^CRON=0|CRON=1|&#34; /etc/default/spamd
+	printf &#34;Restarting spamd...&#34;
+	service spamd restart &amp;&amp; printf &#34; ...done\\n&#34;
+	systemctl enable spamd
+else
+	printf &#34;!!! Neither /etc/default/spamassassin or /etc/default/spamd exists, this is unexpected and needs to be investigated&#34;
+fi
+
+for x in opendkim dovecot postfix fail2ban; do
+	printf &#34;Restarting %s...&#34; &#34;$x&#34;
+	service &#34;$x&#34; restart &amp;&amp; printf &#34; ...done\\n&#34;
+	systemctl enable &#34;$x&#34;
+done
+
+pval=&#34;$(tr -d &#39;\n&#39; &lt;&#34;/etc/postfix/dkim/$domain/$subdom.txt&#34; | sed &#34;s/k=rsa.* \&#34;p=/k=rsa; p=/;s/\&#34;\s*\&#34;//;s/\&#34;\s*).*//&#34; | grep -o &#39;p=.*&#39;)&#34;
+dkimentry=&#34;$subdom._domainkey.$domain	TXT	v=DKIM1; k=rsa; $pval&#34;
+dmarcentry=&#34;_dmarc.$domain	TXT	v=DMARC1; p=reject; rua=mailto:postmaster@$domain; fo=1&#34;
+spfentry=&#34;$domain	TXT	v=spf1 mx a:$maildomain ip4:$ipv4 ip6:$ipv6 -all&#34;
+mxentry=&#34;$domain	MX	10	$maildomain	300&#34;
+
+useradd -m -G mail postmaster
+
+# Create a cronjob that deletes month-old postmaster mails:
+cat &lt;&lt;EOF &gt; /etc/cron.weekly/postmaster-clean
+#!/bin/sh
+
+find /home/postmaster/Mail -type f -mtime &#43;30 -name &#39;*.mail*&#39; -delete &gt;/dev/null 2&gt;&amp;1
+exit 0
+EOF
+chmod 755 /etc/cron.weekly/postmaster-clean
+
+grep -q &#39;^deploy-hook = echo &#34;$RENEWED_DOMAINS&#34; | grep -q&#39; /etc/letsencrypt/cli.ini ||
+	echo &#34;
+deploy-hook = echo \&#34;\$RENEWED_DOMAINS\&#34; | grep -q &#39;$maildomain&#39; &amp;&amp; service postfix reload &amp;&amp; service dovecot reload&#34; &gt;&gt; /etc/letsencrypt/cli.ini
+
+echo &#34;NOTE: Elements in the entries might appear in a different order in your registrar&#39;s DNS settings.
+$dkimentry
+$dmarcentry
+$spfentry
+$mxentry&#34; &gt; &#34;$HOME/dns_emailwizard&#34;
+
+printf &#34;\033[31m
+ _   _
+| \ | | _____      ___
+|  \| |/ _ \ \ /\ / (_)
+| |\  | (_) \ V  V / _
+|_| \_|\___/ \_/\_/ (_)\033[0m
+
+Add these three records to your DNS TXT records on either your registrar&#39;s site
+or your DNS server:
+\033[32m
+$dkimentry
+
+$dmarcentry
+
+$spfentry
+
+$mxentry
+\033[0m
+NOTE: You may need to omit the \`.$domain\` portion at the beginning if
+inputting them in a registrar&#39;s web interface.
+
+Also, these are now saved to \033[34m~/dns_emailwizard\033[0m in case you want them in a file.
+
+Once you do that, you&#39;re done! Check the README for how to add users/accounts
+and how to log in.\n&#34;
+https://www.youtube.com/watch?v=9H_kz71MGwE">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Robust powerful email server: postfix
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2024-09-24T12:07:06-03:00'>
+      September 24, 2024
+    </time>
+    
+    <br>
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/robust/">Robust</a>
+    
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/email/">Email</a>
+    
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/server/">Server</a>
+    
+    
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <p>We need to create an email server that can handle a volume of 500k emails a day to inbox for cold email marketing.Must be capable of handling bounces and spam reports</p>
+<p>Luke smith: <a href="https://www.youtube.com/watch?v=Zg9z8k8pkuM">https://www.youtube.com/watch?v=Zg9z8k8pkuM</a></p>
+<p>Este es el script de luke smith:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#!/bin/sh</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># BEFORE INSTALLING</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Have a Debian or Ubuntu server with a static IP and DNS records (usually</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># A/AAAA) that point your domain name to it.</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># NOTE WHILE INSTALLING</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># On installation of Postfix, select &#34;Internet Site&#34; and put in TLD (without</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># `mail.` before it).</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># AFTER INSTALLING</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># More DNS records will be given to you to install. One of them will be</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># different for every installation and is uniquely generated on your machine.</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>umask <span style="color:#ae81ff">0022</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>install_packages<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;postfix postfix-pcre dovecot-imapd dovecot-pop3d dovecot-sieve opendkim opendkim-tools spamassassin spamc net-tools fail2ban bind9-host&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>systemctl -q stop dovecot
+</span></span><span style="display:flex;"><span>systemctl -q stop postfix
+</span></span><span style="display:flex;"><span>apt-get purge ?config-files -y $install_packages
+</span></span><span style="display:flex;"><span>apt-get install -y $install_packages
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>domain<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>cat /etc/mailname<span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>subdom<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>MAIL_SUBDOM<span style="color:#66d9ef">:-</span>mail<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>maildomain<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$subdom<span style="color:#e6db74">.</span>$domain<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>certdir<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/etc/letsencrypt/live/</span>$maildomain<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>selfsigned<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;no&#34;</span> <span style="color:#75715e"># yes no</span>
+</span></span><span style="display:flex;"><span>allow_suboptimal_ciphers<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;yes&#34;</span> <span style="color:#75715e">#yes no</span>
+</span></span><span style="display:flex;"><span>mailbox_format<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;maildir&#34;</span> <span style="color:#75715e"># maildir sdbox</span>
+</span></span><span style="display:flex;"><span>allowed_protocols<span style="color:#f92672">=</span><span style="color:#e6db74">&#34; imap pop3 &#34;</span>  <span style="color:#75715e">#imap pop3</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>use_cert_config<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;no&#34;</span>
+</span></span><span style="display:flex;"><span>country_name<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span> <span style="color:#75715e"># IT US UK IN etc etc</span>
+</span></span><span style="display:flex;"><span>state_or_province_name<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>organization_name<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>common_name<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span> hostname -f <span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span>$use_cert_config<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;yes&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>	echo <span style="color:#e6db74">&#34;[req]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">	default_bit = 4096
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">	distinguished_name = req_distinguished_name
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">	prompt = no
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">	[req_distinguished_name]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">	countryName             = </span>$country_name<span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">	stateOrProvinceName     = </span>$state_or_province_name<span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">	organizationName        = </span>$organization_name<span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">	commonName              = </span>$common_name<span style="color:#e6db74"> &#34;</span> &gt; $certdir/certconfig.conf
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Preliminary record checks</span>
+</span></span><span style="display:flex;"><span>ipv4<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>host <span style="color:#e6db74">&#34;</span>$domain<span style="color:#e6db74">&#34;</span> | grep -m1 -Eo <span style="color:#e6db74">&#39;([0-9]+\.){3}[0-9]+&#39;</span><span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span> -z <span style="color:#e6db74">&#34;</span>$ipv4<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span> <span style="color:#f92672">&amp;&amp;</span> echo <span style="color:#e6db74">&#34;\033[0;31mPlease point your domain (&#34;</span>$domain<span style="color:#e6db74">&#34;) to your server&#39;s ipv4 address.&#34;</span> <span style="color:#f92672">&amp;&amp;</span> exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>ipv6<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>host <span style="color:#e6db74">&#34;</span>$domain<span style="color:#e6db74">&#34;</span> | grep <span style="color:#e6db74">&#34;IPv6&#34;</span> | awk <span style="color:#e6db74">&#39;{print $NF}&#39;</span><span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span> -z <span style="color:#e6db74">&#34;</span>$ipv6<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span> <span style="color:#f92672">&amp;&amp;</span> echo <span style="color:#e6db74">&#34;\033[0;31mPlease point your domain (&#34;</span>$domain<span style="color:#e6db74">&#34;) to your server&#39;s ipv6 address.&#34;</span> <span style="color:#f92672">&amp;&amp;</span> exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Open required mail ports</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> port in <span style="color:#ae81ff">80</span> <span style="color:#ae81ff">993</span> <span style="color:#ae81ff">465</span> <span style="color:#ae81ff">25</span> <span style="color:#ae81ff">587</span> <span style="color:#ae81ff">110</span> 995; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>	ufw allow <span style="color:#e6db74">&#34;</span>$port<span style="color:#e6db74">&#34;</span> 2&gt;/dev/null
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span>$selfsigned<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;yes&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>	rm -f $certdir/privkey.pem
+</span></span><span style="display:flex;"><span>	rm -f $certdir/csr.pem
+</span></span><span style="display:flex;"><span>	rm -f $certdir/fullchain.pem
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	echo <span style="color:#e6db74">&#34;Generating a 4096 rsa key and a self-signed certificate that lasts 100 years&#34;</span>
+</span></span><span style="display:flex;"><span>	mkdir -p $certdir
+</span></span><span style="display:flex;"><span>	openssl genrsa -out $certdir/privkey.pem <span style="color:#ae81ff">4096</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span>$use_cert_config<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;yes&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>		openssl req -new -key $certdir/privkey.pem -out $certdir/csr.pem -config $certdir/certconfig.conf
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>		openssl req -new -key $certdir/privkey.pem -out $certdir/csr.pem
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>	openssl req -x509 -days <span style="color:#ae81ff">36500</span> -key $certdir/privkey.pem -in $certdir/csr.pem -out $certdir/fullchain.pem
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e"># Open port 80 for Certbot.</span>
+</span></span><span style="display:flex;"><span>	ufw allow <span style="color:#ae81ff">80</span> 2&gt;/dev/null
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#f92672">[</span> ! -d <span style="color:#e6db74">&#34;</span>$certdir<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span> <span style="color:#f92672">&amp;&amp;</span>
+</span></span><span style="display:flex;"><span>		possiblecert<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>certbot certificates 2&gt;/dev/null | grep <span style="color:#e6db74">&#34;Domains:\.* \(\*\.</span>$domain<span style="color:#e6db74">\|</span>$maildomain<span style="color:#e6db74">\)\(\s\|</span>$<span style="color:#e6db74">\)&#34;</span> -A <span style="color:#ae81ff">2</span> | awk <span style="color:#e6db74">&#39;/Certificate Path/ {print $3}&#39;</span> | head -n1<span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">&amp;&amp;</span>
+</span></span><span style="display:flex;"><span>		certdir<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>possiblecert%/*<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#f92672">[</span> ! -d <span style="color:#e6db74">&#34;</span>$certdir<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span> <span style="color:#f92672">&amp;&amp;</span>
+</span></span><span style="display:flex;"><span>		certdir<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/etc/letsencrypt/live/</span>$maildomain<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">&amp;&amp;</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>netstat -tulpn | grep <span style="color:#e6db74">&#34;:80\s&#34;</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span> in
+</span></span><span style="display:flex;"><span>		*nginx*<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>			apt install -y python3-certbot-nginx
+</span></span><span style="display:flex;"><span>			certbot -d <span style="color:#e6db74">&#34;</span>$maildomain<span style="color:#e6db74">&#34;</span> certonly --nginx --register-unsafely-without-email --agree-tos
+</span></span><span style="display:flex;"><span>			;;
+</span></span><span style="display:flex;"><span>		*apache*<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>			apt install -y python3-certbot-apache
+</span></span><span style="display:flex;"><span>			certbot -d <span style="color:#e6db74">&#34;</span>$maildomain<span style="color:#e6db74">&#34;</span> certonly --apache --register-unsafely-without-email --agree-tos
+</span></span><span style="display:flex;"><span>			;;
+</span></span><span style="display:flex;"><span>		*<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>			apt install -y python3-certbot
+</span></span><span style="display:flex;"><span>			certbot -d <span style="color:#e6db74">&#34;</span>$maildomain<span style="color:#e6db74">&#34;</span> certonly --standalone --register-unsafely-without-email --agree-tos
+</span></span><span style="display:flex;"><span>			;;
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">esac</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span> ! -f <span style="color:#e6db74">&#34;</span>$certdir<span style="color:#e6db74">/fullchain.pem&#34;</span> <span style="color:#f92672">]</span> <span style="color:#f92672">&amp;&amp;</span> echo <span style="color:#e6db74">&#34;Error locating or installing SSL certificate.&#34;</span> <span style="color:#f92672">&amp;&amp;</span> exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span> ! -f <span style="color:#e6db74">&#34;</span>$certdir<span style="color:#e6db74">/privkey.pem&#34;</span> <span style="color:#f92672">]</span> <span style="color:#f92672">&amp;&amp;</span> echo <span style="color:#e6db74">&#34;Error locating or installing SSL certificate.&#34;</span> <span style="color:#f92672">&amp;&amp;</span> exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span>$selfsigned<span style="color:#e6db74">&#34;</span> !<span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;yes&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#f92672">[</span> ! -f <span style="color:#e6db74">&#34;</span>$certdir<span style="color:#e6db74">/cert.pem&#34;</span> <span style="color:#f92672">]</span> <span style="color:#f92672">&amp;&amp;</span> echo <span style="color:#e6db74">&#34;Error locating or installing SSL certificate.&#34;</span> <span style="color:#f92672">&amp;&amp;</span> exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span> ! -d <span style="color:#e6db74">&#34;</span>$certdir<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span> <span style="color:#f92672">&amp;&amp;</span> echo <span style="color:#e6db74">&#34;Error locating or installing SSL certificate.&#34;</span> <span style="color:#f92672">&amp;&amp;</span> exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;Configuring Postfix&#39;s main.cf...&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Adding additional vars to fix an issue with receiving emails (relay access denied) and adding it to mydestination.</span>
+</span></span><span style="display:flex;"><span>postconf -e <span style="color:#e6db74">&#34;myhostname = </span>$maildomain<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>postconf -e <span style="color:#e6db74">&#34;mail_name = </span>$domain<span style="color:#e6db74">&#34;</span>  <span style="color:#75715e">#This is for the smtpd_banner</span>
+</span></span><span style="display:flex;"><span>postconf -e <span style="color:#e6db74">&#34;mydomain = </span>$domain<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>postconf -e <span style="color:#e6db74">&#39;mydestination = $myhostname, $mydomain, mail, localhost.localdomain, localhost, localhost.$mydomain&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Change the cert/key files to the default locations of the Let&#39;s Encrypt cert/key</span>
+</span></span><span style="display:flex;"><span>postconf -e <span style="color:#e6db74">&#34;smtpd_tls_key_file=</span>$certdir<span style="color:#e6db74">/privkey.pem&#34;</span>
+</span></span><span style="display:flex;"><span>postconf -e <span style="color:#e6db74">&#34;smtpd_tls_cert_file=</span>$certdir<span style="color:#e6db74">/fullchain.pem&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span>$selfsigned<span style="color:#e6db74">&#34;</span> !<span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;yes&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>	postconf -e <span style="color:#e6db74">&#34;smtp_tls_CAfile=</span>$certdir<span style="color:#e6db74">/cert.pem&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Enable, but do not require TLS. Requiring it with other servers would cause</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># mail delivery problems and requiring it locally would cause many other</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># issues.</span>
+</span></span><span style="display:flex;"><span>postconf -e <span style="color:#e6db74">&#39;smtpd_tls_security_level = may&#39;</span>
+</span></span><span style="display:flex;"><span>postconf -e <span style="color:#e6db74">&#39;smtp_tls_security_level = may&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># TLS required for authentication.</span>
+</span></span><span style="display:flex;"><span>postconf -e <span style="color:#e6db74">&#39;smtpd_tls_auth_only = yes&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Exclude insecure and obsolete encryption protocols.</span>
+</span></span><span style="display:flex;"><span>postconf -e <span style="color:#e6db74">&#39;smtpd_tls_mandatory_protocols = !SSLv2, !SSLv3, !TLSv1, !TLSv1.1&#39;</span>
+</span></span><span style="display:flex;"><span>postconf -e <span style="color:#e6db74">&#39;smtp_tls_mandatory_protocols = !SSLv2, !SSLv3, !TLSv1, !TLSv1.1&#39;</span>
+</span></span><span style="display:flex;"><span>postconf -e <span style="color:#e6db74">&#39;smtpd_tls_protocols = !SSLv2, !SSLv3, !TLSv1, !TLSv1.1&#39;</span>
+</span></span><span style="display:flex;"><span>postconf -e <span style="color:#e6db74">&#39;smtp_tls_protocols = !SSLv2, !SSLv3, !TLSv1, !TLSv1.1&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Exclude suboptimal ciphers.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span>$allow_suboptimal_ciphers<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;no&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>	postconf -e <span style="color:#e6db74">&#39;tls_preempt_cipherlist = yes&#39;</span>
+</span></span><span style="display:flex;"><span>	postconf -e <span style="color:#e6db74">&#39;smtpd_tls_exclude_ciphers = aNULL, LOW, EXP, MEDIUM, ADH, AECDH, MD5, DSS, ECDSA, CAMELLIA128, 3DES, CAMELLIA256, RSA+AES, eNULL&#39;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Here we tell Postfix to look to Dovecot for authenticating users/passwords.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Dovecot will be putting an authentication socket in /var/spool/postfix/private/auth</span>
+</span></span><span style="display:flex;"><span>postconf -e <span style="color:#e6db74">&#39;smtpd_sasl_auth_enable = yes&#39;</span>
+</span></span><span style="display:flex;"><span>postconf -e <span style="color:#e6db74">&#39;smtpd_sasl_type = dovecot&#39;</span>
+</span></span><span style="display:flex;"><span>postconf -e <span style="color:#e6db74">&#39;smtpd_sasl_path = private/auth&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># helo, sender, relay and recipient restrictions</span>
+</span></span><span style="display:flex;"><span>postconf -e <span style="color:#e6db74">&#34;smtpd_sender_login_maps = pcre:/etc/postfix/login_maps.pcre&#34;</span>
+</span></span><span style="display:flex;"><span>postconf -e <span style="color:#e6db74">&#39;smtpd_sender_restrictions = permit_sasl_authenticated, permit_mynetworks, reject_sender_login_mismatch, reject_unknown_reverse_client_hostname, reject_unknown_sender_domain&#39;</span>
+</span></span><span style="display:flex;"><span>postconf -e <span style="color:#e6db74">&#39;smtpd_recipient_restrictions = permit_sasl_authenticated, permit_mynetworks, reject_unauth_destination, reject_unknown_recipient_domain&#39;</span>
+</span></span><span style="display:flex;"><span>postconf -e <span style="color:#e6db74">&#39;smtpd_relay_restrictions = permit_sasl_authenticated, reject_unauth_destination&#39;</span>
+</span></span><span style="display:flex;"><span>postconf -e <span style="color:#e6db74">&#39;smtpd_helo_required = yes&#39;</span>
+</span></span><span style="display:flex;"><span>postconf -e <span style="color:#e6db74">&#39;smtpd_helo_restrictions = permit_mynetworks, permit_sasl_authenticated, reject_invalid_helo_hostname, reject_non_fqdn_helo_hostname, reject_unknown_helo_hostname&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># NOTE: the trailing slash here, or for any directory name in the home_mailbox</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># command, is necessary as it distinguishes a maildir (which is the actual</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># directory that we want) from a spoolfile (which is what old unix boomers want</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># and no one else).</span>
+</span></span><span style="display:flex;"><span>postconf -e <span style="color:#e6db74">&#39;home_mailbox = Mail/Inbox/&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Prevent &#34;Received From:&#34; header in sent emails in order to prevent leakage of public ip addresses</span>
+</span></span><span style="display:flex;"><span>postconf -e <span style="color:#e6db74">&#34;header_checks = regexp:/etc/postfix/header_checks&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># strips &#34;Received From:&#34; in sent emails</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;/^Received:.*/     IGNORE
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">/^X-Originating-IP:/    IGNORE&#34;</span> &gt;&gt; /etc/postfix/header_checks
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Create a login map file that ensures that if a sender wants to send a mail from a user at our local</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># domain, they must be authenticated as that user</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;/^(.*)@</span><span style="color:#66d9ef">$(</span>sh -c <span style="color:#e6db74">&#34;echo </span>$domain<span style="color:#e6db74"> | sed &#39;s/\./\\\./&#39;&#34;</span><span style="color:#66d9ef">)</span>$<span style="color:#e6db74">/   \${1}&#34;</span> &gt; /etc/postfix/login_maps.pcre
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># master.cf</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;Configuring Postfix&#39;s master.cf...&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>sed -i <span style="color:#e6db74">&#39;/^\s*-o/d;/^\s*submission/d;/^\s*smtp/d&#39;</span> /etc/postfix/master.cf
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;smtp unix - - n - - smtp
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">smtp inet n - y - - smtpd
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  -o content_filter=spamassassin
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">submission inet n       -       y       -       -       smtpd
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  -o syslog_name=postfix/submission
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  -o smtpd_tls_security_level=encrypt
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  -o smtpd_tls_auth_only=yes
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  -o smtpd_enforce_tls=yes
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  -o smtpd_client_restrictions=permit_sasl_authenticated,reject
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  -o smtpd_sender_restrictions=reject_sender_login_mismatch
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  -o smtpd_sender_login_maps=pcre:/etc/postfix/login_maps.pcre
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  -o smtpd_recipient_restrictions=permit_sasl_authenticated,reject_unauth_destination
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">smtps     inet  n       -       y       -       -       smtpd
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  -o syslog_name=postfix/smtps
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  -o smtpd_tls_wrappermode=yes
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  -o smtpd_sasl_auth_enable=yes
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">spamassassin unix -     n       n       -       -       pipe
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  user=debian-spamd argv=/usr/bin/spamc -f -e /usr/sbin/sendmail -oi -f \${sender} \${recipient}&#34;</span> &gt;&gt; /etc/postfix/master.cf
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># By default, dovecot has a bunch of configs in /etc/dovecot/conf.d/ These</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># files have nice documentation if you want to read it, but it&#39;s a huge pain to</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># go through them to organize.  Instead, we simply overwrite</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># /etc/dovecot/dovecot.conf because it&#39;s easier to manage. You can get a backup</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># of the original in /usr/share/dovecot if you want.</span>
+</span></span><span style="display:flex;"><span>mv /etc/dovecot/dovecot.conf /etc/dovecot/dovecot.backup.conf
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;Creating Dovecot config...&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;# Dovecot config
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># Note that in the dovecot conf, you can use:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># %u for username
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># %n for the name in name@domain.tld
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># %d for the domain
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># %h the user&#39;s home directory
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">ssl = required
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">ssl_cert = &lt;</span>$certdir<span style="color:#e6db74">/fullchain.pem
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">ssl_key = &lt;</span>$certdir<span style="color:#e6db74">/privkey.pem
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">ssl_min_protocol = TLSv1.2
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">ssl_cipher_list = &#34;</span><span style="color:#e6db74">&#39;EECDH+ECDSA+AESGCM:EECDH+aRSA+AESGCM:EECDH+ECDSA+SHA256:EECDH+aRSA+SHA256:EECDH+ECDSA+SHA384:EECDH+ECDSA+SHA256:EECDH+aRSA+SHA384:EDH+aRSA+AESGCM:EDH+aRSA+SHA256:EDH+aRSA:EECDH:!aNULL:!eNULL:!MEDIUM:!LOW:!3DES:!MD5:!EXP:!PSK:!SRP:!DSS:!RC4:!SEED&#39;</span><span style="color:#e6db74">&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">ssl_prefer_server_ciphers = yes
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">ssl_dh = &lt;/usr/share/dovecot/dh.pem
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">auth_mechanisms = plain login
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">auth_username_format = %n
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">protocols = \$protocols </span>$allowed_protocols<span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># Search for valid users in /etc/passwd
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">userdb {
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">	driver = passwd
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">#Fallback: Use plain old PAM to find user passwords
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">passdb {
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">	driver = pam
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># Our mail for each user will be in ~/Mail, and the inbox will be ~/Mail/Inbox
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># The LAYOUT option is also important because otherwise, the boxes will be \`.Sent\` instead of \`Sent\`.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">mail_location = </span>$mailbox_format<span style="color:#e6db74">:~/Mail:INBOX=~/Mail/Inbox:LAYOUT=fs
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">namespace inbox {
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">	inbox = yes
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">	mailbox Drafts {
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">	special_use = \\Drafts
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">	auto = subscribe
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">	mailbox Junk {
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">	special_use = \\Junk
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">	auto = subscribe
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">	autoexpunge = 30d
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">	mailbox Sent {
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">	special_use = \\Sent
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">	auto = subscribe
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">	mailbox Trash {
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">	special_use = \\Trash
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">	mailbox Archive {
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">	special_use = \\Archive
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># Here we let Postfix use Dovecot&#39;s authentication system.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">service auth {
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  unix_listener /var/spool/postfix/private/auth {
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">	mode = 0660
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">	user = postfix
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">	group = postfix
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">protocol lda {
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  mail_plugins = \$mail_plugins sieve
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">protocol lmtp {
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  mail_plugins = \$mail_plugins sieve
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">protocol pop3 {
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  pop3_uidl_format = %08Xu%08Xv
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  pop3_no_flag_updates = yes
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">plugin {
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">	sieve = ~/.dovecot.sieve
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">	sieve_default = /var/lib/dovecot/sieve/default.sieve
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">	#sieve_global_path = /var/lib/dovecot/sieve/default.sieve
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">	sieve_dir = ~/.sieve
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">	sieve_global_dir = /var/lib/dovecot/sieve/
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;</span> &gt; /etc/dovecot/dovecot.conf
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># If using an old version of Dovecot, remove the ssl_dl line.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>dovecot --version<span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span> in
+</span></span><span style="display:flex;"><span>	1|2.1*|2.2*<span style="color:#f92672">)</span> sed -i <span style="color:#e6db74">&#39;/^ssl_dh/d&#39;</span> /etc/dovecot/dovecot.conf ;;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">esac</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>mkdir /var/lib/dovecot/sieve/
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;require [\&#34;fileinto\&#34;, \&#34;mailbox\&#34;];
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">if header :contains \&#34;X-Spam-Flag\&#34; \&#34;YES\&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">	{
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">		fileinto \&#34;Junk\&#34;;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">	}&#34;</span> &gt; /var/lib/dovecot/sieve/default.sieve
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>grep -q <span style="color:#e6db74">&#39;^vmail:&#39;</span> /etc/passwd <span style="color:#f92672">||</span> useradd vmail
+</span></span><span style="display:flex;"><span>chown -R vmail:vmail /var/lib/dovecot
+</span></span><span style="display:flex;"><span>sievec /var/lib/dovecot/sieve/default.sieve
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#39;Preparing user authentication...&#39;</span>
+</span></span><span style="display:flex;"><span>grep -q nullok /etc/pam.d/dovecot <span style="color:#f92672">||</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#39;auth    required        pam_unix.so nullok
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">account required        pam_unix.so&#39;</span> &gt;&gt; /etc/pam.d/dovecot
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># OpenDKIM</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># A lot of the big name email services, like Google, will automatically reject</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># as spam unfamiliar and unauthenticated email addresses. As in, the server</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># will flatly reject the email, not even delivering it to someone&#39;s Spam</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># folder.</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># OpenDKIM is a way to authenticate your email so you can send to such services</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># without a problem.</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Create an OpenDKIM key in the proper place with proper permissions.</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#39;Generating OpenDKIM keys...&#39;</span>
+</span></span><span style="display:flex;"><span>mkdir -p <span style="color:#e6db74">&#34;/etc/postfix/dkim/</span>$domain<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>opendkim-genkey -D <span style="color:#e6db74">&#34;/etc/postfix/dkim/</span>$domain<span style="color:#e6db74">&#34;</span> -d <span style="color:#e6db74">&#34;</span>$domain<span style="color:#e6db74">&#34;</span> -s <span style="color:#e6db74">&#34;</span>$subdom<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>chgrp -R opendkim /etc/postfix/dkim/*
+</span></span><span style="display:flex;"><span>chmod -R g+r /etc/postfix/dkim/*
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Generate the OpenDKIM info:</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#39;Configuring OpenDKIM...&#39;</span>
+</span></span><span style="display:flex;"><span>grep -q <span style="color:#e6db74">&#34;</span>$domain<span style="color:#e6db74">&#34;</span> /etc/postfix/dkim/keytable 2&gt;/dev/null <span style="color:#f92672">||</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;</span>$subdom<span style="color:#e6db74">._domainkey.</span>$domain<span style="color:#e6db74"> </span>$domain<span style="color:#e6db74">:</span>$subdom<span style="color:#e6db74">:/etc/postfix/dkim/</span>$domain<span style="color:#e6db74">/</span>$subdom<span style="color:#e6db74">.private&#34;</span> &gt;&gt; /etc/postfix/dkim/keytable
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>grep -q <span style="color:#e6db74">&#34;</span>$domain<span style="color:#e6db74">&#34;</span> /etc/postfix/dkim/signingtable 2&gt;/dev/null <span style="color:#f92672">||</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;*@</span>$domain<span style="color:#e6db74"> </span>$subdom<span style="color:#e6db74">._domainkey.</span>$domain<span style="color:#e6db74">&#34;</span> &gt;&gt; /etc/postfix/dkim/signingtable
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>grep -q <span style="color:#e6db74">&#39;127.0.0.1&#39;</span> /etc/postfix/dkim/trustedhosts 2&gt;/dev/null <span style="color:#f92672">||</span>
+</span></span><span style="display:flex;"><span>	echo <span style="color:#e6db74">&#39;127.0.0.1
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">10.1.0.0/16&#39;</span> &gt;&gt; /etc/postfix/dkim/trustedhosts
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ...and source it from opendkim.conf</span>
+</span></span><span style="display:flex;"><span>grep -q <span style="color:#e6db74">&#39;^KeyTable&#39;</span> /etc/opendkim.conf 2&gt;/dev/null <span style="color:#f92672">||</span> echo <span style="color:#e6db74">&#39;KeyTable file:/etc/postfix/dkim/keytable
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">SigningTable refile:/etc/postfix/dkim/signingtable
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">InternalHosts refile:/etc/postfix/dkim/trustedhosts&#39;</span> &gt;&gt; /etc/opendkim.conf
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>sed -i <span style="color:#e6db74">&#39;/^#Canonicalization/s/simple/relaxed\/simple/&#39;</span> /etc/opendkim.conf
+</span></span><span style="display:flex;"><span>sed -i <span style="color:#e6db74">&#39;/^#Canonicalization/s/^#//&#39;</span> /etc/opendkim.conf
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>sed -i <span style="color:#e6db74">&#39;/Socket/s/^#*/#/&#39;</span> /etc/opendkim.conf
+</span></span><span style="display:flex;"><span>grep -q <span style="color:#e6db74">&#39;^Socket\s*inet:12301@localhost&#39;</span> /etc/opendkim.conf <span style="color:#f92672">||</span> echo <span style="color:#e6db74">&#39;Socket inet:12301@localhost&#39;</span> &gt;&gt; /etc/opendkim.conf
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># OpenDKIM daemon settings, removing previously activated socket.</span>
+</span></span><span style="display:flex;"><span>sed -i <span style="color:#e6db74">&#39;/^SOCKET/d&#39;</span> /etc/default/opendkim <span style="color:#f92672">&amp;&amp;</span> echo <span style="color:#e6db74">&#34;SOCKET=\&#34;inet:12301@localhost\&#34;&#34;</span> &gt;&gt; /etc/default/opendkim
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Here we add to postconf the needed settings for working with OpenDKIM</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#39;Configuring Postfix with OpenDKIM settings...&#39;</span>
+</span></span><span style="display:flex;"><span>postconf -e <span style="color:#e6db74">&#39;smtpd_sasl_security_options = noanonymous, noplaintext&#39;</span>
+</span></span><span style="display:flex;"><span>postconf -e <span style="color:#e6db74">&#39;smtpd_sasl_tls_security_options = noanonymous&#39;</span>
+</span></span><span style="display:flex;"><span>postconf -e <span style="color:#e6db74">&#34;myhostname = </span>$maildomain<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>postconf -e <span style="color:#e6db74">&#39;milter_default_action = accept&#39;</span>
+</span></span><span style="display:flex;"><span>postconf -e <span style="color:#e6db74">&#39;milter_protocol = 6&#39;</span>
+</span></span><span style="display:flex;"><span>postconf -e <span style="color:#e6db74">&#39;smtpd_milters = inet:localhost:12301&#39;</span>
+</span></span><span style="display:flex;"><span>postconf -e <span style="color:#e6db74">&#39;non_smtpd_milters = inet:localhost:12301&#39;</span>
+</span></span><span style="display:flex;"><span>postconf -e <span style="color:#e6db74">&#39;mailbox_command = /usr/lib/dovecot/deliver&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Long-term fix to prevent SMTP smuggling</span>
+</span></span><span style="display:flex;"><span>postconf -e <span style="color:#e6db74">&#39;smtpd_forbid_bare_newline = normalize&#39;</span>
+</span></span><span style="display:flex;"><span>postconf -e <span style="color:#e6db74">&#39;smtpd_forbid_bare_newline_exclusions = $mynetworks&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># A fix for &#34;Opendkim won&#39;t start: can&#39;t open PID file?&#34;, as specified here: https://serverfault.com/a/847442</span>
+</span></span><span style="display:flex;"><span>/lib/opendkim/opendkim.service.generate
+</span></span><span style="display:flex;"><span>systemctl daemon-reload
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Enable fail2ban security for dovecot and postfix.</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span> ! -f /etc/fail2ban/jail.d/emailwiz.local <span style="color:#f92672">]</span> <span style="color:#f92672">&amp;&amp;</span> echo <span style="color:#e6db74">&#34;[postfix]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">enabled = true
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">[postfix-sasl]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">enabled = true
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">[sieve]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">enabled = true
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">[dovecot]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">enabled = true&#34;</span> &gt; /etc/fail2ban/jail.d/emailwiz.local
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>sed -i <span style="color:#e6db74">&#34;s|^backend = auto</span>$<span style="color:#e6db74">|backend = systemd|&#34;</span> /etc/fail2ban/jail.conf
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Enable SpamAssassin update cronjob.</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> -f /etc/default/spamassassin <span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>	sed -i <span style="color:#e6db74">&#34;s|^CRON=0|CRON=1|&#34;</span> /etc/default/spamassassin
+</span></span><span style="display:flex;"><span>	printf <span style="color:#e6db74">&#34;Restarting spamassassin...&#34;</span>
+</span></span><span style="display:flex;"><span>	service spamassassin restart <span style="color:#f92672">&amp;&amp;</span> printf <span style="color:#e6db74">&#34; ...done\\n&#34;</span>
+</span></span><span style="display:flex;"><span>	systemctl enable spamassassin
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">elif</span> <span style="color:#f92672">[</span> -f /etc/default/spamd <span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>	sed -i <span style="color:#e6db74">&#34;s|^CRON=0|CRON=1|&#34;</span> /etc/default/spamd
+</span></span><span style="display:flex;"><span>	printf <span style="color:#e6db74">&#34;Restarting spamd...&#34;</span>
+</span></span><span style="display:flex;"><span>	service spamd restart <span style="color:#f92672">&amp;&amp;</span> printf <span style="color:#e6db74">&#34; ...done\\n&#34;</span>
+</span></span><span style="display:flex;"><span>	systemctl enable spamd
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>	printf <span style="color:#e6db74">&#34;!!! Neither /etc/default/spamassassin or /etc/default/spamd exists, this is unexpected and needs to be investigated&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> x in opendkim dovecot postfix fail2ban; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>	printf <span style="color:#e6db74">&#34;Restarting %s...&#34;</span> <span style="color:#e6db74">&#34;</span>$x<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>	service <span style="color:#e6db74">&#34;</span>$x<span style="color:#e6db74">&#34;</span> restart <span style="color:#f92672">&amp;&amp;</span> printf <span style="color:#e6db74">&#34; ...done\\n&#34;</span>
+</span></span><span style="display:flex;"><span>	systemctl enable <span style="color:#e6db74">&#34;</span>$x<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>pval<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>tr -d <span style="color:#e6db74">&#39;\n&#39;</span> &lt;<span style="color:#e6db74">&#34;/etc/postfix/dkim/</span>$domain<span style="color:#e6db74">/</span>$subdom<span style="color:#e6db74">.txt&#34;</span> | sed <span style="color:#e6db74">&#34;s/k=rsa.* \&#34;p=/k=rsa; p=/;s/\&#34;\s*\&#34;//;s/\&#34;\s*).*//&#34;</span> | grep -o <span style="color:#e6db74">&#39;p=.*&#39;</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>dkimentry<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$subdom<span style="color:#e6db74">._domainkey.</span>$domain<span style="color:#e6db74">	TXT	v=DKIM1; k=rsa; </span>$pval<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>dmarcentry<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;_dmarc.</span>$domain<span style="color:#e6db74">	TXT	v=DMARC1; p=reject; rua=mailto:postmaster@</span>$domain<span style="color:#e6db74">; fo=1&#34;</span>
+</span></span><span style="display:flex;"><span>spfentry<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$domain<span style="color:#e6db74">	TXT	v=spf1 mx a:</span>$maildomain<span style="color:#e6db74"> ip4:</span>$ipv4<span style="color:#e6db74"> ip6:</span>$ipv6<span style="color:#e6db74"> -all&#34;</span>
+</span></span><span style="display:flex;"><span>mxentry<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$domain<span style="color:#e6db74">	MX	10	</span>$maildomain<span style="color:#e6db74">	300&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>useradd -m -G mail postmaster
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Create a cronjob that deletes month-old postmaster mails:</span>
+</span></span><span style="display:flex;"><span>cat <span style="color:#e6db74">&lt;&lt;EOF &gt; /etc/cron.weekly/postmaster-clean
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">#!/bin/sh
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">find /home/postmaster/Mail -type f -mtime +30 -name &#39;*.mail*&#39; -delete &gt;/dev/null 2&gt;&amp;1
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">exit 0
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOF</span>
+</span></span><span style="display:flex;"><span>chmod <span style="color:#ae81ff">755</span> /etc/cron.weekly/postmaster-clean
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>grep -q <span style="color:#e6db74">&#39;^deploy-hook = echo &#34;$RENEWED_DOMAINS&#34; | grep -q&#39;</span> /etc/letsencrypt/cli.ini <span style="color:#f92672">||</span>
+</span></span><span style="display:flex;"><span>	echo <span style="color:#e6db74">&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">deploy-hook = echo \&#34;\$RENEWED_DOMAINS\&#34; | grep -q &#39;</span>$maildomain<span style="color:#e6db74">&#39; &amp;&amp; service postfix reload &amp;&amp; service dovecot reload&#34;</span> &gt;&gt; /etc/letsencrypt/cli.ini
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;NOTE: Elements in the entries might appear in a different order in your registrar&#39;s DNS settings.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"></span>$dkimentry<span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"></span>$dmarcentry<span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"></span>$spfentry<span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"></span>$mxentry<span style="color:#e6db74">&#34;</span> &gt; <span style="color:#e6db74">&#34;</span>$HOME<span style="color:#e6db74">/dns_emailwizard&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>printf <span style="color:#e6db74">&#34;\033[31m
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"> _   _
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">| \ | | _____      ___
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">|  \| |/ _ \ \ /\ / (_)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">| |\  | (_) \ V  V / _
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">|_| \_|\___/ \_/\_/ (_)\033[0m
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Add these three records to your DNS TXT records on either your registrar&#39;s site
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">or your DNS server:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">\033[32m
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"></span>$dkimentry<span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"></span>$dmarcentry<span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"></span>$spfentry<span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"></span>$mxentry<span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">\033[0m
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">NOTE: You may need to omit the \`.</span>$domain<span style="color:#e6db74">\` portion at the beginning if
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">inputting them in a registrar&#39;s web interface.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Also, these are now saved to \033[34m~/dns_emailwizard\033[0m in case you want them in a file.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Once you do that, you&#39;re done! Check the README for how to add users/accounts
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">and how to log in.\n&#34;</span>
+</span></span></code></pre></div><p><a href="https://www.youtube.com/watch?v=9H_kz71MGwE">https://www.youtube.com/watch?v=9H_kz71MGwE</a></p>
+<p><a href="https://www.youtube.com/watch?v=6SfXXtb-nHM">https://www.youtube.com/watch?v=6SfXXtb-nHM</a></p>
+<p><a href="https://www.youtube.com/watch?v=Bc9OtVnl8ZY">https://www.youtube.com/watch?v=Bc9OtVnl8ZY</a></p>
+<p><a href="https://www.youtube.com/watch?v=P_NDvSl_Fjg">https://www.youtube.com/watch?v=P_NDvSl_Fjg</a></p>
+<p><a href="https://www.youtube.com/watch?v=Zqg-t3iJKKU">https://www.youtube.com/watch?v=Zqg-t3iJKKU</a></p>
+<p><a href="https://www.youtube.com/watch?v=WpHdJZFISkQ">https://www.youtube.com/watch?v=WpHdJZFISkQ</a></p>
+<p><a href="https://www.youtube.com/watch?v=NHJyYzvwlzA">https://www.youtube.com/watch?v=NHJyYzvwlzA</a></p>
+<p><a href="https://github.com/LukeSmithxyz/emailwiz">https://github.com/LukeSmithxyz/emailwiz</a></p>
+<p>Tutorial de Luke Smith:</p>
+<p><a href="/ssh_sin_clave.md">Agregá tu key para conectarte sin contraseña</a></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ssh root@mail.baconus.net
+</span></span><span style="display:flex;"><span>curl -LO larbs.xyz/emailwiz.sh
+</span></span><span style="display:flex;"><span>sh emailwiz.sh
+</span></span><span style="display:flex;"><span>Ahora te dará una pantalla escribí el dominio que es baconus.net
+</span></span></code></pre></div><p>En otra pantalla logueate en tu servidor también</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>useradd -m billy -G mail
+</span></span><span style="display:flex;"><span>passwd billy
+</span></span></code></pre></div><p>Ahora andate a tu registrar (en mi caso riu.edu.ar) y modificá el MX Record</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>En host: <span style="color:#ae81ff">10</span> points to : mail.baconus.net. <span style="color:#f92672">(</span>con un punto al final<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>Ahora agregá TXT Record:
+</span></span><span style="display:flex;"><span>host: mail._domainkey
+</span></span><span style="display:flex;"><span>Cuando el script de instalación finaliza te da un registro TXT que tenés que ponerlo al lado de este en el TXT Value, ttl dejá como está: <span style="color:#ae81ff">300</span> <span style="color:#f92672">(</span>es la llave pública para saber que el correo vino de tu servidor, open dkim es una forma de evitar que pongas cualquier dirección en el from <span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>otro: host: _dmarc txt: v<span style="color:#f92672">=</span>DMARC1; p<span style="color:#f92672">=</span>reject; rua<span style="color:#f92672">=</span>mailto:dmarc@example.org; fo<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>En otro txt value: v<span style="color:#f92672">=</span>spf1 mx a: -all
+</span></span></code></pre></div><p><img src="/img/mail_server.png" alt="mails register"></p>
+<p>La mejor prueba que podés hacer es con gmail porque es el más delicado(quejoso)</p>
+<p>Abajo de todo el github de emailwiz hay un sitio en donde podés mandar un correo para probar la configuración</p>
+<p><a href="https://appmaildev.com/en/dkim">https://appmaildev.com/en/dkim</a> (te dirán si hay algo mal con tu dkim y podés ver si tu servidor está en una lista negra)</p>
+<h4 id="otra-cosa-que-tenés-que-hacer-es-desbloquear-tus-puertos">Otra cosa que tenés que hacer es desbloquear tus puertos.</h4>
+<p>Si querés tener un correo gráfico podés instalar: <a href="https://landchad.net/rainloop/">https://landchad.net/rainloop/</a>
+pero es mejor usar thunderbird o neomutt o android k9</p>
+<p>Para agregar usuarios: <code>useradd -m amanda -G mail</code></p>
+<p>Si querés agregar muchos dominios tenés que mirar los comandos que ejecuta el script que generarn el open dkim key y tenés que agregarlos al dns records de ese nombre de dominio</p>
+<h4 id="cómo-colectar-rebotes-en-postfix">Cómo colectar rebotes en postfix</h4>
+<p><a href="https://serverfault.com/questions/48326/how-to-collect-bounces-in-postfix">https://serverfault.com/questions/48326/how-to-collect-bounces-in-postfix</a></p>
+<p>La respuesta exacta a su pregunta (manejando la dirección <a href="mailto:rebote-xxx@example.com">rebote-xxx@example.com</a>) depende de cómo esté configurado su servidor para recibir correo. Si ejemplo.com es el dominio virtual, lo mejor que puede hacer es recopilar los mensajes en el buzón <a href="mailto:rebote@ejemplo.com">rebote@ejemplo.com</a> (asumiendo que destinatario_delimitador = -).</p>
+<p>Si ejemplo.com es el dominio entregado localmente para el servidor (el correo se entrega a cuentas reales del sistema), entonces puede agregar un archivo .forward al directorio de inicio del usuario de rebote, que lo entrega a un programa que analiza la información y los registros del rebote. en una base de datos o archivo. Consulte man local para obtener más información sobre el formato .forward y cómo realizar la entrega a un programa.</p>
+<p>Lo que hacemos, dado que enviamos mensajes para una gran cantidad de dominios, es usar rebotes.ejemplo.com como nuestro dominio VERP. Este dominio debe agregarse a Relay_domains. Cree /etc/postfix/transport_maps con este contenido:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>bounces.example.com             bulkbounce:
+</span></span></code></pre></div><p>Luego agregue una línea similar a esta en /etc/postfix/master.cf:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>bulkbounce   unix  -       n       n       -       -       pipe
+</span></span><span style="display:flex;"><span>  user<span style="color:#f92672">=</span>nobody argv<span style="color:#f92672">=</span>/usr/local/bin/bounce_handler.py <span style="color:#e6db74">${</span>recipient<span style="color:#e6db74">}</span>
+</span></span></code></pre></div><p>El script rebote_handler.py acepta la dirección VERP como opción de línea de comando, la analiza y realiza las actualizaciones necesarias de la base de datos para registrar el rebote.</p>
+<p><a href="https://www.upwork.com/freelance-jobs/apply/Robust-powerful-email-server_~021838340937149603064">https://www.upwork.com/freelance-jobs/apply/Robust-powerful-email-server_~021838340937149603064</a></p>
+
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+</footer>
+
+
+</body>
+</html>

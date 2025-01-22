@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/post/buffer_overflow_7/">
+  <meta property="og:site_name" content="Imlauer">
+  <meta property="og:title" content="Buffer overflow 7 (Ricardo navarja reversing)">
+  <meta property="og:description" content="Este es el código que me generó el IDA con mis modificaciones:
+int __cdecl check(char *Stream) { char savedregs; // [esp&#43;0h] [ebp&#43;0h] sprintf(Stream &#43; 220, &#34;Bieeeeeeeeeeeeeeeeeeeen ? con %s&#34;, Stream &#43; 4); if ( *(Stream &#43; 52) != &#39;E&#39; ) { printf(&#34;Mal camino \n&#34;, savedregs); exit(1); } if ( Stream[216] != 0xD ) *(Stream &#43; 54) = 2; printf(&#34;valor= %x\n&#34;, Stream[216]); printf(&#34;number= %x\n&#34;, Stream[204]); if ( *(Stream &#43; 53) == &#39;F&#39; ) printf(&#34;Aprobaste level 7&#34;, savedregs); else printf(&#34;Que pasa, %x \n&#34;, Stream[216] &#43; Stream[204]); return 0; } int main(int argc, const char **argv) { FILE *Stream; // [esp&#43;0h] [ebp-1A4h] BYREF char Buffer[200]; // [esp&#43;4h] [ebp-1A0h] BYREF int v6; // [esp&#43;CCh] [ebp-D8h] int v7; // [esp&#43;D0h] [ebp-D4h] int v8; // [esp&#43;D4h] [ebp-D0h] char Destination[200]; // [esp&#43;DCh] [ebp-C8h] BYREF v6 = 1; v8 = 1; v7 = 69; memset(Buffer, 0, sizeof(Buffer)); memset(Destination, 0, sizeof(Destination)); Stream = fopen(&#34;example.txt&#34;, &#34;rb&#34;); if ( !Stream ) { printf(&#34;No se puede leer el archivo bye bye \n&#34;, 0); exit(1); } fread(Buffer, 200*sizeof(char), 1*sizeof(char), Stream); // Acá se produce el bufferoverflow // Copiamos el contenido del Buffer a Destination. // strcpy copia hasta encontrar un caracter nulo (&#39;\0&#39;) strcpy(Destination, Buffer); if ( v6 != 1 ) { printf(&#34;Mal \n&#34;, (char)Stream); exit(1); } check((int)&amp;Stream); return 0; } Hasta 173 no se produce el buffer overflow. Los caracteres que agregamos luego de 173 caracteres pisan el return address.">
+  <meta property="og:locale" content="es_es">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="post">
+    <meta property="article:published_time" content="2024-08-20T23:49:30-03:00">
+    <meta property="article:modified_time" content="2024-08-20T23:49:30-03:00">
+    <meta property="article:tag" content="Ricardo">
+    <meta property="article:tag" content="Narvaja">
+    <meta property="article:tag" content="Cracking">
+    <meta property="article:tag" content="Reversing">
+    <meta property="article:tag" content="Examen">
+    <meta property="article:tag" content="Buffer">
+
+  
+  <meta itemprop="name" content="Buffer overflow 7 (Ricardo navarja reversing)">
+  <meta itemprop="description" content="Este es el código que me generó el IDA con mis modificaciones:
+int __cdecl check(char *Stream) { char savedregs; // [esp&#43;0h] [ebp&#43;0h] sprintf(Stream &#43; 220, &#34;Bieeeeeeeeeeeeeeeeeeeen ? con %s&#34;, Stream &#43; 4); if ( *(Stream &#43; 52) != &#39;E&#39; ) { printf(&#34;Mal camino \n&#34;, savedregs); exit(1); } if ( Stream[216] != 0xD ) *(Stream &#43; 54) = 2; printf(&#34;valor= %x\n&#34;, Stream[216]); printf(&#34;number= %x\n&#34;, Stream[204]); if ( *(Stream &#43; 53) == &#39;F&#39; ) printf(&#34;Aprobaste level 7&#34;, savedregs); else printf(&#34;Que pasa, %x \n&#34;, Stream[216] &#43; Stream[204]); return 0; } int main(int argc, const char **argv) { FILE *Stream; // [esp&#43;0h] [ebp-1A4h] BYREF char Buffer[200]; // [esp&#43;4h] [ebp-1A0h] BYREF int v6; // [esp&#43;CCh] [ebp-D8h] int v7; // [esp&#43;D0h] [ebp-D4h] int v8; // [esp&#43;D4h] [ebp-D0h] char Destination[200]; // [esp&#43;DCh] [ebp-C8h] BYREF v6 = 1; v8 = 1; v7 = 69; memset(Buffer, 0, sizeof(Buffer)); memset(Destination, 0, sizeof(Destination)); Stream = fopen(&#34;example.txt&#34;, &#34;rb&#34;); if ( !Stream ) { printf(&#34;No se puede leer el archivo bye bye \n&#34;, 0); exit(1); } fread(Buffer, 200*sizeof(char), 1*sizeof(char), Stream); // Acá se produce el bufferoverflow // Copiamos el contenido del Buffer a Destination. // strcpy copia hasta encontrar un caracter nulo (&#39;\0&#39;) strcpy(Destination, Buffer); if ( v6 != 1 ) { printf(&#34;Mal \n&#34;, (char)Stream); exit(1); } check((int)&amp;Stream); return 0; } Hasta 173 no se produce el buffer overflow. Los caracteres que agregamos luego de 173 caracteres pisan el return address.">
+  <meta itemprop="datePublished" content="2024-08-20T23:49:30-03:00">
+  <meta itemprop="dateModified" content="2024-08-20T23:49:30-03:00">
+  <meta itemprop="wordCount" content="533">
+  <meta itemprop="keywords" content="Ricardo,Narvaja,Cracking,Reversing,Examen,Buffer,Overflow,Ida">
+  
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Buffer overflow 7 (Ricardo navarja reversing)">
+  <meta name="twitter:description" content="Este es el código que me generó el IDA con mis modificaciones:
+int __cdecl check(char *Stream) { char savedregs; // [esp&#43;0h] [ebp&#43;0h] sprintf(Stream &#43; 220, &#34;Bieeeeeeeeeeeeeeeeeeeen ? con %s&#34;, Stream &#43; 4); if ( *(Stream &#43; 52) != &#39;E&#39; ) { printf(&#34;Mal camino \n&#34;, savedregs); exit(1); } if ( Stream[216] != 0xD ) *(Stream &#43; 54) = 2; printf(&#34;valor= %x\n&#34;, Stream[216]); printf(&#34;number= %x\n&#34;, Stream[204]); if ( *(Stream &#43; 53) == &#39;F&#39; ) printf(&#34;Aprobaste level 7&#34;, savedregs); else printf(&#34;Que pasa, %x \n&#34;, Stream[216] &#43; Stream[204]); return 0; } int main(int argc, const char **argv) { FILE *Stream; // [esp&#43;0h] [ebp-1A4h] BYREF char Buffer[200]; // [esp&#43;4h] [ebp-1A0h] BYREF int v6; // [esp&#43;CCh] [ebp-D8h] int v7; // [esp&#43;D0h] [ebp-D4h] int v8; // [esp&#43;D4h] [ebp-D0h] char Destination[200]; // [esp&#43;DCh] [ebp-C8h] BYREF v6 = 1; v8 = 1; v7 = 69; memset(Buffer, 0, sizeof(Buffer)); memset(Destination, 0, sizeof(Destination)); Stream = fopen(&#34;example.txt&#34;, &#34;rb&#34;); if ( !Stream ) { printf(&#34;No se puede leer el archivo bye bye \n&#34;, 0); exit(1); } fread(Buffer, 200*sizeof(char), 1*sizeof(char), Stream); // Acá se produce el bufferoverflow // Copiamos el contenido del Buffer a Destination. // strcpy copia hasta encontrar un caracter nulo (&#39;\0&#39;) strcpy(Destination, Buffer); if ( v6 != 1 ) { printf(&#34;Mal \n&#34;, (char)Stream); exit(1); } check((int)&amp;Stream); return 0; } Hasta 173 no se produce el buffer overflow. Los caracteres que agregamos luego de 173 caracteres pisan el return address.">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Buffer overflow 7 (Ricardo navarja reversing)
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/post/buffer_overflow_7/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="Este es el código que me generó el IDA con mis modificaciones:
+
+int __cdecl check(char *Stream)
+{
+  char savedregs; // [esp&#43;0h] [ebp&#43;0h]
+
+  sprintf(Stream &#43; 220, &#34;Bieeeeeeeeeeeeeeeeeeeen ? con %s&#34;, Stream &#43; 4);
+  if ( *(Stream &#43; 52) != &#39;E&#39; )
+  {
+    printf(&#34;Mal camino \n&#34;, savedregs);
+    exit(1);
+  }
+  if ( Stream[216] != 0xD )
+    *(Stream &#43; 54) = 2;
+  printf(&#34;valor= %x\n&#34;, Stream[216]);
+  printf(&#34;number= %x\n&#34;, Stream[204]);
+  if ( *(Stream &#43; 53) == &#39;F&#39; )
+    printf(&#34;Aprobaste level 7&#34;, savedregs);
+  else
+    printf(&#34;Que pasa, %x \n&#34;, Stream[216] &#43; Stream[204]);
+  return 0;
+}
+
+
+int main(int argc, const char **argv)
+{
+  FILE *Stream; // [esp&#43;0h] [ebp-1A4h] BYREF
+  char Buffer[200]; // [esp&#43;4h] [ebp-1A0h] BYREF
+  int v6; // [esp&#43;CCh] [ebp-D8h]
+  int v7; // [esp&#43;D0h] [ebp-D4h]
+  int v8; // [esp&#43;D4h] [ebp-D0h]
+  char Destination[200]; // [esp&#43;DCh] [ebp-C8h] BYREF
+
+  v6 = 1;
+  v8 = 1;
+  v7 = 69;
+  memset(Buffer, 0, sizeof(Buffer));
+  memset(Destination, 0, sizeof(Destination));
+  Stream = fopen(&#34;example.txt&#34;, &#34;rb&#34;);
+  if ( !Stream )
+  {
+    printf(&#34;No se puede leer el archivo bye bye \n&#34;, 0);
+    exit(1);
+  }
+  fread(Buffer, 200*sizeof(char), 1*sizeof(char), Stream);
+
+  // Acá se produce el bufferoverflow
+  // Copiamos el contenido del Buffer a Destination.
+  // strcpy copia hasta encontrar un caracter nulo (&#39;\0&#39;)
+  strcpy(Destination, Buffer);
+  if ( v6 != 1 )
+  {
+    printf(&#34;Mal \n&#34;, (char)Stream);
+    exit(1);
+  }
+  check((int)&amp;Stream);
+  return 0;
+}
+Hasta 173 no se produce el buffer overflow. Los caracteres que agregamos luego de 173 caracteres pisan el return address.">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Buffer overflow 7 (Ricardo navarja reversing)
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2024-08-20T23:49:30-03:00'>
+      August 20, 2024
+    </time>
+    
+    <br>
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/ricardo/">Ricardo</a>
+    
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/narvaja/">Narvaja</a>
+    
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/cracking/">Cracking</a>
+    
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/reversing/">Reversing</a>
+    
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/examen/">Examen</a>
+    
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/buffer/">Buffer</a>
+    
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/overflow/">Overflow</a>
+    
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/ida/">Ida</a>
+    
+    
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <p>Este es el código que me generó el IDA con mis modificaciones:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#66d9ef">__cdecl</span> <span style="color:#a6e22e">check</span>(<span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>Stream)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">char</span> savedregs; <span style="color:#75715e">// [esp+0h] [ebp+0h]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">sprintf</span>(Stream <span style="color:#f92672">+</span> <span style="color:#ae81ff">220</span>, <span style="color:#e6db74">&#34;Bieeeeeeeeeeeeeeeeeeeen ? con %s&#34;</span>, Stream <span style="color:#f92672">+</span> <span style="color:#ae81ff">4</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> ( <span style="color:#f92672">*</span>(Stream <span style="color:#f92672">+</span> <span style="color:#ae81ff">52</span>) <span style="color:#f92672">!=</span> <span style="color:#e6db74">&#39;E&#39;</span> )
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;Mal camino </span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, savedregs);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">exit</span>(<span style="color:#ae81ff">1</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> ( Stream[<span style="color:#ae81ff">216</span>] <span style="color:#f92672">!=</span> <span style="color:#ae81ff">0xD</span> )
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">*</span>(Stream <span style="color:#f92672">+</span> <span style="color:#ae81ff">54</span>) <span style="color:#f92672">=</span> <span style="color:#ae81ff">2</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;valor= %x</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, Stream[<span style="color:#ae81ff">216</span>]);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;number= %x</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, Stream[<span style="color:#ae81ff">204</span>]);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> ( <span style="color:#f92672">*</span>(Stream <span style="color:#f92672">+</span> <span style="color:#ae81ff">53</span>) <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;F&#39;</span> )
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;Aprobaste level 7&#34;</span>, savedregs);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;Que pasa, %x </span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, Stream[<span style="color:#ae81ff">216</span>] <span style="color:#f92672">+</span> Stream[<span style="color:#ae81ff">204</span>]);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>(<span style="color:#66d9ef">int</span> argc, <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">**</span>argv)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  FILE <span style="color:#f92672">*</span>Stream; <span style="color:#75715e">// [esp+0h] [ebp-1A4h] BYREF
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">char</span> Buffer[<span style="color:#ae81ff">200</span>]; <span style="color:#75715e">// [esp+4h] [ebp-1A0h] BYREF
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">int</span> v6; <span style="color:#75715e">// [esp+CCh] [ebp-D8h]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">int</span> v7; <span style="color:#75715e">// [esp+D0h] [ebp-D4h]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">int</span> v8; <span style="color:#75715e">// [esp+D4h] [ebp-D0h]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">char</span> Destination[<span style="color:#ae81ff">200</span>]; <span style="color:#75715e">// [esp+DCh] [ebp-C8h] BYREF
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>  v6 <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  v8 <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  v7 <span style="color:#f92672">=</span> <span style="color:#ae81ff">69</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">memset</span>(Buffer, <span style="color:#ae81ff">0</span>, <span style="color:#66d9ef">sizeof</span>(Buffer));
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">memset</span>(Destination, <span style="color:#ae81ff">0</span>, <span style="color:#66d9ef">sizeof</span>(Destination));
+</span></span><span style="display:flex;"><span>  Stream <span style="color:#f92672">=</span> <span style="color:#a6e22e">fopen</span>(<span style="color:#e6db74">&#34;example.txt&#34;</span>, <span style="color:#e6db74">&#34;rb&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> ( <span style="color:#f92672">!</span>Stream )
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;No se puede leer el archivo bye bye </span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, <span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">exit</span>(<span style="color:#ae81ff">1</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">fread</span>(Buffer, <span style="color:#ae81ff">200</span><span style="color:#f92672">*</span><span style="color:#66d9ef">sizeof</span>(<span style="color:#66d9ef">char</span>), <span style="color:#ae81ff">1</span><span style="color:#f92672">*</span><span style="color:#66d9ef">sizeof</span>(<span style="color:#66d9ef">char</span>), Stream);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// Acá se produce el bufferoverflow
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#75715e">// Copiamos el contenido del Buffer a Destination.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#75715e">// strcpy copia hasta encontrar un caracter nulo (&#39;\0&#39;)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">strcpy</span>(Destination, Buffer);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> ( v6 <span style="color:#f92672">!=</span> <span style="color:#ae81ff">1</span> )
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;Mal </span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, (<span style="color:#66d9ef">char</span>)Stream);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">exit</span>(<span style="color:#ae81ff">1</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">check</span>((<span style="color:#66d9ef">int</span>)<span style="color:#f92672">&amp;</span>Stream);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Hasta 173 no se produce el buffer overflow. Los caracteres que agregamos luego de 173 caracteres pisan el <code>return address</code>.</p>
+<p>Para hacer una prueba al pisar el return address le puse la dirección del printf que decía <code>&quot;No se puede leer el archivo bye bye \n&quot;</code> que estaba en la dirección <code>0x401215</code> con el siguiente exploit:</p>
+<pre tabindex="0"><code>00000000: 4141 4141 4141 4141 4141 4141 4141 4141  AAAAAAAAAAAAAAAA
+00000010: 4141 4141 4141 4141 4141 4141 4141 4141  AAAAAAAAAAAAAAAA
+00000020: 4141 4141 4141 4141 4141 4141 4141 4141  AAAAAAAAAAAAAAAA
+00000030: 4141 4141 4141 4141 4141 4141 4141 4141  AAAAAAAAAAAAAAAA
+00000040: 4141 4141 4141 4141 4141 4141 4141 4141  AAAAAAAAAAAAAAAA
+00000050: 4141 4141 4141 4141 4141 4141 4141 4141  AAAAAAAAAAAAAAAA
+00000060: 4141 4141 4141 4141 4141 4141 4141 4141  AAAAAAAAAAAAAAAA
+00000070: 4141 4141 4141 4141 4141 4141 4141 4141  AAAAAAAAAAAAAAAA
+00000080: 4141 4141 4141 4141 4141 4141 4141 4141  AAAAAAAAAAAAAAAA
+00000090: 4141 4141 4141 4141 4141 4141 4141 4141  AAAAAAAAAAAAAAAA
+000000a0: 4141 4141 4141 4141 4141 4141 4141 1512  AAAAAAAAAAAAAA..
+000000b0: 4000                                     @.
+</code></pre><p>Pisamos el return address con la dirección en donde dice &ldquo;Aprobaste level 7&rdquo; que se puede ubicar en el gráfico de IDA apretando el icono del lapiz en el dialogo en mi caso era la dirección: <code>0x4010AA</code> pasado a little indian: <code>aa1040</code>.</p>
+<h4 id="exploit">exploit</h4>
+<pre tabindex="0"><code>00000000: 4141 4141 4141 4141 4141 4141 4141 4141  AAAAAAAAAAAAAAAA
+00000010: 4141 4141 4141 4141 4141 4141 4141 4141  AAAAAAAAAAAAAAAA
+00000020: 4141 4141 4141 4141 4141 4141 4141 4141  AAAAAAAAAAAAAAAA
+00000030: 4141 4141 4141 4141 4141 4141 4141 4141  AAAAAAAAAAAAAAAA
+00000040: 4141 4141 4141 4141 4141 4141 4141 4141  AAAAAAAAAAAAAAAA
+00000050: 4141 4141 4141 4141 4141 4141 4141 4141  AAAAAAAAAAAAAAAA
+00000060: 4141 4141 4141 4141 4141 4141 4141 4141  AAAAAAAAAAAAAAAA
+00000070: 4141 4141 4141 4141 4141 4141 4141 4141  AAAAAAAAAAAAAAAA
+00000080: 4141 4141 4141 4141 4141 4141 4141 4141  AAAAAAAAAAAAAAAA
+00000090: 4141 4141 4141 4141 4141 4141 4141 4141  AAAAAAAAAAAAAAAA
+000000a0: 4141 4141 4141 4141 4141 4141 4141 aa10  AAAAAAAAAAAAAA..
+000000b0: 40                                       @
+</code></pre>
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+</footer>
+
+
+</body>
+</html>
