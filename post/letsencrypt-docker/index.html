@@ -51,28 +51,9 @@ Usando systemd: Creá un archivo en /etc/systemd/system/docker-compose-app.servi
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="referrer" content="no-referrer">
   <meta name="author" content="Imlauer.">
-  <meta name="description" content="Configurar que el servicio de docker inicie automáticamente en caso de caída o reseteo por mantenimiento
-https://stackoverflow.com/questions/43671482/how-to-run-docker-compose-up-d-at-system-start-up
-Usando systemd:
-Creá un archivo en /etc/systemd/system/docker-compose-app.service con el siguiente contenido:
-# /etc/systemd/system/docker-compose-app.service
-
-[Unit]
-Description=Docker Compose Application Service
-Requires=docker.service
-After=docker.service
-
-[Service]
-Type=oneshot
-RemainAfterExit=yes
-WorkingDirectory=/home/test/docker
-ExecStart=/usr/bin/docker compose up -d
-ExecStop=/usr/bin/docker compose down
-TimeoutStartSec=0
-
-[Install]
-WantedBy=multi-user.target
-Cambie el parámetro WorkingDirectory con la ruta de su proyecto docker. Y habilite el servicio para que se inicie automáticamente:">
+  <meta name="description" content="Configurar que el servicio de docker inicie automáticamente en caso de caída o reseteo por mantenimiento https://stackoverflow.com/questions/43671482/how-to-run-docker-compose-up-d-at-system-start-up
+Usando systemd: Creá un archivo en /etc/systemd/system/docker-compose-app.service con el siguiente contenido:
+# /etc/systemd/system/docker-compose-app.service [Unit] Description=Docker Compose Application Service Requires=docker.service After=docker.service [Service] Type=oneshot RemainAfterExit=yes WorkingDirectory=/home/test/docker ExecStart=/usr/bin/docker compose up -d ExecStop=/usr/bin/docker compose down TimeoutStartSec=0 [Install] WantedBy=multi-user.target Cambie el parámetro WorkingDirectory con la ruta de su proyecto docker. Y habilite el servicio para que se inicie automáticamente:">
 </head>
 <body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
   <div class="navbar-brand">
@@ -166,11 +147,14 @@ Eso se hace con el siguiente comando:</p>
 </span></span><span style="display:flex;"><span>sudo certbot certonly --standalone --preferred-challenges http -d example.com
 </span></span></code></pre></div><p><a href="https://www.digitalocean.com/community/tutorials/how-to-use-certbot-standalone-mode-to-retrieve-let-s-encrypt-ssl-certificates-on-ubuntu-16-04">https://www.digitalocean.com/community/tutorials/how-to-use-certbot-standalone-mode-to-retrieve-let-s-encrypt-ssl-certificates-on-ubuntu-16-04</a></p>
 <blockquote>
-<p>Los certificados de Let&rsquo;s Encrypt solo son válidos por noventa días. Esto es para alentar a los usuarios a automatizar su proceso de renovación de certificados. El paquete certbot que instalamos se encarga de esto agregando un script de renovación a /etc/cron.d. Este script se ejecuta dos veces al día y renovará cualquier certificado que se encuentre dentro de los treinta días posteriores a su vencimiento.</p></blockquote>
+<p>Los certificados de Let&rsquo;s Encrypt solo son válidos por noventa días. Esto es para alentar a los usuarios a automatizar su proceso de renovación de certificados. El paquete certbot que instalamos se encarga de esto agregando un script de renovación a /etc/cron.d. Este script se ejecuta dos veces al día y renovará cualquier certificado que se encuentre dentro de los treinta días posteriores a su vencimiento.</p>
+</blockquote>
 <blockquote>
-<p>Dado que nuestros certificados se renuevan automáticamente, todavía necesitamos una forma de ejecutar otras tareas después de una renovación. Necesitamos al menos reiniciar o recargar nuestro servidor para recoger los nuevos certificados y, como se mencionó en el Paso 3, es posible que necesitemos manipular los archivos de certificados de alguna manera para que funcionen con el software que estamos usando. Este es el propósito de la opción renew_hook de Certbot.</p></blockquote>
+<p>Dado que nuestros certificados se renuevan automáticamente, todavía necesitamos una forma de ejecutar otras tareas después de una renovación. Necesitamos al menos reiniciar o recargar nuestro servidor para recoger los nuevos certificados y, como se mencionó en el Paso 3, es posible que necesitemos manipular los archivos de certificados de alguna manera para que funcionen con el software que estamos usando. Este es el propósito de la opción renew_hook de Certbot.</p>
+</blockquote>
 <blockquote>
-<p>Para agregar un renew_hook, actualizamos el archivo de configuración de renovación de Certbot. Certbot recuerda todos los detalles de cómo obtuvo el certificado por primera vez y se ejecutará con las mismas opciones al renovarlo. Sólo necesitamos agregar nuestro gancho. Abra el archivo de configuración con su editor favorito:</p></blockquote>
+<p>Para agregar un renew_hook, actualizamos el archivo de configuración de renovación de Certbot. Certbot recuerda todos los detalles de cómo obtuvo el certificado por primera vez y se ejecutará con las mismas opciones al renovarlo. Sólo necesitamos agregar nuestro gancho. Abra el archivo de configuración con su editor favorito:</p>
+</blockquote>
 <p><a href="https://pentacent.medium.com/nginx-and-lets-encrypt-with-docker-in-less-than-5-minutes-b4b8a60d3a71">https://pentacent.medium.com/nginx-and-lets-encrypt-with-docker-in-less-than-5-minutes-b4b8a60d3a71</a></p>
 <h5 id="luego-de-que-se-renueva-el-certificado-automáticamente-hay-que-reiniciar-el-servidor-apache-para-que-cargue-el-nuevo-certificado-para-ello-usaremos-renew-hooks">Luego de que se renueva el certificado automáticamente hay que reiniciar el servidor Apache para que cargue el nuevo certificado para ello usaremos renew-hooks</h5>
 <h2 id="una-forma-de-hacerlo-la-segunda-es-mejor">Una forma de hacerlo (la segunda es mejor)</h2>
