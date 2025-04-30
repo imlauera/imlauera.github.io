@@ -34,7 +34,7 @@ Explicación de por qué gpt:
 To boot MBR under UEFI, you need CSM. Intel pushed for its removal years ago, so it’s unlikely to find it in anything modern. Es recomendable para UEFI con hdd mayores a 2teras, dos también funciona con UEFI pero para bootear un disco duro con MBR(dos) desde UEFI se usa CSM que es algo viejo deprecado por intel). En MBR(DOS) no podés tener una partición de 3 teras. GPT es el futuro. UEFI Firware necesita GPT.">
   <meta itemprop="datePublished" content="2023-11-22T02:05:50-03:00">
   <meta itemprop="dateModified" content="2023-11-22T02:05:50-03:00">
-  <meta itemprop="wordCount" content="4067">
+  <meta itemprop="wordCount" content="4071">
   <meta itemprop="keywords" content="Archlinux,Full,Installation">
   
   <meta name="twitter:card" content="summary">
@@ -210,19 +210,21 @@ Es recomendable para UEFI con hdd mayores a 2teras, dos también funciona con UE
 </span></span><span style="display:flex;"><span>127.0.0.1       arch.localdomain	arch
 </span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>passwd <span style="color:#75715e"># cambiar la clave del root</span>
 </span></span><span style="display:flex;"><span>pacman -S grub networkmanager alsa-utils 
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">```</span>bash
 </span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>pacman -S pipewire pipewire-pulse tmux fastfetch os-prober sudo fish sway wmenu foot alsa-utils mpv imagemagick translate-shell git hugo python-pip wl-clipboard grim btop feh yt-dlp neomutt firefox irssi w3m samba obs-studio gimp qt6-wayland
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>systemctl enable NetworkManager
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>pacman -S wpa_supplicant wireless_tools netctl  <span style="color:#75715e"># no necesario, con networkmanager te basta. Opcional </span>
-</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pacman -S dosfstools mtools <span style="color:#75715e"># particiones fat</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e">#### uefi(gpt)</span>
-</span></span><span style="display:flex;"><span>pacman -S efibootmgr 
-</span></span><span style="display:flex;"><span>grub-install --target<span style="color:#f92672">=</span>x86_64-efi --bootloader-id<span style="color:#f92672">=</span>grub_uefi --efi-directory<span style="color:#f92672">=</span>/boot --recheck
-</span></span></code></pre></div><h2 id="ojo">OJO!!</h2>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">##### Fonts</span>
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">```</span>bash
+</span></span><span style="display:flex;"><span>sudo pacman -S noto-fonts noto-fonts-cjk noto-fonts-emoji noto-fonts-extra
+</span></span></code></pre></div><p>pacman -S pipewire pipewire-pulse tmux fastfetch os-prober sudo fish sway wmenu foot alsa-utils mpv imagemagick translate-shell git hugo python-pip wl-clipboard grim btop feh yt-dlp neomutt firefox irssi w3m samba obs-studio gimp qt6-wayland</p>
+<p>systemctl enable NetworkManager</p>
+<p>pacman -S wpa_supplicant wireless_tools netctl  # no necesario, con networkmanager te basta. Opcional</p>
+<pre tabindex="0"><code>```bash
+pacman -S dosfstools mtools # particiones fat
+
+#### uefi(gpt)
+pacman -S efibootmgr 
+grub-install --target=x86_64-efi --bootloader-id=grub_uefi --efi-directory=/boot --recheck
+</code></pre><h2 id="ojo">OJO!!</h2>
 <p>En algunos UEFI frameworks con fallas tenes que instalar el grub usando el parámetro <code>--removable</code> para instalar el bootloader a la ubicación de respaldo &ldquo;fallback&rdquo; porque sino se borra sólo la entrada del efi.</p>
 <p><a href="https://bbs.archlinux.org/viewtopic.php?id=250928">https://bbs.archlinux.org/viewtopic.php?id=250928</a></p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo grub-install --target<span style="color:#f92672">=</span>x86_64-efi --efi-directory<span style="color:#f92672">=</span>/boot --removable
@@ -307,9 +309,7 @@ Tenés que ubicar el efi y ejecutarlo</p>
 </span></span><span style="display:flex;"><span>$endif
 </span></span></code></pre></div><p>Luego guardá y ejecutá startx, done.</p>
 <p>Esta instalación que encontré es ligeramente diferente: <a href="https://www.geeksforgeeks.org/arch-linux-installation-and-configuration-on-uefi-machines/">https://www.geeksforgeeks.org/arch-linux-installation-and-configuration-on-uefi-machines/</a></p>
-<h4 id="fonts">Fonts</h4>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo pacman -S noto-fonts noto-fonts-cjk noto-fonts-emoji noto-fonts-extra
-</span></span></code></pre></div><h3 id="instalar-dwm-st-dvtm-dwmstatus">Instalar dwm, st, dvtm, dwmstatus</h3>
+<h3 id="instalar-dwm-st-dvtm-dwmstatus">Instalar dwm, st, dvtm, dwmstatus</h3>
 <p>Instalar las dependencias de dwm sin bloat</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo pacman -S xorg-server xorg-xinit libx11 libxinerama libxft webkit2gtk
 </span></span></code></pre></div><p><a href="https://wiki.archlinux.org/title/dwm">https://wiki.archlinux.org/title/dwm</a>
