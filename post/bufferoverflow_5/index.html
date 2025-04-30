@@ -10,7 +10,7 @@
   <meta property="og:site_name" content="Imlauer">
   <meta property="og:title" content="Buffer overflow exámen 5 (Ricardo Narvaja Reversing)">
   <meta property="og:description" content="Lo que el decompilador de IDA me generó con algunas modificaciones.
-int check(char *buffer) { // Copia el buffer a partir de la posición 216 al comienzo del buffer a partir de la posición 4. // 11 caracteres insertando al buffer // 4&#43;4&#43;11 = 19 char savedregs; // 199 -4 &#43; 11 sprintf(&amp;buffer[4], &#34;Bien ? con %s&#34;, buffer &#43; 216); // 52-19 = 33 // La posición 33 del archivo example.">
+int check(char *buffer) { // Copia el buffer a partir de la posición 216 al comienzo del buffer a partir de la posición 4. // 11 caracteres insertando al buffer // 4&#43;4&#43;11 = 19 char savedregs; // 199 -4 &#43; 11 sprintf(&amp;buffer[4], &#34;Bien ? con %s&#34;, buffer &#43; 216); // 52-19 = 33 // La posición 33 del archivo example.txt tiene que ser igual a el hexadecimal 45 (&#39;E&#39;). if ( buffer[52] != 0x45 ) { printf(&#34;Mal camino \n&#34;); exit(1); } if ( buffer[0] != 0xD ) buffer[0] = 2; printf(&#34;valor= %x\n&#34;, buffer[0]); printf(&#34;number= %x\n&#34;, buffer[204]); // 51-19 = 32 // La posición 32 del archivo example.txt tiene que ser igual a el hexadecimal 44. if ( 2 &#43; buffer[51] != 0x46 ) { printf(&#34;Noooo, %x \n&#34;, buffer[0] &#43; buffer[204]); exit(1); } printf(&#34;Aprobaste level 5&#34;); getchar(); return 0; } int main(int argc, const char **argv) { char *buffer = malloc(416*sizeof(char)); buffer[51] = 1; buffer[52] = &#39;E&#39;; // Inicializa el buffer memset(&amp;buffer[216], 0, 200*sizeof(char)); memset(&amp;buffer[4], 0, 200*sizeof(char)); buffer[53] = fopen(&#34;example.txt&#34;, &#34;rb&#34;); if ( !buffer[53] ) { printf(&#34;No se puede leer el archivo bye bye \n&#34;); exit(1); } // Carga a partir de la posición 216 el contenido del archivo. // 216-53 = 163 // 216&#43;163 = 379 // 416-216 = 200 fread(&amp;buffer[216], 200*sizeof(char), 1*sizeof(char), buffer[53]); // Copia el buffer a partir de la posición 216 al comienzo del buffer a partir de la posición 4 strcpy(&amp;buffer[4], &amp;buffer[216]); // El carácter de la posición 47 del texto example.txt tiene que ser igual 1 if ( buffer[51] != 1 ) { printf(&#34;Mal \n&#34;, buffer); exit(1); } check(buffer); return 0; } Primero pasamos el primer if. Agregamos las 4 As al comienzo para saber cual es la posición 51, hasta 190 caracteres.">
   <meta property="og:locale" content="es_es">
   <meta property="og:type" content="article">
     <meta property="article:section" content="post">
@@ -26,7 +26,7 @@ int check(char *buffer) { // Copia el buffer a partir de la posición 216 al com
   
   <meta itemprop="name" content="Buffer overflow exámen 5 (Ricardo Narvaja Reversing)">
   <meta itemprop="description" content="Lo que el decompilador de IDA me generó con algunas modificaciones.
-int check(char *buffer) { // Copia el buffer a partir de la posición 216 al comienzo del buffer a partir de la posición 4. // 11 caracteres insertando al buffer // 4&#43;4&#43;11 = 19 char savedregs; // 199 -4 &#43; 11 sprintf(&amp;buffer[4], &#34;Bien ? con %s&#34;, buffer &#43; 216); // 52-19 = 33 // La posición 33 del archivo example.">
+int check(char *buffer) { // Copia el buffer a partir de la posición 216 al comienzo del buffer a partir de la posición 4. // 11 caracteres insertando al buffer // 4&#43;4&#43;11 = 19 char savedregs; // 199 -4 &#43; 11 sprintf(&amp;buffer[4], &#34;Bien ? con %s&#34;, buffer &#43; 216); // 52-19 = 33 // La posición 33 del archivo example.txt tiene que ser igual a el hexadecimal 45 (&#39;E&#39;). if ( buffer[52] != 0x45 ) { printf(&#34;Mal camino \n&#34;); exit(1); } if ( buffer[0] != 0xD ) buffer[0] = 2; printf(&#34;valor= %x\n&#34;, buffer[0]); printf(&#34;number= %x\n&#34;, buffer[204]); // 51-19 = 32 // La posición 32 del archivo example.txt tiene que ser igual a el hexadecimal 44. if ( 2 &#43; buffer[51] != 0x46 ) { printf(&#34;Noooo, %x \n&#34;, buffer[0] &#43; buffer[204]); exit(1); } printf(&#34;Aprobaste level 5&#34;); getchar(); return 0; } int main(int argc, const char **argv) { char *buffer = malloc(416*sizeof(char)); buffer[51] = 1; buffer[52] = &#39;E&#39;; // Inicializa el buffer memset(&amp;buffer[216], 0, 200*sizeof(char)); memset(&amp;buffer[4], 0, 200*sizeof(char)); buffer[53] = fopen(&#34;example.txt&#34;, &#34;rb&#34;); if ( !buffer[53] ) { printf(&#34;No se puede leer el archivo bye bye \n&#34;); exit(1); } // Carga a partir de la posición 216 el contenido del archivo. // 216-53 = 163 // 216&#43;163 = 379 // 416-216 = 200 fread(&amp;buffer[216], 200*sizeof(char), 1*sizeof(char), buffer[53]); // Copia el buffer a partir de la posición 216 al comienzo del buffer a partir de la posición 4 strcpy(&amp;buffer[4], &amp;buffer[216]); // El carácter de la posición 47 del texto example.txt tiene que ser igual 1 if ( buffer[51] != 1 ) { printf(&#34;Mal \n&#34;, buffer); exit(1); } check(buffer); return 0; } Primero pasamos el primer if. Agregamos las 4 As al comienzo para saber cual es la posición 51, hasta 190 caracteres.">
   <meta itemprop="datePublished" content="2024-08-07T18:31:16-03:00">
   <meta itemprop="dateModified" content="2024-08-07T18:31:16-03:00">
   <meta itemprop="wordCount" content="444">
@@ -35,7 +35,7 @@ int check(char *buffer) { // Copia el buffer a partir de la posición 216 al com
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="Buffer overflow exámen 5 (Ricardo Narvaja Reversing)">
   <meta name="twitter:description" content="Lo que el decompilador de IDA me generó con algunas modificaciones.
-int check(char *buffer) { // Copia el buffer a partir de la posición 216 al comienzo del buffer a partir de la posición 4. // 11 caracteres insertando al buffer // 4&#43;4&#43;11 = 19 char savedregs; // 199 -4 &#43; 11 sprintf(&amp;buffer[4], &#34;Bien ? con %s&#34;, buffer &#43; 216); // 52-19 = 33 // La posición 33 del archivo example.">
+int check(char *buffer) { // Copia el buffer a partir de la posición 216 al comienzo del buffer a partir de la posición 4. // 11 caracteres insertando al buffer // 4&#43;4&#43;11 = 19 char savedregs; // 199 -4 &#43; 11 sprintf(&amp;buffer[4], &#34;Bien ? con %s&#34;, buffer &#43; 216); // 52-19 = 33 // La posición 33 del archivo example.txt tiene que ser igual a el hexadecimal 45 (&#39;E&#39;). if ( buffer[52] != 0x45 ) { printf(&#34;Mal camino \n&#34;); exit(1); } if ( buffer[0] != 0xD ) buffer[0] = 2; printf(&#34;valor= %x\n&#34;, buffer[0]); printf(&#34;number= %x\n&#34;, buffer[204]); // 51-19 = 32 // La posición 32 del archivo example.txt tiene que ser igual a el hexadecimal 44. if ( 2 &#43; buffer[51] != 0x46 ) { printf(&#34;Noooo, %x \n&#34;, buffer[0] &#43; buffer[204]); exit(1); } printf(&#34;Aprobaste level 5&#34;); getchar(); return 0; } int main(int argc, const char **argv) { char *buffer = malloc(416*sizeof(char)); buffer[51] = 1; buffer[52] = &#39;E&#39;; // Inicializa el buffer memset(&amp;buffer[216], 0, 200*sizeof(char)); memset(&amp;buffer[4], 0, 200*sizeof(char)); buffer[53] = fopen(&#34;example.txt&#34;, &#34;rb&#34;); if ( !buffer[53] ) { printf(&#34;No se puede leer el archivo bye bye \n&#34;); exit(1); } // Carga a partir de la posición 216 el contenido del archivo. // 216-53 = 163 // 216&#43;163 = 379 // 416-216 = 200 fread(&amp;buffer[216], 200*sizeof(char), 1*sizeof(char), buffer[53]); // Copia el buffer a partir de la posición 216 al comienzo del buffer a partir de la posición 4 strcpy(&amp;buffer[4], &amp;buffer[216]); // El carácter de la posición 47 del texto example.txt tiene que ser igual 1 if ( buffer[51] != 1 ) { printf(&#34;Mal \n&#34;, buffer); exit(1); } check(buffer); return 0; } Primero pasamos el primer if. Agregamos las 4 As al comienzo para saber cual es la posición 51, hasta 190 caracteres.">
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -54,7 +54,81 @@ int check(char *buffer) { // Copia el buffer a partir de la posición 216 al com
   <meta name="referrer" content="no-referrer">
   <meta name="author" content="Imlauer.">
   <meta name="description" content="Lo que el decompilador de IDA me generó con algunas modificaciones.
-int check(char *buffer) { // Copia el buffer a partir de la posición 216 al comienzo del buffer a partir de la posición 4. // 11 caracteres insertando al buffer // 4&#43;4&#43;11 = 19 char savedregs; // 199 -4 &#43; 11 sprintf(&amp;buffer[4], &#34;Bien ? con %s&#34;, buffer &#43; 216); // 52-19 = 33 // La posición 33 del archivo example.">
+int check(char *buffer)
+{
+  // Copia el buffer a partir de la posición 216 al comienzo del buffer a partir de la posición 4.
+  // 11 caracteres insertando al buffer
+  // 4&#43;4&#43;11 = 19
+  char savedregs; 
+  
+  // 199 -4 &#43; 11
+  sprintf(&amp;buffer[4], &#34;Bien ? con %s&#34;, buffer &#43; 216);
+
+  // 52-19 = 33
+  // La posición 33 del archivo example.txt tiene que ser igual a el hexadecimal 45 (&#39;E&#39;).
+  if ( buffer[52] != 0x45 )
+  {
+    printf(&#34;Mal camino \n&#34;);
+    exit(1);
+  }
+  if ( buffer[0] != 0xD )
+    buffer[0] = 2;
+
+  printf(&#34;valor= %x\n&#34;, buffer[0]);
+  printf(&#34;number= %x\n&#34;, buffer[204]);
+
+  // 51-19 = 32
+  // La posición 32 del archivo example.txt tiene que ser igual a el hexadecimal 44.
+  if ( 2 &#43; buffer[51] != 0x46 )
+  {
+    printf(&#34;Noooo, %x \n&#34;, buffer[0] &#43; buffer[204]);
+    exit(1);
+  }
+  printf(&#34;Aprobaste level 5&#34;);
+  getchar();
+  return 0;
+}
+
+int main(int argc, const char **argv)
+{
+  char *buffer = malloc(416*sizeof(char));
+
+  buffer[51] = 1;
+  buffer[52] = &#39;E&#39;;
+
+  // Inicializa el buffer
+  memset(&amp;buffer[216], 0, 200*sizeof(char));
+  memset(&amp;buffer[4], 0, 200*sizeof(char));
+
+  buffer[53] = fopen(&#34;example.txt&#34;, &#34;rb&#34;);
+
+  if ( !buffer[53] )
+  {
+    printf(&#34;No se puede leer el archivo bye bye \n&#34;);
+    exit(1);
+  }
+
+  // Carga a partir de la posición 216 el contenido del archivo.
+  // 216-53 = 163
+  // 216&#43;163 = 379
+  // 416-216 = 200
+  fread(&amp;buffer[216], 200*sizeof(char), 1*sizeof(char), buffer[53]);
+
+  // Copia el buffer a partir de la posición 216 al comienzo del buffer a partir de la posición 4
+
+  strcpy(&amp;buffer[4], &amp;buffer[216]);
+
+  // El carácter de la posición 47 del texto example.txt tiene que ser igual 1
+  if ( buffer[51] != 1 )
+  {
+    printf(&#34;Mal \n&#34;, buffer);
+    exit(1);
+  }
+  check(buffer);
+  return 0;
+}
+Primero pasamos el primer if.
+Agregamos las 4 As al comienzo para saber cual es la posición 51, hasta 190 caracteres.">
 </head>
 <body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
   <div class="navbar-brand">

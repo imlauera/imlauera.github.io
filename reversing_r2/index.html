@@ -11,7 +11,8 @@
   <meta property="og:title" content="Reversing con radare">
   <meta property="og:description" content="r2 /bin/ls aaa # analiza el binario afl # Lista las funciones s main # selecciona una función # decompila pdf # asm pdd # r2ai pdg # ghidra Ejemplo:
 // gcc bucle.c -o bucle #include &lt;stdio.h&gt; int main(){ for (int i = 0; i &lt; 100; i&#43;&#43;) printf(&#34;i: %d\n&#34;,i); return 0; } Analizamos el binario con radare:
-r2 bucle aaa afl s main pdf Este es el código ASM generado por radare:">
+r2 bucle aaa afl s main pdf Este es el código ASM generado por radare:
+; DATA XREF from entry0 @ 0x1058(r) ┌ 59: int main (int argc, char **argv, char **envp); │ afv: vars(1:sp[0xc..0xc]) │ 0x00001139 55 push rbp ; Inicializa la pila │ 0x0000113a 4889e5 mov rbp, rsp ; Carga rsp a la base de la pila (rbp). │ 0x0000113d 4883ec10 sub rsp, 0x10 ; 0x10 = 16 en hexadecimal. Crea 16 bits de espacio para las variables. │ 0x00001141 c745fc0000.. mov dword [var_4h], 0 ; Mueve 0 a var_4h │ ┌─&lt; 0x00001148 eb1d jmp 0x1167 ; Salta a la dirección 0x1167 │ │ ; CODE XREF from main @ 0x116b(x) │ ┌──&gt; 0x0000114a 8b45fc mov eax, dword [var_4h] ; Mueve el contenido de var_4h a eax │ ■│ 0x0000114d 89c6 mov esi, eax ; Mueve el eax a esi │ ■│ 0x0000114f 488d05ae0e.. lea rax, str.i:__d_n ; 0x2004 ; &#34;i: %d\n&#34; ; Mueve la string a rax │ ■│ 0x00001156 4889c7 mov rdi, rax ; const char *format - carga el rax a rdi │ ■│ 0x00001159 b800000000 mov eax, 0 ; carga 0 al eax │ ■│ 0x0000115e e8cdfeffff call sym.imp.printf ; int printf(const char *format) - llama a printf │ ■│ 0x00001163 8345fc01 add dword [var_4h], 1 ; suma 1 al contenido de var_4h │ ■│ ; CODE XREF from main @ 0x1148(x) │ ■└─&gt; 0x00001167 837dfc63 cmp dword [var_4h], 0x63 ; &#39;c&#39; - Compara contenido 0x63 = 99 en hexadecimal con el contenido de var_4h que es inicializado en 0. │ └──&lt; 0x0000116b 7edd jle 0x114a ; Salta si el contenido de var_4h es menor a 99. │ 0x0000116d b800000000 mov eax, 0 # Mueve el 0 al eax. │ 0x00001172 c9 leave └ 0x00001173 c3 ret Otro código en C:">
   <meta property="og:locale" content="es_es">
   <meta property="og:type" content="article">
     <meta property="article:published_time" content="2024-11-11T14:40:37-03:00">
@@ -22,7 +23,8 @@ r2 bucle aaa afl s main pdf Este es el código ASM generado por radare:">
   <meta itemprop="name" content="Reversing con radare">
   <meta itemprop="description" content="r2 /bin/ls aaa # analiza el binario afl # Lista las funciones s main # selecciona una función # decompila pdf # asm pdd # r2ai pdg # ghidra Ejemplo:
 // gcc bucle.c -o bucle #include &lt;stdio.h&gt; int main(){ for (int i = 0; i &lt; 100; i&#43;&#43;) printf(&#34;i: %d\n&#34;,i); return 0; } Analizamos el binario con radare:
-r2 bucle aaa afl s main pdf Este es el código ASM generado por radare:">
+r2 bucle aaa afl s main pdf Este es el código ASM generado por radare:
+; DATA XREF from entry0 @ 0x1058(r) ┌ 59: int main (int argc, char **argv, char **envp); │ afv: vars(1:sp[0xc..0xc]) │ 0x00001139 55 push rbp ; Inicializa la pila │ 0x0000113a 4889e5 mov rbp, rsp ; Carga rsp a la base de la pila (rbp). │ 0x0000113d 4883ec10 sub rsp, 0x10 ; 0x10 = 16 en hexadecimal. Crea 16 bits de espacio para las variables. │ 0x00001141 c745fc0000.. mov dword [var_4h], 0 ; Mueve 0 a var_4h │ ┌─&lt; 0x00001148 eb1d jmp 0x1167 ; Salta a la dirección 0x1167 │ │ ; CODE XREF from main @ 0x116b(x) │ ┌──&gt; 0x0000114a 8b45fc mov eax, dword [var_4h] ; Mueve el contenido de var_4h a eax │ ■│ 0x0000114d 89c6 mov esi, eax ; Mueve el eax a esi │ ■│ 0x0000114f 488d05ae0e.. lea rax, str.i:__d_n ; 0x2004 ; &#34;i: %d\n&#34; ; Mueve la string a rax │ ■│ 0x00001156 4889c7 mov rdi, rax ; const char *format - carga el rax a rdi │ ■│ 0x00001159 b800000000 mov eax, 0 ; carga 0 al eax │ ■│ 0x0000115e e8cdfeffff call sym.imp.printf ; int printf(const char *format) - llama a printf │ ■│ 0x00001163 8345fc01 add dword [var_4h], 1 ; suma 1 al contenido de var_4h │ ■│ ; CODE XREF from main @ 0x1148(x) │ ■└─&gt; 0x00001167 837dfc63 cmp dword [var_4h], 0x63 ; &#39;c&#39; - Compara contenido 0x63 = 99 en hexadecimal con el contenido de var_4h que es inicializado en 0. │ └──&lt; 0x0000116b 7edd jle 0x114a ; Salta si el contenido de var_4h es menor a 99. │ 0x0000116d b800000000 mov eax, 0 # Mueve el 0 al eax. │ 0x00001172 c9 leave └ 0x00001173 c3 ret Otro código en C:">
   <meta itemprop="datePublished" content="2024-11-11T14:40:37-03:00">
   <meta itemprop="dateModified" content="2024-11-11T14:40:37-03:00">
   <meta itemprop="wordCount" content="984">
@@ -32,7 +34,8 @@ r2 bucle aaa afl s main pdf Este es el código ASM generado por radare:">
   <meta name="twitter:title" content="Reversing con radare">
   <meta name="twitter:description" content="r2 /bin/ls aaa # analiza el binario afl # Lista las funciones s main # selecciona una función # decompila pdf # asm pdd # r2ai pdg # ghidra Ejemplo:
 // gcc bucle.c -o bucle #include &lt;stdio.h&gt; int main(){ for (int i = 0; i &lt; 100; i&#43;&#43;) printf(&#34;i: %d\n&#34;,i); return 0; } Analizamos el binario con radare:
-r2 bucle aaa afl s main pdf Este es el código ASM generado por radare:">
+r2 bucle aaa afl s main pdf Este es el código ASM generado por radare:
+; DATA XREF from entry0 @ 0x1058(r) ┌ 59: int main (int argc, char **argv, char **envp); │ afv: vars(1:sp[0xc..0xc]) │ 0x00001139 55 push rbp ; Inicializa la pila │ 0x0000113a 4889e5 mov rbp, rsp ; Carga rsp a la base de la pila (rbp). │ 0x0000113d 4883ec10 sub rsp, 0x10 ; 0x10 = 16 en hexadecimal. Crea 16 bits de espacio para las variables. │ 0x00001141 c745fc0000.. mov dword [var_4h], 0 ; Mueve 0 a var_4h │ ┌─&lt; 0x00001148 eb1d jmp 0x1167 ; Salta a la dirección 0x1167 │ │ ; CODE XREF from main @ 0x116b(x) │ ┌──&gt; 0x0000114a 8b45fc mov eax, dword [var_4h] ; Mueve el contenido de var_4h a eax │ ■│ 0x0000114d 89c6 mov esi, eax ; Mueve el eax a esi │ ■│ 0x0000114f 488d05ae0e.. lea rax, str.i:__d_n ; 0x2004 ; &#34;i: %d\n&#34; ; Mueve la string a rax │ ■│ 0x00001156 4889c7 mov rdi, rax ; const char *format - carga el rax a rdi │ ■│ 0x00001159 b800000000 mov eax, 0 ; carga 0 al eax │ ■│ 0x0000115e e8cdfeffff call sym.imp.printf ; int printf(const char *format) - llama a printf │ ■│ 0x00001163 8345fc01 add dword [var_4h], 1 ; suma 1 al contenido de var_4h │ ■│ ; CODE XREF from main @ 0x1148(x) │ ■└─&gt; 0x00001167 837dfc63 cmp dword [var_4h], 0x63 ; &#39;c&#39; - Compara contenido 0x63 = 99 en hexadecimal con el contenido de var_4h que es inicializado en 0. │ └──&lt; 0x0000116b 7edd jle 0x114a ; Salta si el contenido de var_4h es menor a 99. │ 0x0000116d b800000000 mov eax, 0 # Mueve el 0 al eax. │ 0x00001172 c9 leave └ 0x00001173 c3 ret Otro código en C:">
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -50,9 +53,54 @@ r2 bucle aaa afl s main pdf Este es el código ASM generado por radare:">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="referrer" content="no-referrer">
   <meta name="author" content="Imlauer.">
-  <meta name="description" content="r2 /bin/ls aaa # analiza el binario afl # Lista las funciones s main # selecciona una función # decompila pdf # asm pdd # r2ai pdg # ghidra Ejemplo:
-// gcc bucle.c -o bucle #include &lt;stdio.h&gt; int main(){ for (int i = 0; i &lt; 100; i&#43;&#43;) printf(&#34;i: %d\n&#34;,i); return 0; } Analizamos el binario con radare:
-r2 bucle aaa afl s main pdf Este es el código ASM generado por radare:">
+  <meta name="description" content="r2 /bin/ls
+aaa # analiza el binario
+afl # Lista las funciones
+s main # selecciona una función
+# decompila
+pdf # asm
+pdd # r2ai
+pdg # ghidra
+Ejemplo:
+// gcc bucle.c -o bucle
+#include &lt;stdio.h&gt;
+
+int main(){
+        for (int i = 0; i &lt; 100; i&#43;&#43;) printf(&#34;i: %d\n&#34;,i);
+        return 0;
+}
+Analizamos el binario con radare:
+r2 bucle
+aaa
+afl 
+s main
+pdf
+
+Este es el código ASM generado por radare:
+            ; DATA XREF from entry0 @ 0x1058(r)
+┌ 59: int main (int argc, char **argv, char **envp);
+│ afv: vars(1:sp[0xc..0xc])
+│           0x00001139      55             push rbp  ; Inicializa la pila
+│           0x0000113a      4889e5         mov rbp, rsp ; Carga rsp a la base de la pila (rbp).
+│           0x0000113d      4883ec10       sub rsp, 0x10 ; 0x10 = 16 en hexadecimal. Crea 16 bits de espacio para las variables.
+│           0x00001141      c745fc0000..   mov dword [var_4h], 0 ; Mueve 0 a var_4h
+│       ┌─&lt; 0x00001148      eb1d           jmp 0x1167 ; Salta a la dirección 0x1167
+│       │   ; CODE XREF from main @ 0x116b(x)
+│      ┌──&gt; 0x0000114a      8b45fc         mov eax, dword [var_4h] ; Mueve el contenido de var_4h a eax
+│      ■│   0x0000114d      89c6           mov esi, eax ; Mueve el eax a esi
+│      ■│   0x0000114f      488d05ae0e..   lea rax, str.i:__d_n        ; 0x2004 ; &#34;i: %d\n&#34; ; Mueve la string a rax
+│      ■│   0x00001156      4889c7         mov rdi, rax                ; const char *format - carga el rax a rdi
+│      ■│   0x00001159      b800000000     mov eax, 0 ; carga 0 al eax
+│      ■│   0x0000115e      e8cdfeffff     call sym.imp.printf         ; int printf(const char *format) - llama a printf
+│      ■│   0x00001163      8345fc01       add dword [var_4h], 1 ; suma 1 al contenido de var_4h
+│      ■│   ; CODE XREF from main @ 0x1148(x)
+│      ■└─&gt; 0x00001167      837dfc63       cmp dword [var_4h], 0x63    ; &#39;c&#39; - Compara contenido 0x63 = 99 en hexadecimal con el contenido de var_4h que es inicializado en 0.
+│      └──&lt; 0x0000116b      7edd           jle 0x114a ; Salta si el contenido de var_4h es menor a 99.
+│           0x0000116d      b800000000     mov eax, 0 # Mueve el 0 al eax.
+│           0x00001172      c9             leave
+└           0x00001173      c3             ret
+
+Otro código en C:">
 </head>
 <body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
   <div class="navbar-brand">

@@ -10,7 +10,7 @@
   <meta property="og:site_name" content="Imlauer">
   <meta property="og:title" content="Buffer overflow 7 (Ricardo navarja reversing)">
   <meta property="og:description" content="Este es el código que me generó el IDA con mis modificaciones:
-int __cdecl check(char *Stream) { char savedregs; // [esp&#43;0h] [ebp&#43;0h] sprintf(Stream &#43; 220, &#34;Bieeeeeeeeeeeeeeeeeeeen ? con %s&#34;, Stream &#43; 4); if ( *(Stream &#43; 52) != &#39;E&#39; ) { printf(&#34;Mal camino \n&#34;, savedregs); exit(1); } if ( Stream[216] != 0xD ) *(Stream &#43; 54) = 2; printf(&#34;valor= %x\n&#34;, Stream[216]); printf(&#34;number= %x\n&#34;, Stream[204]); if ( *(Stream &#43; 53) == &#39;F&#39; ) printf(&#34;Aprobaste level 7&#34;, savedregs); else printf(&#34;Que pasa, %x \n&#34;, Stream[216] &#43; Stream[204]); return 0; } int main(int argc, const char **argv) { FILE *Stream; // [esp&#43;0h] [ebp-1A4h] BYREF char Buffer[200]; // [esp&#43;4h] [ebp-1A0h] BYREF int v6; // [esp&#43;CCh] [ebp-D8h] int v7; // [esp&#43;D0h] [ebp-D4h] int v8; // [esp&#43;D4h] [ebp-D0h] char Destination[200]; // [esp&#43;DCh] [ebp-C8h] BYREF v6 = 1; v8 = 1; v7 = 69; memset(Buffer, 0, sizeof(Buffer)); memset(Destination, 0, sizeof(Destination)); Stream = fopen(&#34;example.">
+int __cdecl check(char *Stream) { char savedregs; // [esp&#43;0h] [ebp&#43;0h] sprintf(Stream &#43; 220, &#34;Bieeeeeeeeeeeeeeeeeeeen ? con %s&#34;, Stream &#43; 4); if ( *(Stream &#43; 52) != &#39;E&#39; ) { printf(&#34;Mal camino \n&#34;, savedregs); exit(1); } if ( Stream[216] != 0xD ) *(Stream &#43; 54) = 2; printf(&#34;valor= %x\n&#34;, Stream[216]); printf(&#34;number= %x\n&#34;, Stream[204]); if ( *(Stream &#43; 53) == &#39;F&#39; ) printf(&#34;Aprobaste level 7&#34;, savedregs); else printf(&#34;Que pasa, %x \n&#34;, Stream[216] &#43; Stream[204]); return 0; } int main(int argc, const char **argv) { FILE *Stream; // [esp&#43;0h] [ebp-1A4h] BYREF char Buffer[200]; // [esp&#43;4h] [ebp-1A0h] BYREF int v6; // [esp&#43;CCh] [ebp-D8h] int v7; // [esp&#43;D0h] [ebp-D4h] int v8; // [esp&#43;D4h] [ebp-D0h] char Destination[200]; // [esp&#43;DCh] [ebp-C8h] BYREF v6 = 1; v8 = 1; v7 = 69; memset(Buffer, 0, sizeof(Buffer)); memset(Destination, 0, sizeof(Destination)); Stream = fopen(&#34;example.txt&#34;, &#34;rb&#34;); if ( !Stream ) { printf(&#34;No se puede leer el archivo bye bye \n&#34;, 0); exit(1); } fread(Buffer, 200*sizeof(char), 1*sizeof(char), Stream); // Acá se produce el bufferoverflow // Copiamos el contenido del Buffer a Destination. // strcpy copia hasta encontrar un caracter nulo (&#39;\0&#39;) strcpy(Destination, Buffer); if ( v6 != 1 ) { printf(&#34;Mal \n&#34;, (char)Stream); exit(1); } check((int)&amp;Stream); return 0; } Hasta 173 no se produce el buffer overflow. Los caracteres que agregamos luego de 173 caracteres pisan el return address.">
   <meta property="og:locale" content="es_es">
   <meta property="og:type" content="article">
     <meta property="article:section" content="post">
@@ -26,7 +26,7 @@ int __cdecl check(char *Stream) { char savedregs; // [esp&#43;0h] [ebp&#43;0h] s
   
   <meta itemprop="name" content="Buffer overflow 7 (Ricardo navarja reversing)">
   <meta itemprop="description" content="Este es el código que me generó el IDA con mis modificaciones:
-int __cdecl check(char *Stream) { char savedregs; // [esp&#43;0h] [ebp&#43;0h] sprintf(Stream &#43; 220, &#34;Bieeeeeeeeeeeeeeeeeeeen ? con %s&#34;, Stream &#43; 4); if ( *(Stream &#43; 52) != &#39;E&#39; ) { printf(&#34;Mal camino \n&#34;, savedregs); exit(1); } if ( Stream[216] != 0xD ) *(Stream &#43; 54) = 2; printf(&#34;valor= %x\n&#34;, Stream[216]); printf(&#34;number= %x\n&#34;, Stream[204]); if ( *(Stream &#43; 53) == &#39;F&#39; ) printf(&#34;Aprobaste level 7&#34;, savedregs); else printf(&#34;Que pasa, %x \n&#34;, Stream[216] &#43; Stream[204]); return 0; } int main(int argc, const char **argv) { FILE *Stream; // [esp&#43;0h] [ebp-1A4h] BYREF char Buffer[200]; // [esp&#43;4h] [ebp-1A0h] BYREF int v6; // [esp&#43;CCh] [ebp-D8h] int v7; // [esp&#43;D0h] [ebp-D4h] int v8; // [esp&#43;D4h] [ebp-D0h] char Destination[200]; // [esp&#43;DCh] [ebp-C8h] BYREF v6 = 1; v8 = 1; v7 = 69; memset(Buffer, 0, sizeof(Buffer)); memset(Destination, 0, sizeof(Destination)); Stream = fopen(&#34;example.">
+int __cdecl check(char *Stream) { char savedregs; // [esp&#43;0h] [ebp&#43;0h] sprintf(Stream &#43; 220, &#34;Bieeeeeeeeeeeeeeeeeeeen ? con %s&#34;, Stream &#43; 4); if ( *(Stream &#43; 52) != &#39;E&#39; ) { printf(&#34;Mal camino \n&#34;, savedregs); exit(1); } if ( Stream[216] != 0xD ) *(Stream &#43; 54) = 2; printf(&#34;valor= %x\n&#34;, Stream[216]); printf(&#34;number= %x\n&#34;, Stream[204]); if ( *(Stream &#43; 53) == &#39;F&#39; ) printf(&#34;Aprobaste level 7&#34;, savedregs); else printf(&#34;Que pasa, %x \n&#34;, Stream[216] &#43; Stream[204]); return 0; } int main(int argc, const char **argv) { FILE *Stream; // [esp&#43;0h] [ebp-1A4h] BYREF char Buffer[200]; // [esp&#43;4h] [ebp-1A0h] BYREF int v6; // [esp&#43;CCh] [ebp-D8h] int v7; // [esp&#43;D0h] [ebp-D4h] int v8; // [esp&#43;D4h] [ebp-D0h] char Destination[200]; // [esp&#43;DCh] [ebp-C8h] BYREF v6 = 1; v8 = 1; v7 = 69; memset(Buffer, 0, sizeof(Buffer)); memset(Destination, 0, sizeof(Destination)); Stream = fopen(&#34;example.txt&#34;, &#34;rb&#34;); if ( !Stream ) { printf(&#34;No se puede leer el archivo bye bye \n&#34;, 0); exit(1); } fread(Buffer, 200*sizeof(char), 1*sizeof(char), Stream); // Acá se produce el bufferoverflow // Copiamos el contenido del Buffer a Destination. // strcpy copia hasta encontrar un caracter nulo (&#39;\0&#39;) strcpy(Destination, Buffer); if ( v6 != 1 ) { printf(&#34;Mal \n&#34;, (char)Stream); exit(1); } check((int)&amp;Stream); return 0; } Hasta 173 no se produce el buffer overflow. Los caracteres que agregamos luego de 173 caracteres pisan el return address.">
   <meta itemprop="datePublished" content="2024-08-20T23:49:30-03:00">
   <meta itemprop="dateModified" content="2024-08-20T23:49:30-03:00">
   <meta itemprop="wordCount" content="533">
@@ -35,7 +35,7 @@ int __cdecl check(char *Stream) { char savedregs; // [esp&#43;0h] [ebp&#43;0h] s
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="Buffer overflow 7 (Ricardo navarja reversing)">
   <meta name="twitter:description" content="Este es el código que me generó el IDA con mis modificaciones:
-int __cdecl check(char *Stream) { char savedregs; // [esp&#43;0h] [ebp&#43;0h] sprintf(Stream &#43; 220, &#34;Bieeeeeeeeeeeeeeeeeeeen ? con %s&#34;, Stream &#43; 4); if ( *(Stream &#43; 52) != &#39;E&#39; ) { printf(&#34;Mal camino \n&#34;, savedregs); exit(1); } if ( Stream[216] != 0xD ) *(Stream &#43; 54) = 2; printf(&#34;valor= %x\n&#34;, Stream[216]); printf(&#34;number= %x\n&#34;, Stream[204]); if ( *(Stream &#43; 53) == &#39;F&#39; ) printf(&#34;Aprobaste level 7&#34;, savedregs); else printf(&#34;Que pasa, %x \n&#34;, Stream[216] &#43; Stream[204]); return 0; } int main(int argc, const char **argv) { FILE *Stream; // [esp&#43;0h] [ebp-1A4h] BYREF char Buffer[200]; // [esp&#43;4h] [ebp-1A0h] BYREF int v6; // [esp&#43;CCh] [ebp-D8h] int v7; // [esp&#43;D0h] [ebp-D4h] int v8; // [esp&#43;D4h] [ebp-D0h] char Destination[200]; // [esp&#43;DCh] [ebp-C8h] BYREF v6 = 1; v8 = 1; v7 = 69; memset(Buffer, 0, sizeof(Buffer)); memset(Destination, 0, sizeof(Destination)); Stream = fopen(&#34;example.">
+int __cdecl check(char *Stream) { char savedregs; // [esp&#43;0h] [ebp&#43;0h] sprintf(Stream &#43; 220, &#34;Bieeeeeeeeeeeeeeeeeeeen ? con %s&#34;, Stream &#43; 4); if ( *(Stream &#43; 52) != &#39;E&#39; ) { printf(&#34;Mal camino \n&#34;, savedregs); exit(1); } if ( Stream[216] != 0xD ) *(Stream &#43; 54) = 2; printf(&#34;valor= %x\n&#34;, Stream[216]); printf(&#34;number= %x\n&#34;, Stream[204]); if ( *(Stream &#43; 53) == &#39;F&#39; ) printf(&#34;Aprobaste level 7&#34;, savedregs); else printf(&#34;Que pasa, %x \n&#34;, Stream[216] &#43; Stream[204]); return 0; } int main(int argc, const char **argv) { FILE *Stream; // [esp&#43;0h] [ebp-1A4h] BYREF char Buffer[200]; // [esp&#43;4h] [ebp-1A0h] BYREF int v6; // [esp&#43;CCh] [ebp-D8h] int v7; // [esp&#43;D0h] [ebp-D4h] int v8; // [esp&#43;D4h] [ebp-D0h] char Destination[200]; // [esp&#43;DCh] [ebp-C8h] BYREF v6 = 1; v8 = 1; v7 = 69; memset(Buffer, 0, sizeof(Buffer)); memset(Destination, 0, sizeof(Destination)); Stream = fopen(&#34;example.txt&#34;, &#34;rb&#34;); if ( !Stream ) { printf(&#34;No se puede leer el archivo bye bye \n&#34;, 0); exit(1); } fread(Buffer, 200*sizeof(char), 1*sizeof(char), Stream); // Acá se produce el bufferoverflow // Copiamos el contenido del Buffer a Destination. // strcpy copia hasta encontrar un caracter nulo (&#39;\0&#39;) strcpy(Destination, Buffer); if ( v6 != 1 ) { printf(&#34;Mal \n&#34;, (char)Stream); exit(1); } check((int)&amp;Stream); return 0; } Hasta 173 no se produce el buffer overflow. Los caracteres que agregamos luego de 173 caracteres pisan el return address.">
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -54,7 +54,64 @@ int __cdecl check(char *Stream) { char savedregs; // [esp&#43;0h] [ebp&#43;0h] s
   <meta name="referrer" content="no-referrer">
   <meta name="author" content="Imlauer.">
   <meta name="description" content="Este es el código que me generó el IDA con mis modificaciones:
-int __cdecl check(char *Stream) { char savedregs; // [esp&#43;0h] [ebp&#43;0h] sprintf(Stream &#43; 220, &#34;Bieeeeeeeeeeeeeeeeeeeen ? con %s&#34;, Stream &#43; 4); if ( *(Stream &#43; 52) != &#39;E&#39; ) { printf(&#34;Mal camino \n&#34;, savedregs); exit(1); } if ( Stream[216] != 0xD ) *(Stream &#43; 54) = 2; printf(&#34;valor= %x\n&#34;, Stream[216]); printf(&#34;number= %x\n&#34;, Stream[204]); if ( *(Stream &#43; 53) == &#39;F&#39; ) printf(&#34;Aprobaste level 7&#34;, savedregs); else printf(&#34;Que pasa, %x \n&#34;, Stream[216] &#43; Stream[204]); return 0; } int main(int argc, const char **argv) { FILE *Stream; // [esp&#43;0h] [ebp-1A4h] BYREF char Buffer[200]; // [esp&#43;4h] [ebp-1A0h] BYREF int v6; // [esp&#43;CCh] [ebp-D8h] int v7; // [esp&#43;D0h] [ebp-D4h] int v8; // [esp&#43;D4h] [ebp-D0h] char Destination[200]; // [esp&#43;DCh] [ebp-C8h] BYREF v6 = 1; v8 = 1; v7 = 69; memset(Buffer, 0, sizeof(Buffer)); memset(Destination, 0, sizeof(Destination)); Stream = fopen(&#34;example.">
+
+int __cdecl check(char *Stream)
+{
+  char savedregs; // [esp&#43;0h] [ebp&#43;0h]
+
+  sprintf(Stream &#43; 220, &#34;Bieeeeeeeeeeeeeeeeeeeen ? con %s&#34;, Stream &#43; 4);
+  if ( *(Stream &#43; 52) != &#39;E&#39; )
+  {
+    printf(&#34;Mal camino \n&#34;, savedregs);
+    exit(1);
+  }
+  if ( Stream[216] != 0xD )
+    *(Stream &#43; 54) = 2;
+  printf(&#34;valor= %x\n&#34;, Stream[216]);
+  printf(&#34;number= %x\n&#34;, Stream[204]);
+  if ( *(Stream &#43; 53) == &#39;F&#39; )
+    printf(&#34;Aprobaste level 7&#34;, savedregs);
+  else
+    printf(&#34;Que pasa, %x \n&#34;, Stream[216] &#43; Stream[204]);
+  return 0;
+}
+
+
+int main(int argc, const char **argv)
+{
+  FILE *Stream; // [esp&#43;0h] [ebp-1A4h] BYREF
+  char Buffer[200]; // [esp&#43;4h] [ebp-1A0h] BYREF
+  int v6; // [esp&#43;CCh] [ebp-D8h]
+  int v7; // [esp&#43;D0h] [ebp-D4h]
+  int v8; // [esp&#43;D4h] [ebp-D0h]
+  char Destination[200]; // [esp&#43;DCh] [ebp-C8h] BYREF
+
+  v6 = 1;
+  v8 = 1;
+  v7 = 69;
+  memset(Buffer, 0, sizeof(Buffer));
+  memset(Destination, 0, sizeof(Destination));
+  Stream = fopen(&#34;example.txt&#34;, &#34;rb&#34;);
+  if ( !Stream )
+  {
+    printf(&#34;No se puede leer el archivo bye bye \n&#34;, 0);
+    exit(1);
+  }
+  fread(Buffer, 200*sizeof(char), 1*sizeof(char), Stream);
+
+  // Acá se produce el bufferoverflow
+  // Copiamos el contenido del Buffer a Destination.
+  // strcpy copia hasta encontrar un caracter nulo (&#39;\0&#39;)
+  strcpy(Destination, Buffer);
+  if ( v6 != 1 )
+  {
+    printf(&#34;Mal \n&#34;, (char)Stream);
+    exit(1);
+  }
+  check((int)&amp;Stream);
+  return 0;
+}
+Hasta 173 no se produce el buffer overflow. Los caracteres que agregamos luego de 173 caracteres pisan el return address.">
 </head>
 <body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
   <div class="navbar-brand">
