@@ -27,7 +27,7 @@ El binario de GRUB no viene con la bandera mount (USE Flag) habilitada por lo ta
 Es decir los binarios vienen con la mínima cantidad de banderas posibles, a diferencia de ArchLinux que vienen con la máxima cantidad de banderas posibles activadas.">
   <meta itemprop="datePublished" content="2025-06-22T22:25:52-03:00">
   <meta itemprop="dateModified" content="2025-06-22T22:25:52-03:00">
-  <meta itemprop="wordCount" content="1498">
+  <meta itemprop="wordCount" content="1564">
   <meta itemprop="keywords" content="Gentoo">
   
   <meta name="twitter:card" content="summary">
@@ -115,6 +115,8 @@ Es decir los binarios vienen con la mínima cantidad de banderas posibles, a dif
 <hr>
 <h6 id="handbook-amd64-full">Handbook AMD64 FULL: <a href="https://wiki.gentoo.org/wiki/Handbook:AMD64/Full/Installation">https://wiki.gentoo.org/wiki/Handbook:AMD64/Full/Installation</a></h6>
 <p><a href="https://wiki.gentoo.org/wiki/Handbook:AMD64/Full">https://wiki.gentoo.org/wiki/Handbook:AMD64/Full</a></p>
+<p><strong>AVISO: Esta guía no incluye la creación del pendrive con Gentoo ni el particionado</strong>. Esta guía comienza después el particionado para adelante.<br>
+<strong>Como hacer crear el pendrive y el particionado están bien descriptos en el handbook</strong>.</p>
 <p>Instalé gentoo guíandome con el handbook: Usé XFS, OpenRC, Grub y agregué el binary host.</p>
 <p>NO instalé pipewire y funcionó el audio sin configurarlo.</p>
 <h5 id="en-el-handbook-usaba-efi-como-partición-yo-usé-bootque-supuestamente-es-para-legacy-bios-funcionó-pero-no-tengo-legacy-bios-tengo-uefi">En el handbook usaba <code>/efi</code> como partición yo usé <code>/boot</code>(que supuestamente es para Legacy BIOS), funcionó pero no tengo Legacy BIOS tengo UEFI.</h5>
@@ -164,10 +166,10 @@ nameserver 9.9.9.9
 </span></span><span style="display:flex;"><span>arch-chroot /mnt/gentoo<span style="color:#e6db74">`</span> o podes montar uno por uno como está en el Handbook   
 </span></span><span style="display:flex;"><span>source /etc/profile   
 </span></span><span style="display:flex;"><span>export PS1<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;(chroot) </span><span style="color:#e6db74">${</span>PS1<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>   
-</span></span><span style="display:flex;"><span>emerge-webrsync   
+</span></span><span style="display:flex;"><span>emerge-webrsync <span style="color:#75715e"># Baja una snapshot de los títulos de los paquetes disponibles, sirve si estás detrás de un firewall (se actualiza cada 24 horas)</span>
 </span></span><span style="display:flex;"><span>emerge --verbose --oneshot app-portage/mirrorselect   
 </span></span><span style="display:flex;"><span>mirrorselect -i -o &gt;&gt; /etc/portage/make.conf   
-</span></span><span style="display:flex;"><span>emerge --sync <span style="color:#75715e"># No hace falta porque emerge-webrsync está bastante actualizado.   </span>
+</span></span><span style="display:flex;"><span>emerge --sync <span style="color:#75715e"># Lo mismo que emerge-webrsync pero más actualizado. No hace falta porque emerge-webrsync está bastante actualizado.   </span>
 </span></span><span style="display:flex;"><span>eselect news list   
 </span></span><span style="display:flex;"><span>eselect news read   
 </span></span><span style="display:flex;"><span>eselect profile list   
@@ -290,7 +292,7 @@ El handbook sugiere para WiFi: <code>emerge net-wireless/iw net-wireless/wpa_sup
 </span></span></code></pre></div><p>En el handbook sugería usar: <code>grub-mkconfig -o /efi/EFI/Gentoo/grub.cfg</code> pero yo usé la partición <code>/boot</code> (explicado anteriormente).</p>
 <p>Hay una discusión sobre esto:</p>
 <blockquote>
-<p>Edit: 2024-04-19 20:09 (UTC) Handbook &gt; GRUB &gt; UEFI systems grub-install &ndash;efi-directory=/efi installs all files except grubx64.efi in /boot rather than /efi. Is that not a dangerous configuration, that will break for most? I propose recommending grub-install &ndash;efi-directory=/efi &ndash;boot-directory=/efi instead. grub-mkconfig -o /efi/grub/grub.cfg doesn&rsquo;t run without symlinking /boot into /efi. I also had to update that command from the wiki provided version using -o /boot/grub/grub.cfg</p></blockquote>
+<p>Edit: 2024-04-19 20:09 (UTC) Handbook &gt; GRUB &gt; UEFI systems grub-install &ndash;efi-directory=/efi installs all files except grubx64.efi in /boot rather than /efi. Is that not a dangerous configuration, that will break for most? I propose recommending <code>grub-install --efi-directory=/efi --boot-directory=/efi</code> instead. <code>grub-mkconfig -o /efi/grub/grub.cfg</code> doesn&rsquo;t run without symlinking /boot into /efi. I also had to update that command from the wiki provided version using -o /boot/grub/grub.cfg</p></blockquote>
 <h4 id="agregando-un-usuario">Agregando un usuario.</h4>
 <p>El handbook fue muy puto acá: me recomendó un comando para crear el usuario pero sin el grupo <code>video</code> y estuve peleando un poco para iniciar <code>sway</code>.</p>
 <p><strong>Acá está el comando con el grupo video agregado.</strong></p>
