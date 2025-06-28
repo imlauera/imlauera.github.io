@@ -31,7 +31,7 @@ legacy boot sin swap Si estás en una VM podes directamente crear una única par
 o n p 1 Enter Enter w uefi (gpt) con Swap g (gpt disk label) n 1 (partition number [1/128]) 2048 first sector &#43;300M last sector (boot sector size) t 1 (EFI System) n 2 default &#43;4G t 2 swap n 3 default (fill up partition) default (fill up partition) w (write) Descargá el último release kiss-chroot de acá: https://codeberg.org/kiss-community/repo/releases Extraélo como root.">
   <meta itemprop="datePublished" content="2025-06-25T02:43:44-03:00">
   <meta itemprop="dateModified" content="2025-06-25T02:43:44-03:00">
-  <meta itemprop="wordCount" content="826">
+  <meta itemprop="wordCount" content="906">
   <meta itemprop="keywords" content="Linux">
   
   <meta name="twitter:card" content="summary">
@@ -215,7 +215,7 @@ Extraélo como <code>root</code>.</p>
 </span></span><span style="display:flex;"><span>git config merge.verifySignatures true
 </span></span><span style="display:flex;"><span>kiss update
 </span></span><span style="display:flex;"><span>cd /var/db/kiss/installed <span style="color:#f92672">&amp;&amp;</span> kiss build *  
-</span></span><span style="display:flex;"><span>kiss b e2fsprogs dosfsprogs xfsprogs util-linux dhcpcd libelf ncurses perl 
+</span></span><span style="display:flex;"><span>kiss b e2fsprogs dosfsprogs xfsprogs util-linux dhcpcd libelf ncurses perl baseinit
 </span></span><span style="display:flex;"><span><span style="color:#75715e"># Quedó obsoleto eudev</span>
 </span></span><span style="display:flex;"><span>mkdir -p /etc/rc.d
 </span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;dhcpcd 2&gt; /dev/null&#34;</span> &gt; /etc/rc.d/dhcpcd.boot
@@ -239,7 +239,8 @@ Primero tenemos que crear la configuración por defecto del kernel</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>make help
 </span></span></code></pre></div><p>Encontrarás un argumento llamado <code>localyesconfig (update current config converting local mods to core)</code></p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>make localyesconfig
-</span></span></code></pre></div><p>Ese comando convierte lo que está en memoria cargado con ArchLinux pero se da cuenta de que no está configurado todavía, así que no puedo convertirlo lo que significa que lo necesito.
+</span></span></code></pre></div><p>Sacale una foto o una screenshot a la salida de ese comando para buscar uno por uno más rápido.</p>
+<p>Ese comando convierte lo que está en memoria cargado con ArchLinux pero se da cuenta de que no está configurado todavía, así que no puedo convertirlo lo que significa que lo necesito.
 Parece mucho pero hay varios <code>sub-modulos</code>.
 Ejemplo: <code>pata_acpi</code> si copiás <code>CONFIG_PATA_ACPI</code> (podes copiar si habilitas el mouse systemctl start gpm en otra consola lo pegas con botón derecho).</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>make menuconfig
@@ -265,7 +266,7 @@ Si no ves un número al buscar, no podes hacer nada ignoralo y habilitando los d
 </span></span></code></pre></div><p>Ahora que hicimos todo los modulos:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>make menuconfig
 </span></span></code></pre></div><p>Si vez <code>Kernel .config support</code> con un <code>&lt;M&gt;</code></p>
-<p>Deshabilitá el <code>Initial RAM filesystem and RAM disk (initramfs/initrd) support</code><br>
+<p>Deshabilitá en <code>General Setup - Initial RAM filesystem and RAM disk (initramfs/initrd) support</code><br>
 En <code>Processor type and features - Processor family</code> seleccioná <code>Core 2/newer Xeon</code>.
 En <code>General setup - Default hostname - kiss</code>
 En <code>device drives - USB support</code>
@@ -279,22 +280,33 @@ En <code>filesystem</code> debería estar habilitado <code>ext4</code>.</p>
 </span></span><span style="display:flex;"><span><span style="color:#75715e"># Fijate que esté bien el fstab</span>
 </span></span><span style="display:flex;"><span>cat /etc/fstab
 </span></span><span style="display:flex;"><span>kiss b grub
-</span></span><span style="display:flex;"><span><span style="color:#75715e">#### legacy boot</span>
+</span></span><span style="display:flex;"><span>Legacy BOOT
+</span></span><span style="display:flex;"><span>Desde KISS Linux
 </span></span><span style="display:flex;"><span>sudo grub-install /dev/sda --recheck
 </span></span><span style="display:flex;"><span>grub-mkconfig -o /boot/grub/grub.cfg
-</span></span><span style="display:flex;"><span>kiss b baseinit
-</span></span><span style="display:flex;"><span>passwd
-</span></span><span style="display:flex;"><span>adduser esotericwarfare
-</span></span><span style="display:flex;"><span>addgroup esotericwarfare audio
-</span></span><span style="display:flex;"><span>addgroup esotericwarfare video
-</span></span><span style="display:flex;"><span>exit
-</span></span><span style="display:flex;"><span>exit
-</span></span><span style="display:flex;"><span>reboot
-</span></span></code></pre></div><p>Con <code>lspci -k</code> podes ver lo que cargó.</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cd /var/db/kiss/community/community - Paquetes disponibles en el repositorio
+</span></span><span style="display:flex;"><span>Desde ArchLinux
+</span></span><span style="display:flex;"><span>grub-install --boot-directory<span style="color:#f92672">=</span>/mnt/boot /dev/sda --recheck
+</span></span></code></pre></div><p>Descargá el <code>linux-firwamre</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cd /usr/lib
+</span></span><span style="display:flex;"><span>git clone https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
+</span></span></code></pre></div><p>Si estás en VirtualBox abrí la configuración en Experto y en Display poné <code>Graphics Controller</code> en <code>VBoxsSVGA</code>
+.
+Ahora en el archivo <code>/etc/default/grub</code> agregamos en la línea <code>GRUB_CMDLINE_LINUX_DEFAULT=&quot;loglevel=3 quiet nomodeset&quot;</code></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>vi /etc/default/grub
+</span></span><span style="display:flex;"><span>+GRUB_CMDLINE_LINUX_DEFAULT<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;loglevel=3 quiet nomodeset # (no carga los drivers de video)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">grub-mkconfig -o /boot/grub/grub.cfg
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">passwd
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">adduser esotericwarfare
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">exit
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">exit
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">reboot
+</span></span></span></code></pre></div><p>Con <code>lspci -k</code> podes ver que módulos cargó.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>dhcpcd <span style="color:#75715e"># Levantar network</span>
+</span></span><span style="display:flex;"><span>cd /var/db/kiss/community/community - Paquetes disponibles en el repositorio
 </span></span><span style="display:flex;"><span>ls 
 </span></span></code></pre></div><p>Probamos si podemos instalar un paquete.</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>kiss b lz4
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>kiss b neofetch
+</span></span><span style="display:flex;"><span>neofetch
 </span></span></code></pre></div>
 </div>
 
