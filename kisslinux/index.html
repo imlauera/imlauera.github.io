@@ -31,7 +31,7 @@ legacy boot sin swap Si estás en una VM podes directamente crear una única par
 o n p 1 Enter Enter w uefi (gpt) con Swap g (gpt disk label) n 1 (partition number [1/128]) 2048 first sector &#43;300M last sector (boot sector size) t 1 (EFI System) n 2 default &#43;4G t 2 swap n 3 default (fill up partition) default (fill up partition) w (write) Descargá el último release kiss-chroot de acá: https://codeberg.org/kiss-community/repo/releases Extraélo como root.">
   <meta itemprop="datePublished" content="2025-06-25T02:43:44-03:00">
   <meta itemprop="dateModified" content="2025-06-25T02:43:44-03:00">
-  <meta itemprop="wordCount" content="903">
+  <meta itemprop="wordCount" content="1663">
   <meta itemprop="keywords" content="Linux">
   
   <meta name="twitter:card" content="summary">
@@ -296,6 +296,9 @@ Ahora en el archivo <code>/etc/default/grub</code> agregamos en la línea <code>
 </span></span></span><span style="display:flex;"><span><span style="color:#e6db74">grub-mkconfig -o /boot/grub/grub.cfg
 </span></span></span><span style="display:flex;"><span><span style="color:#e6db74">passwd
 </span></span></span><span style="display:flex;"><span><span style="color:#e6db74">adduser esotericwarfare
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">addgroup esotericwarfare audio
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">addgroup esotericwarfare video
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">addgroup esotericwarfare input
 </span></span></span><span style="display:flex;"><span><span style="color:#e6db74">exit
 </span></span></span><span style="display:flex;"><span><span style="color:#e6db74">exit
 </span></span></span><span style="display:flex;"><span><span style="color:#e6db74">reboot
@@ -306,7 +309,71 @@ Ahora en el archivo <code>/etc/default/grub</code> agregamos en la línea <code>
 </span></span></code></pre></div><p>Probamos si podemos instalar un paquete.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>kiss b neofetch
 </span></span><span style="display:flex;"><span>neofetch
-</span></span></code></pre></div>
+</span></span></code></pre></div><hr>
+<p>Agregado.</p>
+<p>Tecla combinada / bastidor para la cocina
+Dos tomas un bastidor con 2 tomas para no usar adaptador.</p>
+<p>El built me tardo 10 horas
+Desde ArchLinux</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>root@archiso ~ <span style="color:#75715e"># grub-install --efi-directory=/mnt/boot --boot-directory=/mnt/boot --target=x86_64-efi --bootloader-id=grub_uefi  --removable</span>
+</span></span></code></pre></div><p>Agrega <code>kiss b grub lm-sensors elinks</code> al comienzo</p>
+<p>2:42 AM</p>
+<p>La compilacion del kernel me tardo 2 horas y 40 minutos</p>
+<p>El <code>linux-firmware</code> pesa 4g</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mount --mkdir /dev/sda5 /mnt/mnt/mx
+</span></span></code></pre></div><p>Habilita todos estos y nodemodeset en el <code>GRUB_CMDLINE</code></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>CONFIG_FB 
+</span></span><span style="display:flex;"><span>CONFIG_FRAMEBUFFER_CONSOLE
+</span></span><span style="display:flex;"><span>CONFIG_FB_EFI
+</span></span><span style="display:flex;"><span>CONFIG_FB_VESA
+</span></span></code></pre></div><p>Los primeros paquetes que instale despues de iniciar Linux.</p>
+<h5 id="es-mejor-compilar-los-paquetes-uno-por-uno-porque-recien-los-instala-luego-de-compilarlo-si-compilas-varios-paquetes-recien-los-instalara-cuando-termine-de-compilar-el-ultimo-paquete">Es mejor compilar los paquetes uno por uno porque recien los instala luego de compilarlo, si compilas varios paquetes recien los instalara cuando termine de compilar el ultimo paquete.</h5>
+<pre tabindex="0"><code>kiss b openssh imagemagick qpdf lm-sensors links vis vim mpv swayfx swagbg firefox-privacy
+(root) pip install yt-dlp
+</code></pre><h6 id="estuvo-3-dias-12-horas-horas-compilando-llvm-y-clang-spirv-tools-para-instalar-2-paquetes-mpv-y-sway-en-una-intel-celeron-n2806-dual-core-16ghz">Estuvo 3 dias 12 horas horas compilando LLVM y Clang SPIRV tools para instalar 2 paquetes: mpv y sway!! En una Intel Celeron N2806 Dual Core 1.6GHz</h6>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>addgroup esotericwarfare audio
+</span></span><span style="display:flex;"><span>addgroup esotericwarfare video
+</span></span><span style="display:flex;"><span>addgroup esotericwarfare input
+</span></span></code></pre></div><p>Clang 04:09 AM - 38%</p>
+<p>Para instalar el driver <code>i915</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>su
+</span></span><span style="display:flex;"><span>git clone ...linux-firware /usr/bin/firmware
+</span></span><span style="display:flex;"><span>cd /var/db/kiss/linux-VERSION
+</span></span><span style="display:flex;"><span>make menuconfig
+</span></span><span style="display:flex;"><span>Device Driver
+</span></span><span style="display:flex;"><span>Generic Driver Options
+</span></span><span style="display:flex;"><span>Firmware loader
+</span></span></code></pre></div><p>Ahi en <code>Firmware blobs root directory</code> agregue: <code>/lib/firmware</code> y en <code>Build named firmware blobs into the kernel binary</code> puse <code>*</code> (Aunque no deberia hacer eso sino elegir una por una la que tengo que usar.)</p>
+<p>Estos son los paquetes que estan en el repositorio de <code>community</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>9base abduco aerc age amfora aml android-tools appstream apulse aria2 asciinema autoconf autoconf-archive automake axel bandwhich bash bat bc bemenu birch
+</span></span><span style="display:flex;"><span>bit-bin boost bottom brlaser brotli btop btrfs-progs bubblewrap cantarell-fonts catgirl cava ccrypt cfm chicken cloc cmark-gfm cmus containerd coreutils
+</span></span><span style="display:flex;"><span>cproc crosstool-ng cryptsetup ctags cups cups-filters curlpp darkhttpd dash dejavu-ttf delta dialog discount diskonaut djvulibre dmidecode docker docker-buildx
+</span></span><span style="display:flex;"><span>docker-compose-bin dogefetch dvtm ecl elinks emacs emacs-compat emacs-kiss-git emacs-tsort entr erlang evremap evtest exa execline exfatprogs exiftool
+</span></span><span style="display:flex;"><span>extra-cmake-modules falkon fdk-aac fdm fff fftw file flac flatpak fmt fnf fortune fossil freeglut fuse fuse2 fzy gawk gc gcompat gdb ghostscript girara github-cli
+</span></span><span style="display:flex;"><span>globe-cli glorytun glow-bin gnu-netcat gnupg1 gnupg2 gnutls go go-bootstrap go-ipfs goimports gopls gperf gpgme gphoto2 groff gron-git gsl gspt gt5 gtar gtest
+</span></span><span style="display:flex;"><span>guile3 guile3-fibers-git gumbo-parser hack hexyl hostapd htop hugo hummingbird-git icu idmap imagemagick imath inih iniparser init-hooks iosevka-nerd-fonts
+</span></span><span style="display:flex;"><span>iperf iproute2 iptables isync iw jbig2dec jo jq json-glib kak-lsp-bin kakoune kexec-tools keyutils kfc kiss-find kmod lcms ldns less libaio libarchive
+</span></span><span style="display:flex;"><span>libassuan libatomic_ops libbpf libburn libcap libconfig libcupsfilters libdvdcss libedit libev libevent libexif libgcrypt libgpg-error libgphoto2 libisoburn
+</span></span><span style="display:flex;"><span>libisofs libjpeg libksba libmupdf libnl libpcap libportaudio2 libppd libpsl libseccomp libsixel libslirp libsndfile libsodium libssh libtermkey libtool libtorrent
+</span></span><span style="display:flex;"><span>libunistring liburing libusb libutemper libuv libvncserver libwebsockets libxdp libxml2 libxmlb libxslt libyaml limine links lm-sensors lpeg lsof lua luajit lux lvm2
+</span></span><span style="display:flex;"><span>lz4 lzo mblaze mdev-usb mediainfo mg minikube mksh mosh msgpack-c msmtp mtools mtpaint mtr nano nawk-git ncdu1 neatvnc neofetch neomutt neovim nettle nmap npth
+</span></span><span style="display:flex;"><span>nq nsd ntfs-3g numactl oksh openjpeg2 openntpd optipng ostree ox pandoc-bin pash patch patchelf pciutils perl pfetch pick pinentry pipewire pkcs11-helper pmount
+</span></span><span style="display:flex;"><span>poppler poppler-data popt pounce powertop pqiv procps-ng protobuf protobuf-c pv pybind11 pystring qbe qemu qpdf qrencode qt5 qt5-declarative qt5-svg qt5-wayland
+</span></span><span style="display:flex;"><span>qt5-webchannel qt5-webengine ranger readline reptyr retrogram-rtlsdr ripgrep rsync rtorrent ruby runc runit rustup-bin s6 s6-linux-init s6-rc sane sbase sbcl sc
+</span></span><span style="display:flex;"><span>sc-im sccache scenefx scrcpy scroll scryer-prolog sdl2 secret sed sed-i senpai sfeed sgt-puzzles shellcheck-bin shepherd shfm shfmt-bin shinit sinit slang slides
+</span></span><span style="display:flex;"><span>slirp4netns smu-karlb spotify-player spotifyd squashfs-tools sudo swappy swaybg swayfx swayidle swaylock swww syncthing sysmgr tcc tdb tea terminus-font tiff tig
+</span></span><span style="display:flex;"><span>tinygo-bin tinyramfs-git tiv tmate tmux tokei totp transmission tre tree ttf-font-awesome ttf-jetbrains-mono ttyd tuitube twemoji-color-font typescript-language-server
+</span></span><span style="display:flex;"><span>uacme ubase ugrep umurmur unbound unzip uthash virglrenderer vis viu vmwh vundle wayvnc wireguard-tools wireless_tools wl-clipboard wl-screenrec wlr-randr
+</span></span><span style="display:flex;"><span>wmenu xxd yajl yarn yash yasm yt-dlp ytfzf zathura zathura-cb zathura-djvu zathura-pdf-mupdf zathura-pdf-poppler zig-bin zip zls-bin zsh zzz
+</span></span></code></pre></div><p>Paquetes que esta en el repo de <code>repo/extra</code> (tiene 2 mas: core y wayland)</p>
+<pre tabindex="0"><code>adwaita-icon-theme alsa-lib alsa-utils bkeymaps cairo cbindgen ccache clang cmake cyrus-sasl dhcpcd dosfstools e2fsprogs efibootmgr efivar eiwd expat
+ffmpeg firefox firefox-privacy fontconfig freetype-harfbuzz gdk-pixbuf glib gnugrep gtk+3 hicolor-icon-theme hwdata intel-vaapi-driver json-c kirc lame
+libass libclc libdisplay-info libelf libepoxy libffi libjpeg-turbo libnl-tiny libogg libplacebo libpng libretls libtheora libudev-zero libva
+libva-utils libvorbis libvpx libwebp llvm man-pages mandoc mdevd mesa meson mold mpv mutt nasm ncurses nodejs nspr nss opendoas openresolv openssh opus
+pango pcre2 pkgconf python python-docutils python-flit-core python-glad python-gpep517 python-installer python-jinja2 python-mako python-markupsafe
+python-packaging python-setuptools python-wheel python-yaml rust samurai scdoc skalibs spirv-headers spirv-llvm-translator spirv-tools sqlite ssu
+strace ttf-croscore tzdata util-linux vim wpa_supplicant x264 x265 xvidcore zstd
+</code></pre>
 </div>
 
 
