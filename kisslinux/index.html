@@ -31,7 +31,7 @@ legacy boot sin swap Si estás en una VM podes directamente crear una única par
 o n p 1 Enter Enter w uefi (gpt) con Swap g (gpt disk label) n 1 (partition number [1/128]) 2048 first sector &#43;300M last sector (boot sector size) t 1 (EFI System) n 2 default &#43;4G t 2 swap n 3 default (fill up partition) default (fill up partition) w (write) Descargá el último release kiss-chroot de acá: https://codeberg.org/kiss-community/repo/releases Extraélo como root.">
   <meta itemprop="datePublished" content="2025-06-25T02:43:44-03:00">
   <meta itemprop="dateModified" content="2025-06-25T02:43:44-03:00">
-  <meta itemprop="wordCount" content="1663">
+  <meta itemprop="wordCount" content="1736">
   <meta itemprop="keywords" content="Linux">
   
   <meta name="twitter:card" content="summary">
@@ -239,7 +239,8 @@ Primero tenemos que crear la configuración por defecto del kernel</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>make help
 </span></span></code></pre></div><p>Encontrarás un argumento llamado <code>localyesconfig (update current config converting local mods to core)</code></p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>make localyesconfig
-</span></span></code></pre></div><p>Sacale una foto o una screenshot a la salida de ese comando para buscar uno por uno más rápido.</p>
+</span></span></code></pre></div><p>Hay que habilitar <code>CONFIG_FRAMEBUFFER_CONSOLE</code></p>
+<p>Sacale una foto o una screenshot a la salida de ese comando para buscar uno por uno más rápido.</p>
 <p>Ese comando convierte lo que está en memoria cargado con ArchLinux pero se da cuenta de que no está configurado todavía, así que no puedo convertirlo lo que significa que lo necesito.
 Parece mucho pero hay varios <code>sub-modulos</code>.
 Ejemplo: <code>pata_acpi</code> si copiás <code>CONFIG_PATA_ACPI</code> (podes copiar si habilitas el mouse systemctl start gpm en otra consola lo pegas con botón derecho).</p>
@@ -326,7 +327,8 @@ Desde ArchLinux</p>
 </span></span><span style="display:flex;"><span>CONFIG_FRAMEBUFFER_CONSOLE
 </span></span><span style="display:flex;"><span>CONFIG_FB_EFI
 </span></span><span style="display:flex;"><span>CONFIG_FB_VESA
-</span></span></code></pre></div><p>Los primeros paquetes que instale despues de iniciar Linux.</p>
+</span></span></code></pre></div><p>Cuando bootee no tenia imagen pero igual podia escribir usuario: root y la clave y apagar mi computadora o pude ver videos con mpv e iniciar el entorno grafico con <code>seatd-launch sway</code></p>
+<p>Los primeros paquetes que instale despues de iniciar Linux.</p>
 <h5 id="es-mejor-compilar-los-paquetes-uno-por-uno-porque-recien-los-instala-luego-de-compilarlo-si-compilas-varios-paquetes-recien-los-instalara-cuando-termine-de-compilar-el-ultimo-paquete">Es mejor compilar los paquetes uno por uno porque recien los instala luego de compilarlo, si compilas varios paquetes recien los instalara cuando termine de compilar el ultimo paquete.</h5>
 <pre tabindex="0"><code>kiss b openssh imagemagick qpdf lm-sensors links vis vim mpv swayfx swagbg firefox-privacy
 (root) pip install yt-dlp
@@ -344,6 +346,10 @@ Desde ArchLinux</p>
 </span></span><span style="display:flex;"><span>Generic Driver Options
 </span></span><span style="display:flex;"><span>Firmware loader
 </span></span></code></pre></div><p>Ahi en <code>Firmware blobs root directory</code> agregue: <code>/lib/firmware</code> y en <code>Build named firmware blobs into the kernel binary</code> puse <code>*</code> (Aunque no deberia hacer eso sino elegir una por una la que tengo que usar.)</p>
+<h3 id="como-solucionar-los-problemas">Como solucionar los problemas</h3>
+<p>Si no funciona nada fijate si podes escribir el usuario y contraseña en ciego y ejecutar y luego bootealo con <code>nomodeset</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>dmesg &gt; dmesg.txt
+</span></span></code></pre></div><p>Para instalar las fonts de sway: <code>kiss b terminus-font</code>.</p>
 <p>Estos son los paquetes que estan en el repositorio de <code>community</code>:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>9base abduco aerc age amfora aml android-tools appstream apulse aria2 asciinema autoconf autoconf-archive automake axel bandwhich bash bat bc bemenu birch
 </span></span><span style="display:flex;"><span>bit-bin boost bottom brlaser brotli btop btrfs-progs bubblewrap cantarell-fonts catgirl cava ccrypt cfm chicken cloc cmark-gfm cmus containerd coreutils
