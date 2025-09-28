@@ -23,7 +23,7 @@ Tengo un teclado ANSI y uso distribución español con Ñ así que no puedo hacr
 Tengo un teclado ANSI y uso distribución español con Ñ así que no puedo hacre el signo mayor ni menor (&lt; &gt;) y encima es un teclado 75% o sea no tengo teclado numérico y estoy desde la TTY linux la única solución que encontré es ejecutando sudo loadkeys us y luego sudo loadkeys es para hacer el signo mayor y menor, ¿existe hay alguna otra forma para que no tenga que hacer eso?">
   <meta itemprop="datePublished" content="2025-09-27T13:28:35-03:00">
   <meta itemprop="dateModified" content="2025-09-27T13:28:35-03:00">
-  <meta itemprop="wordCount" content="177">
+  <meta itemprop="wordCount" content="445">
   <meta itemprop="keywords" content="Linux">
   
   <meta name="twitter:card" content="summary">
@@ -113,6 +113,59 @@ Tengo un teclado ANSI y uso distribución español con Ñ así que no puedo hacr
 <p>&gt; &lt;</p>
 <p>Luego agregamos <code>loadkeys ~/mi_mapa.kmap</code> a <code>.bashrc</code> o <code>.config/fish/config.fish</code>.</p>
 <p>O copiá <code>mi_mapa.kmap</code> a <code>/usr/share/kbd/keymaps/i386/qwerty/</code> luego en <code>/etc/vconsole.conf</code> (archivo usado en distros con systemd) agregá: <code>KEYMAP=mi_mapa</code> o se puede hacer usando también un servicio de systemd.</p>
+<p>In <strong>X11</strong>, layouts are defined in <code>/usr/share/X11/xkb/symbols/</code>.
+The file <code>es</code> is the <strong>Spanish layout definition</strong>. You can add your custom <code>&lt;</code> and <code>&gt;</code> mapping there — or better, in a <strong>custom variant</strong> so you don’t break updates.</p>
+<hr>
+<h3 id="-example-add--and--to-altgr--commaperiod">🔹 Example: Add <code>&lt;</code> and <code>&gt;</code> to AltGr + comma/period</h3>
+<p>Open the file:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo nano /usr/share/X11/xkb/symbols/es
+</span></span></code></pre></div><p>At the bottom, you can add a <strong>variant</strong> like this:</p>
+<pre tabindex="0"><code class="language-xkb" data-lang="xkb">partial alphanumeric_keys
+xkb_symbols &#34;ansi75&#34; {
+    include &#34;es(basic)&#34;  // base Spanish layout
+
+    // Redefine comma (key &lt;AB08&gt;) and period (key &lt;AB09&gt;)
+    key &lt;AB08&gt; { [ comma, semicolon, less,   less   ] };
+    key &lt;AB09&gt; { [ period, colon,  greater, greater ] };
+};
+</code></pre><p>Explanation:</p>
+<ul>
+<li><code>&lt;AB08&gt;</code> is the <strong>comma key</strong></li>
+<li><code>&lt;AB09&gt;</code> is the <strong>period key</strong></li>
+<li><code>[normal, Shift, AltGr, Shift+AltGr]</code></li>
+</ul>
+<p>So this means:</p>
+<ul>
+<li><code>,</code> → comma</li>
+<li><code>Shift + ,</code> → semicolon</li>
+<li><code>AltGr + ,</code> → <code>&lt;</code></li>
+<li><code>AltGr + Shift + ,</code> → <code>&lt;</code></li>
+</ul>
+<p>And the same for period → <code>&gt;</code>.</p>
+<hr>
+<h3 id="-test-the-new-variant">🔹 Test the new variant</h3>
+<p>En mi caso yo uso EGLFS así que agregué a <code>.config/fish/config.fish</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>export XKB_DEFAULT_LAYOUT<span style="color:#f92672">=</span>es
+</span></span><span style="display:flex;"><span>export XKB_DEFAULT_VARIANT<span style="color:#f92672">=</span>ansi75
+</span></span></code></pre></div><p>Run:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>setxkbmap -layout es -variant ansi75
+</span></span></code></pre></div><p>Now try typing with <code>AltGr + ,</code> and <code>AltGr + .</code> → you should get <code>&lt;</code> and <code>&gt;</code>.</p>
+<hr>
+<h3 id="-make-it-permanent">🔹 Make it permanent</h3>
+<p>Edit <code>/etc/X11/xorg.conf.d/00-keyboard.conf</code> (create if missing):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo nano /etc/X11/xorg.conf.d/00-keyboard.conf
+</span></span></code></pre></div><p>Add:</p>
+<pre tabindex="0"><code class="language-conf" data-lang="conf">Section &#34;InputClass&#34;
+    Identifier &#34;system-keyboard&#34;
+    MatchIsKeyboard &#34;on&#34;
+    Option &#34;XkbLayout&#34; &#34;es&#34;
+    Option &#34;XkbVariant&#34; &#34;ansi75&#34;
+EndSection
+</code></pre><p>Reboot (or just replug keyboard / restart X11).</p>
+<hr>
+<p>✅ This way, you don’t lose Spanish support — you just add your <strong>ansi75</strong> variant for your keyboard.</p>
+<hr>
+<p>👉 Do you want me to also give you the <strong>equivalent patch for Wayland (xkbcomp)</strong>, so it works the same outside pure X11?</p>
 <p>Gracias ChatGPT!</p>
 
 </div>
