@@ -29,7 +29,7 @@ Como deployar a Neocities desde GitHub yo tengo mi sitio alli tambien: https://i
 Step 1: Create an API key Go to your Neocities settings. Scroll to API Key → copy it. Step 2: Add the key to your GitHub repo On GitHub, open your repo → Settings → Secrets → Actions.">
   <meta itemprop="datePublished" content="2025-10-17T04:22:23-03:00">
   <meta itemprop="dateModified" content="2025-10-17T04:22:23-03:00">
-  <meta itemprop="wordCount" content="180">
+  <meta itemprop="wordCount" content="471">
   <meta itemprop="keywords" content="Tech">
   
   <meta name="twitter:card" content="summary">
@@ -174,6 +174,58 @@ On GitHub, open your repo → Settings → Secrets → Actions.">
 </span></span><span style="display:flex;"><span>          <span style="color:#f92672">dist_dir</span>: <span style="color:#ae81ff">. </span> <span style="color:#75715e"># change if your built site is in a subfolder</span>
 </span></span></code></pre></div><p>This action will upload your repo’s files to Neocities automatically every time you push to <code>main</code>.</p>
 <p>✅ <strong>Reference:</strong> <a href="https://github.com/bcomnes/deploy-to-neocities">bcomnes/deploy-to-neocities</a></p>
+<p>Good — that’s actually a very common error when using <code>bcomnes/deploy-to-neocities</code>. The <code>JSONHTTPError: Bad Request</code> means <strong>Neocities’ API rejected at least one of the files</strong> being uploaded, usually for one of these reasons 👇</p>
+<hr>
+<h2 id="-1-youre-uploading-disallowed-files">🧩 1. <strong>You’re uploading disallowed files</strong></h2>
+<p>Neocities only allows <em>safe web formats</em>:</p>
+<blockquote>
+<p><code>.html</code>, <code>.css</code>, <code>.js</code>, <code>.png</code>, <code>.jpg</code>, <code>.gif</code>, <code>.svg</code>, <code>.ico</code>, <code>.mp4</code>, <code>.mp3</code>, <code>.txt</code>, <code>.pdf</code>, <code>.xml</code>, <code>.json</code>, <code>.woff</code>, <code>.woff2</code>, etc.</p>
+</blockquote>
+<p>❌ <strong>Blocked extensions:</strong> <code>.zip</code>, <code>.map</code>, <code>.ts</code>, <code>.jsx</code>, <code>.md</code>, <code>.yml</code>, <code>.git</code>, and all binary or hidden files (<code>.gitignore</code>, <code>.github</code>, <code>.git/</code>, <code>node_modules/</code>, etc.)</p>
+<h3 id="-fix">✅ Fix:</h3>
+<p>In your repo root, create a file called <code>.neocitiesignore</code> and add:</p>
+<pre tabindex="0"><code>.git/
+.github/
+node_modules/
+*.map
+*.ts
+*.tsx
+*.jsx
+*.yml
+*.yaml
+*.md
+*.zip
+*.json5
+package*
+README*
+</code></pre><p>Then push again.
+Neocities will now skip these files.</p>
+<hr>
+<h2 id="-2-your">⚙️ 2. <strong>Your <code>dist_dir</code> points to the wrong folder</strong></h2>
+<p>If you’re using a static site generator (Astro, Jekyll, Eleventy, etc.), make sure you’re only uploading the built site, not the source or node_modules.</p>
+<p>Example for Astro:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">with</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">api_token</span>: <span style="color:#ae81ff">${{ secrets.NEOCITIES_API_KEY }}</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">dist_dir</span>: <span style="color:#ae81ff">dist</span>
+</span></span></code></pre></div><p>Check that the folder (<code>dist</code>, <code>_site</code>, <code>build</code>, etc.) contains <strong>only web files</strong> like <code>index.html</code>.</p>
+<hr>
+<h2 id="-3-your-api-key-or-site-name-mismatch">🧠 3. <strong>Your API key or site name mismatch</strong></h2>
+<p>If your key belongs to a different Neocities account or site, you’ll get “Bad Request.”</p>
+<h3 id="verify">Verify:</h3>
+<p>Run this (locally or in a test workflow):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>curl -H <span style="color:#e6db74">&#34;Authorization: Bearer YOUR_API_KEY&#34;</span> https://neocities.org/api/info
+</span></span></code></pre></div><p>It should return your site info.
+If not, regenerate the key at <a href="https://neocities.org/settings">neocities.org/settings</a>.</p>
+<hr>
+<h2 id="-quick-fix-summary">✅ Quick fix summary</h2>
+<ol>
+<li>Add a <code>.neocitiesignore</code> to filter out unsupported files.</li>
+<li>Ensure <code>dist_dir</code> points to your build output (not your source).</li>
+<li>Recheck the <code>NEOCITIES_API_KEY</code> secret.</li>
+</ol>
+<hr>
+<p>If you paste your workflow YAML (just the relevant <code>deploy</code> section) and tell me what’s inside your repo (e.g. Astro/Jekyll/plain HTML), I can tailor the <code>.neocitiesignore</code> and config exactly to your setup.
+Want to do that?</p>
 
 </div>
 
