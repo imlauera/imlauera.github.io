@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/post/mysql_cronjob/">
+  <meta property="og:site_name" content="Imlauer">
+  <meta property="og:title" content="Mysql cronjob">
+  <meta property="og:description" content="Esto es una pésima forma de hacer backups.
+mkdir -p /home/miusuario/backup/database-backups &amp;&amp; cd /home/miusuario/backup/database-backups touch cron_backup.sh chmod &#43;x cron_backup.sh Hay muchas mejores formas de hacer esto pero este es el script que lo usé un par de veces.
+#!/bin/sh # # @author: Jabran Rafique &lt;hello@jabran.me&gt; # @link: http://jabran.me/articles/automatic-database-backup-using-git-hosting/ # Set variables FULLDATE = $(date &#43;&#34;%Y-%d-%m %H:%M&#34;) NOW = $(date &#43;&#34;%Y-%m-%d-%H-%M&#34;) # MYSQL_DUMP = `which mysqldump` MYSQL_DUMP = &#34;docker compose -f /home/miusuario/kimkelen/ exec db /usr/bin/mysqldump&#34; GIT = `which git` DB_NAME = &#34;kimkelen&#34; CRON_USER = &#34;root&#34; CRON_PASSWORD = &#34;xxxx&#34; TEMP_BACKUP = &#34;latest_backup.sql&#34; BACKUP_DIR = $(date &#43;&#34;%Y/%m&#34;) # Check current Git status and update ${GIT} status ${GIT} pull origin HEAD # Dump database ${MYSQL_DUMP} -u &#34;$CRON_USER&#34; -p &#34;$CRON_PASSWORD&#34; $DB_NAME &gt; $TEMP_BACKUP wait # Make backup directory if not exists (format: {year}/{month}/) if [ ! -d &#34;$BACKUP_DIR&#34; ]; then mkdir -p $BACKUP_DIR fi # Compress SQL dump tar -cvzf $BACKUP_DIR/$DB_NAME-$NOW-sql.tar.gz $TEMP_BACKUP # Remove original SQL dump rm -f $TEMP_BACKUP # Add to Git and commit ${GIT} add -A ${GIT} commit -m &#34;Automatic backup - $FULLDATE&#34; ${GIT} push origin HEAD Al final lo terminé dejando así: Esto es necesario para que find lo ignore: mv cron_backup.sh .cron_backup.sh">
+  <meta property="og:locale" content="es_es">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="post">
+    <meta property="article:published_time" content="2024-09-20T19:57:30-03:00">
+    <meta property="article:modified_time" content="2024-09-20T19:57:30-03:00">
+    <meta property="article:tag" content="Mysql">
+
+  
+  <meta itemprop="name" content="Mysql cronjob">
+  <meta itemprop="description" content="Esto es una pésima forma de hacer backups.
+mkdir -p /home/miusuario/backup/database-backups &amp;&amp; cd /home/miusuario/backup/database-backups touch cron_backup.sh chmod &#43;x cron_backup.sh Hay muchas mejores formas de hacer esto pero este es el script que lo usé un par de veces.
+#!/bin/sh # # @author: Jabran Rafique &lt;hello@jabran.me&gt; # @link: http://jabran.me/articles/automatic-database-backup-using-git-hosting/ # Set variables FULLDATE = $(date &#43;&#34;%Y-%d-%m %H:%M&#34;) NOW = $(date &#43;&#34;%Y-%m-%d-%H-%M&#34;) # MYSQL_DUMP = `which mysqldump` MYSQL_DUMP = &#34;docker compose -f /home/miusuario/kimkelen/ exec db /usr/bin/mysqldump&#34; GIT = `which git` DB_NAME = &#34;kimkelen&#34; CRON_USER = &#34;root&#34; CRON_PASSWORD = &#34;xxxx&#34; TEMP_BACKUP = &#34;latest_backup.sql&#34; BACKUP_DIR = $(date &#43;&#34;%Y/%m&#34;) # Check current Git status and update ${GIT} status ${GIT} pull origin HEAD # Dump database ${MYSQL_DUMP} -u &#34;$CRON_USER&#34; -p &#34;$CRON_PASSWORD&#34; $DB_NAME &gt; $TEMP_BACKUP wait # Make backup directory if not exists (format: {year}/{month}/) if [ ! -d &#34;$BACKUP_DIR&#34; ]; then mkdir -p $BACKUP_DIR fi # Compress SQL dump tar -cvzf $BACKUP_DIR/$DB_NAME-$NOW-sql.tar.gz $TEMP_BACKUP # Remove original SQL dump rm -f $TEMP_BACKUP # Add to Git and commit ${GIT} add -A ${GIT} commit -m &#34;Automatic backup - $FULLDATE&#34; ${GIT} push origin HEAD Al final lo terminé dejando así: Esto es necesario para que find lo ignore: mv cron_backup.sh .cron_backup.sh">
+  <meta itemprop="datePublished" content="2024-09-20T19:57:30-03:00">
+  <meta itemprop="dateModified" content="2024-09-20T19:57:30-03:00">
+  <meta itemprop="wordCount" content="337">
+  <meta itemprop="keywords" content="Mysql">
+  
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Mysql cronjob">
+  <meta name="twitter:description" content="Esto es una pésima forma de hacer backups.
+mkdir -p /home/miusuario/backup/database-backups &amp;&amp; cd /home/miusuario/backup/database-backups touch cron_backup.sh chmod &#43;x cron_backup.sh Hay muchas mejores formas de hacer esto pero este es el script que lo usé un par de veces.
+#!/bin/sh # # @author: Jabran Rafique &lt;hello@jabran.me&gt; # @link: http://jabran.me/articles/automatic-database-backup-using-git-hosting/ # Set variables FULLDATE = $(date &#43;&#34;%Y-%d-%m %H:%M&#34;) NOW = $(date &#43;&#34;%Y-%m-%d-%H-%M&#34;) # MYSQL_DUMP = `which mysqldump` MYSQL_DUMP = &#34;docker compose -f /home/miusuario/kimkelen/ exec db /usr/bin/mysqldump&#34; GIT = `which git` DB_NAME = &#34;kimkelen&#34; CRON_USER = &#34;root&#34; CRON_PASSWORD = &#34;xxxx&#34; TEMP_BACKUP = &#34;latest_backup.sql&#34; BACKUP_DIR = $(date &#43;&#34;%Y/%m&#34;) # Check current Git status and update ${GIT} status ${GIT} pull origin HEAD # Dump database ${MYSQL_DUMP} -u &#34;$CRON_USER&#34; -p &#34;$CRON_PASSWORD&#34; $DB_NAME &gt; $TEMP_BACKUP wait # Make backup directory if not exists (format: {year}/{month}/) if [ ! -d &#34;$BACKUP_DIR&#34; ]; then mkdir -p $BACKUP_DIR fi # Compress SQL dump tar -cvzf $BACKUP_DIR/$DB_NAME-$NOW-sql.tar.gz $TEMP_BACKUP # Remove original SQL dump rm -f $TEMP_BACKUP # Add to Git and commit ${GIT} add -A ${GIT} commit -m &#34;Automatic backup - $FULLDATE&#34; ${GIT} push origin HEAD Al final lo terminé dejando así: Esto es necesario para que find lo ignore: mv cron_backup.sh .cron_backup.sh">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Mysql cronjob
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/post/mysql_cronjob/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="Esto es una pésima forma de hacer backups.
+mkdir -p /home/miusuario/backup/database-backups &amp;&amp; cd /home/miusuario/backup/database-backups
+touch cron_backup.sh
+chmod &#43;x cron_backup.sh
+Hay muchas mejores formas de hacer esto pero este es el script que lo usé un par de veces.
+#!/bin/sh
+#
+# @author: Jabran Rafique &lt;hello@jabran.me&gt;
+# @link: http://jabran.me/articles/automatic-database-backup-using-git-hosting/
+
+# Set variables
+FULLDATE      = $(date &#43;&#34;%Y-%d-%m %H:%M&#34;)
+NOW           = $(date &#43;&#34;%Y-%m-%d-%H-%M&#34;)
+# MYSQL_DUMP    = `which mysqldump`
+MYSQL_DUMP    = &#34;docker compose -f /home/miusuario/kimkelen/ exec db /usr/bin/mysqldump&#34;
+GIT           = `which git`
+DB_NAME       = &#34;kimkelen&#34;
+CRON_USER     = &#34;root&#34;
+CRON_PASSWORD = &#34;xxxx&#34;
+TEMP_BACKUP   = &#34;latest_backup.sql&#34;
+BACKUP_DIR    = $(date &#43;&#34;%Y/%m&#34;)
+
+# Check current Git status and update
+${GIT} status
+${GIT} pull origin HEAD
+
+# Dump database
+${MYSQL_DUMP} -u &#34;$CRON_USER&#34; -p &#34;$CRON_PASSWORD&#34; $DB_NAME &gt; $TEMP_BACKUP 
+wait
+
+# Make backup directory if not exists (format: {year}/{month}/)
+if [ ! -d &#34;$BACKUP_DIR&#34; ]; then
+  mkdir -p $BACKUP_DIR
+  fi
+
+  # Compress SQL dump
+  tar -cvzf $BACKUP_DIR/$DB_NAME-$NOW-sql.tar.gz $TEMP_BACKUP
+
+  # Remove original SQL dump
+  rm -f $TEMP_BACKUP
+
+  # Add to Git and commit
+  ${GIT} add -A
+  ${GIT} commit -m &#34;Automatic backup - $FULLDATE&#34;
+  ${GIT} push origin HEAD
+
+Al final lo terminé dejando así:
+Esto es necesario para que find lo ignore:  
+mv cron_backup.sh .cron_backup.sh">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Mysql cronjob
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2024-09-20T19:57:30-03:00'>
+      September 20, 2024
+    </time>
+    
+    <br>
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/mysql/">Mysql</a>
+    
+    
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <p>Esto es una pésima forma de hacer backups.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mkdir -p /home/miusuario/backup/database-backups <span style="color:#f92672">&amp;&amp;</span> cd /home/miusuario/backup/database-backups
+</span></span><span style="display:flex;"><span>touch cron_backup.sh
+</span></span><span style="display:flex;"><span>chmod +x cron_backup.sh
+</span></span></code></pre></div><p>Hay muchas mejores formas de hacer esto pero este es el script que lo usé un par de veces.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/sh
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># @author: Jabran Rafique &lt;hello@jabran.me&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># @link: http://jabran.me/articles/automatic-database-backup-using-git-hosting/</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Set variables</span>
+</span></span><span style="display:flex;"><span>FULLDATE      <span style="color:#f92672">=</span> <span style="color:#66d9ef">$(</span>date +<span style="color:#e6db74">&#34;%Y-%d-%m %H:%M&#34;</span><span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>NOW           <span style="color:#f92672">=</span> <span style="color:#66d9ef">$(</span>date +<span style="color:#e6db74">&#34;%Y-%m-%d-%H-%M&#34;</span><span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># MYSQL_DUMP    = `which mysqldump`</span>
+</span></span><span style="display:flex;"><span>MYSQL_DUMP    <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;docker compose -f /home/miusuario/kimkelen/ exec db /usr/bin/mysqldump&#34;</span>
+</span></span><span style="display:flex;"><span>GIT           <span style="color:#f92672">=</span> <span style="color:#e6db74">`</span>which git<span style="color:#e6db74">`</span>
+</span></span><span style="display:flex;"><span>DB_NAME       <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;kimkelen&#34;</span>
+</span></span><span style="display:flex;"><span>CRON_USER     <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;root&#34;</span>
+</span></span><span style="display:flex;"><span>CRON_PASSWORD <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;xxxx&#34;</span>
+</span></span><span style="display:flex;"><span>TEMP_BACKUP   <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;latest_backup.sql&#34;</span>
+</span></span><span style="display:flex;"><span>BACKUP_DIR    <span style="color:#f92672">=</span> <span style="color:#66d9ef">$(</span>date +<span style="color:#e6db74">&#34;%Y/%m&#34;</span><span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Check current Git status and update</span>
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">${</span>GIT<span style="color:#e6db74">}</span> status
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">${</span>GIT<span style="color:#e6db74">}</span> pull origin HEAD
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Dump database</span>
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">${</span>MYSQL_DUMP<span style="color:#e6db74">}</span> -u <span style="color:#e6db74">&#34;</span>$CRON_USER<span style="color:#e6db74">&#34;</span> -p <span style="color:#e6db74">&#34;</span>$CRON_PASSWORD<span style="color:#e6db74">&#34;</span> $DB_NAME &gt; $TEMP_BACKUP 
+</span></span><span style="display:flex;"><span>wait
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Make backup directory if not exists (format: {year}/{month}/)</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> ! -d <span style="color:#e6db74">&#34;</span>$BACKUP_DIR<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>  mkdir -p $BACKUP_DIR
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># Compress SQL dump</span>
+</span></span><span style="display:flex;"><span>  tar -cvzf $BACKUP_DIR/$DB_NAME-$NOW-sql.tar.gz $TEMP_BACKUP
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># Remove original SQL dump</span>
+</span></span><span style="display:flex;"><span>  rm -f $TEMP_BACKUP
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># Add to Git and commit</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">${</span>GIT<span style="color:#e6db74">}</span> add -A
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">${</span>GIT<span style="color:#e6db74">}</span> commit -m <span style="color:#e6db74">&#34;Automatic backup - </span>$FULLDATE<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">${</span>GIT<span style="color:#e6db74">}</span> push origin HEAD
+</span></span></code></pre></div><hr>
+<h4 id="al-final-lo-terminé-dejando-así">Al final lo terminé dejando así:</h4>
+<p>Esto es necesario para que find lo ignore:  <br>
+<code>mv cron_backup.sh .cron_backup.sh</code></p>
+<p>crontab -e</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>@weekly cd /home/xxx/backup/database-backups; /home/xxx/backup/database-backups/.cron_backup.sh &gt; /dev/null 2&gt;&amp;<span style="color:#ae81ff">1</span>
+</span></span></code></pre></div><hr>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#!/bin/bash</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># @author: Jabran Rafique &lt;hello@jabran.me&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># @link: http://jabran.me/articles/automatic-database-backup-using-git-hosting/</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Set variables</span>
+</span></span><span style="display:flex;"><span>FULLDATE<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>date +<span style="color:#e6db74">&#34;%Y-%d-%m %H:%M&#34;</span><span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>NOW<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>date +<span style="color:#e6db74">&#34;%Y-%m-%d-%H-%M&#34;</span><span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># MYSQL_DUMP=`which mysqldump`</span>
+</span></span><span style="display:flex;"><span>DOCKER<span style="color:#f92672">=</span><span style="color:#e6db74">`</span>which docker<span style="color:#e6db74">`</span>
+</span></span><span style="display:flex;"><span>DOCKER_COMPOSE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/home/epet36misiones/kimkelen/docker-compose.yml&#34;</span>
+</span></span><span style="display:flex;"><span>DOCKER_DB_SERVICE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;db&#34;</span>
+</span></span><span style="display:flex;"><span>GIT<span style="color:#f92672">=</span><span style="color:#e6db74">`</span>which git<span style="color:#e6db74">`</span>
+</span></span><span style="display:flex;"><span>DB_NAME<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;kimkelen&#34;</span>
+</span></span><span style="display:flex;"><span>CRON_USER<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;root&#34;</span>
+</span></span><span style="display:flex;"><span>CRON_PASSWORD<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;xx&#34;</span>
+</span></span><span style="display:flex;"><span>TEMP_BACKUP<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;latest_backup.sql&#34;</span>
+</span></span><span style="display:flex;"><span>BACKUP_DIR<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>date +<span style="color:#e6db74">&#34;%Y/%m&#34;</span><span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Check current Git status and update</span>
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">${</span>GIT<span style="color:#e6db74">}</span> status
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">${</span>GIT<span style="color:#e6db74">}</span> pull origin HEAD
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Dump database</span>
+</span></span><span style="display:flex;"><span>$DOCKER compose -f $DOCKER_COMPOSE exec $DOCKER_DB_SERVICE /usr/bin/mysqldump -u <span style="color:#e6db74">&#34;</span>$CRON_USER<span style="color:#e6db74">&#34;</span> --password<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$CRON_PASSWORD<span style="color:#e6db74">&#34;</span> $DB_NAME &gt; $TEMP_BACKUP
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Make backup directory if not exists (format: {year}/{month}/)</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> ! -d <span style="color:#e6db74">&#34;</span>$BACKUP_DIR<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>  mkdir -p $BACKUP_DIR
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Compress SQL dump</span>
+</span></span><span style="display:flex;"><span>tar -cvzf $BACKUP_DIR/$DB_NAME-$NOW-sql.tar.gz $TEMP_BACKUP
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Remove original SQL dump</span>
+</span></span><span style="display:flex;"><span>rm -f $TEMP_BACKUP
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Remove all backups older than 60 days</span>
+</span></span><span style="display:flex;"><span>find /home/epet36misiones/backup/database-backups/ -not -path <span style="color:#e6db74">&#39;*/.*&#39;</span> -type f -mtime +60 -delete
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Add to Git and commit</span>
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">${</span>GIT<span style="color:#e6db74">}</span> add -A
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">${</span>GIT<span style="color:#e6db74">}</span> commit -m <span style="color:#e6db74">&#34;Automatic backup - </span>$FULLDATE<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">${</span>GIT<span style="color:#e6db74">}</span> push origin HEAD
+</span></span></code></pre></div>
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+</footer>
+
+
+</body>
+</html>

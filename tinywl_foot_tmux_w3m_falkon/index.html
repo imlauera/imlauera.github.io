@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/tinywl_foot_tmux_w3m_falkon/">
+  <meta property="og:site_name" content="Imlauer">
+  <meta property="og:title" content="Como usando un navegador de consola puedo ver videos e Instagram. WAYLAND: Tinywl o DWL, Foot, Tmux w3m, QuteBrowser, Konqueror y Falkon(Ex-QupZilla)">
+  <meta property="og:description" content="El setup mas minimalista que encontre:
+En .bashrc o .zshrc o .config/fish/config.fish:
+Usá w3m con -sixel para ver imágenes con foot. if status is-interactive # Commands to run in interactive sessions can go here end set -U fish_greeting export QT_QPA_PLATFORM=wayland alias dgg &#39;w3m -sixel dgg.gg&#39; alias f1 &#39;bash scripts/f1exposure.sh&#39; alias google &#39;cha -V google.com&#39; alias 3dgames &#39;cha -V foros.3dgames.com.ar&#39; alias wgoogle &#39;w3m -sixel google.com&#39; alias tdgg &#39;w3m -sixel dgg.gg&#39; alias imlauera &#39;w3m -sixel imlauera.github.io&#39; alias cimlauera &#39;cha -V imlauera.github.io&#39; alias invidious &#39;w3m -sixel https://inv.nadeko.net/feed/subscriptions&#39; alias cinvidious &#39;cha -V https://inv.nadeko.net/feed/subscriptions&#39; Si vas a usar linuxfb en algunos casos tenes que agregar esta bandera para que funcionen falkon, qutebrowser y angelfish. export QTWEBENGINE_CHROMIUM_FLAGS=&#34;--ignore-gpu-blacklist --disable-gpu&#34; alias upwork=&#34;falkon upwork.com&#34; alias linkedin=&#34;falkon linkedin.com&#34; alias freelancer=&#34;falkon freelancer.com&#34; alias hackernews=&#34;w3m news.ycombinator.com&#34; alias drudgereport=&#34;w3m drudgereport.com&#34; alias argentina=&#34;w3m old.reddit.com/r/argentina&#34; alias rcommandline=&#34;w3m old.reddit.com/r/commandline&#34; alias buenosaires=&#34;w3m old.reddit.com/r/BuenosAires&#34; alias duolingo=&#34;falkon https://duolingo.com/learn&#34; alias f1=&#34;echo &#39;Los tiempos están en UTC. Coordinated Universal Time está 3 horas adelantado a Buenos Aires&#39;; bash $HOME/scripts/f1exposure.sh | jq .&#34; alias chatgpt=&#34;falkon chatgpt.com&#34; alias telegram=&#34;falkon web.telegram.org&#34; export QT_QPA_PLATFORM=linuxfb:offset=0x0:size=1038x700 #export QT_QPA_PLATFORM=linuxfb:offset=0x0 #export QT_QPA_PLATFORM= #export QT_QPA_PLATFORM=eglfs:offset=900x130:size=768x600 #export QT_QPA_PLATFORM=eglfs #export QT_QPA_EGLFS_INTEGRATION=eglfs_kms #export QT_QPA_EGLFS_WIDTH=400 #export QT_QPA_EGLFS_HEIGHT=420 #export QT_QPA_EGLFS_PHYSICAL_HEIGHT=109.62 #export QT_QPA_EGLFS_PHYSICAL_WIDTH=292.32 #export QT_QPA_EGLFS_NO_LIBINPUT=1 #export QT_QPA_FONTDIR=/lib/Fonts #export QT_QPA_PLATFORM_PLUGIN_PATH=/usr/lib/plugins/platforms #export TERM=xterm-256color # Start X at login # #if status --is-login # if test -z &#34;$DISPLAY&#34; -a $XDG_VTNR = 1 # # tmux attach-session -t mysession 2&gt;/dev/null || tmux new-session -s mysession # tmux new-session # end ##end #if status --is-login # if test -z &#34;$DISPLAY&#34; -a $XDG_VTNR = 1 # exec dvtm # end #end if test -z &#34;$TMUX&#34; -a $XDG_VTNR = 1 #mbsync -a &gt; /dev/null &amp; #exec dvtm #tinywl -s foot tmux attach || exec tmux new-session end sudo pacman -S tinywl foot tmux w3m qutebrowser y yay -S falkon">
+  <meta property="og:locale" content="es_es">
+  <meta property="og:type" content="article">
+    <meta property="article:published_time" content="2024-12-20T05:26:21-03:00">
+    <meta property="article:modified_time" content="2024-12-20T05:26:21-03:00">
+    <meta property="article:tag" content="Wayland">
+
+  
+  <meta itemprop="name" content="Como usando un navegador de consola puedo ver videos e Instagram. WAYLAND: Tinywl o DWL, Foot, Tmux w3m, QuteBrowser, Konqueror y Falkon(Ex-QupZilla)">
+  <meta itemprop="description" content="El setup mas minimalista que encontre:
+En .bashrc o .zshrc o .config/fish/config.fish:
+Usá w3m con -sixel para ver imágenes con foot. if status is-interactive # Commands to run in interactive sessions can go here end set -U fish_greeting export QT_QPA_PLATFORM=wayland alias dgg &#39;w3m -sixel dgg.gg&#39; alias f1 &#39;bash scripts/f1exposure.sh&#39; alias google &#39;cha -V google.com&#39; alias 3dgames &#39;cha -V foros.3dgames.com.ar&#39; alias wgoogle &#39;w3m -sixel google.com&#39; alias tdgg &#39;w3m -sixel dgg.gg&#39; alias imlauera &#39;w3m -sixel imlauera.github.io&#39; alias cimlauera &#39;cha -V imlauera.github.io&#39; alias invidious &#39;w3m -sixel https://inv.nadeko.net/feed/subscriptions&#39; alias cinvidious &#39;cha -V https://inv.nadeko.net/feed/subscriptions&#39; Si vas a usar linuxfb en algunos casos tenes que agregar esta bandera para que funcionen falkon, qutebrowser y angelfish. export QTWEBENGINE_CHROMIUM_FLAGS=&#34;--ignore-gpu-blacklist --disable-gpu&#34; alias upwork=&#34;falkon upwork.com&#34; alias linkedin=&#34;falkon linkedin.com&#34; alias freelancer=&#34;falkon freelancer.com&#34; alias hackernews=&#34;w3m news.ycombinator.com&#34; alias drudgereport=&#34;w3m drudgereport.com&#34; alias argentina=&#34;w3m old.reddit.com/r/argentina&#34; alias rcommandline=&#34;w3m old.reddit.com/r/commandline&#34; alias buenosaires=&#34;w3m old.reddit.com/r/BuenosAires&#34; alias duolingo=&#34;falkon https://duolingo.com/learn&#34; alias f1=&#34;echo &#39;Los tiempos están en UTC. Coordinated Universal Time está 3 horas adelantado a Buenos Aires&#39;; bash $HOME/scripts/f1exposure.sh | jq .&#34; alias chatgpt=&#34;falkon chatgpt.com&#34; alias telegram=&#34;falkon web.telegram.org&#34; export QT_QPA_PLATFORM=linuxfb:offset=0x0:size=1038x700 #export QT_QPA_PLATFORM=linuxfb:offset=0x0 #export QT_QPA_PLATFORM= #export QT_QPA_PLATFORM=eglfs:offset=900x130:size=768x600 #export QT_QPA_PLATFORM=eglfs #export QT_QPA_EGLFS_INTEGRATION=eglfs_kms #export QT_QPA_EGLFS_WIDTH=400 #export QT_QPA_EGLFS_HEIGHT=420 #export QT_QPA_EGLFS_PHYSICAL_HEIGHT=109.62 #export QT_QPA_EGLFS_PHYSICAL_WIDTH=292.32 #export QT_QPA_EGLFS_NO_LIBINPUT=1 #export QT_QPA_FONTDIR=/lib/Fonts #export QT_QPA_PLATFORM_PLUGIN_PATH=/usr/lib/plugins/platforms #export TERM=xterm-256color # Start X at login # #if status --is-login # if test -z &#34;$DISPLAY&#34; -a $XDG_VTNR = 1 # # tmux attach-session -t mysession 2&gt;/dev/null || tmux new-session -s mysession # tmux new-session # end ##end #if status --is-login # if test -z &#34;$DISPLAY&#34; -a $XDG_VTNR = 1 # exec dvtm # end #end if test -z &#34;$TMUX&#34; -a $XDG_VTNR = 1 #mbsync -a &gt; /dev/null &amp; #exec dvtm #tinywl -s foot tmux attach || exec tmux new-session end sudo pacman -S tinywl foot tmux w3m qutebrowser y yay -S falkon">
+  <meta itemprop="datePublished" content="2024-12-20T05:26:21-03:00">
+  <meta itemprop="dateModified" content="2024-12-20T05:26:21-03:00">
+  <meta itemprop="wordCount" content="1601">
+  <meta itemprop="keywords" content="Wayland">
+  
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Como usando un navegador de consola puedo ver videos e Instagram. WAYLAND: Tinywl o DWL, Foot, Tmux w3m, QuteBrowser, Konqueror y Falkon(Ex-QupZilla)">
+  <meta name="twitter:description" content="El setup mas minimalista que encontre:
+En .bashrc o .zshrc o .config/fish/config.fish:
+Usá w3m con -sixel para ver imágenes con foot. if status is-interactive # Commands to run in interactive sessions can go here end set -U fish_greeting export QT_QPA_PLATFORM=wayland alias dgg &#39;w3m -sixel dgg.gg&#39; alias f1 &#39;bash scripts/f1exposure.sh&#39; alias google &#39;cha -V google.com&#39; alias 3dgames &#39;cha -V foros.3dgames.com.ar&#39; alias wgoogle &#39;w3m -sixel google.com&#39; alias tdgg &#39;w3m -sixel dgg.gg&#39; alias imlauera &#39;w3m -sixel imlauera.github.io&#39; alias cimlauera &#39;cha -V imlauera.github.io&#39; alias invidious &#39;w3m -sixel https://inv.nadeko.net/feed/subscriptions&#39; alias cinvidious &#39;cha -V https://inv.nadeko.net/feed/subscriptions&#39; Si vas a usar linuxfb en algunos casos tenes que agregar esta bandera para que funcionen falkon, qutebrowser y angelfish. export QTWEBENGINE_CHROMIUM_FLAGS=&#34;--ignore-gpu-blacklist --disable-gpu&#34; alias upwork=&#34;falkon upwork.com&#34; alias linkedin=&#34;falkon linkedin.com&#34; alias freelancer=&#34;falkon freelancer.com&#34; alias hackernews=&#34;w3m news.ycombinator.com&#34; alias drudgereport=&#34;w3m drudgereport.com&#34; alias argentina=&#34;w3m old.reddit.com/r/argentina&#34; alias rcommandline=&#34;w3m old.reddit.com/r/commandline&#34; alias buenosaires=&#34;w3m old.reddit.com/r/BuenosAires&#34; alias duolingo=&#34;falkon https://duolingo.com/learn&#34; alias f1=&#34;echo &#39;Los tiempos están en UTC. Coordinated Universal Time está 3 horas adelantado a Buenos Aires&#39;; bash $HOME/scripts/f1exposure.sh | jq .&#34; alias chatgpt=&#34;falkon chatgpt.com&#34; alias telegram=&#34;falkon web.telegram.org&#34; export QT_QPA_PLATFORM=linuxfb:offset=0x0:size=1038x700 #export QT_QPA_PLATFORM=linuxfb:offset=0x0 #export QT_QPA_PLATFORM= #export QT_QPA_PLATFORM=eglfs:offset=900x130:size=768x600 #export QT_QPA_PLATFORM=eglfs #export QT_QPA_EGLFS_INTEGRATION=eglfs_kms #export QT_QPA_EGLFS_WIDTH=400 #export QT_QPA_EGLFS_HEIGHT=420 #export QT_QPA_EGLFS_PHYSICAL_HEIGHT=109.62 #export QT_QPA_EGLFS_PHYSICAL_WIDTH=292.32 #export QT_QPA_EGLFS_NO_LIBINPUT=1 #export QT_QPA_FONTDIR=/lib/Fonts #export QT_QPA_PLATFORM_PLUGIN_PATH=/usr/lib/plugins/platforms #export TERM=xterm-256color # Start X at login # #if status --is-login # if test -z &#34;$DISPLAY&#34; -a $XDG_VTNR = 1 # # tmux attach-session -t mysession 2&gt;/dev/null || tmux new-session -s mysession # tmux new-session # end ##end #if status --is-login # if test -z &#34;$DISPLAY&#34; -a $XDG_VTNR = 1 # exec dvtm # end #end if test -z &#34;$TMUX&#34; -a $XDG_VTNR = 1 #mbsync -a &gt; /dev/null &amp; #exec dvtm #tinywl -s foot tmux attach || exec tmux new-session end sudo pacman -S tinywl foot tmux w3m qutebrowser y yay -S falkon">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Como usando un navegador de consola puedo ver videos e Instagram. WAYLAND: Tinywl o DWL, Foot, Tmux w3m, QuteBrowser, Konqueror y Falkon(Ex-QupZilla)
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/tinywl_foot_tmux_w3m_falkon/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="El setup mas minimalista que encontre:
+En .bashrc o .zshrc o .config/fish/config.fish:
+Usá w3m con -sixel para ver imágenes con foot.
+if status is-interactive
+    # Commands to run in interactive sessions can go here
+end
+
+
+set -U fish_greeting
+export QT_QPA_PLATFORM=wayland
+alias dgg &#39;w3m -sixel dgg.gg&#39;
+alias f1 &#39;bash scripts/f1exposure.sh&#39;
+alias google &#39;cha -V google.com&#39;
+alias 3dgames &#39;cha -V foros.3dgames.com.ar&#39;
+alias wgoogle &#39;w3m -sixel google.com&#39;
+alias tdgg &#39;w3m -sixel dgg.gg&#39;
+alias imlauera &#39;w3m -sixel imlauera.github.io&#39;
+alias cimlauera &#39;cha -V imlauera.github.io&#39;
+alias invidious &#39;w3m -sixel https://inv.nadeko.net/feed/subscriptions&#39;
+alias cinvidious &#39;cha -V https://inv.nadeko.net/feed/subscriptions&#39;
+Si vas a usar linuxfb en algunos casos tenes que agregar esta bandera para que funcionen falkon, qutebrowser y angelfish.
+export QTWEBENGINE_CHROMIUM_FLAGS=&#34;--ignore-gpu-blacklist --disable-gpu&#34;
+alias upwork=&#34;falkon upwork.com&#34;
+alias linkedin=&#34;falkon linkedin.com&#34;
+alias freelancer=&#34;falkon freelancer.com&#34;
+alias hackernews=&#34;w3m news.ycombinator.com&#34;
+alias drudgereport=&#34;w3m drudgereport.com&#34;
+alias argentina=&#34;w3m old.reddit.com/r/argentina&#34;
+alias rcommandline=&#34;w3m old.reddit.com/r/commandline&#34;
+alias buenosaires=&#34;w3m old.reddit.com/r/BuenosAires&#34;
+alias duolingo=&#34;falkon https://duolingo.com/learn&#34;
+alias f1=&#34;echo &#39;Los tiempos están en UTC. Coordinated Universal Time está 3 horas adelantado a Buenos Aires&#39;; bash $HOME/scripts/f1exposure.sh | jq .&#34;
+alias chatgpt=&#34;falkon chatgpt.com&#34;
+alias telegram=&#34;falkon web.telegram.org&#34;
+
+
+export QT_QPA_PLATFORM=linuxfb:offset=0x0:size=1038x700
+#export QT_QPA_PLATFORM=linuxfb:offset=0x0
+#export QT_QPA_PLATFORM=
+#export QT_QPA_PLATFORM=eglfs:offset=900x130:size=768x600
+
+#export QT_QPA_PLATFORM=eglfs
+#export QT_QPA_EGLFS_INTEGRATION=eglfs_kms
+#export QT_QPA_EGLFS_WIDTH=400
+#export QT_QPA_EGLFS_HEIGHT=420
+#export QT_QPA_EGLFS_PHYSICAL_HEIGHT=109.62
+#export QT_QPA_EGLFS_PHYSICAL_WIDTH=292.32
+#export QT_QPA_EGLFS_NO_LIBINPUT=1
+#export QT_QPA_FONTDIR=/lib/Fonts
+#export QT_QPA_PLATFORM_PLUGIN_PATH=/usr/lib/plugins/platforms
+
+#export TERM=xterm-256color
+# Start X at login
+#
+#if status --is-login
+#  if test -z &#34;$DISPLAY&#34; -a $XDG_VTNR = 1
+#    # tmux attach-session -t mysession 2&gt;/dev/null || tmux new-session -s mysession
+#    tmux new-session
+#  end
+##end
+#if status --is-login
+#  if test -z &#34;$DISPLAY&#34; -a $XDG_VTNR = 1
+#    exec dvtm
+#  end
+#end
+
+
+
+if test -z &#34;$TMUX&#34; -a $XDG_VTNR = 1
+  #mbsync -a &gt; /dev/null &amp;
+  #exec dvtm
+  #tinywl -s foot
+  tmux attach || exec tmux new-session
+end
+sudo pacman -S tinywl foot tmux w3m qutebrowser y yay -S falkon">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Como usando un navegador de consola puedo ver videos e Instagram. WAYLAND: Tinywl o DWL, Foot, Tmux w3m, QuteBrowser, Konqueror y Falkon(Ex-QupZilla)
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2024-12-20T05:26:21-03:00'>
+      December 20, 2024
+    </time>
+    
+    <br>
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/wayland/">Wayland</a>
+    
+    
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <p>El setup mas minimalista que encontre:</p>
+<p>En <code>.bashrc</code> o <code>.zshrc</code> o <code>.config/fish/config.fish</code>:</p>
+<h6 id="usá-w3m-con--sixel-para-ver-imágenes-con-foot">Usá w3m con <code>-sixel</code> para ver imágenes con foot.</h6>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#66d9ef">if</span> status is-interactive
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Commands to run in interactive sessions can go here</span>
+</span></span><span style="display:flex;"><span>end
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>set -U fish_greeting
+</span></span><span style="display:flex;"><span>export QT_QPA_PLATFORM<span style="color:#f92672">=</span>wayland
+</span></span><span style="display:flex;"><span>alias dgg <span style="color:#e6db74">&#39;w3m -sixel dgg.gg&#39;</span>
+</span></span><span style="display:flex;"><span>alias f1 <span style="color:#e6db74">&#39;bash scripts/f1exposure.sh&#39;</span>
+</span></span><span style="display:flex;"><span>alias google <span style="color:#e6db74">&#39;cha -V google.com&#39;</span>
+</span></span><span style="display:flex;"><span>alias 3dgames <span style="color:#e6db74">&#39;cha -V foros.3dgames.com.ar&#39;</span>
+</span></span><span style="display:flex;"><span>alias wgoogle <span style="color:#e6db74">&#39;w3m -sixel google.com&#39;</span>
+</span></span><span style="display:flex;"><span>alias tdgg <span style="color:#e6db74">&#39;w3m -sixel dgg.gg&#39;</span>
+</span></span><span style="display:flex;"><span>alias imlauera <span style="color:#e6db74">&#39;w3m -sixel imlauera.github.io&#39;</span>
+</span></span><span style="display:flex;"><span>alias cimlauera <span style="color:#e6db74">&#39;cha -V imlauera.github.io&#39;</span>
+</span></span><span style="display:flex;"><span>alias invidious <span style="color:#e6db74">&#39;w3m -sixel https://inv.nadeko.net/feed/subscriptions&#39;</span>
+</span></span><span style="display:flex;"><span>alias cinvidious <span style="color:#e6db74">&#39;cha -V https://inv.nadeko.net/feed/subscriptions&#39;</span>
+</span></span></code></pre></div><h3 id="si-vas-a-usar-linuxfb-en-algunos-casos-tenes-que-agregar-esta-bandera-para-que-funcionen-falkon-qutebrowser-y-angelfish">Si vas a usar linuxfb en algunos casos tenes que agregar esta bandera para que funcionen falkon, qutebrowser y angelfish.</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>export QTWEBENGINE_CHROMIUM_FLAGS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;--ignore-gpu-blacklist --disable-gpu&#34;</span>
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>alias upwork<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;falkon upwork.com&#34;</span>
+</span></span><span style="display:flex;"><span>alias linkedin<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;falkon linkedin.com&#34;</span>
+</span></span><span style="display:flex;"><span>alias freelancer<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;falkon freelancer.com&#34;</span>
+</span></span><span style="display:flex;"><span>alias hackernews<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;w3m news.ycombinator.com&#34;</span>
+</span></span><span style="display:flex;"><span>alias drudgereport<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;w3m drudgereport.com&#34;</span>
+</span></span><span style="display:flex;"><span>alias argentina<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;w3m old.reddit.com/r/argentina&#34;</span>
+</span></span><span style="display:flex;"><span>alias rcommandline<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;w3m old.reddit.com/r/commandline&#34;</span>
+</span></span><span style="display:flex;"><span>alias buenosaires<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;w3m old.reddit.com/r/BuenosAires&#34;</span>
+</span></span><span style="display:flex;"><span>alias duolingo<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;falkon https://duolingo.com/learn&#34;</span>
+</span></span><span style="display:flex;"><span>alias f1<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;echo &#39;Los tiempos están en UTC. Coordinated Universal Time está 3 horas adelantado a Buenos Aires&#39;; bash </span>$HOME<span style="color:#e6db74">/scripts/f1exposure.sh | jq .&#34;</span>
+</span></span><span style="display:flex;"><span>alias chatgpt<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;falkon chatgpt.com&#34;</span>
+</span></span><span style="display:flex;"><span>alias telegram<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;falkon web.telegram.org&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>export QT_QPA_PLATFORM<span style="color:#f92672">=</span>linuxfb:offset<span style="color:#f92672">=</span>0x0:size<span style="color:#f92672">=</span>1038x700
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#export QT_QPA_PLATFORM=linuxfb:offset=0x0</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#export QT_QPA_PLATFORM=</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#export QT_QPA_PLATFORM=eglfs:offset=900x130:size=768x600</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#export QT_QPA_PLATFORM=eglfs</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#export QT_QPA_EGLFS_INTEGRATION=eglfs_kms</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#export QT_QPA_EGLFS_WIDTH=400</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#export QT_QPA_EGLFS_HEIGHT=420</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#export QT_QPA_EGLFS_PHYSICAL_HEIGHT=109.62</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#export QT_QPA_EGLFS_PHYSICAL_WIDTH=292.32</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#export QT_QPA_EGLFS_NO_LIBINPUT=1</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#export QT_QPA_FONTDIR=/lib/Fonts</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#export QT_QPA_PLATFORM_PLUGIN_PATH=/usr/lib/plugins/platforms</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#export TERM=xterm-256color</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Start X at login</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#if status --is-login</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#  if test -z &#34;$DISPLAY&#34; -a $XDG_VTNR = 1</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#    # tmux attach-session -t mysession 2&gt;/dev/null || tmux new-session -s mysession</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#    tmux new-session</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#  end</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">##end</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#if status --is-login</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#  if test -z &#34;$DISPLAY&#34; -a $XDG_VTNR = 1</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#    exec dvtm</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#  end</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#end</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> test -z <span style="color:#e6db74">&#34;</span>$TMUX<span style="color:#e6db74">&#34;</span> -a $XDG_VTNR <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">#mbsync -a &gt; /dev/null &amp;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">#exec dvtm</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">#tinywl -s foot</span>
+</span></span><span style="display:flex;"><span>  tmux attach <span style="color:#f92672">||</span> exec tmux new-session
+</span></span><span style="display:flex;"><span>end
+</span></span></code></pre></div><p><code>sudo pacman -S tinywl foot tmux w3m qutebrowser</code> y <code>yay -S falkon</code></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>qutebrowser --qt-flag disable-gpu --qt-flag disable-software-rasterizer
+</span></span></code></pre></div><h5 id="como-bloquear-publicidad-en-falkon-no-es-tan-eficiente-como-firefox-con-ublock-pero-corre-en-el-framebuffer">Como bloquear publicidad en Falkon no es tan eficiente como Firefox con uBlock pero corre en el framebuffer:</h5>
+<p>Essentially, you need to do three things:</p>
+<ol>
+<li>
+<p>Goto AdBlock settings, and add all non-regional lists (EasyPrivacy, NoCoin List,
+Anti-Adblock Killer, Peter Lowe&rsquo;s List etc).</p>
+</li>
+<li>
+<p>Go to Settings -&gt; Extensions, and check the box for GreaseMonkey.</p>
+</li>
+<li>
+<p>Go to <a href="https://greasyfork.org/en/scripts/459541-youtube">https://greasyfork.org/en/scripts/459541-youtube</a>� � � -youtube-ad-blocker,
+and click Install this script, then click install anyway. This is the Youtube
+Adblocker.</p>
+</li>
+</ol>
+<p>Now your Falkon should be able to block all the ads.</p>
+<p>Test its abilities here: <a href="https://d3ward.github.io/toolz/adblock">https://d3ward.github.io/toolz/adblock</a></p>
+<p><strong>Cambiar el tamaño de la letra en foot, descomentá las lineas:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cp /etc/xdg/foot/foot.ini .config/foot/foot.ini
+</span></span></code></pre></div><p>foot.ini:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># -*- conf -*-</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># shell=$SHELL (if set, otherwise user&#39;s default shell from /etc/passwd)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># term=foot (or xterm-256color if built with -Dterminfo=disabled)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># login-shell=no</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># app-id=foot # globally set wayland app-id. Default values are &#34;foot&#34; and &#34;footclient&#34; for desktop and server mode</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># title=foot</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># locked-title=no</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># font=monospace:size=8</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># font-bold=&lt;bold variant of regular font&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># font-italic=&lt;italic variant of regular font&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># font-bold-italic=&lt;bold+italic variant of regular font&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># font-size-adjustment=0.5</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># line-height=&lt;font metrics&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># letter-spacing=0</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># horizontal-letter-offset=0</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># vertical-letter-offset=0</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># underline-offset=&lt;font metrics&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># underline-thickness=&lt;font underline thickness&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># strikeout-thickness=&lt;font strikeout thickness&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># box-drawings-uses-font-glyphs=no</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># dpi-aware=no</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># initial-window-size-pixels=700x500  # Or,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># initial-window-size-chars=&lt;COLSxROWS&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># initial-window-mode=windowed</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># pad=0x0                             # optionally append &#39;center&#39;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># resize-by-cells=yes</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># resize-keep-grid=yes</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># resize-delay-ms=100</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># bold-text-in-bright=no</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># word-delimiters=,│`|:&#34;&#39;()[]{}&lt;&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># selection-target=primary</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># workers=&lt;number of logical CPUs&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># utmp-helper=/usr/lib/utempter/utempter  # When utmp backend is ‘libutempter’ (Linux)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># utmp-helper=/usr/libexec/ulog-helper    # When utmp backend is ‘ulog’ (FreeBSD)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>environment<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># name=value</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>security<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># osc52=enabled  # disabled|copy-enabled|paste-enabled|enabled</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>bell<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># urgent=no</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># notify=no</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># visual=no</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># command=</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># command-focused=no</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>desktop-notifications<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># command=notify-send --wait --app-name ${app-id} --icon ${app-id} --category ${category} --urgency ${urgency} --expire-time ${expire-time} --hint STRING:image-path:${icon} --hint BOOLEAN:suppress-sound:${muted} --hint STRING:sound-name:${sound-name} --replace-id ${replace-id} ${action-argument} --print-id -- ${title} ${body}</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># command-action-argument=--action ${action-name}=${action-label}</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># close=&#34;&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># inhibit-when-focused=yes</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>scrollback<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># lines=1000</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># multiplier=3.0</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># indicator-position=relative</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># indicator-format=&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>url<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># launch=xdg-open ${url}</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># label-letters=sadfjklewcmpgh</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># osc8-underline=url-mode</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># protocols=http, https, ftp, ftps, file, gemini, gopher</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># uri-characters=abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.,~:;/?#@!$&amp;%*+=&#34;&#39;()[]</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>cursor<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># style=block</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># color=&lt;inverse foreground/background&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># blink=no</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># blink-rate=500</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># beam-thickness=1.5</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># underline-thickness=&lt;font underline thickness&gt;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>mouse<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># hide-when-typing=no</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># alternate-scroll-mode=yes</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>touch<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># long-press-delay=400</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>colors<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># alpha=1.0</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># background=242424</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># foreground=ffffff</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># flash=7f7f00</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># flash-alpha=0.5</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## Normal/regular colors (color palette 0-7)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># regular0=242424  # black</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># regular1=f62b5a  # red</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># regular2=47b413  # green</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># regular3=e3c401  # yellow</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># regular4=24acd4  # blue</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># regular5=f2affd  # magenta</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># regular6=13c299  # cyan</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># regular7=e6e6e6  # white</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## Bright colors (color palette 8-15)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># bright0=616161   # bright black</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># bright1=ff4d51   # bright red</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># bright2=35d450   # bright green</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># bright3=e9e836   # bright yellow</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># bright4=5dc5f8   # bright blue</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># bright5=feabf2   # bright magenta</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># bright6=24dfc4   # bright cyan</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># bright7=ffffff   # bright white</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## dimmed colors (see foot.ini(5) man page)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># dim0=&lt;not set&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ...</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># dim7=&lt;not-set&gt;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## The remaining 256-color palette</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 16 = &lt;256-color palette #16&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ...</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 255 = &lt;256-color palette #255&gt;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## Sixel colors</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># sixel0 =  000000</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># sixel1 =  3333cc</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># sixel2 =  cc2121</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># sixel3 =  33cc33</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># sixel4 =  cc33cc</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># sixel5 =  33cccc</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># sixel6 =  cccc33</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># sixel7 =  878787</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># sixel8 =  424242</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># sixel9 =  545499</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># sixel10 = 994242</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># sixel11 = 549954</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># sixel12 = 995499</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># sixel13 = 549999</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># sixel14 = 999954</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># sixel15 = cccccc</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## Misc colors</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># selection-foreground=&lt;inverse foreground/background&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># selection-background=&lt;inverse foreground/background&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># jump-labels=&lt;regular0&gt; &lt;regular3&gt;          # black-on-yellow</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># scrollback-indicator=&lt;regular0&gt; &lt;bright4&gt;  # black-on-bright-blue</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># search-box-no-match=&lt;regular0&gt; &lt;regular1&gt;  # black-on-red</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># search-box-match=&lt;regular0&gt; &lt;regular3&gt;     # black-on-yellow</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># urls=&lt;regular3&gt;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>csd<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># preferred=server</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># size=26</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># font=&lt;primary font&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># color=&lt;foreground color&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># hide-when-maximized=no</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># double-click-to-maximize=yes</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># border-width=0</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># border-color=&lt;csd.color&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># button-width=26</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># button-color=&lt;background color&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># button-minimize-color=&lt;regular4&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># button-maximize-color=&lt;regular2&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># button-close-color=&lt;regular1&gt;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>key-bindings<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># scrollback-up-page=Shift+Page_Up</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># scrollback-up-half-page=none</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># scrollback-up-line=none</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># scrollback-down-page=Shift+Page_Down</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># scrollback-down-half-page=none</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># scrollback-down-line=none</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># scrollback-home=none</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># scrollback-end=none</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># clipboard-copy=Control+Shift+c XF86Copy</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># clipboard-paste=Control+Shift+v XF86Paste</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># primary-paste=Shift+Insert</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># search-start=Control+Shift+r</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># font-increase=Control+plus Control+equal Control+KP_Add</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># font-decrease=Control+minus Control+KP_Subtract</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># font-reset=Control+0 Control+KP_0</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># spawn-terminal=Control+Shift+n</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># minimize=none</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># maximize=none</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># fullscreen=none</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># pipe-visible=[sh -c &#34;xurls | fuzzel | xargs -r firefox&#34;] none</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># pipe-scrollback=[sh -c &#34;xurls | fuzzel | xargs -r firefox&#34;] none</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># pipe-selected=[xargs -r firefox] none</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># pipe-command-output=[wl-copy] none # Copy last command&#39;s output to the clipboard</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># show-urls-launch=Control+Shift+o</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># show-urls-copy=none</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># show-urls-persistent=none</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># prompt-prev=Control+Shift+z</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># prompt-next=Control+Shift+x</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># unicode-input=Control+Shift+u</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># noop=none</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># quit=none</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>search-bindings<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># cancel=Control+g Control+c Escape</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># commit=Return</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># find-prev=Control+r</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># find-next=Control+s</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># cursor-left=Left Control+b</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># cursor-left-word=Control+Left Mod1+b</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># cursor-right=Right Control+f</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># cursor-right-word=Control+Right Mod1+f</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># cursor-home=Home Control+a</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># cursor-end=End Control+e</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># delete-prev=BackSpace</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># delete-prev-word=Mod1+BackSpace Control+BackSpace</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># delete-next=Delete</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># delete-next-word=Mod1+d Control+Delete</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># extend-char=Shift+Right</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># extend-to-word-boundary=Control+w Control+Shift+Right</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># extend-to-next-whitespace=Control+Shift+w</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># extend-line-down=Shift+Down</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># extend-backward-char=Shift+Left</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># extend-backward-to-word-boundary=Control+Shift+Left</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># extend-backward-to-next-whitespace=none</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># extend-line-up=Shift+Up</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># clipboard-paste=Control+v Control+Shift+v Control+y XF86Paste</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># primary-paste=Shift+Insert</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># unicode-input=none</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># scrollback-up-page=Shift+Page_Up</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># scrollback-up-half-page=none</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># scrollback-up-line=none</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># scrollback-down-page=Shift+Page_Down</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># scrollback-down-half-page=none</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># scrollback-down-line=none</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># scrollback-home=none</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># scrollback-end=none</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>url-bindings<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># cancel=Control+g Control+c Control+d Escape</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># toggle-url-visible=t</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>text-bindings<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># \x03=Mod4+c  # Map Super+c -&gt; Ctrl+c</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>mouse-bindings<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># scrollback-up-mouse=BTN_WHEEL_BACK</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># scrollback-down-mouse=BTN_WHEEL_FORWARD</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># font-increase=Control+BTN_WHEEL_BACK</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># font-decrease=Control+BTN_WHEEL_FORWARD</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># selection-override-modifiers=Shift</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># primary-paste=BTN_MIDDLE</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># select-begin=BTN_LEFT</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># select-begin-block=Control+BTN_LEFT</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># select-extend=BTN_RIGHT</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># select-extend-character-wise=Control+BTN_RIGHT</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># select-word=BTN_LEFT-2</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># select-word-whitespace=Control+BTN_LEFT-2</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># select-quote = BTN_LEFT-3</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># select-row=BTN_LEFT-4</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># vim: ft=dosini</span>
+</span></span></code></pre></div><p>Iniciá tinywl o dwl ejecutando:  <code>tinywl -s foot</code> (no tiene soporte para ver videos en MPV XD) o <code>dwl</code> (que si lo tiene)</p>
+<p>Si usas <code>dwl</code> tenes que instalar foot y yay -S wmenu<code>para instalar dwl clona el repo de dwl y compilalo. Con tecla Windows+p abre el menu para ejecutar un programa con tecla Windows+Shift+Enter abre foot, los demas comandos los podes leer en config.h al clonar el repo de</code>dwl`.</p>
+<p><strong>dwl cambiar el keyboard layout:</strong></p>
+<p>Para cambiar el keyboard layout tenés que exportar la variable <code>XKB_DEFAULT_LAYOUT</code>.
+o agregando .layout = &ldquo;es&rdquo; in the keyboard section in the <code>config.h</code> file and recompiled.</p>
+<h4 id="qué-es-wayland">Qué es wayland?</h4>
+<p>To expand slightly on the above, wayland isn&rsquo;t a real thing; it&rsquo;s a protocol, an idea, or a concept.  There is no implementation other than your compositor.  With X11
+you had the Xorg server and a window manager as separated bits of software - and questions about the keymap would be addressed at the level of the Xorg server, so it is
+meaningful to ask a question like &ldquo;How do I change my keymap in X11&rdquo; (or really that should be Xorg not X11, but for better or worse the two are used interchangeably
+now).  But &ldquo;How do I change my keymap in Wayland&rdquo; makes no sense; you have to change it in your compositor - in your case in dwl&rsquo;s settings which are commented on above.</p>
+<p>And how you do this in dwl is completely different than how you&rsquo;d do it in sway, or weston, or any other wayland compositor.  There may be some vague similarity as they
+all use similar protocols to talk to clients, so some convergence in how you specific some configuration is likely - but this is mostly just coincidence: different
+compositors <em>can</em> handle such things completely differently, and some will not handle it at all.</p>
+<p>All that said, <em>many</em> compositors use xkbcommon, and those that do can be influenced by the same environment variables.  As I&rsquo;m pretty sure this is the case for dwl, you
+can see here for the answer for another compositor that uses xkbcommon.  In short, set (and export) XKB_DEFAULT_LAYOUT before starting dwl.  It can be set to the
+two-letter abbreviation for the Swedish locale (which I don&rsquo;t know off hand).  This should be easier and will not require a recompile.</p>
+<h4 id="navegador-consola">Navegador consola</h4>
+<p>En <code>w3m</code> apretá o y poné como navegadores por defecto: <code>mpv</code>, <code>qutebrowser</code>, <code>yt-dlp -f134+140</code>, <code>netsurf-fb -f sdl -w 1366 -h 768</code>, <code>gallery-dl --cookies-from-browser firefox</code>, <code>falkon</code>, <code>konqueror</code>.</p>
+<h4 id="para-copiar-y-pegar-en-vim-usando-wayland">Para copiar y pegar en vim usando wayland:</h4>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo pacman -S wl-clipboard
+</span></span><span style="display:flex;"><span>vim .vimrc
+</span></span><span style="display:flex;"><span>xnoremap &lt;silent&gt; &lt;C-@&gt; :w !wl-copy&lt;CR&gt;&lt;CR&gt;
+</span></span></code></pre></div><p>Seleccioná las líneas a copiar y apretá <code>Control+@</code> y lo pegás con <code>Control+Shift+V</code>.</p>
+<h4 id="para-correr-chrome-necesitás-ejecutarlo-con-el-siguiente-argumento">Para correr chrome necesitás ejecutarlo con el siguiente argumento:</h4>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>chromium --ozone-platform<span style="color:#f92672">=</span>wayland
+</span></span></code></pre></div><h5 id="o-configuralo-de-forma-permanente-en-chrome">O configuralo de forma permanente en chrome.</h5>
+<ul>
+<li>Go to chrome://flags</li>
+<li>Search &ldquo;Preferred Ozone platform&rdquo;</li>
+<li>Set it to &ldquo;Wayland&rdquo;</li>
+</ul>
+<p><a href="https://www.reddit.com/r/Fedora/comments/rkzp78/make_chrome_run_on_wayland_permanently/">https://www.reddit.com/r/Fedora/comments/rkzp78/make_chrome_run_on_wayland_permanently/</a></p>
+
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+</footer>
+
+
+</body>
+</html>

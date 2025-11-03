@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/post/instalacion_arch_basica/">
+  <meta property="og:site_name" content="Imlauer">
+  <meta property="og:title" content="Instalación de ArchLinux completa y cheatsheet de pacman">
+  <meta property="og:description" content="loadkeys es timedatectl set-ntp true Configurar wifi después de bootear a arch iwctl device list station wlan0 scan station wlan0 get-networks station wlan0 connect asdf station wlan0 show exit Probar la conexión ping dgg.gg
+Listá tus particiones fdisk -l
+Para empezar a particionar ejecutamos cfdisk /dev/sda o usando fdisk /dev/sda explicado más abajo
+De ahí seleccioná gpt en la lista.
+Explicación de por qué gpt:
+To boot MBR under UEFI, you need CSM. Intel pushed for its removal years ago, so it’s unlikely to find it in anything modern. Es recomendable para UEFI con hdd mayores a 2teras, dos también funciona con UEFI pero para bootear un disco duro con MBR(dos) desde UEFI se usa CSM que es algo viejo deprecado por intel). En MBR(DOS) no podés tener una partición de 3 teras. GPT es el futuro. UEFI Firware necesita GPT.">
+  <meta property="og:locale" content="es_es">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="post">
+    <meta property="article:published_time" content="2023-11-22T02:05:50-03:00">
+    <meta property="article:modified_time" content="2023-11-22T02:05:50-03:00">
+    <meta property="article:tag" content="Archlinux">
+    <meta property="article:tag" content="Full">
+    <meta property="article:tag" content="Installation">
+
+  
+  <meta itemprop="name" content="Instalación de ArchLinux completa y cheatsheet de pacman">
+  <meta itemprop="description" content="loadkeys es timedatectl set-ntp true Configurar wifi después de bootear a arch iwctl device list station wlan0 scan station wlan0 get-networks station wlan0 connect asdf station wlan0 show exit Probar la conexión ping dgg.gg
+Listá tus particiones fdisk -l
+Para empezar a particionar ejecutamos cfdisk /dev/sda o usando fdisk /dev/sda explicado más abajo
+De ahí seleccioná gpt en la lista.
+Explicación de por qué gpt:
+To boot MBR under UEFI, you need CSM. Intel pushed for its removal years ago, so it’s unlikely to find it in anything modern. Es recomendable para UEFI con hdd mayores a 2teras, dos también funciona con UEFI pero para bootear un disco duro con MBR(dos) desde UEFI se usa CSM que es algo viejo deprecado por intel). En MBR(DOS) no podés tener una partición de 3 teras. GPT es el futuro. UEFI Firware necesita GPT.">
+  <meta itemprop="datePublished" content="2023-11-22T02:05:50-03:00">
+  <meta itemprop="dateModified" content="2023-11-22T02:05:50-03:00">
+  <meta itemprop="wordCount" content="5196">
+  <meta itemprop="keywords" content="Archlinux,Full,Installation">
+  
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Instalación de ArchLinux completa y cheatsheet de pacman">
+  <meta name="twitter:description" content="loadkeys es timedatectl set-ntp true Configurar wifi después de bootear a arch iwctl device list station wlan0 scan station wlan0 get-networks station wlan0 connect asdf station wlan0 show exit Probar la conexión ping dgg.gg
+Listá tus particiones fdisk -l
+Para empezar a particionar ejecutamos cfdisk /dev/sda o usando fdisk /dev/sda explicado más abajo
+De ahí seleccioná gpt en la lista.
+Explicación de por qué gpt:
+To boot MBR under UEFI, you need CSM. Intel pushed for its removal years ago, so it’s unlikely to find it in anything modern. Es recomendable para UEFI con hdd mayores a 2teras, dos también funciona con UEFI pero para bootear un disco duro con MBR(dos) desde UEFI se usa CSM que es algo viejo deprecado por intel). En MBR(DOS) no podés tener una partición de 3 teras. GPT es el futuro. UEFI Firware necesita GPT.">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Instalación de ArchLinux completa y cheatsheet de pacman
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/post/instalacion_arch_basica/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="loadkeys es
+timedatectl set-ntp true
+Configurar wifi después de bootear a arch
+iwctl
+device list
+station wlan0 scan
+station wlan0 get-networks
+station wlan0 connect asdf
+station wlan0 show
+exit
+Probar la conexión
+ping dgg.gg
+Listá tus particiones
+fdisk -l
+Para empezar a particionar ejecutamos
+cfdisk /dev/sda o usando fdisk /dev/sda explicado más abajo
+De ahí seleccioná gpt en la lista.
+Explicación de por qué gpt:
+
+To boot MBR under UEFI, you need CSM. Intel pushed for its removal years ago, so it&rsquo;s unlikely to find it in anything modern.
+Es recomendable para UEFI con hdd mayores a 2teras, dos también funciona con UEFI pero para bootear un disco duro con MBR(dos) desde UEFI se usa CSM que es algo viejo deprecado por intel). En MBR(DOS) no podés tener una partición de 3 teras. GPT es el futuro.  UEFI Firware necesita GPT.">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Instalación de ArchLinux completa y cheatsheet de pacman
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2023-11-22T02:05:50-03:00'>
+      November 22, 2023
+    </time>
+    
+    <br>
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/archlinux/">Archlinux</a>
+    
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/full/">Full</a>
+    
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/installation/">Installation</a>
+    
+    
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>loadkeys es
+</span></span><span style="display:flex;"><span>timedatectl set-ntp true
+</span></span></code></pre></div><h4 id="configurar-wifi-después-de-bootear-a-arch">Configurar wifi después de bootear a arch</h4>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>iwctl
+</span></span><span style="display:flex;"><span>device list
+</span></span><span style="display:flex;"><span>station wlan0 scan
+</span></span><span style="display:flex;"><span>station wlan0 get-networks
+</span></span><span style="display:flex;"><span>station wlan0 connect asdf
+</span></span><span style="display:flex;"><span>station wlan0 show
+</span></span><span style="display:flex;"><span>exit
+</span></span></code></pre></div><h4 id="probar-la-conexión">Probar la conexión</h4>
+<p>ping dgg.gg</p>
+<h5 id="listá-tus-particiones">Listá tus particiones</h5>
+<p><code>fdisk -l</code></p>
+<h6 id="para-empezar-a-particionar-ejecutamos">Para empezar a particionar ejecutamos</h6>
+<p><code>cfdisk /dev/sda</code> o usando <code>fdisk /dev/sda</code> explicado más abajo</p>
+<p>De ahí seleccioná gpt en la lista.</p>
+<p>Explicación de por qué gpt:</p>
+<blockquote>
+<p>To boot MBR under UEFI, you need CSM. Intel pushed for its removal years ago, so it&rsquo;s unlikely to find it in anything modern.
+Es recomendable para UEFI con hdd mayores a 2teras, dos también funciona con UEFI pero para bootear un disco duro con MBR(dos) desde UEFI se usa CSM que es algo viejo deprecado por intel). En MBR(DOS) no podés tener una partición de 3 teras. GPT es el futuro.  UEFI Firware necesita GPT.</p>
+</blockquote>
+<p>Explicación sobre MBR(DOS) y GPT : <a href="https://youtube.com/watch?v=Ch9f7i0hj90">https://youtube.com/watch?v=Ch9f7i0hj90</a></p>
+<p><a href="https://hardzone.es/reportajes/que-es/csm-bios-uefi-placa-base-hdd-ssd/">https://hardzone.es/reportajes/que-es/csm-bios-uefi-placa-base-hdd-ssd/</a></p>
+<p><strong>Crea una particion de efi de por lo menos 300 megas, otra de swap de 4gb, y el espacio que sobra para ext4</strong></p>
+<p><strong>Si no lo quieren hacer con cfdisk lo pueden hacer con fdisk de la siguiente manera:</strong></p>
+<h4 id="uefi-gpt">uefi (gpt)</h4>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>g <span style="color:#f92672">(</span>gpt disk label<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>n
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">1</span> <span style="color:#f92672">(</span>partition number <span style="color:#f92672">[</span>1/128<span style="color:#f92672">])</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">2048</span> first sector
+</span></span><span style="display:flex;"><span>+300M last sector <span style="color:#f92672">(</span>boot sector size<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>t
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">1</span> <span style="color:#f92672">(</span>EFI System<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>n
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>default
+</span></span><span style="display:flex;"><span>+4G
+</span></span><span style="display:flex;"><span>t
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>swap
+</span></span><span style="display:flex;"><span>n
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">3</span>
+</span></span><span style="display:flex;"><span>default <span style="color:#f92672">(</span>fill up partition<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>default <span style="color:#f92672">(</span>fill up partition<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>w <span style="color:#f92672">(</span>write<span style="color:#f92672">)</span>
+</span></span></code></pre></div><h4 id="formateo-montado-de-particiones-e-instalación-base-usando-uefi">Formateo, montado de particiones e instalación base (usando UEFI)</h4>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mkfs.ext4 /dev/sda3 <span style="color:#f92672">(</span>root partition<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>mkswap /dev/sda2 <span style="color:#f92672">(</span>swap partition<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>mkfs.fat -F <span style="color:#ae81ff">32</span> /dev/sda1 <span style="color:#f92672">(</span>efi partition<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>mount /dev/sda3 <span style="color:#f92672">(</span>root_partition<span style="color:#f92672">)</span> /mnt
+</span></span><span style="display:flex;"><span>mount --mkdir /dev/sda1 <span style="color:#f92672">(</span>efi partition<span style="color:#f92672">)</span> /mnt/boot
+</span></span><span style="display:flex;"><span>swapon /dev/sda2 <span style="color:#f92672">(</span>swap_partition<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>pacstrap -K /mnt base base-devel linux linux-firmware vim man-pages man-db
+</span></span><span style="display:flex;"><span>genfstab -U /mnt &gt;&gt; /mnt/etc/fstab
+</span></span><span style="display:flex;"><span>arch-chroot /mnt 
+</span></span><span style="display:flex;"><span>ln -sf /usr/share/zoneinfo/America/Buenos_Aires /etc/localtime
+</span></span><span style="display:flex;"><span>hwclock --systohc
+</span></span><span style="display:flex;"><span>vim /etc/locale.gen y descomentá en_US.UTF-8 UTF-8 <span style="color:#f92672">(</span>es el idioma del sistema operativo a mi me gusta en ingles<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>locale-gen
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;LANG=en_US.UTF-8&#34;</span> &gt; /etc/locale.conf
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;KEYMAP=es&#34;</span> &gt; /etc/vconsole.conf
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### Mirá en el directorio /usr/share/kbd/consolefonts/ para ver tus letras disponibles</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;FONT=latarcyrheb-sun32&#34;</span> &gt;&gt; /etc/vconsole.conf
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;arch&#34;</span> &gt; /etc/hostname
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>vim /etc/hosts
+</span></span><span style="display:flex;"><span>127.0.0.1       localhost
+</span></span><span style="display:flex;"><span>::1 localhost
+</span></span><span style="display:flex;"><span>127.0.0.1       arch.localdomain	arch
+</span></span></code></pre></div><p>En este archivo también podes agregar al final el siguiente archivo para bloquear sitios de apuestas, pornografía, etc: <a href="https://github.com/StevenBlack/hosts">https://github.com/StevenBlack/hosts</a></p>
+<h6 id="cambia-las-dns-porque-las-de-claro-personal-movistar-bloquean-páginas-yo-uso-las-de-quad9---está-bloqueado-por-quad9--así-que-ahora-uso-las-dns-de-google">Cambia las DNS porque las de Claro, Personal, Movistar bloquean páginas, yo uso las de Quad9 ( <a href="https://digdeeper.love">https://digdeeper.love</a> está bloqueado por Quad9 ) así que ahora uso las DNS de Google.</h6>
+<p>DNS de Quad9 <a href="https://en.wikipedia.org/wiki/Quad9">https://en.wikipedia.org/wiki/Quad9</a></p>
+<p>sudo vim <code>/etc/resolv.conf</code></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nameserver 9.9.9.11
+</span></span><span style="display:flex;"><span>nameserver 149.112.112.11
+</span></span></code></pre></div><hr>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo chattr +i /etc/resolv.conf <span style="color:#75715e"># Para que networkmanager no sobreescriba.</span>
+</span></span><span style="display:flex;"><span>passwd <span style="color:#75715e"># cambiar la clave del root</span>
+</span></span><span style="display:flex;"><span>pacman -S grub networkmanager alsa-utils 
+</span></span></code></pre></div><h5 id="fonts">Fonts</h5>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo pacman -S noto-fonts noto-fonts-cjk noto-fonts-emoji noto-fonts-extra terminus-font
+</span></span></code></pre></div><p>Y en el <code>.config/foot/foot.ini</code> agregá:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>font<span style="color:#f92672">=</span>Terminus:size<span style="color:#f92672">=</span><span style="color:#ae81ff">12</span>
+</span></span></code></pre></div><hr>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pacman -S fzf bash-completion pipewire pipewire-pulse tmux fastfetch os-prober sudo fish sway wmenu foot alsa-utils mpv imagemagick translate-shell git hugo python-pip wl-clipboard grim btop imv yt-dlp neomutt firefox irssi w3m samba obs-studio gimp qt6-wayland qt5-wayland<span style="color:#f92672">(</span>para smtube<span style="color:#f92672">)</span> thunderbird tor torsocks v4l-utils unrar unzip qbittorrent kdenlive extra/texlive-latex extra/texlive-latexextra extra/texlive-plaingeneric texlive-fontsextra extra/texlive-fontsrecommended evince extra/texlive-langspanish wget acpi telegram-desktop festival espeak-ng speech-dispatcher libreoffice tree rclone inetutils bc xorg-xwayland feh chromium newsboat telegram-desktop
+</span></span></code></pre></div><h4 id="neomutt">Neomutt</h4>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo pacman --needed -S neomutt curl isync msmtp pass ca-certificates gettext goimapnotify lynx notmuch cronie mpop
+</span></span><span style="display:flex;"><span>yay -S abook urlview pam-gnupg gallery-dl jackett-bin factorio i2p-bin 
+</span></span></code></pre></div><h6 id="todos-los-paquetes-de-yay-se-instalan-en-opt">Todos los paquetes de yay se instalan en <code>/opt</code></h6>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>yay -Ql package para saber que binarios instaló
+</span></span><span style="display:flex;"><span>pacman -Ql nombre_del_paquete
+</span></span></code></pre></div><p>También instalá chawan (explicado en la guía de Gentoo).</p>
+<h5 id="letras-para-chawan">Letras para chawan.</h5>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo pacman -S ttf-nerd-fonts-symbols ttf-font-awesome ttf-jetbrains-mono-nerd
+</span></span></code></pre></div><h4 id="virtualbox">VirtualBox</h4>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#f92672">[</span>I<span style="color:#f92672">]</span> esotericwarfare@arch ~&gt; sudo pacman -S virtualbox
+</span></span><span style="display:flex;"><span>resolving dependencies...
+</span></span><span style="display:flex;"><span>:: There are <span style="color:#ae81ff">3</span> providers available <span style="color:#66d9ef">for</span> VIRTUALBOX-HOST-MODULES:
+</span></span><span style="display:flex;"><span>:: Repository extra
+</span></span><span style="display:flex;"><span>   1<span style="color:#f92672">)</span> virtualbox-host-dkms  2<span style="color:#f92672">)</span> virtualbox-host-modules-arch  3<span style="color:#f92672">)</span> virtualbox-host-modules-lts
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Enter a number <span style="color:#f92672">(</span>default<span style="color:#f92672">=</span>1<span style="color:#f92672">)</span>: <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>sudo pacman -S virtualbox-host-modules-arch
+</span></span></code></pre></div><h6 id="para-ver-todos-los-paquetes-instalados">Para ver todos los paquetes instalados</h6>
+<p><a href="https://github.com/rezadoz/pacdump/">https://github.com/rezadoz/pacdump/</a></p>
+<p>En el archivo (Control+Alt+R para leer texto desde Firefox).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo vim /etc/speech-dispatcher/speechd.conf
+</span></span></code></pre></div><p><strong>Descomentá:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>AddModule <span style="color:#e6db74">&#34;festival&#34;</span>                 <span style="color:#e6db74">&#34;sd_festival&#34;</span>  <span style="color:#e6db74">&#34;festival.conf&#34;</span>
+</span></span><span style="display:flex;"><span>LanguageDefaultModule <span style="color:#e6db74">&#34;es&#34;</span>  <span style="color:#e6db74">&#34;festival&#34;</span>
+</span></span></code></pre></div><h4 id="virtualización">Virtualización</h4>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo pacman -S virt-manager qemu libvirt bridge-utils dnsmasq virt-viewer vde2 openbsd-netcat
+</span></span><span style="display:flex;"><span>sudo pacman --needed -S ebtables iptables
+</span></span><span style="display:flex;"><span>sudo pacman -S libguestfs
+</span></span><span style="display:flex;"><span>sudo systemctl start libvirtd
+</span></span><span style="display:flex;"><span>sudo usermod -aG libvirt tu_user
+</span></span></code></pre></div><p>Y tenés que cambiar la cantidad de procesadores a 1 sino te tira <strong>kernel panic</strong>.</p>
+<p>Para instalar smtube tendrás que usar el AUR. <strong>Aclaración sobre el AUR:</strong> podés usar YAY o otros pero lo ideal es que instales los paquetes del AUR <strong>manualmente</strong>: <a href="https://averagelinuxuser.com/install-aur-manually-helpers/">https://averagelinuxuser.com/install-aur-manually-helpers/</a></p>
+<h4 id="instalar-yay">Instalar yay</h4>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo pacman -S --needed git base-devel <span style="color:#f92672">&amp;&amp;</span> git clone https://aur.archlinux.org/yay.git <span style="color:#f92672">&amp;&amp;</span> cd yay <span style="color:#f92672">&amp;&amp;</span> makepkg -si
+</span></span><span style="display:flex;"><span>yay -S tor-browser-bin aichat freetube-bin
+</span></span><span style="display:flex;"><span>freetube --ozone-platform<span style="color:#f92672">=</span>wayland
+</span></span></code></pre></div><p>Al ejecutar aichat seleccioná <code>deep-infra</code> que no requiere una API key.</p>
+<p>Si instalás wayland tenés que ejecutar discord y chrome así y <strong>feh</strong> para que funcioné tenés que instalar xorg-server-xwayland o mejor usá <strong>imv</strong>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo pacman -S xdg-desktop-portal xdg-desktop-portal-wlr  xorg-server-xwayland
+</span></span><span style="display:flex;"><span>Tenés que modificar el /etc/sway/config <span style="color:#f92672">(</span>buscá en mis publicaciones sway<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>discord --enable-features<span style="color:#f92672">=</span>UseOzonePlatform --ozone-platform<span style="color:#f92672">=</span>wayland
+</span></span></code></pre></div><p>systemctl enable NetworkManager</p>
+<p>pacman -S wpa_supplicant wireless_tools netctl  # no necesario, con networkmanager te basta. Opcional</p>
+<pre tabindex="0"><code>```bash
+pacman -S dosfstools mtools # particiones fat
+
+#### uefi(gpt)
+Acá me equivoqué no necesitas efibootmgr si vas a usar GRUB porque efibootmgr es para Efi Stub.
+pacman -S efibootmgr 
+grub-install --target=x86_64-efi --bootloader-id=grub_uefi --efi-directory=/boot --recheck
+</code></pre><h2 id="ojo">OJO!!</h2>
+<p>En algunos UEFI frameworks con fallas tenes que instalar el grub usando el parámetro <code>--removable</code> para instalar el bootloader a la ubicación de respaldo &ldquo;fallback&rdquo; porque sino se borra sólo la entrada del efi.</p>
+<p><a href="https://bbs.archlinux.org/viewtopic.php?id=250928">https://bbs.archlinux.org/viewtopic.php?id=250928</a></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo grub-install --target<span style="color:#f92672">=</span>x86_64-efi --efi-directory<span style="color:#f92672">=</span>/boot --removable
+</span></span></code></pre></div><p>Si no hacés esto, de todas formas vas a poder bootear a tu arch usando la EFI shell de la siguiente manera
+Tenés que ubicar el efi y ejecutarlo</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>blk0:
+</span></span><span style="display:flex;"><span>cd EFI
+</span></span><span style="display:flex;"><span>cd grub
+</span></span><span style="display:flex;"><span>grubx64.efi
+</span></span></code></pre></div><h5 id="legacy-dosmbr">legacy dos/mbr</h5>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>grub-install /dev/sda --recheck
+</span></span></code></pre></div><h6 id="luego-de-instalar-el-grub-se-lo-configura-con-el-siguiente-comando">Luego de instalar el grub se lo configura con el siguiente comando:</h6>
+<h2 id="para-que-os-prober-reconozca-las-demás-distros-tenés-que-montar-las-otras-particiones-luego-de-inicar-arch-y-en-etcdefaultgrub-agregá-la-siguiente-línea">Para que os-prober reconozca las demás distros tenés que montar las otras particiones luego de inicar arch y en <code>/etc/default/grub</code> agregá la siguiente línea:</h2>
+<p><code>GRUB_DISABLE_OS_PROBER=false</code></p>
+<pre tabindex="0"><code>sudo mount --mkdir /dev/sdaX /mnt/linux
+</code></pre><p>Ejecutá: <code>sudo os-prober</code> para verificar que detecte la partición de las demás distribuciones de linux que tengas.</p>
+<p>Luego</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>grub-mkconfig -o /boot/grub/grub.cfg
+</span></span><span style="display:flex;"><span>exit
+</span></span></code></pre></div><h5 id="ahora-salimos-del-chroot-y-reiniciamos">Ahora salimos del chroot y reiniciamos</h5>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>exit
+</span></span><span style="display:flex;"><span>reboot
+</span></span></code></pre></div><h4 id="crear-un-usuario-e-instalar-xfce">Crear un usuario e instalar xfce</h4>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-console" data-lang="console"><span style="display:flex;"><span># nmtui <span style="color:#f92672">(</span>para conectarse wifi<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span># useradd -m -g users -G video,audio,wheel nombre_usuario
+</span></span><span style="display:flex;"><span># passwd nombre_usuario <span style="color:#75715e">## agregar password</span>
+</span></span><span style="display:flex;"><span># vim /etc/sudoers y agregá tu usuario copiando la linea de root y sustituyendo root por tu nombre de usuario
+</span></span><span style="display:flex;"><span># pacman -S pipewire pipewire-pulse <span style="color:#75715e"># servidor de audio</span>
+</span></span><span style="display:flex;"><span># pacman -S pavucontrol <span style="color:#f92672">(</span>opcional para controlar y setear otras placas de audio<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>#<span style="color:#75715e">## Agregá esto a .xinitrc si es que no usas un login manager (aunque para mi no fue necesario)</span>
+</span></span><span style="display:flex;"><span># pipewire &amp;
+</span></span><span style="display:flex;"><span># pipewire-pulse &amp;
+</span></span><span style="display:flex;"><span># pipewire-media-session &amp;
+</span></span><span style="display:flex;"><span>#<span style="color:#75715e">### Esto yo no lo volvería a instalar, solo xorg y xorg-xinit porque uso dwm, o ahora estoy usando sólo la TTY.</span>
+</span></span><span style="display:flex;"><span># pacman -Syu xorg xfce4 xfce4-goodies 
+</span></span><span style="display:flex;"><span># pacman -S fish 
+</span></span><span style="display:flex;"><span>#<span style="color:#75715e">## La configuración de fish está en .fish/config/config.fish, uso fish por el autosuggestions.</span>
+</span></span><span style="display:flex;"><span># chsh para cambiar la shell del usuario actual
+</span></span></code></pre></div><p>Ingresá desde tu usuario y creá un archivo .xinitrc adentro poné</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>exec xfce4-session
+</span></span></code></pre></div><h3 id="agregar-keymap-keyboard-y-touchpad-synaptics">agregar keymap keyboard y touchpad synaptics</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-console" data-lang="console"><span style="display:flex;"><span># /etc/X11/xorg.conf.d/00-keyboard.conf
+</span></span><span style="display:flex;"><span>Section &#34;InputClass&#34;
+</span></span><span style="display:flex;"><span>        Identifier &#34;system-keyboard&#34;
+</span></span><span style="display:flex;"><span>        MatchIsKeyboard &#34;on&#34;
+</span></span><span style="display:flex;"><span>        Option &#34;XkbLayout&#34; &#34;es&#34;
+</span></span><span style="display:flex;"><span>        Option &#34;XkbModel&#34; &#34;pc104&#34;
+</span></span><span style="display:flex;"><span>EndSection
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-console" data-lang="console"><span style="display:flex;"><span># /etc/X11/xorg.conf.d/70-synaptics.conf
+</span></span><span style="display:flex;"><span>Section &#34;InputClass&#34;
+</span></span><span style="display:flex;"><span>    Identifier &#34;touchpad&#34;
+</span></span><span style="display:flex;"><span>    Driver &#34;synaptics&#34;
+</span></span><span style="display:flex;"><span>    MatchIsTouchpad &#34;on&#34;
+</span></span><span style="display:flex;"><span>        Option &#34;TapButton1&#34; &#34;1&#34;
+</span></span><span style="display:flex;"><span>        Option &#34;TapButton2&#34; &#34;3&#34;
+</span></span><span style="display:flex;"><span>        Option &#34;TapButton3&#34; &#34;2&#34;
+</span></span><span style="display:flex;"><span>        Option &#34;VertEdgeScroll&#34; &#34;on&#34;
+</span></span><span style="display:flex;"><span>        Option &#34;VertTwoFingerScroll&#34; &#34;on&#34;
+</span></span><span style="display:flex;"><span>        Option &#34;HorizEdgeScroll&#34; &#34;on&#34;
+</span></span><span style="display:flex;"><span>        Option &#34;HorizTwoFingerScroll&#34; &#34;on&#34;
+</span></span><span style="display:flex;"><span>        Option &#34;CircularScrolling&#34; &#34;on&#34;
+</span></span><span style="display:flex;"><span>        Option &#34;CircScrollTrigger&#34; &#34;2&#34;
+</span></span><span style="display:flex;"><span>        Option &#34;EmulateTwoFingerMinZ&#34; &#34;40&#34;
+</span></span><span style="display:flex;"><span>        Option &#34;EmulateTwoFingerMinW&#34; &#34;8&#34;
+</span></span><span style="display:flex;"><span>        Option &#34;CoastingSpeed&#34; &#34;0&#34;
+</span></span><span style="display:flex;"><span>        Option &#34;FingerLow&#34; &#34;30&#34;
+</span></span><span style="display:flex;"><span>        Option &#34;FingerHigh&#34; &#34;50&#34;
+</span></span><span style="display:flex;"><span>        Option &#34;MaxTapTime&#34; &#34;125&#34;
+</span></span><span style="display:flex;"><span>EndSection
+</span></span></code></pre></div><h3 id="para-limpiar-la-terminal-cuando-tenés-seteado-el-set--o-vi">Para limpiar la terminal cuando tenés seteado el set -o vi</h3>
+<p>Esto va en el archivo .inputrc</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>set editing-mode vi
+</span></span><span style="display:flex;"><span>$if mode<span style="color:#f92672">=</span>vi
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>set keymap vi-command
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># these are for vi-command mode</span>
+</span></span><span style="display:flex;"><span>Control-l: clear-screen
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>set keymap vi-insert
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># these are for vi-insert mode</span>
+</span></span><span style="display:flex;"><span>Control-l: clear-screen 
+</span></span><span style="display:flex;"><span>$endif
+</span></span></code></pre></div><p>Luego guardá y ejecutá startx, done.</p>
+<p>Esta instalación que encontré es ligeramente diferente: <a href="https://www.geeksforgeeks.org/arch-linux-installation-and-configuration-on-uefi-machines/">https://www.geeksforgeeks.org/arch-linux-installation-and-configuration-on-uefi-machines/</a></p>
+<h3 id="instalar-dwm-st-dvtm-dwmstatus">Instalar dwm, st, dvtm, dwmstatus</h3>
+<p>Instalar las dependencias de dwm sin bloat</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo pacman -S xorg-server xorg-xinit libx11 libxinerama libxft webkit2gtk
+</span></span></code></pre></div><p><a href="https://wiki.archlinux.org/title/dwm">https://wiki.archlinux.org/title/dwm</a>
+<a href="https://dl.suckless.org/">https://dl.suckless.org/</a></p>
+<p>Mi dwm configuración: <a href="https://github.com/imlauera/dwm">https://github.com/imlauera/dwm</a></p>
+<p>.xinitrc</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-console" data-lang="console"><span style="display:flex;"><span>dwmstatus &amp;
+</span></span><span style="display:flex;"><span>xfce4-screensaver &amp;
+</span></span><span style="display:flex;"><span>st -e irssi &amp;
+</span></span><span style="display:flex;"><span>st -e vim ~/TODO &amp;
+</span></span><span style="display:flex;"><span>chromium &amp;
+</span></span><span style="display:flex;"><span>mbsync -a &amp;
+</span></span><span style="display:flex;"><span>st -e neomutt &amp;
+</span></span><span style="display:flex;"><span>redshift -O3500; xset r rate 300 50; exec startdwm
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span>#<span style="color:#75715e">## startdwm</span>
+</span></span><span style="display:flex;"><span>while true; do
+</span></span><span style="display:flex;"><span>    # Log stderror to a file
+</span></span><span style="display:flex;"><span>    dwm 2&gt; ~/.dwm.log
+</span></span><span style="display:flex;"><span>    # No error logging
+</span></span><span style="display:flex;"><span>    #dwm &gt;/dev/null 2&gt;&amp;1
+</span></span><span style="display:flex;"><span>done
+</span></span></code></pre></div><h4 id="atencion-tuve-problemas-con-el-startdwm">ATENCION: TUVE PROBLEMAS CON EL STARTDWM</h4>
+<p>Tuve problemas usando startdwm directamente escribí exec dwm porque crasheaba el mpv cuando apretaba J y pipewire no lo necesité escribir en .xinitrc directamente lo instalé y funcionaba sin necesidad de escribirlo.
+Configuracion que uso en /etc/mpv/mpv.conf y /etc/yt-dlp.conf</p>
+<h6 id="etcmpvmpvconf">/etc/mpv/mpv.conf</h6>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#f92672">[</span>esotericwarfare@arch mpv<span style="color:#f92672">]</span>$ cat mpv.conf
+</span></span><span style="display:flex;"><span>--profile<span style="color:#f92672">=</span>fast
+</span></span><span style="display:flex;"><span>--sub-auto<span style="color:#f92672">=</span>all
+</span></span><span style="display:flex;"><span>--ytdl-raw-options<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;format=18,write-auto-sub=,write-sub=,sub-lang=[en,ru]&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>esotericwarfare@arch mpv<span style="color:#f92672">]</span>$
+</span></span></code></pre></div><h5 id="yt-dlpconf">yt-dlp.conf</h5>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#f92672">[</span>esotericwarfare@arch mpv<span style="color:#f92672">]</span>$ cat /etc/yt-dlp.conf
+</span></span><span style="display:flex;"><span>--format<span style="color:#f92672">=</span><span style="color:#ae81ff">18</span>
+</span></span><span style="display:flex;"><span>--write-auto-sub
+</span></span><span style="display:flex;"><span>--write-sub
+</span></span><span style="display:flex;"><span>--sub-lang<span style="color:#f92672">=</span>en,ru
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>esotericwarfare@arch mpv<span style="color:#f92672">]</span>$
+</span></span></code></pre></div><h1 id="pacman--qm-estos-paquetes-tenes-que-instalar-para-terminar-la-instalación">pacman -Qm: Estos paquetes tenes que instalar para terminar la instalación</h1>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#f92672">[</span>esotericwarfare@arch ~<span style="color:#f92672">]</span>$ pacman -Qm
+</span></span><span style="display:flex;"><span>cstrike-appimage 1.6-1
+</span></span><span style="display:flex;"><span>dmenu-git 5.3.r0.7be720c-1
+</span></span><span style="display:flex;"><span>dmenu-git-debug 5.3.r0.7be720c-1
+</span></span><span style="display:flex;"><span>jackett-bin 0.22.233-1
+</span></span><span style="display:flex;"><span>keynav-debug 0.20180821.0-2
+</span></span><span style="display:flex;"><span>keynav-git 0.+r271.20220824-1
+</span></span><span style="display:flex;"><span>keynav-git-debug 0.+r271.20220824-1
+</span></span><span style="display:flex;"><span>ovh-ttyrec-git v1.1.7.1.r0.g36e8dde-1
+</span></span><span style="display:flex;"><span>ovh-ttyrec-git-debug v1.1.7.1.r0.g36e8dde-1
+</span></span><span style="display:flex;"><span>simplescreenrecorder 0.4.4-3
+</span></span><span style="display:flex;"><span>simplescreenrecorder-debug 0.4.4-3
+</span></span><span style="display:flex;"><span>surf 2.1-6
+</span></span><span style="display:flex;"><span>surf-debug 2.1-6
+</span></span><span style="display:flex;"><span>tabbed 0.8-1
+</span></span><span style="display:flex;"><span>tabbed-debug 0.8-1
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>esotericwarfare@arch ~<span style="color:#f92672">]</span>$
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-console" data-lang="console"><span style="display:flex;"><span>sudo pacman -S git
+</span></span><span style="display:flex;"><span>git clone https://git.suckless.org/dwm
+</span></span><span style="display:flex;"><span>git clone https://git.suckless.org/st
+</span></span><span style="display:flex;"><span>git clone https://git.suckless.org/dwmstatus
+</span></span><span style="display:flex;"><span>curl -L https://www.brain-dump.org/projects/dvtm/dvtm-0.15.tar.gz -o dvtm.tar.gz
+</span></span><span style="display:flex;"><span>sudo pacman -S xorg-server xorg-xinit libx11 libxinerama libxft webkit2gtk
+</span></span><span style="display:flex;"><span>cd st
+</span></span><span style="display:flex;"><span>sudo make clean install
+</span></span><span style="display:flex;"><span>cd dwm
+</span></span><span style="display:flex;"><span>vim config.h
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span>static const char *termcmd[]  = { &#34;st&#34;,&#34;-e&#34;,&#34;dvtm&#34;, NULL };
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span>static const char *up_vol[]   = { &#34;pactl&#34;, &#34;set-sink-volume&#34;, &#34;@DEFAULT_SINK@&#34;, &#34;+10%&#34;,   NULL };
+</span></span><span style="display:flex;"><span>static const char *down_vol[] = { &#34;pactl&#34;, &#34;set-sink-volume&#34;, &#34;@DEFAULT_SINK@&#34;, &#34;-10%&#34;,   NULL };
+</span></span><span style="display:flex;"><span>static const char *mute_vol[] = { &#34;pactl&#34;, &#34;set-sink-mute&#34;,   &#34;@DEFAULT_SINK@&#34;, &#34;toggle&#34;, NULL };
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span>static const char *brighter[] = { &#34;brightnessctl&#34;, &#34;set&#34;, &#34;10%+&#34;, NULL };
+</span></span><span style="display:flex;"><span>static const char *dimmer[]   = { &#34;brightnessctl&#34;, &#34;set&#34;, &#34;10%-&#34;, NULL };
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span>mkdir $HOME/pics
+</span></span><span style="display:flex;"><span>scrot $HOME/pics/%m-%d-%Y-%H%M%S.png
+</span></span><span style="display:flex;"><span>scrot $HOME/pics/%m-%d-%Y-%H%M%S.png --select --line mode=edge
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span>       { 0,         XK_Print, spawn, SHCMD(&#34;/path/to/scripts/screenshot.sh&#34;) },
+</span></span><span style="display:flex;"><span>       { ShiftMask, XK_Print, spawn, SHCMD(&#34;/path/to/scripts/screenshotsel.sh&#34;) },
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span>sudo make clean install
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span>`cp /etc/X11/xinit/xinitrc ~/.xinitrc`
+</span></span><span style="display:flex;"><span>.xinitrc:
+</span></span><span style="display:flex;"><span>```console
+</span></span><span style="display:flex;"><span>dwmstatus &amp;
+</span></span><span style="display:flex;"><span>feh --bg-center &#34;/home/esotericwarfare/wall.png&#34; &amp;
+</span></span><span style="display:flex;"><span>st -e irssi &amp;
+</span></span><span style="display:flex;"><span>chromium &amp;
+</span></span><span style="display:flex;"><span>exec startdwm
+</span></span></code></pre></div><h5 id="startdwn">startdwn:</h5>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#f92672">[</span>esotericwarfare@arch ~<span style="color:#f92672">]</span>$ cat /usr/bin/startdwm
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">while</span> true; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Log stderror to a file</span>
+</span></span><span style="display:flex;"><span>    dwm 2&gt; ~/.dwm.log
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># No error logging</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">#dwm &gt;/dev/null 2&gt;&amp;1</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">done</span>
+</span></span></code></pre></div><pre tabindex="0"><code>
+#### Configurar driver intel ( no hace falta el que viene por defecto funciona bien pero para sacarte el screen tearing tenés que usar picom)
+[https://youtube.com/watch?v=zEhAJMQYSws](https://youtube.com/watch?v=zEhAJMQYSws)
+
+
+### Screen tearing
+Tuve un problma de screen tearing que podría estar relacionada con psr (lee la archlinux wiki) lo terminé solucionando con picom, aunque no es la solución ideal
+
+Instalá picom y agregalo al xinitrc así:
+```bash
+picom -cfF -o 0.38 -O 200 -I 200 -t 0 -l 0 -r 3 -D2 -m 0.88 --daemon
+</code></pre><p>en <code>/etc/xdg/picom.conf</code>, cambiá los siguientes parámetros</p>
+<pre tabindex="0"><code>backend = &#34;glx&#34;
+vsync = true
+</code></pre><h5 id="pegar-logs">Pegar logs</h5>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-console" data-lang="console"><span style="display:flex;"><span>curl -F file=@- https://0x0.st
+</span></span></code></pre></div><h3 id="minimalista-picomconf-para-arreglar-screen-tearing">Minimalista picom.conf para arreglar screen tearing</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#corner-radius = 14.0;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#################################</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#             Shadows           #</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#################################</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Enabled client-side shadows on windows. Note desktop windows </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># (windows with &#39;_NET_WM_WINDOW_TYPE_DESKTOP&#39;) never get shadow, </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># unless explicitly requested using the wintypes option.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># shadow = false</span>
+</span></span><span style="display:flex;"><span>shadow <span style="color:#f92672">=</span> false;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># The blur radius for shadows, in pixels. (defaults to 12)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># shadow-radius = 12</span>
+</span></span><span style="display:flex;"><span>shadow-radius <span style="color:#f92672">=</span> 12;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># The opacity of shadows. (0.0 - 1.0, defaults to 0.75)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># shadow-opacity = .75</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># The left offset for shadows, in pixels. (defaults to -15)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># shadow-offset-x = -15</span>
+</span></span><span style="display:flex;"><span>shadow-offset-x <span style="color:#f92672">=</span> -6;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># The top offset for shadows, in pixels. (defaults to -15)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># shadow-offset-y = -15</span>
+</span></span><span style="display:flex;"><span>shadow-offset-y <span style="color:#f92672">=</span> -6;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Avoid drawing shadows on dock/panel windows. This option is deprecated,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># you should use the *wintypes* option in your config file instead.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># no-dock-shadow = false</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Don&#39;t draw shadows on drag-and-drop windows. This option is deprecated, </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># you should use the *wintypes* option in your config file instead.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># no-dnd-shadow = false</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Red color value of shadow (0.0 - 1.0, defaults to 0).</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># shadow-red = 0</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Green color value of shadow (0.0 - 1.0, defaults to 0).</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># shadow-green = 0</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Blue color value of shadow (0.0 - 1.0, defaults to 0).</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># shadow-blue = 0</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Do not paint shadows on shaped windows. Note shaped windows </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># here means windows setting its shape through X Shape extension. </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Those using ARGB background is beyond our control. </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Deprecated, use </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   shadow-exclude = &#39;bounding_shaped&#39;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># or </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   shadow-exclude = &#39;bounding_shaped &amp;&amp; !rounded_corners&#39;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># instead.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># shadow-ignore-shaped = &#39;&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Specify a list of conditions of windows that should have no shadow.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># examples:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   shadow-exclude = &#34;n:e:Notification&#34;;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># shadow-exclude = []</span>
+</span></span><span style="display:flex;"><span>shadow-exclude <span style="color:#f92672">=</span> <span style="color:#f92672">[</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;name = &#39;Notification&#39;&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;class_g = &#39;Conky&#39;&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;class_g ?= &#39;Notify-osd&#39;&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;class_g = &#39;Cairo-clock&#39;&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;_GTK_FRAME_EXTENTS@:c&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">]</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Specify a X geometry that describes the region in which shadow should not</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># be painted in, such as a dock window region. Use </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#    shadow-exclude-reg = &#34;x10+0+0&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># for example, if the 10 pixels on the bottom of the screen should not have shadows painted on.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># shadow-exclude-reg = &#34;&#34; </span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Crop shadow of a window fully on a particular Xinerama screen to the screen.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># xinerama-shadow-crop = false</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#################################</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#           Fading              #</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#################################</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Fade windows in/out when opening/closing and when opacity changes,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#  unless no-fading-openclose is used.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># fading = false</span>
+</span></span><span style="display:flex;"><span>fading <span style="color:#f92672">=</span> false
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Opacity change between steps while fading in. (0.01 - 1.0, defaults to 0.028)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># fade-in-step = 0.028</span>
+</span></span><span style="display:flex;"><span>fade-in-step <span style="color:#f92672">=</span> 0.03;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Opacity change between steps while fading out. (0.01 - 1.0, defaults to 0.03)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># fade-out-step = 0.03</span>
+</span></span><span style="display:flex;"><span>fade-out-step <span style="color:#f92672">=</span> 0.03;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># The time between steps in fade step, in milliseconds. (&gt; 0, defaults to 10)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># fade-delta = 10</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Specify a list of conditions of windows that should not be faded.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># fade-exclude = []</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Do not fade on window open/close.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># no-fading-openclose = false</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Do not fade destroyed ARGB windows with WM frame. Workaround of bugs in Openbox, Fluxbox, etc.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># no-fading-destroyed-argb = false</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#################################</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   Transparency / Opacity      #</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#################################</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Opacity of inactive windows. (0.1 - 1.0, defaults to 1.0)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># inactive-opacity = 1</span>
+</span></span><span style="display:flex;"><span>inactive-opacity <span style="color:#f92672">=</span> 1.0;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Opacity of window titlebars and borders. (0.1 - 1.0, disabled by default)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># frame-opacity = 1.0</span>
+</span></span><span style="display:flex;"><span>frame-opacity <span style="color:#f92672">=</span> 0.95;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Default opacity for dropdown menus and popup menus. (0.0 - 1.0, defaults to 1.0)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># menu-opacity = 1.0</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Let inactive opacity set by -i override the &#39;_NET_WM_OPACITY&#39; values of windows.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># inactive-opacity-override = true</span>
+</span></span><span style="display:flex;"><span>inactive-opacity-override <span style="color:#f92672">=</span> true;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Default opacity for active windows. (0.0 - 1.0, defaults to 1.0)</span>
+</span></span><span style="display:flex;"><span>active-opacity <span style="color:#f92672">=</span> 1.0
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Dim inactive windows. (0.0 - 1.0, defaults to 0.0)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># inactive-dim = 0.0</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Specify a list of conditions of windows that should always be considered focused.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># focus-exclude = []</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#focus-exclude = [ &#34;class_g = &#39;Termite&#39;&#34; ];</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Use fixed inactive dim value, instead of adjusting according to window opacity.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># inactive-dim-fixed = 1.0</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Specify a list of opacity rules, in the format `PERCENT:PATTERN`, </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># like `50:name *= &#34;Firefox&#34;`. picom-trans is recommended over this. </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Note we don&#39;t make any guarantee about possible conflicts with other </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># programs that set &#39;_NET_WM_WINDOW_OPACITY&#39; on frame or client windows.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># example:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#    opacity-rule = [ &#34;80:class_g = &#39;URxvt&#39;&#34; ];</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#################################</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#     Background-Blurring       #</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#################################</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Parameters for background blurring, see the *BLUR* section for more information.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># blur-method = </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># blur-size = 12</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># blur-deviation = false</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Blur background of semi-transparent / ARGB windows. </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Bad in performance, with driver-dependent behavior. </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># The name of the switch may change without prior notifications.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># blur-background = false</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Blur background of windows when the window frame is not opaque. </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Implies:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#    blur-background </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Bad in performance, with driver-dependent behavior. The name may change.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># blur-background-frame = false</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Use fixed blur strength rather than adjusting according to window opacity.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># blur-background-fixed = false</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Specify the blur convolution kernel, with the following format:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># example:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   blur-kern = &#34;5,5,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1&#34;;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># blur-kern = &#39;&#39;</span>
+</span></span><span style="display:flex;"><span>blur-kern <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;3x3box&#34;</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Exclude conditions for background blur.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># blur-background-exclude = []</span>
+</span></span><span style="display:flex;"><span>blur-background-exclude <span style="color:#f92672">=</span> <span style="color:#f92672">[</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;window_type = &#39;dock&#39;&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;window_type = &#39;desktop&#39;&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;_GTK_FRAME_EXTENTS@:c&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">]</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#################################</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#       General Settings        #</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#################################</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Daemonize process. Fork to background after initialization. Causes issues with certain (badly-written) drivers.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># daemon = false</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Specify the backend to use: `xrender`, `glx`, or `xr_glx_hybrid`.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># `xrender` is the default one.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># backend = &#39;glx&#39;</span>
+</span></span><span style="display:flex;"><span>backend <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;xrender&#34;</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Enable/disable VSync.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># vsync = false</span>
+</span></span><span style="display:flex;"><span>vsync <span style="color:#f92672">=</span> true
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Enable remote control via D-Bus. See the *D-BUS API* section below for more details.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># dbus = false</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Try to detect WM windows (a non-override-redirect window with no </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># child that has &#39;WM_STATE&#39;) and mark them as active.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># mark-wmwin-focused = false</span>
+</span></span><span style="display:flex;"><span>mark-wmwin-focused <span style="color:#f92672">=</span> true;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Mark override-redirect windows that doesn&#39;t have a child window with &#39;WM_STATE&#39; focused.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># mark-ovredir-focused = false</span>
+</span></span><span style="display:flex;"><span>mark-ovredir-focused <span style="color:#f92672">=</span> true;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Try to detect windows with rounded corners and don&#39;t consider them </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># shaped windows. The accuracy is not very high, unfortunately.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># detect-rounded-corners = false</span>
+</span></span><span style="display:flex;"><span>detect-rounded-corners <span style="color:#f92672">=</span> true;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Detect &#39;_NET_WM_OPACITY&#39; on client windows, useful for window managers</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># not passing &#39;_NET_WM_OPACITY&#39; of client windows to frame windows.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># detect-client-opacity = false</span>
+</span></span><span style="display:flex;"><span>detect-client-opacity <span style="color:#f92672">=</span> true;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Specify refresh rate of the screen. If not specified or 0, picom will </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># try detecting this with X RandR extension.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># refresh-rate = 60</span>
+</span></span><span style="display:flex;"><span>refresh-rate <span style="color:#f92672">=</span> <span style="color:#ae81ff">60</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Limit picom to repaint at most once every 1 / &#39;refresh_rate&#39; second to </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># boost performance. This should not be used with </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   vsync drm/opengl/opengl-oml</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># as they essentially does sw-opti&#39;s job already, </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># unless you wish to specify a lower refresh rate than the actual value.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># sw-opti = </span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Use EWMH &#39;_NET_ACTIVE_WINDOW&#39; to determine currently focused window, </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># rather than listening to &#39;FocusIn&#39;/&#39;FocusOut&#39; event. Might have more accuracy, </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># provided that the WM supports it.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># use-ewmh-active-win = false</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Unredirect all windows if a full-screen opaque window is detected, </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># to maximize performance for full-screen windows. Known to cause flickering </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># when redirecting/unredirecting windows.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># unredir-if-possible = false</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Delay before unredirecting the window, in milliseconds. Defaults to 0.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># unredir-if-possible-delay = 0</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Conditions of windows that shouldn&#39;t be considered full-screen for unredirecting screen.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># unredir-if-possible-exclude = []</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Use &#39;WM_TRANSIENT_FOR&#39; to group windows, and consider windows </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># in the same group focused at the same time.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span>detect-transient <span style="color:#f92672">=</span> false
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#detect-transient = true</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Use &#39;WM_CLIENT_LEADER&#39; to group windows, and consider windows in the same </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># group focused at the same time. &#39;WM_TRANSIENT_FOR&#39; has higher priority if </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># detect-transient is enabled, too.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># detect-client-leader = false</span>
+</span></span><span style="display:flex;"><span>detect-client-leader <span style="color:#f92672">=</span> true
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Resize damaged region by a specific number of pixels. </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># A positive value enlarges it while a negative one shrinks it. </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># If the value is positive, those additional pixels will not be actually painted </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># to screen, only used in blur calculation, and such. (Due to technical limitations, </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># with use-damage, those pixels will still be incorrectly painted to screen.) </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Primarily used to fix the line corruption issues of blur, </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># in which case you should use the blur radius value here </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># (e.g. with a 3x3 kernel, you should use `--resize-damage 1`, </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># with a 5x5 one you use `--resize-damage 2`, and so on). </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># May or may not work with *--glx-no-stencil*. Shrinking doesn&#39;t function correctly.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># resize-damage = 1</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Specify a list of conditions of windows that should be painted with inverted color. </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Resource-hogging, and is not well tested.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># invert-color-include = []</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># GLX backend: Avoid using stencil buffer, useful if you don&#39;t have a stencil buffer. </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Might cause incorrect opacity when rendering transparent content (but never </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># practically happened) and may not work with blur-background. </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># My tests show a 15% performance boost. Recommended.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># glx-no-stencil = false</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># GLX backend: Avoid rebinding pixmap on window damage. </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Probably could improve performance on rapid window content changes, </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># but is known to break things on some drivers (LLVMpipe, xf86-video-intel, etc.).</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Recommended if it works.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># glx-no-rebind-pixmap = false</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Disable the use of damage information. </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># This cause the whole screen to be redrawn everytime, instead of the part of the screen</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># has actually changed. Potentially degrades the performance, but might fix some artifacts.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># The opposing option is use-damage</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># no-use-damage = false</span>
+</span></span><span style="display:flex;"><span>use-damage <span style="color:#f92672">=</span> true
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Use X Sync fence to sync clients&#39; draw calls, to make sure all draw </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># calls are finished before picom starts drawing. Needed on nvidia-drivers </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># with GLX backend for some users.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># xrender-sync-fence = false</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># GLX backend: Use specified GLSL fragment shader for rendering window contents. </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># See `compton-default-fshader-win.glsl` and `compton-fake-transparency-fshader-win.glsl` </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># in the source tree for examples.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># glx-fshader-win = &#39;&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Force all windows to be painted with blending. Useful if you </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># have a glx-fshader-win that could turn opaque pixels transparent.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># force-win-blend = false</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Do not use EWMH to detect fullscreen windows. </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Reverts to checking if a window is fullscreen based only on its size and coordinates.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># no-ewmh-fullscreen = false</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Dimming bright windows so their brightness doesn&#39;t exceed this set value. </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Brightness of a window is estimated by averaging all pixels in the window, </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># so this could comes with a performance hit. </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Setting this to 1.0 disables this behaviour. Requires --use-damage to be disabled. (default: 1.0)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># max-brightness = 1.0</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Make transparent windows clip other windows like non-transparent windows do,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># instead of blending on top of them.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># transparent-clipping = false</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Set the log level. Possible values are:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#  &#34;trace&#34;, &#34;debug&#34;, &#34;info&#34;, &#34;warn&#34;, &#34;error&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># in increasing level of importance. Case doesn&#39;t matter. </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># If using the &#34;TRACE&#34; log level, it&#39;s better to log into a file </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># using *--log-file*, since it can generate a huge stream of logs.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># log-level = &#34;debug&#34;</span>
+</span></span><span style="display:flex;"><span>log-level <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;warn&#34;</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Set the log file.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># If *--log-file* is never specified, logs will be written to stderr. </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Otherwise, logs will to written to the given file, though some of the early </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># logs might still be written to the stderr. </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># When setting this option from the config file, it is recommended to use an absolute path.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># log-file = &#39;/path/to/your/log/file&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Show all X errors (for debugging)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># show-all-xerrors = false</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Write process ID to a file.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># write-pid-path = &#39;/path/to/your/log/file&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Window type settings</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># &#39;WINDOW_TYPE&#39; is one of the 15 window types defined in EWMH standard: </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#     &#34;unknown&#34;, &#34;desktop&#34;, &#34;dock&#34;, &#34;toolbar&#34;, &#34;menu&#34;, &#34;utility&#34;, </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#     &#34;splash&#34;, &#34;dialog&#34;, &#34;normal&#34;, &#34;dropdown_menu&#34;, &#34;popup_menu&#34;, </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#     &#34;tooltip&#34;, &#34;notification&#34;, &#34;combo&#34;, and &#34;dnd&#34;.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Following per window-type options are available: ::</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   fade, shadow:::</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#     Controls window-type-specific shadow and fade settings.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   opacity:::</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#     Controls default opacity of the window type.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   focus:::</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#     Controls whether the window of this type is to be always considered focused. </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#     (By default, all window types except &#34;normal&#34; and &#34;dialog&#34; has this on.)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   full-shadow:::</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#     Controls whether shadow is drawn under the parts of the window that you </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#     normally won&#39;t be able to see. Useful when the window has parts of it </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#     transparent, and you want shadows in those areas.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   redir-ignore:::</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#     Controls whether this type of windows should cause screen to become </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#     redirected again after been unredirected. If you have unredir-if-possible</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#     set, and doesn&#39;t want certain window to cause unnecessary screen redirection, </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#     you can set this to `true`.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span>wintypes:
+</span></span><span style="display:flex;"><span><span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  tooltip <span style="color:#f92672">=</span> <span style="color:#f92672">{</span> fade <span style="color:#f92672">=</span> true; shadow <span style="color:#f92672">=</span> true; opacity <span style="color:#f92672">=</span> 0.75; focus <span style="color:#f92672">=</span> true; full-shadow <span style="color:#f92672">=</span> false; <span style="color:#f92672">}</span>;
+</span></span><span style="display:flex;"><span>  dock <span style="color:#f92672">=</span> <span style="color:#f92672">{</span> shadow <span style="color:#f92672">=</span> false; <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>  dnd <span style="color:#f92672">=</span> <span style="color:#f92672">{</span> shadow <span style="color:#f92672">=</span> false; <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>  popup_menu <span style="color:#f92672">=</span> <span style="color:#f92672">{</span> opacity <span style="color:#f92672">=</span> 0.8; <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>  dropdown_menu <span style="color:#f92672">=</span> <span style="color:#f92672">{</span> opacity <span style="color:#f92672">=</span> 0.8; <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>;
+</span></span></code></pre></div><p>Para desbloquear un usuario que intentó varias veces acceder:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-console" data-lang="console"><span style="display:flex;"><span># faillock --user nombre_usuario --reset
+</span></span></code></pre></div><h4 id="instalar-docker">Instalar docker</h4>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo pacman -S docker docker-compose
+</span></span><span style="display:flex;"><span>sudo systemctl start docker.service
+</span></span><span style="display:flex;"><span>sudo usermod -aG docker $USER
+</span></span></code></pre></div><p><strong>Si instalás OBS y usás wayland con sway:</strong></p>
+<h5 id="para-tener-audio-con-pipewire-y-obs-hay-que-instalar-yay--s-obs-pipewire-audio-capture">Para tener audio con PipeWire y OBS hay que instalar: <code>yay -S obs-pipewire-audio-capture</code></h5>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>export QT_QPA_PLATFORM<span style="color:#f92672">=</span>wayland
+</span></span><span style="display:flex;"><span>sudo pacman -S qt6-wayland
+</span></span></code></pre></div><p><strong>Agregar al <code>/etc/sway/config</code>:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Set XDG_CURRENT_DESKTOP for proper Wayland support</span>
+</span></span><span style="display:flex;"><span>exec --no-startup-id dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP<span style="color:#f92672">=</span>sway
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Start xdg-desktop-portal services (ensure wlr starts first)</span>
+</span></span><span style="display:flex;"><span>exec --no-startup-id /usr/lib/xdg-desktop-portal-wlr &amp;
+</span></span><span style="display:flex;"><span>exec --no-startup-id /usr/lib/xdg-desktop-portal -r
+</span></span></code></pre></div><p><a href="https://www.youtube.com/watch?v=Rq0ZjsAMeIY">https://www.youtube.com/watch?v=Rq0ZjsAMeIY</a></p>
+<h4 id="para-programación-arduino-lectura-y-escritura-de-devttyusb0">Para programación arduino lectura y escritura de /dev/ttyUSB0</h4>
+<p><code>sudo usermod -aG uucp $USER</code></p>
+<h2 id="cada-vez-que-agregas-un-grupo-al-usuario-tenes-que-cerrar-la-sesión-y-volver-a-entrar">Cada vez que agregas un grupo al usuario tenes que cerrar la sesión y volver a entrar.</h2>
+<p>Instalamos <code>locate</code> para buscar archivos más rápidos</p>
+<hr>
+<h3 id="pacman">Pacman</h3>
+<h5 id="to-search-for-a-package">To search for a package:</h5>
+<p><code>pacman -Ss &lt;package&gt;...</code></p>
+<h5 id="to-update-the-local-package-base-and-upgrade-all-out-of-date-packages">To update the local package base and upgrade all out-of-date packages:</h5>
+<p><code>pacman -Suy</code></p>
+<h5 id="to-install-a-package">To install a package:</h5>
+<p><code>pacman -S &lt;package&gt;...</code></p>
+<h5 id="to-uninstall-a-package">To uninstall a package:</h5>
+<p><code>pacman -R &lt;package&gt;...</code></p>
+<h5 id="to-uninstall-a-package-and-its-depedencies-removing-all-new-orphans">To uninstall a package and its depedencies, removing all new orphans:</h5>
+<p><code>pacman -Rcs &lt;package&gt;...</code></p>
+<h5 id="to-get-information-about-package">To get information about package:</h5>
+<p><code>pacman -Si &lt;package&gt;...</code></p>
+<h5 id="to-install-a-package-from-builded-package-file-tarxz">To install a package from builded package file (.tar.xz):</h5>
+<p><code>pacman -U &lt;file&gt;</code></p>
+<h5 id="to-list-the-commands-provided-by-an-installed-package">To list the commands provided by an installed package:</h5>
+<p><code>pacman -Ql &lt;package&gt;... | sed -n -e 's/.*\/bin\///p' | tail -n +2</code></p>
+<h5 id="to-list-explicitly-installed-packages">To list explicitly installed packages:</h5>
+<p><code>pacman -Qe</code></p>
+<h5 id="to-list-the-top-most-recent-explicitly-installed-packages-not-in-the-base-groups">To list the top-most recent explicitly installed packages (not in the base groups):</h5>
+<p><code>expac --timefmt='%Y-%m-%d %T' '%l\t%n' $(comm -23 &lt;(pacman -Qeq|sort) &lt;(pacman -Qqg base base-devel|sort)) | sort -r | head -20</code></p>
+<h5 id="to-list-orphan-packages-installed-as-dependencies-and-not-required-anymore">To list orphan packages (installed as dependencies and not required anymore):</h5>
+<p><code>pacman -Qdt</code></p>
+<h5 id="to-list-installed-packages-sorted-by-size">To list installed packages sorted by size</h5>
+<p><code>pacman -Qi | awk '/^Name/ {name=$3} /^Installed Size/ {print name, $4 substr($5,1,1)}' | column -t | sort -rhk2 | cat -n | tac</code></p>
+<p>You can&rsquo;t directly install packages from the Arch User Database (AUR) with
+pacman. You need an AUR helper program such as <code>yay</code> or <code>paru</code> to do that.
+But considering that all of those are themselves in the AUR, here is how to
+do that manualy.</p>
+<hr>
+<p>Installing a package from AUR is a relatively simple process:</p>
+<ul>
+<li>Make sure that you have the <code>base-devel</code> and <code>git</code> packages installed</li>
+<li>Retrieve the repository corresponding to the package from the AUR website</li>
+<li>Run <code>makepkg</code> in the cloned repository</li>
+<li>Use <code>pacman</code> to install the created package</li>
+</ul>
+<hr>
+<h5 id="ensure-that-have-base-devel-and-git">Ensure that have <code>base-devel</code> and <code>git</code>:</h5>
+<p><code>pacman -S --needed base-devel git</code></p>
+<h5 id="retrieve-the-repository">Retrieve the repository:</h5>
+<p><code>git clone https://aur.archlinux.org/&lt;package&gt;.git</code><br>
+<code>cd &lt;package&gt;</code></p>
+<h5 id="build-the-package">Build the package:</h5>
+<p><code>makepkg -s</code></p>
+<h5 id="install">Install:</h5>
+<p><code>sudo pacman -U &lt;package (.pkg.tar.zst)&gt;</code></p>
+<h3 id="tldrpacman">tldr:pacman</h3>
+<p>Arch Linux package manager utility.
+Some subcommands such as <code>pacman sync</code> have their own usage documentation.
+For equivalent commands in other package managers, see &lt;<a href="https://wiki.archlinux.org/title/Pacman/Rosetta">https://wiki.archlinux.org/title/Pacman/Rosetta</a>&gt;.
+More information: &lt;<a href="https://man.archlinux.org/man/pacman.8">https://man.archlinux.org/man/pacman.8</a>&gt;.</p>
+<h5 id="sincronizar-y-actualizar-todos-los-paquetes">Sincronizar y actualizar todos los paquetes.</h5>
+<p><code>sudo pacman -Syu</code></p>
+<h5 id="instalar-un-nuevo-paqueteinstalar-un-nuevo-paquete">Instalar un nuevo paqueteInstalar un nuevo paquete.</h5>
+<p><code>sudo pacman -S package_name</code></p>
+<h5 id="eliminar-un-paquete-y-sus-dependencias">Eliminar un paquete y sus dependencias.</h5>
+<p><code>sudo pacman -Rs package_name</code></p>
+<h5 id="buscar-en-la-base-de-datos-de-paquetes-con-alguna-palabra-clave-o-expresión-regular">Buscar en la base de datos de paquetes con alguna palabra clave o expresión regular.</h5>
+<p><code>pacman -Ss &quot;search_pattern&quot;</code></p>
+<h5 id="listar-paquetes-instalados-y-sus-versiones">Listar paquetes instalados y sus versiones.</h5>
+<p><code>pacman -Q</code></p>
+<h5 id="listar-sólo-los-paquetes-explícitamente-instalados-y-sus-versiones">Listar sólo los paquetes explícitamente instalados y sus versiones:</h5>
+<p><code>pacman -Qe</code></p>
+<h5 id="listar-paquetes-huérfanos-fueron-instalados-como-dependencias-pero-actualmente-no-son-requeridos-por-ningún-paquete">Listar paquetes huérfanos (fueron instalados como dependencias pero actualmente no son requeridos por ningún paquete)</h5>
+<p><code>pacman -Qtdq</code></p>
+<h5 id="limpiar-todo-el-cache-de-pacman">Limpiar todo el cache de pacman:</h5>
+<p><code>sudo pacman -Scc</code></p>
+<h3 id="eliminar-paquetes-hérfanos">Eliminar paquetes hérfanos</h3>
+<p><code>sudo pacman -Qdtq | sudo pacman -Rns -</code></p>
+<hr>
+<h3 id="ver-todos-los-paquetes-instalados">Ver todos los paquetes instalados</h3>
+<p>pacman -Qe</p>
+<p>Estos son todos mis paquetes (mezclando AUR y repositorio oficial): <code>acpi aichat alsa-utils base base-devel bc bridge-utils btop chawan-git dnsmasq dosfstools espeak-ng evince fastfetch festival fim firefox fish floorp-bin foot freetube-bin gimp git grim grub hugo imagemagick inetutils iptables-nft irssi jq kdenlive lib32-mesa libguestfs libreoffice-fresh libvirt linux linux-firmware man-db man-pages mpv mtools neomutt networkmanager noto-fonts noto-fonts-cjk noto-fonts-emoji noto-fonts-extra obs-studio os-prober pipewire pipewire-pulse plocate python-pip qbittorrent qemu-full qt5-wayland qt6-wayland rclone samba smtube speech-dispatcher sway telegram-desktop texlive-fontsextra texlive-fontsrecommended texlive-langspanish texlive-latex texlive-latexextra texlive-plaingeneric thunderbird tmux tor tor-browser-bin torsocks translate-shell tree unrar unzip v4l-utils vim virt-manager w3m wget wine wl-clipboard wmenu xdg-desktop-portal xdg-desktop-portal-wlr yay yay-debug yt-dlp </code></p>
+<p><a href="https://github.com/familyfriendlymikey/mpv-cut">https://github.com/familyfriendlymikey/mpv-cut</a></p>
+<h5 id="cifrar-disco-duro">Cifrar disco duro</h5>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cryptsetup luksFormat /dev/sda1 <span style="color:#f92672">(</span>root<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>cryptsetup open /dev/sda1 cryptroot
+</span></span><span style="display:flex;"><span>lsblk
+</span></span><span style="display:flex;"><span>mkfs.ext4 /dev/mapper/cryptroot
+</span></span><span style="display:flex;"><span>mount /dev/mapper/cryptroot /mnt
+</span></span><span style="display:flex;"><span>mkdir /mnt/boot
+</span></span><span style="display:flex;"><span>mount /dev/sda1 /mnt/boot
+</span></span><span style="display:flex;"><span>pacstrap... todo lo mismo 
+</span></span><span style="display:flex;"><span>vim /etc/mkinitcpio.conf
+</span></span><span style="display:flex;"><span>Agregá en HOOKS: HOOKS<span style="color:#f92672">=(</span>encrypt lvm2<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>mkinitcpio -P
+</span></span></code></pre></div><h6 id="para-instalar-el-grub-tenes-que-saber-el-uuid-del-disco-duro">Para instalar el grub tenes que saber el UUID del disco duro</h6>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>blkid -o value -s UUID /dev/sda1 &gt;&gt; /etc/default/grub
+</span></span><span style="display:flex;"><span>blkid -o value -s UUID /dev/mapper/cryptroot &gt;&gt; /etc/default/grub
+</span></span><span style="display:flex;"><span>vim /etc/default/grub
+</span></span></code></pre></div><p>Pegá el primer UUID al final de la línea que dice dice <code>CMDLINE_LINUX_DEFAULT</code> y</p>
+<h6 id="ambos-deben-estar-en-una-línea-y-separadas-por-un-espacio">Ambos deben estar en una línea y separadas por un espacio.</h6>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cryptdevice<span style="color:#f92672">=</span>UUID<span style="color:#f92672">=</span>dejá el primer UUID:cryptroot <span style="color:#f92672">(</span>dev mapper particion<span style="color:#f92672">)</span> root<span style="color:#f92672">=</span>UUID<span style="color:#f92672">=</span>dejá el 2do UUID y nada más 
+</span></span><span style="display:flex;"><span>grub-mkconfig -o /boot/grub/grub.cfg <span style="color:#f92672">(</span>antes ejecutar grub-install<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>systemctl enable NetworkManager ...
+</span></span><span style="display:flex;"><span>reboot..
+</span></span><span style="display:flex;"><span>sudo vim /lib/systemd/system/getty<span style="color:#ae81ff">\@</span>.service
+</span></span></code></pre></div><p>En la línea <code>ExecStart=-/sbin/agetty</code> eliminá <code>-o '-p -- \\u'</code> reemplazalo por <code>-a esotericwarfare</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo reboot
+</span></span></code></pre></div><hr>
+<p>Actualmente uso <code>4get.ca</code> como mi buscador</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>abook acpi aichat airgeddon alsa-utils amfora base base-devel bash-completion bc beef-xss bettercap bisq2 bridge-utils btop bully chawan-git chromium cronie crunch dhcp dillo discord dnsmasq dosfstools espeak-ng ettercap evince falkon fastfetch feh festival fim firefox fish floorp-bin foot fzf gallery-dl gimp git goimapnotify grim grub hashcat hcxdumptool hcxtools hostapd hostapd-wpe hugo i2p-bin imagemagick inetutils iptables-nft irssi isync jackett-bin jdk jdk22-openjdk john jq kdenlive kristall lib32-mesa libguestfs libreoffice-fresh libvirt lighttpd linux linux-firmware lynx man-db man-pages mdk4 mpop mpv msmtp mtools neomutt networkmanager newsboat notmuch noto-fonts noto-fonts-cjk noto-fonts-emoji noto-fonts-extra obs-studio os-prober pam-gnupg pass pcmanfm pipewire pipewire-pulse pixiewps plocate proxychains-ng python-pip qbittorrent qemu-full qt5-wayland qt5-webengine qt6-wayland rclone reaver samba smtube speech-dispatcher sway tcpdump telegram-desktop texlive-fontsextra texlive-fontsrecommended texlive-langspanish texlive-latex texlive-latexextra texlive-plaingeneric thunderbird tmux tor tor-browser-bin torsocks translate-shell tree ttf-font-awesome ttf-jetbrains-mono-nerd ttf-material-icons-git ttf-nerd-fonts-symbols unrar unzip urlview v4l-utils vim virt-manager virtualbox w3m webkit2gtk wget wifite wine wireshark-cli wl-clipboard wmenu xdg-desktop-portal xdg-desktop-portal-wlr xorg-xhost xorg-xwayland yay yay-debug yt-dlp
+</span></span></code></pre></div><h3 id="streamsh">Stream.sh</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo pacman -S ttyd
+</span></span></code></pre></div><hr>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/bash
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>sudo chmod <span style="color:#ae81ff">666</span> /dev/input/event*
+</span></span><span style="display:flex;"><span>amixer set <span style="color:#e6db74">&#39;Internal Mic Boost&#39;</span> 50%-
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>ttyd --port <span style="color:#ae81ff">2020</span> --writable fish &amp; 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>falkon <span style="color:#e6db74">&#34;https://www.youtube.com/live_dashboard&#34;</span> <span style="color:#e6db74">&#34;http://localhost:2020&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### Solo tty</span>
+</span></span><span style="display:flex;"><span>ffmpeg -f alsa -i pipewire -thread_queue_size <span style="color:#ae81ff">1024</span> -f fbdev -framerate <span style="color:#ae81ff">60</span> -i /dev/fb0 -c:v libx264 -preset ultrafast -tune zerolatency -pix_f
+</span></span><span style="display:flex;"><span>mt yuv420p -c:a aac -b:a 128k -f flv -async <span style="color:#ae81ff">1</span> -ar <span style="color:#ae81ff">48000</span> -latency <span style="color:#ae81ff">100</span> -bufsize 1000k rtmp://a.rtmp.youtube.com/live2/354p-cjwx-h1se-5xvg-b88c
+</span></span><span style="display:flex;"><span>2&gt; /dev/null
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#### Camara con tty</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#ffmpeg -f alsa -i pipewire -thread_queue_size 1024 -f fbdev -framerate 60 -i /dev/fb0 -f v4l2 -framerate 60 -video_size 320x240 -i /dev/vide</span>
+</span></span><span style="display:flex;"><span>o0 -filter_complex <span style="color:#e6db74">&#34;[2:v]scale=320:240[cam];[1:v][cam]overlay=main_w-overlay_w-10:main_h-overlay_h-10[outv]&#34;</span> -map <span style="color:#e6db74">&#34;[outv]&#34;</span> -map 0:a -c:v libx
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">264</span> -preset ultrafast -tune zerolatency -pix_fmt yuv420p -c:a aac -b:a 128k -f flv -bufsize 1000k rtmp://a.rtmp.youtube.com/live2/354p-cjwx-h
+</span></span><span style="display:flex;"><span>1se-5xvg-b88c 2&gt; /dev/null
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### Solo camara</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#ffmpeg -f alsa -i pipewire -thread_queue_size 1024 -f v4l2 -framerate 60 -video_size 1280x720 -i /dev/video0 -c:v libx264 -preset ultrafast</span>
+</span></span><span style="display:flex;"><span>-tune zerolatency -pix_fmt yuv420p -c:a aac -b:a 128k -f flv -bufsize 1000k rtmp://a.rtmp.youtube.com/live2/354p-cjwx-h1se-5xvg-b88c 2&gt; /dev/
+</span></span><span style="display:flex;"><span>null
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#mpv &#34;https://www.youtube.com/channel/UCtnEUzfISySqwOkWH4nRoww/live&#34;</span>
+</span></span></code></pre></div><h4 id="error-mirrors-arch">Error mirrors arch</h4>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>error: failed retrieving file <span style="color:#e6db74">&#39;0ad-a27.1-2-x86_64.pkg.tar.zst&#39;</span> from america.mirror.pkgbuild.com : Could not resolve host: america.mirror.pkgbuild.com warning: fatal error from america.mirror.pkgbuild.com, skipping <span style="color:#66d9ef">for</span> the remainder of this transaction error: failed retrieving file <span style="color:#e6db74">&#39;wxwidgets-gtk3-3.2.8.1-2-x86_64.pkg.tar.zst&#39;</span> from america.mirror.pkgbuild.com : Failed to connect to america.mirror.pkgbuild.com port <span style="color:#ae81ff">443</span> after <span style="color:#ae81ff">133</span> ms: Could not connect to server error: failed retrieving file <span style="color:#e6db74">&#39;wxwidgets-common-3.2.8.1-2-x86_64.pkg.tar.zst&#39;</span> from america.mirror.pkgbuild.com : Failed to connect to america.mirror.pkgbuild.com port <span style="color:#ae81ff">443</span> after <span style="color:#ae81ff">129</span> ms: Could not connect to server error: failed retrieving file <span style="color:#e6db74">&#39;gloox-1.0.28-1-x86_64.pkg.tar.zst&#39;</span> from america.mirror.pkgbuild.com : Failed to connect to america.mirror.pkgbuild.com port <span style="color:#ae81ff">443</span> after <span style="color:#ae81ff">129</span> ms: Could not connect to server error: failed retrieving file <span style="color:#e6db74">&#39;0ad-data-a27.1-1-any.pkg.tar.zst&#39;</span> from america.mirror.pkgbuild.com : Failed to connect to america.mirror.pkgbuild.com port <span style="color:#ae81ff">443</span> after <span style="color:#ae81ff">200</span> ms
+</span></span></code></pre></div><h4 id="solucion">Solucion:</h4>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo reflector --country Chile,Brazil,Argentina --age <span style="color:#ae81ff">12</span> --protocol https --sort rate --save /etc/pacman.d/mirrorlist
+</span></span><span style="display:flex;"><span>sudo pacman -Syyu
+</span></span></code></pre></div><hr>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#f92672">[</span>N<span style="color:#f92672">]</span> esotericwarfare@arch /e/u/rules.d&gt; sudo vim 99-input-event-permissions.rules
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>I<span style="color:#f92672">]</span> esotericwarfare@arch /e/u/rules.d&gt; cat 99-input-event-permissions.rules
+</span></span><span style="display:flex;"><span>KERNEL<span style="color:#f92672">==</span><span style="color:#e6db74">&#34;event[0-9]*&#34;</span>, MODE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;0666&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>I<span style="color:#f92672">]</span> esotericwarfare@arch /e/u/rules.d&gt;
+</span></span></code></pre></div>
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+</footer>
+
+
+</body>
+</html>

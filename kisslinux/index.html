@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/kisslinux/">
+  <meta property="og:site_name" content="Imlauer">
+  <meta property="og:title" content="Kiss Linux (compilar kernel manualmente)">
+  <meta property="og:description" content="Primero boteá ArchLinux descargá la ISO de acá: https://archlinux.org/download/
+Quemá la ISO en un pendrive usando
+dd if=archlinux.iso of=/dev/sdb status=progress bs=4098 https://kisslinux.github.io Está obsoleto, el creador desapareció pero la comunidad de KISS decidió forkearlo acá: https://kisscommunity.org/kiss/install/
+Al bootear ArchLinux particionemos el disco.
+legacy boot sin swap Si estás en una VM podes directamente crear una única partición
+o n p 1 Enter Enter w uefi (gpt) con Swap g (gpt disk label) n 1 (partition number [1/128]) 2048 first sector &#43;300M last sector (boot sector size) t 1 (EFI System) n 2 default &#43;4G t 2 swap n 3 default (fill up partition) default (fill up partition) w (write) Descargá el último release kiss-chroot de acá: https://codeberg.org/kiss-community/repo/releases Extraélo como root.">
+  <meta property="og:locale" content="es_es">
+  <meta property="og:type" content="article">
+    <meta property="article:published_time" content="2025-06-25T02:43:44-03:00">
+    <meta property="article:modified_time" content="2025-06-25T02:43:44-03:00">
+    <meta property="article:tag" content="Linux">
+
+  
+  <meta itemprop="name" content="Kiss Linux (compilar kernel manualmente)">
+  <meta itemprop="description" content="Primero boteá ArchLinux descargá la ISO de acá: https://archlinux.org/download/
+Quemá la ISO en un pendrive usando
+dd if=archlinux.iso of=/dev/sdb status=progress bs=4098 https://kisslinux.github.io Está obsoleto, el creador desapareció pero la comunidad de KISS decidió forkearlo acá: https://kisscommunity.org/kiss/install/
+Al bootear ArchLinux particionemos el disco.
+legacy boot sin swap Si estás en una VM podes directamente crear una única partición
+o n p 1 Enter Enter w uefi (gpt) con Swap g (gpt disk label) n 1 (partition number [1/128]) 2048 first sector &#43;300M last sector (boot sector size) t 1 (EFI System) n 2 default &#43;4G t 2 swap n 3 default (fill up partition) default (fill up partition) w (write) Descargá el último release kiss-chroot de acá: https://codeberg.org/kiss-community/repo/releases Extraélo como root.">
+  <meta itemprop="datePublished" content="2025-06-25T02:43:44-03:00">
+  <meta itemprop="dateModified" content="2025-06-25T02:43:44-03:00">
+  <meta itemprop="wordCount" content="1775">
+  <meta itemprop="keywords" content="Linux">
+  
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Kiss Linux (compilar kernel manualmente)">
+  <meta name="twitter:description" content="Primero boteá ArchLinux descargá la ISO de acá: https://archlinux.org/download/
+Quemá la ISO en un pendrive usando
+dd if=archlinux.iso of=/dev/sdb status=progress bs=4098 https://kisslinux.github.io Está obsoleto, el creador desapareció pero la comunidad de KISS decidió forkearlo acá: https://kisscommunity.org/kiss/install/
+Al bootear ArchLinux particionemos el disco.
+legacy boot sin swap Si estás en una VM podes directamente crear una única partición
+o n p 1 Enter Enter w uefi (gpt) con Swap g (gpt disk label) n 1 (partition number [1/128]) 2048 first sector &#43;300M last sector (boot sector size) t 1 (EFI System) n 2 default &#43;4G t 2 swap n 3 default (fill up partition) default (fill up partition) w (write) Descargá el último release kiss-chroot de acá: https://codeberg.org/kiss-community/repo/releases Extraélo como root.">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Kiss Linux (compilar kernel manualmente)
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/kisslinux/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="
+Primero boteá ArchLinux descargá la ISO de acá: https://archlinux.org/download/
+Quemá la ISO en un pendrive usando
+dd if=archlinux.iso of=/dev/sdb status=progress bs=4098
+https://kisslinux.github.io Está obsoleto, el creador desapareció pero la comunidad de KISS decidió forkearlo acá: https://kisscommunity.org/kiss/install/
+Al bootear ArchLinux particionemos el disco.
+legacy boot sin swap
+Si estás en una VM podes directamente crear una única partición
+o
+n
+p
+1
+Enter
+Enter
+w
+uefi (gpt) con Swap
+g (gpt disk label)
+n
+1 (partition number [1/128])
+2048 first sector
+&#43;300M last sector (boot sector size)
+t
+1 (EFI System)
+n
+2
+default
+&#43;4G
+t
+2
+swap
+n
+3
+default (fill up partition)
+default (fill up partition)
+w (write)
+Descargá el último release kiss-chroot de acá: https://codeberg.org/kiss-community/repo/releases
+Extraélo como root.">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Kiss Linux (compilar kernel manualmente)
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2025-06-25T02:43:44-03:00'>
+      June 25, 2025
+    </time>
+    
+    <br>
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/linux/">Linux</a>
+    
+    
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAADICAYAAACtWK6eAAAABHNCSVQICAgIfAhkiAAABspJREFUeF7t3TFuHEcQBdCR4ZxMnCt2YsKJQ65uJJ9EupGoG9A3oU4gd4OG460BulA1/QZg1jNd9Wo/lkFj9jhcBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBC4u8OFC/T0X7OVt1PTP4rr+GM9/XLzHmcd/P3OTe9YJ/ByPrvb3bV27/z957lGt71nPJa5fLtGFJggsEhCQRbAeew0BAbnGHHWxSEBAFsF67DUEBOQac9TFIgEBWQTrsdcQEJBrzFEXiwQEZBGsx15DQECuMUddLBIQkEWwHnsNAQG5xhx1sZnAPHgYOl80Fv+s9jcOSYV6iPY81889qvU96znRy3PFz7hvkIpTUVMZAQEpMwqFVBQQkIpTUVMZAQEpMwqFVBQQkIpTUVMZAQEpMwqFVBQQkIpTUVMZAQEpMwqFVBQQkIpTUVMZAQEpMwqFVBQQkIpTUVMZgV+TKhlHhu6/np6eHr98+XL/DWdWfv48Xum29p1uT6OuUOMn+ph7VLyiff99HF9fj2O+aC9yfYosPrM2KyC3SHEPDw/H7Ra6JfL497WP619GOHdY3EW876Q7on0/HEfJrPsXK+kDY5ueAgLSc26qThIQkCRo2/QUEJCec1N1koCAJEHbpqeAgPScm6qTBAQkCdo2PQUEpOfcVJ0kICBJ0LbpKSAgPeem6iQBAUmCtk1PgTNnseY5tFuk3Z/HX5HlY+3vwfWWdxd4OdHA+Inm+YK6yDW3CR1w9A0S4bV2OwEB2W7kGo4ICEhEy9rtBARku5FrOCIgIBEta7cTEJDtRq7hiICARLSs3U5AQLYbuYYjAgIS0bJ2OwEB2W7kGo4ICEhEy9rtBOZZrNCPJ46XFz2OdxjFruc/Y+s//nYcLy+xe6KrP36M3rHv+rfxPrfFL9k7gxv64I4NfozP7ng5Xei2cd4rduArfFJxdj5/hzVyzXB8Cp0pizz9fe230cntFr9vxzsy5pHgOj5VsZOKY71/sRIGY4u+AgLSd3YqTxAQkARkW/QVEJC+s1N5goCAJCDboq+AgPSdncoTBAQkAdkWfQUEpO/sVJ4gICAJyLboKyAgfWen8gQBAUlAtkVfgTMvjot3+2Ee+Vp8Rc97LS7nUo+/3eLn6TJmnoDsGyQB2RZ9BQSk7+xUniAgIAnItugrICB9Z6fyBAEBSUC2RV8BAek7O5UnCAhIArIt+goISN/ZqTxBQEASkG3RV0BA+s5O5QkCApKAbIu+AjlnsTJ8breMXeyxmcB1AvL9+2aj026GgH+xMpTt0VZAQNqOTuEZAgKSoWyPtgIC0nZ0Cs8QEJAMZXu0FRCQtqNTeIaAgGQo26OtgIC0HZ3CMwQEJEPZHm0FBKTt6BSeISAgGcr2aCtw5o1u4d/xDP6EZ1tMhecKnPjwvowKQ78O6xskd6Z2ayYgIM0GptxcAQHJ9bZbMwEBaTYw5eYKCEiut92aCQhIs4EpN1dAQHK97dZMQECaDUy5uQICkuttt2YCAtJsYMrNFRCQXG+7NRM4816s12iPL8dxi9zzOBY/RW7IWvv8nLXT2n0KvkNsfqje4l2/BG8Jf3ZPnPcKlvS+PHRecX4Mo52fqip601V+SbfgL9DexixOvPpv+efXv1jRkFi/lYCAbDVuzUYFBCQqZv1WAgKy1bg1GxUQkKiY9VsJCMhW49ZsVEBAomLWbyUgIFuNW7NRAQGJilm/lYCAbDVuzUYFBCQqZj2BAgLzONY8v7Xsb7z9bp6s8neHwbRaOYv/nj1nXu7yDVJuJAqqJCAglaahlnICAlJuJAqqJCAglaahlnICAlJuJAqqJCAglaahlnICAlJuJAqqJCAglaahlnICAlJuJAqqJCAglaahlnICAlJuJAqqJLD8vUInm30Y9y19d9x4+NexydI9TvZe7rYfx/E63rj2eXFh86VuYytXFYFxBi/lEF7GQb/Ve0yrLS//Ym05dk3fKyAg90pZt6WAgGw5dk3fKyAg90pZt6WAgGw5dk3fKyAg90pZt6WAgGw5dk3fKyAg90pZt6WAgGw5dk3fKyAg90pZt6WAgGw5dk0TIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAAECBAgQIECAAIGLCPwLp3NqWiLupKsAAAAASUVORK5CYII=" alt=""></p>
+<p>Primero boteá ArchLinux descargá la ISO de acá: <a href="https://archlinux.org/download/">https://archlinux.org/download/</a></p>
+<p>Quemá la ISO en un pendrive usando</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>dd <span style="color:#66d9ef">if</span><span style="color:#f92672">=</span>archlinux.iso of<span style="color:#f92672">=</span>/dev/sdb status<span style="color:#f92672">=</span>progress bs<span style="color:#f92672">=</span><span style="color:#ae81ff">4098</span>
+</span></span></code></pre></div><p><a href="https://kisslinux.github.io">https://kisslinux.github.io</a> Está obsoleto, el creador desapareció pero la comunidad de KISS decidió forkearlo acá: <a href="https://kisscommunity.org/kiss/install/">https://kisscommunity.org/kiss/install/</a></p>
+<p>Al bootear ArchLinux particionemos el disco.</p>
+<h6 id="legacy-boot-sin-swap">legacy boot sin swap</h6>
+<p>Si estás en una VM podes directamente crear una única partición</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>o
+</span></span><span style="display:flex;"><span>n
+</span></span><span style="display:flex;"><span>p
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>Enter
+</span></span><span style="display:flex;"><span>Enter
+</span></span><span style="display:flex;"><span>w
+</span></span></code></pre></div><h6 id="uefi-gpt-con-swap">uefi (gpt) con Swap</h6>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>g <span style="color:#f92672">(</span>gpt disk label<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>n
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">1</span> <span style="color:#f92672">(</span>partition number <span style="color:#f92672">[</span>1/128<span style="color:#f92672">])</span>
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">2048</span> first sector
+</span></span><span style="display:flex;"><span>+300M last sector <span style="color:#f92672">(</span>boot sector size<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>t
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">1</span> <span style="color:#f92672">(</span>EFI System<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>n
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>default
+</span></span><span style="display:flex;"><span>+4G
+</span></span><span style="display:flex;"><span>t
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>swap
+</span></span><span style="display:flex;"><span>n
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">3</span>
+</span></span><span style="display:flex;"><span>default <span style="color:#f92672">(</span>fill up partition<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>default <span style="color:#f92672">(</span>fill up partition<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>w <span style="color:#f92672">(</span>write<span style="color:#f92672">)</span>
+</span></span></code></pre></div><p>Descargá el último release <strong>kiss-chroot</strong> de acá: <a href="https://codeberg.org/kiss-community/repo/releases">https://codeberg.org/kiss-community/repo/releases</a>
+Extraélo como <code>root</code>.</p>
+<h6 id="instalación-en-legacy-boot-en-uefi-tendrás-que-crear-una-partición-efi-con-mkfsfat--f-32-explicado-en-el-artículo-de-archlinux">Instalación en Legacy Boot en UEFI tendrás que crear una partición EFI con <code>mkfs.fat -F 32</code> (explicado en el artículo de ArchLinux)</h6>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mkfs.ext4 /dev/sda1 
+</span></span><span style="display:flex;"><span>mount /dev/sda1 /mnt
+</span></span><span style="display:flex;"><span>cd /mnt
+</span></span><span style="display:flex;"><span>lynx https://kisscommunity.org/kiss/install/
+</span></span><span style="display:flex;"><span>De ahí dale a <span style="color:#e6db74">`</span>latest-release<span style="color:#e6db74">`</span> bajá hasta donde dice <span style="color:#e6db74">`</span>Downloads<span style="color:#e6db74">`</span> y descargá <span style="color:#e6db74">`</span>kiss-chroot-24.12.18.tar.xz<span style="color:#e6db74">`</span>, **Download and Save to Disk**.
+</span></span><span style="display:flex;"><span>tar xvf kiss-chroot-24.12.18.tar.xz <span style="color:#75715e"># Descomprimí como root</span>
+</span></span><span style="display:flex;"><span>genfstab -U /mnt &gt;&gt; /mnt/etc/fstab
+</span></span><span style="display:flex;"><span>bin/kiss-chroot .
+</span></span></code></pre></div><p>En el archivo <code>/etc/profile.d/kiss_path.sh</code></p>
+<p>vi <code>/etc/profile.d/kiss_path.sh</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>export REPOS_DIR<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;/var/db/kiss&#39;</span>
+</span></span><span style="display:flex;"><span>export KISS_PATH<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;&#39;</span>
+</span></span><span style="display:flex;"><span>KISS_PATH<span style="color:#f92672">=</span>$KISS_PATH:$REPOS_DIR/repo/core
+</span></span><span style="display:flex;"><span>KISS_PATH<span style="color:#f92672">=</span>$KISS_PATH:$REPOS_DIR/repo/extra
+</span></span><span style="display:flex;"><span>KISS_PATH<span style="color:#f92672">=</span>$KISS_PATH:$REPOS_DIR/repo/wayland
+</span></span><span style="display:flex;"><span>KISS_PATH<span style="color:#f92672">=</span>$KISS_PATH:$REPOS_DIR/community/community
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>export CFLAGS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;-O2 -march=native&#34;</span>
+</span></span><span style="display:flex;"><span>export CXXFLAGS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$CFLAGS<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>export MAKEFLAGS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;-j2&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>export KISS_SU<span style="color:#f92672">=</span>su
+</span></span></code></pre></div><p>Cargamos las variables:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cp /etc/profile.d/kiss_path.sh .profile
+</span></span><span style="display:flex;"><span>source ~/.profile
+</span></span><span style="display:flex;"><span>echo $KISS_PATH
+</span></span><span style="display:flex;"><span>cd /var/db/kiss
+</span></span><span style="display:flex;"><span>git clone https://codeberg.org/kiss-community/repo
+</span></span><span style="display:flex;"><span>git clone https://codeberg.org/kiss-community/community
+</span></span><span style="display:flex;"><span>cd repo
+</span></span><span style="display:flex;"><span>git config gpg.ssh.allowedSignersFile .allowed_signers
+</span></span><span style="display:flex;"><span>git config merge.verifySignatures true
+</span></span><span style="display:flex;"><span>kiss update
+</span></span><span style="display:flex;"><span>cd /var/db/kiss/installed <span style="color:#f92672">&amp;&amp;</span> kiss build *  
+</span></span><span style="display:flex;"><span>kiss b e2fsprogs dosfsprogs xfsprogs util-linux dhcpcd libelf ncurses perl baseinit
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Quedó obsoleto eudev</span>
+</span></span><span style="display:flex;"><span>mkdir -p /etc/rc.d
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;dhcpcd 2&gt; /dev/null&#34;</span> &gt; /etc/rc.d/dhcpcd.boot
+</span></span><span style="display:flex;"><span>echo kiss &gt; /etc/hostname
+</span></span><span style="display:flex;"><span>vi /etc/hosts
+</span></span><span style="display:flex;"><span>127.0.0.1   kiss
+</span></span><span style="display:flex;"><span>ping kiss
+</span></span><span style="display:flex;"><span>cd /var/db/kiss
+</span></span></code></pre></div><p>Descargá el linux kernel:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>lynx kernel.org
+</span></span><span style="display:flex;"><span>Latest Release - Download
+</span></span><span style="display:flex;"><span>tar xvf linux-*
+</span></span><span style="display:flex;"><span>cd linux-*
+</span></span></code></pre></div><p>Es recomendable bootear con ArchLinux porque carga todo lo que necesitás para que tu sessión sea exitosa, ahora todos los módulos están cargados en la memoria si ejecutás:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>lspci -k
+</span></span></code></pre></div><p>Verás que el ethernet está cargado, etc. Es un buen comienzo pero no es todo.
+Ahora podes descargar <code>linux-firmware</code> pero en este caso lo omnitiremos.
+Primero tenemos que crear la configuración por defecto del kernel</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>make defconfig
+</span></span></code></pre></div><p>Si ejecutamos:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>make help
+</span></span></code></pre></div><p>Encontrarás un argumento llamado <code>localyesconfig (update current config converting local mods to core)</code></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>make localyesconfig
+</span></span></code></pre></div><p>Hay que habilitar <code>CONFIG_FRAMEBUFFER_CONSOLE</code></p>
+<p>Sacale una foto o una screenshot a la salida de ese comando para buscar uno por uno más rápido.</p>
+<p>Ese comando convierte lo que está en memoria cargado con ArchLinux pero se da cuenta de que no está configurado todavía, así que no puedo convertirlo lo que significa que lo necesito.
+Parece mucho pero hay varios <code>sub-modulos</code>.
+Ejemplo: <code>pata_acpi</code> si copiás <code>CONFIG_PATA_ACPI</code> (podes copiar si habilitas el mouse systemctl start gpm en otra consola lo pegas con botón derecho).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>make menuconfig
+</span></span><span style="display:flex;"><span>/ <span style="color:#f92672">(</span>slash<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>CONFIG_PATA_ACPI
+</span></span></code></pre></div><p>Te dice <code>[=n]</code> y abajo en <code>Depends: </code> y en <code>Selects: [=n]</code> (esa tenes que seleccionarlo y habilitarlo con <code>*</code> para que quede todo en <code>[=y]</code>)</p>
+<p>Si apretás el número lo podes convertir como <code>core</code> si lo pones con <code>*</code>(asterisco) - Save - Exit - Exit</p>
+<p>Ahora ejecutá:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>make localyesconfig
+</span></span></code></pre></div><p>Si lo hiciste bien debería haber desaparecido el mensaje.</p>
+<h6 id="lo-mismo-con-todos-los-demás-siempre-guardá-salí-y-mirá-si-el-mensaje-desapareció-ejecutando-make-localyesconfig">Lo mismo con todos los demás siempre guardá, salí y mirá si el mensaje desapareció ejecutando <code>make localyesconfig</code>&hellip;</h6>
+<p>Con bluetooth hay un problema BT es una subsección no es algo&hellip; <code>BT [=n]</code> dice no para habilitar esas cosas, cuando ves eso posponelo.
+Dice <code>[=n]</code> pero si mirás abajo en <code>Selects:</code> dice: <code>CRC16[=y] &amp;&amp; CRYPTO[=y]...</code> tiene varias habilitadas pero para que quede habilitado <code>BT [=n]</code> todo debería estar en <code>[=y]</code>.
+Pero si copias el que dice <code>[=n] (CRYPTO_ECB)</code> haces una búsqueda no lo encontrarás porque no es un módulo, es una opción.</p>
+<h6 id="por-eso-es-mejor-omnitirlo-el-bluetooth">Por eso es mejor omnitirlo el <code>bluetooth</code></h6>
+<p>Si es una sección es mejor no tocarla y mientras hacés las demás esa sección desaparecerá.
+Si no ves un número al buscar, no podes hacer nada ignoralo y habilitando los demás desaparecerá el mensaje.</p>
+<p>VMware usa <code>CONFIG_SND_EN5171</code></p>
+<p>Hacé lo mismo para cada <code>CONFIG_</code></p>
+<h4 id="a-veces-si-haces-una-búsqueda-y-ponés-el-nombre-completo-config_-no-lo-encuentra-pero-si-pones-la-mitad-del-nombre-si-lo-encuentra">A veces si haces una búsqueda y ponés el nombre completo: <code>CONFIG_...</code> no lo encuentra pero si pones la mitad del nombre si lo encuentra.</h4>
+<p>Al final cuando ejecutás <code>make localyesconfig</code> no te debería salir ningun mensaje solo:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>using config: .config
+</span></span></code></pre></div><p>Ahora que hicimos todo los modulos:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>make menuconfig
+</span></span></code></pre></div><p>Si vez <code>Kernel .config support</code> con un <code>&lt;M&gt;</code></p>
+<p>Deshabilitá en <code>General Setup - Initial RAM filesystem and RAM disk (initramfs/initrd) support</code><br>
+En <code>Processor type and features - Processor family</code> seleccioná <code>Core 2/newer Xeon</code>.
+En <code>General setup - Default hostname - kiss</code>
+En <code>device drives - USB support</code>
+En <code>filesystem</code> debería estar habilitado <code>ext4</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>make -j <span style="color:#66d9ef">$(</span>nproc<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Ignorá el mensaje Cannot find LILO </span>
+</span></span><span style="display:flex;"><span>make install  
+</span></span><span style="display:flex;"><span>mv /boot/vmlinuz    /boot/vmlinuz-VERSION  
+</span></span><span style="display:flex;"><span>mv /boot/System.map /boot/System.map-VERSION 
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Fijate que esté bien el fstab</span>
+</span></span><span style="display:flex;"><span>cat /etc/fstab
+</span></span><span style="display:flex;"><span>kiss b grub
+</span></span><span style="display:flex;"><span>Legacy BOOT
+</span></span><span style="display:flex;"><span>Desde KISS Linux
+</span></span><span style="display:flex;"><span>sudo grub-install /dev/sda --recheck
+</span></span><span style="display:flex;"><span>grub-mkconfig -o /boot/grub/grub.cfg
+</span></span><span style="display:flex;"><span>Desde ArchLinux
+</span></span><span style="display:flex;"><span>grub-install --boot-directory<span style="color:#f92672">=</span>/mnt/boot /dev/sda --recheck
+</span></span></code></pre></div><p>Descargá el <code>linux-firwamre</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cd /usr/lib
+</span></span><span style="display:flex;"><span>git clone https://git.kernel.org/pub/scm/linux/kernel/git/firmware/linux-firmware.git
+</span></span></code></pre></div><p>Si estás en VirtualBox abrí la configuración en Experto y en Display poné <code>Graphics Controller</code> en <code>VBoxsSVGA</code>
+.
+Ahora en el archivo <code>/etc/default/grub</code> agregamos en la línea <code>GRUB_CMDLINE_LINUX_DEFAULT=&quot;loglevel=3 quiet nomodeset&quot;</code></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>vi /etc/default/grub
+</span></span><span style="display:flex;"><span>+GRUB_CMDLINE_LINUX_DEFAULT<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;loglevel=3 quiet nomodeset # (no carga los drivers de video)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">grub-mkconfig -o /boot/grub/grub.cfg
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">passwd
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">adduser esotericwarfare
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">addgroup esotericwarfare audio
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">addgroup esotericwarfare video
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">addgroup esotericwarfare input
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">exit
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">exit
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">reboot
+</span></span></span></code></pre></div><p>Con <code>lspci -k</code> podes ver que módulos cargó.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>dhcpcd <span style="color:#75715e"># Levantar network</span>
+</span></span><span style="display:flex;"><span>cd /var/db/kiss/community/community - Paquetes disponibles en el repositorio
+</span></span><span style="display:flex;"><span>ls 
+</span></span></code></pre></div><p>Probamos si podemos instalar un paquete.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>kiss b neofetch
+</span></span><span style="display:flex;"><span>neofetch
+</span></span></code></pre></div><hr>
+<p>Agregado.</p>
+<p>El built me tardo 10 horas
+Desde ArchLinux</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>root@archiso ~ <span style="color:#75715e"># grub-install --efi-directory=/mnt/boot --boot-directory=/mnt/boot --target=x86_64-efi --bootloader-id=grub_uefi  --removable</span>
+</span></span></code></pre></div><p>Agrega <code>kiss b grub lm-sensors links</code> al comienzo</p>
+<p>2:42 AM</p>
+<p>La compilacion del kernel me tardo 2 horas y 40 minutos</p>
+<p>El <code>linux-firmware</code> pesa 2.4g</p>
+<p>Habilita todos estos y nodemodeset en el <code>GRUB_CMDLINE</code></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>CONFIG_FB 
+</span></span><span style="display:flex;"><span>CONFIG_FRAMEBUFFER_CONSOLE
+</span></span><span style="display:flex;"><span>CONFIG_FB_EFI
+</span></span><span style="display:flex;"><span>CONFIG_FB_VESA
+</span></span></code></pre></div><h4 id="cuando-bootee-no-tenia-imagen-pero-igual-podia-escribir-usuario-root-y-la-clave-y-apagar-mi-computadora-o-pude-ver-videos-con-mpv-e-iniciar-el-entorno-gráfico-con-seatd-launch-sway-esto-lo-hice-despues-de-bootear-la-máquina-usando-nomodeset-e-instalar-los-siguientes-paquetes">Cuando bootee no tenia imagen pero igual podia escribir usuario: root y la clave y apagar mi computadora o pude ver videos con mpv e iniciar el entorno gráfico con <code>seatd-launch sway</code> esto lo hice despues de bootear la máquina usando <code>nomodeset</code> e instalar los siguientes paquetes:</h4>
+<p>Los primeros paquetes que instale despues de iniciar Linux.</p>
+<h5 id="es-mejor-compilar-los-paquetes-uno-por-uno-porque-recien-los-instala-luego-de-compilarlo-si-compilas-varios-paquetes-recien-los-instalara-cuando-termine-de-compilar-el-ultimo-paquete">Es mejor compilar los paquetes uno por uno porque recien los instala luego de compilarlo, si compilas varios paquetes recien los instalara cuando termine de compilar el ultimo paquete.</h5>
+<pre tabindex="0"><code>kiss b openssh imagemagick qpdf lm-sensors links vis vim mpv swayfx swagbg firefox-privacy links
+(root) pip install yt-dlp
+</code></pre><p>Tuve que compilar <code>irssi</code> desde la págian porque no estaa en el repo de kiss ni el de community.</p>
+<h6 id="estuvo-3-dias-12-horas-horas-compilando-llvm-y-clang-spirv-tools-para-instalar-2-paquetes-mpv-y-sway-en-una-intel-celeron-n2806-dual-core-16ghz">Estuvo 3 dias 12 horas horas compilando LLVM y Clang SPIRV tools para instalar 2 paquetes: mpv y sway!! En una Intel Celeron N2806 Dual Core 1.6GHz</h6>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>addgroup esotericwarfare audio
+</span></span><span style="display:flex;"><span>addgroup esotericwarfare video
+</span></span><span style="display:flex;"><span>addgroup esotericwarfare input
+</span></span></code></pre></div><p>Clang 04:09 AM - 38%</p>
+<p>Para instalar el driver <code>i915</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>su
+</span></span><span style="display:flex;"><span>git clone ...linux-firware /usr/bin/firmware
+</span></span><span style="display:flex;"><span>cd /var/db/kiss/linux-VERSION
+</span></span><span style="display:flex;"><span>make menuconfig
+</span></span><span style="display:flex;"><span>Device Driver
+</span></span><span style="display:flex;"><span>Generic Driver Options
+</span></span><span style="display:flex;"><span>Firmware loader
+</span></span></code></pre></div><p>Ahi en <code>Firmware blobs root directory</code> agregue: <code>/lib/firmware</code> y en <code>Build named firmware blobs into the kernel binary</code> puse <code>*</code> (Aunque no deberia hacer eso sino elegir una por una la que tengo que usar.)</p>
+<h3 id="como-solucionar-los-problemas">Como solucionar los problemas</h3>
+<p>Si no funciona nada fijate si podes escribir el usuario y contraseña en ciego y ejecutar y luego bootealo con <code>nomodeset</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>dmesg &gt; dmesg.txt
+</span></span></code></pre></div><p>Para instalar las fonts de sway: <code>kiss b terminus-font</code>.</p>
+<p>Estos son los paquetes que estan en el repositorio de <code>community</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>9base abduco aerc age amfora aml android-tools appstream apulse aria2 asciinema autoconf autoconf-archive automake axel bandwhich bash bat bc bemenu birch
+</span></span><span style="display:flex;"><span>bit-bin boost bottom brlaser brotli btop btrfs-progs bubblewrap cantarell-fonts catgirl cava ccrypt cfm chicken cloc cmark-gfm cmus containerd coreutils
+</span></span><span style="display:flex;"><span>cproc crosstool-ng cryptsetup ctags cups cups-filters curlpp darkhttpd dash dejavu-ttf delta dialog discount diskonaut djvulibre dmidecode docker docker-buildx
+</span></span><span style="display:flex;"><span>docker-compose-bin dogefetch dvtm ecl elinks emacs emacs-compat emacs-kiss-git emacs-tsort entr erlang evremap evtest exa execline exfatprogs exiftool
+</span></span><span style="display:flex;"><span>extra-cmake-modules falkon fdk-aac fdm fff fftw file flac flatpak fmt fnf fortune fossil freeglut fuse fuse2 fzy gawk gc gcompat gdb ghostscript girara github-cli
+</span></span><span style="display:flex;"><span>globe-cli glorytun glow-bin gnu-netcat gnupg1 gnupg2 gnutls go go-bootstrap go-ipfs goimports gopls gperf gpgme gphoto2 groff gron-git gsl gspt gt5 gtar gtest
+</span></span><span style="display:flex;"><span>guile3 guile3-fibers-git gumbo-parser hack hexyl hostapd htop hugo hummingbird-git icu idmap imagemagick imath inih iniparser init-hooks iosevka-nerd-fonts
+</span></span><span style="display:flex;"><span>iperf iproute2 iptables isync iw jbig2dec jo jq json-glib kak-lsp-bin kakoune kexec-tools keyutils kfc kiss-find kmod lcms ldns less libaio libarchive
+</span></span><span style="display:flex;"><span>libassuan libatomic_ops libbpf libburn libcap libconfig libcupsfilters libdvdcss libedit libev libevent libexif libgcrypt libgpg-error libgphoto2 libisoburn
+</span></span><span style="display:flex;"><span>libisofs libjpeg libksba libmupdf libnl libpcap libportaudio2 libppd libpsl libseccomp libsixel libslirp libsndfile libsodium libssh libtermkey libtool libtorrent
+</span></span><span style="display:flex;"><span>libunistring liburing libusb libutemper libuv libvncserver libwebsockets libxdp libxml2 libxmlb libxslt libyaml limine links lm-sensors lpeg lsof lua luajit lux lvm2
+</span></span><span style="display:flex;"><span>lz4 lzo mblaze mdev-usb mediainfo mg minikube mksh mosh msgpack-c msmtp mtools mtpaint mtr nano nawk-git ncdu1 neatvnc neofetch neomutt neovim nettle nmap npth
+</span></span><span style="display:flex;"><span>nq nsd ntfs-3g numactl oksh openjpeg2 openntpd optipng ostree ox pandoc-bin pash patch patchelf pciutils perl pfetch pick pinentry pipewire pkcs11-helper pmount
+</span></span><span style="display:flex;"><span>poppler poppler-data popt pounce powertop pqiv procps-ng protobuf protobuf-c pv pybind11 pystring qbe qemu qpdf qrencode qt5 qt5-declarative qt5-svg qt5-wayland
+</span></span><span style="display:flex;"><span>qt5-webchannel qt5-webengine ranger readline reptyr retrogram-rtlsdr ripgrep rsync rtorrent ruby runc runit rustup-bin s6 s6-linux-init s6-rc sane sbase sbcl sc
+</span></span><span style="display:flex;"><span>sc-im sccache scenefx scrcpy scroll scryer-prolog sdl2 secret sed sed-i senpai sfeed sgt-puzzles shellcheck-bin shepherd shfm shfmt-bin shinit sinit slang slides
+</span></span><span style="display:flex;"><span>slirp4netns smu-karlb spotify-player spotifyd squashfs-tools sudo swappy swaybg swayfx swayidle swaylock swww syncthing sysmgr tcc tdb tea terminus-font tiff tig
+</span></span><span style="display:flex;"><span>tinygo-bin tinyramfs-git tiv tmate tmux tokei totp transmission tre tree ttf-font-awesome ttf-jetbrains-mono ttyd tuitube twemoji-color-font typescript-language-server
+</span></span><span style="display:flex;"><span>uacme ubase ugrep umurmur unbound unzip uthash virglrenderer vis viu vmwh vundle wayvnc wireguard-tools wireless_tools wl-clipboard wl-screenrec wlr-randr
+</span></span><span style="display:flex;"><span>wmenu xxd yajl yarn yash yasm yt-dlp ytfzf zathura zathura-cb zathura-djvu zathura-pdf-mupdf zathura-pdf-poppler zig-bin zip zls-bin zsh zzz
+</span></span></code></pre></div><p>Paquetes que esta en el repo de <code>repo/extra</code> (tiene 2 mas: core y wayland)</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>adwaita-icon-theme alsa-lib alsa-utils bkeymaps cairo cbindgen ccache clang cmake cyrus-sasl dhcpcd dosfstools e2fsprogs efibootmgr efivar eiwd expat
+</span></span><span style="display:flex;"><span>ffmpeg firefox firefox-privacy fontconfig freetype-harfbuzz gdk-pixbuf glib gnugrep gtk+3 hicolor-icon-theme hwdata intel-vaapi-driver json-c kirc lame
+</span></span><span style="display:flex;"><span>libass libclc libdisplay-info libelf libepoxy libffi libjpeg-turbo libnl-tiny libogg libplacebo libpng libretls libtheora libudev-zero libva
+</span></span><span style="display:flex;"><span>libva-utils libvorbis libvpx libwebp llvm man-pages mandoc mdevd mesa meson mold mpv mutt nasm ncurses nodejs nspr nss opendoas openresolv openssh opus
+</span></span><span style="display:flex;"><span>pango pcre2 pkgconf python python-docutils python-flit-core python-glad python-gpep517 python-installer python-jinja2 python-mako python-markupsafe
+</span></span><span style="display:flex;"><span>python-packaging python-setuptools python-wheel python-yaml rust samurai scdoc skalibs spirv-headers spirv-llvm-translator spirv-tools sqlite ssu
+</span></span><span style="display:flex;"><span>strace ttf-croscore tzdata util-linux vim wpa_supplicant x264 x265 xvidcore zstd
+</span></span></code></pre></div><hr>
+<p>Acá fue cuando ejecuté <code>make localyesconfig</code> en la carpeta del kernel descargado y fui habilitando uno por uno los <code>CONFIG_</code> saqué una foto porque eran demasiados.</p>
+<p><a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhMuPo4ZkXF4xlEXDwZW1ewbB8tntT23bPEXg66nyI2CQ-2GrC_KAL0zJh17k_dTqPjSNt6WxJ2CwIL485VBx5frF8aWegT8gDOwmRXQHVHu4tHh4ZX-LHtia1j03gZRPWtbIOidIBmKD1svsz3qZa5w_cmjESmAvQgJwZ0Dw3edLU9EhBESK0coGKdJBv_/s4160/IMG_20250626_194303066.jpg"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhMuPo4ZkXF4xlEXDwZW1ewbB8tntT23bPEXg66nyI2CQ-2GrC_KAL0zJh17k_dTqPjSNt6WxJ2CwIL485VBx5frF8aWegT8gDOwmRXQHVHu4tHh4ZX-LHtia1j03gZRPWtbIOidIBmKD1svsz3qZa5w_cmjESmAvQgJwZ0Dw3edLU9EhBESK0coGKdJBv_/s320/IMG_20250626_194303066.jpg" alt=""></a>
+<a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjLIUWBg6lqcZxg7CGijLeeqjvpW3qc5aDYwPO7FFy4mJewquiZ2N75FkkwN6TOkIHgha4_NUkigVX3wNsFqgoEeloUHknLG9fRUKEDvWNImfAKLwxYnd0UqbezI-V-pW8yCxlFL8Xd4mBLO9hVMQtPVbJPgHrKgfGTQjhlukVD7WM__qrkNUoo4wdbWQzR/s4160/IMG_20250626_195009956.jpg"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjLIUWBg6lqcZxg7CGijLeeqjvpW3qc5aDYwPO7FFy4mJewquiZ2N75FkkwN6TOkIHgha4_NUkigVX3wNsFqgoEeloUHknLG9fRUKEDvWNImfAKLwxYnd0UqbezI-V-pW8yCxlFL8Xd4mBLO9hVMQtPVbJPgHrKgfGTQjhlukVD7WM__qrkNUoo4wdbWQzR/s320/IMG_20250626_195009956.jpg" alt=""></a>
+<a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiBSl-f_sWvW3On9Td1IITlsqwmOZeSZMFfLxz9hsGFjkmUCiraWtH7hDnefIHXPBZLnSrP-9wBjLEs6LKmpgKR9C2DwNmVCHo8nfpOfUOH2zSQ-7dmGMKqrUwgG4HXvUCs30A0nzofIgyOeFNmvbq0mIPniYWkQsnQYjPBB9Kv9DKlVlsJ_TfkxTIpzY69/s4160/IMG_20250626_195746460.jpg"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiBSl-f_sWvW3On9Td1IITlsqwmOZeSZMFfLxz9hsGFjkmUCiraWtH7hDnefIHXPBZLnSrP-9wBjLEs6LKmpgKR9C2DwNmVCHo8nfpOfUOH2zSQ-7dmGMKqrUwgG4HXvUCs30A0nzofIgyOeFNmvbq0mIPniYWkQsnQYjPBB9Kv9DKlVlsJ_TfkxTIpzY69/s320/IMG_20250626_195746460.jpg" alt=""></a>
+<a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjbu7312OwsMgIGt33z9K6na9Kjeznh_gl7vL0pU-Wte-XxygnbnVx_jN69hn8IJ0c7ps7OgliZM1GRulE8tIAz7W0BmN50T1uTd4CYrTjQkarvYMTTX7vJeKeWHTxrj_eSi7nmmbWyIDTGyaowDtKZ-UMz5Xhn8S6YPMEwbs6Z2XI5G47mbn6O4rAInwQr/s4160/IMG_20250627_212721959.jpg"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjbu7312OwsMgIGt33z9K6na9Kjeznh_gl7vL0pU-Wte-XxygnbnVx_jN69hn8IJ0c7ps7OgliZM1GRulE8tIAz7W0BmN50T1uTd4CYrTjQkarvYMTTX7vJeKeWHTxrj_eSi7nmmbWyIDTGyaowDtKZ-UMz5Xhn8S6YPMEwbs6Z2XI5G47mbn6O4rAInwQr/s320/IMG_20250627_212721959.jpg" alt=""></a>
+<a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjg6JVSu-1Cd8p6m66FLqLqzsDAGwNidIl8xpFKNvXBDqGE2uhwq3WWSdNI9ZXX0Ey5t7Zy8WOUVgFZ0ZZX-hwDXWVgukhFgUmQAFoTIhewde0TheabT6ryMhWVtlJ6QVR9nBMa4X9sV_5PmwSa0ap-HXcdGKKFXzC4-ZaMAcLmSZVUXw2Zb0LfOj9QQnUH/s4160/IMG_20250628_121352880.jpg"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjg6JVSu-1Cd8p6m66FLqLqzsDAGwNidIl8xpFKNvXBDqGE2uhwq3WWSdNI9ZXX0Ey5t7Zy8WOUVgFZ0ZZX-hwDXWVgukhFgUmQAFoTIhewde0TheabT6ryMhWVtlJ6QVR9nBMa4X9sV_5PmwSa0ap-HXcdGKKFXzC4-ZaMAcLmSZVUXw2Zb0LfOj9QQnUH/s320/IMG_20250628_121352880.jpg" alt=""></a>
+<a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhfbh4fPIuuQ17Dyk5sC2Xh1iryfHz28ukyiF9xoPxvWngADCAtRsX7IxMuTtTqhcCSWMWDhCrFX_kJ01tN855GjdF0VScuXOALDZrIGXA9fSCmOqLCZdTMd61oNd58lmXBmLCnpWNBF4tyytvF1iCj6gOd1uswBBoxx60X2lNzC6iyqup0StEbXPuNT9Wu/s4160/IMG_20250628_172336385.jpg"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhfbh4fPIuuQ17Dyk5sC2Xh1iryfHz28ukyiF9xoPxvWngADCAtRsX7IxMuTtTqhcCSWMWDhCrFX_kJ01tN855GjdF0VScuXOALDZrIGXA9fSCmOqLCZdTMd61oNd58lmXBmLCnpWNBF4tyytvF1iCj6gOd1uswBBoxx60X2lNzC6iyqup0StEbXPuNT9Wu/s320/IMG_20250628_172336385.jpg" alt=""></a>
+<a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiPtex-tkwrxVl1FAEKwkiZKK_GsYSjvG2ZoyTT3K3_9Rmzc0ZjxAjgfCmMcl7eAsyw2Wfa285VUCi4FVQOBBSFZscJlH0mVgnxzyusPK8a-kLWLgb0acAK48yS8TOE5GVmZvdMicza8CZ-zVRYy9QmxAGw-f67q_xInzDULCnaqb5mNrm6tMyvixS_eyAs/s4160/IMG_20250629_015151598.jpg"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiPtex-tkwrxVl1FAEKwkiZKK_GsYSjvG2ZoyTT3K3_9Rmzc0ZjxAjgfCmMcl7eAsyw2Wfa285VUCi4FVQOBBSFZscJlH0mVgnxzyusPK8a-kLWLgb0acAK48yS8TOE5GVmZvdMicza8CZ-zVRYy9QmxAGw-f67q_xInzDULCnaqb5mNrm6tMyvixS_eyAs/s320/IMG_20250629_015151598.jpg" alt=""></a>
+<a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEizgFx1FxNSs4Q2gPVw25oGUEV-livnmYxNhLQnixnI0fOEfPlbYuJmYVcGi4Pyob-2DFCmc_wCPkqNDdpJSiyFs1dsV_WWkzJK19cj9OYRvFrFWO_z7hAvvsRz8cs_kdcDJfwBcMGknPI7kq9vjV1B9aWcfg-J3qBqUy4fDmxnWNvVKenw4xg-RATro6ch/s4160/IMG_20250629_020616031.jpg"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEizgFx1FxNSs4Q2gPVw25oGUEV-livnmYxNhLQnixnI0fOEfPlbYuJmYVcGi4Pyob-2DFCmc_wCPkqNDdpJSiyFs1dsV_WWkzJK19cj9OYRvFrFWO_z7hAvvsRz8cs_kdcDJfwBcMGknPI7kq9vjV1B9aWcfg-J3qBqUy4fDmxnWNvVKenw4xg-RATro6ch/s320/IMG_20250629_020616031.jpg" alt=""></a>
+<a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgUaSV2QtsOhCLYhJNVXfaNjonLRJvANV_knJQRiptVKGnleWLD3dpRNKe2097jxBQ5SwdzYSQU6fyT7C_LBDatnRfwt-B1GGW5YbUkY8NzZG8HqW_8OKf_eywXbRei-wCAN_77eBvcZVAYLV7bn6X3YWGuc8OkYMzkXwIGvViJonw9f7kbK7GytOX1EV54/s4160/IMG_20250629_021438204.jpg"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgUaSV2QtsOhCLYhJNVXfaNjonLRJvANV_knJQRiptVKGnleWLD3dpRNKe2097jxBQ5SwdzYSQU6fyT7C_LBDatnRfwt-B1GGW5YbUkY8NzZG8HqW_8OKf_eywXbRei-wCAN_77eBvcZVAYLV7bn6X3YWGuc8OkYMzkXwIGvViJonw9f7kbK7GytOX1EV54/s320/IMG_20250629_021438204.jpg" alt=""></a>
+<a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEi2zAIDejn_TvWWLIOEt3QsPisEFybE5is0pmy7c5FKabqHe_m4LRbSc1FOXP6JjOHlKV7i87YyIfDbDHont0_qvoVT2QmRzy88G_29dbdQowPGahrcwr4zKfL5GVY9_w3bJ7XTzi5cLbP9hcBDWBiKxEchoCYU2mRrLhfvg0S2ouJwiNSWTaJLOs4rdLDe/s4160/IMG_20250629_022136547.jpg"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEi2zAIDejn_TvWWLIOEt3QsPisEFybE5is0pmy7c5FKabqHe_m4LRbSc1FOXP6JjOHlKV7i87YyIfDbDHont0_qvoVT2QmRzy88G_29dbdQowPGahrcwr4zKfL5GVY9_w3bJ7XTzi5cLbP9hcBDWBiKxEchoCYU2mRrLhfvg0S2ouJwiNSWTaJLOs4rdLDe/s320/IMG_20250629_022136547.jpg" alt=""></a>
+<a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgcUnnbi75P5poTIoM8EDE6nGMQHDJPHW0wRDGBruOtxfvx8G0022tOVDqV0qJdkk54sGKylW1m8jaNiWcuQL4-2IUBjSmo3VMtlPwycX7HqkD0jLBVCZiVUBnRz9T5fhTfYkJmo3r5bdaH6m8zJdajlMMc4nsQZIRHvmc1XVRq1V4dFy5W0kDB22CVdFCE/s4160/IMG_20250629_022829638.jpg"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgcUnnbi75P5poTIoM8EDE6nGMQHDJPHW0wRDGBruOtxfvx8G0022tOVDqV0qJdkk54sGKylW1m8jaNiWcuQL4-2IUBjSmo3VMtlPwycX7HqkD0jLBVCZiVUBnRz9T5fhTfYkJmo3r5bdaH6m8zJdajlMMc4nsQZIRHvmc1XVRq1V4dFy5W0kDB22CVdFCE/s320/IMG_20250629_022829638.jpg" alt=""></a>
+<a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiDTTzN-AsvJi4P0s2f4vjkk55Sokkc_uHu13gvN3Yu3LACSQTh2zIeL-47ABm4Q6EABMlY1OY3QduKavRMvZUbGjr0c-KyyPPKbEiK-1Suq2pTxbWqh6w8C1IPe6UMeJtJuH8Pl4JCZ-a2rnpGiCc7SQdY_coJPtwfL6N7m4fciNkMUPlOYw2e25NR362n/s4160/IMG_20250629_023316239.jpg"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiDTTzN-AsvJi4P0s2f4vjkk55Sokkc_uHu13gvN3Yu3LACSQTh2zIeL-47ABm4Q6EABMlY1OY3QduKavRMvZUbGjr0c-KyyPPKbEiK-1Suq2pTxbWqh6w8C1IPe6UMeJtJuH8Pl4JCZ-a2rnpGiCc7SQdY_coJPtwfL6N7m4fciNkMUPlOYw2e25NR362n/s320/IMG_20250629_023316239.jpg" alt=""></a>
+<a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjHB31nAFZt8IGorHfOfmnKvmNLzj2jkJYgMQFcbsqiu0T9EQoZdcBf66RRLCzpztuI21bUcYQEFg77XwPP0wi0YTzgMYbkef5Mwmz7T5XEwC1QmKSVbMsuNyF7Wu1K36BbIUG_EalkzLKAW3EHPT7fI0xLjr8JscEGb5rqPvXmKqCIJ0Prn9mYisEY2Kt1/s4160/IMG_20250629_023601922.jpg"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjHB31nAFZt8IGorHfOfmnKvmNLzj2jkJYgMQFcbsqiu0T9EQoZdcBf66RRLCzpztuI21bUcYQEFg77XwPP0wi0YTzgMYbkef5Mwmz7T5XEwC1QmKSVbMsuNyF7Wu1K36BbIUG_EalkzLKAW3EHPT7fI0xLjr8JscEGb5rqPvXmKqCIJ0Prn9mYisEY2Kt1/s320/IMG_20250629_023601922.jpg" alt=""></a>
+<a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhnGj1OncWbkdHVebxETu_GtpFXwn563134U1krbn1l78j2gErNmOF2nEHvULxdH0ECWezPCloc3_clyycr0C20EVlwRw97d3rLQPbYaxgvSgLlpnV5LNORD-OMPwHTJVNjYXxvW3DQq-HEC2uUd-HnYjTEumwLhn-hCiHZ9uQ-g-onlVeGO-OXvzr6B7bP/s4160/IMG_20250629_082054265.jpg"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhnGj1OncWbkdHVebxETu_GtpFXwn563134U1krbn1l78j2gErNmOF2nEHvULxdH0ECWezPCloc3_clyycr0C20EVlwRw97d3rLQPbYaxgvSgLlpnV5LNORD-OMPwHTJVNjYXxvW3DQq-HEC2uUd-HnYjTEumwLhn-hCiHZ9uQ-g-onlVeGO-OXvzr6B7bP/s320/IMG_20250629_082054265.jpg" alt=""></a>
+<a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEggPR8Pp9s54UwegDtsIPL7NMNFqhy-BgL9uhbK5cCza4zDOuQRRbht3_uAFqOvKUeT2-X576DOKlVMwyUrBlaqA0pWf4GUTB3qO6GOcbXMag1q_4WKDAf3GSkBB09vA5g1q8ADN8vNzBfgh-dUs6VwC31BFU9teYoBY2C0RtTdu8BQgIam7tepUzE6lT5R/s4160/IMG_20250629_104323619.jpg"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEggPR8Pp9s54UwegDtsIPL7NMNFqhy-BgL9uhbK5cCza4zDOuQRRbht3_uAFqOvKUeT2-X576DOKlVMwyUrBlaqA0pWf4GUTB3qO6GOcbXMag1q_4WKDAf3GSkBB09vA5g1q8ADN8vNzBfgh-dUs6VwC31BFU9teYoBY2C0RtTdu8BQgIam7tepUzE6lT5R/s320/IMG_20250629_104323619.jpg" alt=""></a>
+<a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhzXAkxAzm7i4KPBol7quT9cRrYTbeH7PNBxLXbo4V3pBOppDxAHpm7A2Y4ZiBfSrhlwP7kUvrG_YkI0HFMv-jIILhh7JgSaWFWZbq61NvsVgh-Ohn3ioZkjSqtMGvTB-JZkAStBoST4Z8jqMfAIy9VhFQTWWL9VaJsSXEjREBg4qyyvlxY7zpGOoMdRp9L/s4160/IMG_20250629_104327052_BURST000_COVER_TOP.jpg"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhzXAkxAzm7i4KPBol7quT9cRrYTbeH7PNBxLXbo4V3pBOppDxAHpm7A2Y4ZiBfSrhlwP7kUvrG_YkI0HFMv-jIILhh7JgSaWFWZbq61NvsVgh-Ohn3ioZkjSqtMGvTB-JZkAStBoST4Z8jqMfAIy9VhFQTWWL9VaJsSXEjREBg4qyyvlxY7zpGOoMdRp9L/s320/IMG_20250629_104327052_BURST000_COVER_TOP.jpg" alt=""></a>
+<a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgwiu4ObJmctuALHEPbkArr9WTni-dOYbHmf323GY_83yeK2HxXTEyP7hhcEr4uNbsM-Ah_6pDj9bWQ4VP_uCz7iIaKvSgraIntknsESAf_vbW_HY3YD1XJZWeYH-pFVfeBpXjQEc9HK7yfHmgGj6y5iORavK21RJ9v81ccCExUJuNB2ROdzK7URxD4Lw7O/s4160/IMG_20250629_104327052_BURST001.jpg"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgwiu4ObJmctuALHEPbkArr9WTni-dOYbHmf323GY_83yeK2HxXTEyP7hhcEr4uNbsM-Ah_6pDj9bWQ4VP_uCz7iIaKvSgraIntknsESAf_vbW_HY3YD1XJZWeYH-pFVfeBpXjQEc9HK7yfHmgGj6y5iORavK21RJ9v81ccCExUJuNB2ROdzK7URxD4Lw7O/s320/IMG_20250629_104327052_BURST001.jpg" alt=""></a>
+<a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEig9yt2bEKb1NSsqnNjO6gYWPQm9L-KZGLKsUkeVR5OTbIFcVHPy_SZr3MEvNZVpF6tq-tmWt4KIyOnvzTPRwegviVsZMFP9qkH9kRVaHpT3AXRZIkdU7DP6xikFYXit5RnY5JigTH6JaQHM0Od5ljaOru-303jE4OT-B1ahqtZh3rHPlLRe1RIdyQdkHpV/s4160/IMG_20250629_104329091.jpg"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEig9yt2bEKb1NSsqnNjO6gYWPQm9L-KZGLKsUkeVR5OTbIFcVHPy_SZr3MEvNZVpF6tq-tmWt4KIyOnvzTPRwegviVsZMFP9qkH9kRVaHpT3AXRZIkdU7DP6xikFYXit5RnY5JigTH6JaQHM0Od5ljaOru-303jE4OT-B1ahqtZh3rHPlLRe1RIdyQdkHpV/s320/IMG_20250629_104329091.jpg" alt=""></a>
+<a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhs9cJqEI5eMDHIfZftLAe_jGKupVqcgpoHK35SgS7hbo0warDToIXB3swijjA6QwucupZU23N0UBhJrDr7cr57hB4U3QPJO0Q6jvevIruh-vPBWWYeLnePe_1tMJjan19Xd_Rxu8Q0X0VoHaIG_zlf_8CIMMzFKpnX-DX2IaPgSjmQxOsyFxis3wSrX38e/s4160/IMG_20250630_100308742.jpg"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhs9cJqEI5eMDHIfZftLAe_jGKupVqcgpoHK35SgS7hbo0warDToIXB3swijjA6QwucupZU23N0UBhJrDr7cr57hB4U3QPJO0Q6jvevIruh-vPBWWYeLnePe_1tMJjan19Xd_Rxu8Q0X0VoHaIG_zlf_8CIMMzFKpnX-DX2IaPgSjmQxOsyFxis3wSrX38e/s320/IMG_20250630_100308742.jpg" alt=""></a>
+<a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh2eealxOVfEq6BA8iKHoN41IFKMH9B_Q-XyqeqeWiJQkZEbzfpBEKIH-qJHHVwooPs3Hu-Abz2tF9gvokALSi3C30t9kB0yDAfI5kRh6Trfx4xomo9TLXGkssJGv0ZfrWhyf_1BM55fEqn8GTFhrhCmJifdY5YQvjrtRxMNzwSYeZc2fYyIlQsscfKMiPX/s4160/IMG_20250630_233903549.jpg"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh2eealxOVfEq6BA8iKHoN41IFKMH9B_Q-XyqeqeWiJQkZEbzfpBEKIH-qJHHVwooPs3Hu-Abz2tF9gvokALSi3C30t9kB0yDAfI5kRh6Trfx4xomo9TLXGkssJGv0ZfrWhyf_1BM55fEqn8GTFhrhCmJifdY5YQvjrtRxMNzwSYeZc2fYyIlQsscfKMiPX/s320/IMG_20250630_233903549.jpg" alt=""></a>
+<a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjjhvQoK-Cuv3pqmBWHOm6bhVKGXG2VZD3rCl8C9VRvsCyGlQ_S0LlR6e2_kKP2gBuslw3ZfZdZmfFwg6M_OFkTubTG46SypKK4fgvPWkOxXB6lpB4h81dO2CT_m1HzKyiQunHPo0N0kLgMRP_E16tWeWPSALem1_eAXkMwTQZohgIdoyifBKuAtJ_6_gcu/s4160/IMG_20250701_012750522.jpg"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjjhvQoK-Cuv3pqmBWHOm6bhVKGXG2VZD3rCl8C9VRvsCyGlQ_S0LlR6e2_kKP2gBuslw3ZfZdZmfFwg6M_OFkTubTG46SypKK4fgvPWkOxXB6lpB4h81dO2CT_m1HzKyiQunHPo0N0kLgMRP_E16tWeWPSALem1_eAXkMwTQZohgIdoyifBKuAtJ_6_gcu/s320/IMG_20250701_012750522.jpg" alt=""></a>
+<a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjeLWrZ64rThBtdWSjNo0ANlI6AA2H77hLCOJanBsOBzp8BD0hyphenhyphen6OLaVYz9pRg9voPherc0N8iHEn3tXDf49MUZtJ275_zR2hFU7QJnSq9KWV7PQSDfX9F8t4UmEqDNPHYF9ljtA82StHuVo9b-huDRC-TE1Io7Kbc0jFwm_z1yzB1IgIhVmo5z7VdR-2xZ/s4160/IMG_20250702_204439728_BURST000_COVER.jpg"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjeLWrZ64rThBtdWSjNo0ANlI6AA2H77hLCOJanBsOBzp8BD0hyphenhyphen6OLaVYz9pRg9voPherc0N8iHEn3tXDf49MUZtJ275_zR2hFU7QJnSq9KWV7PQSDfX9F8t4UmEqDNPHYF9ljtA82StHuVo9b-huDRC-TE1Io7Kbc0jFwm_z1yzB1IgIhVmo5z7VdR-2xZ/s320/IMG_20250702_204439728_BURST000_COVER.jpg" alt=""></a>
+<a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgsdu33t3wZF8EFXfQDYsrAc52DEtyaN2iYjuF0zAjJD-bqTmdgLEu6dEzcl886sJ21xNKrOWhlWn4lqyY9qLP9C5RXtHOxB1R7TvcikVAfrRiCLyuILrqDhd5pBnfcG3uAj5nhyphenhyphenJ_6t1tvwkmRUtTQHhj_wFqiwIEn4Xn6IXSAYXCvnAfLZF_ZynzjyWKH/s4160/IMG_20250702_204444197.jpg"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgsdu33t3wZF8EFXfQDYsrAc52DEtyaN2iYjuF0zAjJD-bqTmdgLEu6dEzcl886sJ21xNKrOWhlWn4lqyY9qLP9C5RXtHOxB1R7TvcikVAfrRiCLyuILrqDhd5pBnfcG3uAj5nhyphenhyphenJ_6t1tvwkmRUtTQHhj_wFqiwIEn4Xn6IXSAYXCvnAfLZF_ZynzjyWKH/s320/IMG_20250702_204444197.jpg" alt=""></a>
+<a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgRXsVwxNL5Cvdb0y4PxDTlqi6jYBlIJlJnvg7U6A0DjgdnE4qd6HM0eUi2S8KyW3EPOMRz5PLBpRi0qX8kUAWFEl4EZGcmzr7tm_o0qwvGD9xZvJODkjnQ40jdhh_djJ92LURw71JKlbYSpxRqLtibL9kPi9R0kvXDWq6XKGFu96OfHDHwzPvyTgC_gUBD/s4160/IMG_20250703_103537378.jpg"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgRXsVwxNL5Cvdb0y4PxDTlqi6jYBlIJlJnvg7U6A0DjgdnE4qd6HM0eUi2S8KyW3EPOMRz5PLBpRi0qX8kUAWFEl4EZGcmzr7tm_o0qwvGD9xZvJODkjnQ40jdhh_djJ92LURw71JKlbYSpxRqLtibL9kPi9R0kvXDWq6XKGFu96OfHDHwzPvyTgC_gUBD/s320/IMG_20250703_103537378.jpg" alt=""></a>
+<a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhdUWBosyXS3sobrSxI1iw7pNsDynj6OjHtLNdgxbN1NG-R-uQo7wpLGfkwgXtNJvKWYw8WxLtyS9UMOIy-7sZARSbteESfzP8KfDHRQUKz84gzokWy9UY0ScU1wUpW864VnPuVdbaxduwecT-KyxtjWnMMaon6CUvxKU0HTPb00e2gUZ3_NpGBI2gK1Rzh/s4160/IMG_20250703_120405988.jpg"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhdUWBosyXS3sobrSxI1iw7pNsDynj6OjHtLNdgxbN1NG-R-uQo7wpLGfkwgXtNJvKWYw8WxLtyS9UMOIy-7sZARSbteESfzP8KfDHRQUKz84gzokWy9UY0ScU1wUpW864VnPuVdbaxduwecT-KyxtjWnMMaon6CUvxKU0HTPb00e2gUZ3_NpGBI2gK1Rzh/s320/IMG_20250703_120405988.jpg" alt=""></a>
+<a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhKDqLKaYtAx7svZW_7xGj7vhE80_wZ1_upGj6ug_TlfXDL8-MNw3_7i9ElQCW7lHXpfSqu_8OwKIfsemOPV0shfNVZPckI_EWNsTzEl1k2BSPCt36zXi0sUeIfTMb-90ymGDgmCawZAwPW3yF46Z_jRqaDryCUPjldbyuWhMQFTOKkoMM5crUN7lF8ggg1/s4160/IMG_20250704_063857979.jpg"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhKDqLKaYtAx7svZW_7xGj7vhE80_wZ1_upGj6ug_TlfXDL8-MNw3_7i9ElQCW7lHXpfSqu_8OwKIfsemOPV0shfNVZPckI_EWNsTzEl1k2BSPCt36zXi0sUeIfTMb-90ymGDgmCawZAwPW3yF46Z_jRqaDryCUPjldbyuWhMQFTOKkoMM5crUN7lF8ggg1/s320/IMG_20250704_063857979.jpg" alt=""></a>
+<a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhM9U_3UmBBaRS58L5Kuf_-FF8p-H9uhGBFXo8d73Y-BtMGbiousNPa0kGVa6bvc1asbnoo2NYa_1KMP9puy7WUZm9tbcTXbq7cch0WJz5s8uyfdH7wDLcLasHaJKQU6ipuq2yOfpVkRqv-gihwmWt2un-V7X8xZDT5iLOBurdgE3ENtLRdy-RwpSJywnls/s4160/IMG_20250704_064716543.jpg"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhM9U_3UmBBaRS58L5Kuf_-FF8p-H9uhGBFXo8d73Y-BtMGbiousNPa0kGVa6bvc1asbnoo2NYa_1KMP9puy7WUZm9tbcTXbq7cch0WJz5s8uyfdH7wDLcLasHaJKQU6ipuq2yOfpVkRqv-gihwmWt2un-V7X8xZDT5iLOBurdgE3ENtLRdy-RwpSJywnls/s320/IMG_20250704_064716543.jpg" alt=""></a>
+<a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEi5zjgcJ_D9dGGpFGKGO9wMigI-hh0Vl6YFVOUuDPXmLxk4oMHSr0fw9_t9ZnqHpTTp8HnQbgEnDvJ37-Z-JXjHZ_5tGPKjejsT3LT8S1UEVmhx73N4AMAOJdJZEFJZ49BRAEtKEVEyRuf-VqTVCbo9yc9ACswDMvfRlOpjIzqXtg2bEc6jvSzzYvo1fFQx/s4160/IMG_20250704_065401822.jpg"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEi5zjgcJ_D9dGGpFGKGO9wMigI-hh0Vl6YFVOUuDPXmLxk4oMHSr0fw9_t9ZnqHpTTp8HnQbgEnDvJ37-Z-JXjHZ_5tGPKjejsT3LT8S1UEVmhx73N4AMAOJdJZEFJZ49BRAEtKEVEyRuf-VqTVCbo9yc9ACswDMvfRlOpjIzqXtg2bEc6jvSzzYvo1fFQx/s320/IMG_20250704_065401822.jpg" alt=""></a>
+<a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiULVlAs6PFFhztAzoo0w3_Mh8OnSzyxrrzYHJu5KEwxwNM8zVolDHm-Dgw6iRmRWauq7Ej57cS8JmmFNgU7T1Z_W9idYBCPbVI-VrrH8bwmyWuD89QeV2W8grAb3l5ZjQ3wIVvQDbKX1Rm6AoAvS_NBja11cejMi4BHKSuXqr4CXrs95qtqpq9STxva4ft/s4160/IMG_20250704_070059874_BURST000_COVER_TOP.jpg"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiULVlAs6PFFhztAzoo0w3_Mh8OnSzyxrrzYHJu5KEwxwNM8zVolDHm-Dgw6iRmRWauq7Ej57cS8JmmFNgU7T1Z_W9idYBCPbVI-VrrH8bwmyWuD89QeV2W8grAb3l5ZjQ3wIVvQDbKX1Rm6AoAvS_NBja11cejMi4BHKSuXqr4CXrs95qtqpq9STxva4ft/s320/IMG_20250704_070059874_BURST000_COVER_TOP.jpg" alt=""></a>
+<a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh71yevc-r9iJzpNcV3yLhMm-FVCbfMFGIIZ4HpkDpzJRhyphenhyphenZgs4R6HuSws0AxZHaCanNI_iy4VxpMBwhPM6SY_7_M3N2r69TSTqZ00FqvmyTExBSLe1ZJRQCN6vdbYIqUIRBSdhapWya4Mmc82WLX0z3HkeJs9nEWToHMFQDTURjsPOprZ2tqh3mOBhJnGN/s4160/IMG_20250704_070059874_BURST001.jpg"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh71yevc-r9iJzpNcV3yLhMm-FVCbfMFGIIZ4HpkDpzJRhyphenhyphenZgs4R6HuSws0AxZHaCanNI_iy4VxpMBwhPM6SY_7_M3N2r69TSTqZ00FqvmyTExBSLe1ZJRQCN6vdbYIqUIRBSdhapWya4Mmc82WLX0z3HkeJs9nEWToHMFQDTURjsPOprZ2tqh3mOBhJnGN/s320/IMG_20250704_070059874_BURST001.jpg" alt=""></a>
+<a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEirtu36pU4eJjaMyfdxu2tNEJ1bkdlBWI26UD4WWR8TDB2rslVVZxFbqGlTQilJZieRBqAhDlbw_nVOZw4QKtEClhVPaUazZVBnlgGwHdwcJxWZiVTEcM8TU9hj0sb-qZY1gN11JXeX9B2RCPl5Db92SppO_5uaguikojkYj0C_WcVm58FSKGlEs_hckmu4/s4160/IMG_20250704_070915172.jpg"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEirtu36pU4eJjaMyfdxu2tNEJ1bkdlBWI26UD4WWR8TDB2rslVVZxFbqGlTQilJZieRBqAhDlbw_nVOZw4QKtEClhVPaUazZVBnlgGwHdwcJxWZiVTEcM8TU9hj0sb-qZY1gN11JXeX9B2RCPl5Db92SppO_5uaguikojkYj0C_WcVm58FSKGlEs_hckmu4/s320/IMG_20250704_070915172.jpg" alt=""></a>
+<a href="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgifd4d73woInGbEVhw_hMzMMK3qJZdiDGpbx_ticbJ_PxIBQxviI8JN7fHmygH_nAo_cfpau16SbTtdtqPR07UrKxY-asAm-0zFFmvUV5QS-C8yI2MiMNWC0eMWjai3K6hpE6St0W82ylaZxlJ3S__mIlEM4ETlW74Xdictcm7lkqgrjQpzDafjXf_7Jho/s4160/IMG_20250704_071709677.jpg"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgifd4d73woInGbEVhw_hMzMMK3qJZdiDGpbx_ticbJ_PxIBQxviI8JN7fHmygH_nAo_cfpau16SbTtdtqPR07UrKxY-asAm-0zFFmvUV5QS-C8yI2MiMNWC0eMWjai3K6hpE6St0W82ylaZxlJ3S__mIlEM4ETlW74Xdictcm7lkqgrjQpzDafjXf_7Jho/s320/IMG_20250704_071709677.jpg" alt=""></a></p>
+
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+</footer>
+
+
+</body>
+</html>

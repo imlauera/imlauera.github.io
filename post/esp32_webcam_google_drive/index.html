@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/post/esp32_webcam_google_drive/">
+  <meta property="og:site_name" content="Imlauer">
+  <meta property="og:title" content="Subir capturas con una esp32 webcam a google drive">
+  <meta property="og:description" content="El ESP32 siempre pierde la conexión con la WiFi y cuando corta la luz tenés que esperar 15 minutos para volver a conectarte agregando un delay al comienzo y a veces la conexión wifi al ser tan pobre tenes que subir foto de menor calidad, entonces tenes 3 opciones:
+Escribir funciones para detectar si se ha perdido la conexión y volver a reconectarse.
+Escribir un perro guardían (watchdog): https://github.com/TronixLab/ESP32_Watchdog
+Reinicialo cada 10 minutos pero para hacer esto tenés que desactivar los sensores y escribir manualmente la configuración porque sino siempre van a volver a su valor por defecto.">
+  <meta property="og:locale" content="es_es">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="post">
+    <meta property="article:published_time" content="2023-11-10T04:51:54-03:00">
+    <meta property="article:modified_time" content="2023-11-10T04:51:54-03:00">
+    <meta property="article:tag" content="Esp32">
+    <meta property="article:tag" content="Capturas">
+    <meta property="article:tag" content="Webcam">
+    <meta property="article:tag" content="Google">
+    <meta property="article:tag" content="Drive">
+
+  
+  <meta itemprop="name" content="Subir capturas con una esp32 webcam a google drive">
+  <meta itemprop="description" content="El ESP32 siempre pierde la conexión con la WiFi y cuando corta la luz tenés que esperar 15 minutos para volver a conectarte agregando un delay al comienzo y a veces la conexión wifi al ser tan pobre tenes que subir foto de menor calidad, entonces tenes 3 opciones:
+Escribir funciones para detectar si se ha perdido la conexión y volver a reconectarse.
+Escribir un perro guardían (watchdog): https://github.com/TronixLab/ESP32_Watchdog
+Reinicialo cada 10 minutos pero para hacer esto tenés que desactivar los sensores y escribir manualmente la configuración porque sino siempre van a volver a su valor por defecto.">
+  <meta itemprop="datePublished" content="2023-11-10T04:51:54-03:00">
+  <meta itemprop="dateModified" content="2023-11-10T04:51:54-03:00">
+  <meta itemprop="wordCount" content="1920">
+  <meta itemprop="keywords" content="Esp32,Capturas,Webcam,Google,Drive">
+  
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Subir capturas con una esp32 webcam a google drive">
+  <meta name="twitter:description" content="El ESP32 siempre pierde la conexión con la WiFi y cuando corta la luz tenés que esperar 15 minutos para volver a conectarte agregando un delay al comienzo y a veces la conexión wifi al ser tan pobre tenes que subir foto de menor calidad, entonces tenes 3 opciones:
+Escribir funciones para detectar si se ha perdido la conexión y volver a reconectarse.
+Escribir un perro guardían (watchdog): https://github.com/TronixLab/ESP32_Watchdog
+Reinicialo cada 10 minutos pero para hacer esto tenés que desactivar los sensores y escribir manualmente la configuración porque sino siempre van a volver a su valor por defecto.">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Subir capturas con una esp32 webcam a google drive
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/post/esp32_webcam_google_drive/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="El ESP32 siempre pierde la conexión con la WiFi y cuando corta la luz tenés que esperar 15 minutos para volver a conectarte agregando un delay al comienzo y a veces la conexión wifi al ser tan pobre tenes que subir foto de menor calidad, entonces tenes 3 opciones:
+
+
+Escribir funciones para detectar si se ha perdido la conexión y volver a reconectarse.
+
+
+Escribir un perro guardían (watchdog): https://github.com/TronixLab/ESP32_Watchdog
+
+
+Reinicialo cada 10 minutos pero para hacer esto tenés que desactivar los sensores
+y escribir manualmente la configuración porque sino siempre van a volver a su valor
+por defecto.">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Subir capturas con una esp32 webcam a google drive
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2023-11-10T04:51:54-03:00'>
+      November 10, 2023
+    </time>
+    
+    <br>
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/esp32/">Esp32</a>
+    
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/capturas/">Capturas</a>
+    
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/webcam/">Webcam</a>
+    
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/google/">Google</a>
+    
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/drive/">Drive</a>
+    
+    
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <p>El ESP32 siempre pierde la conexión con la WiFi y cuando corta la luz tenés que esperar 15 minutos para volver a conectarte agregando un delay al comienzo y a veces la conexión wifi al ser tan pobre tenes que subir foto de menor calidad, entonces tenes 3 opciones:</p>
+<ol>
+<li>
+<p>Escribir funciones para detectar si se ha perdido la conexión y volver a reconectarse.</p>
+</li>
+<li>
+<p>Escribir un perro guardían (watchdog): <a href="https://github.com/TronixLab/ESP32_Watchdog">https://github.com/TronixLab/ESP32_Watchdog</a></p>
+</li>
+<li>
+<p>Reinicialo cada 10 minutos pero para hacer esto tenés que desactivar los sensores
+y escribir manualmente la configuración porque sino siempre van a volver a su valor
+por defecto.</p>
+</li>
+</ol>
+<p>Nos dimos cuenta que tarda para subir la foto 10 minutos aprox. tarda google en aceptar o sea sube fotos 10 minutos atrasados o más.  Estuvimos 30 minutos en frente de la cámara subió solo 1 foto.</p>
+<p>Se puede usar un <strong>reloj de vidriera</strong>, en caso de que se pierda la conexión wifi para que se vuelva a tomar.</p>
+<h4 id="si-la-cámara-deja-de-subir-imágenes-podes-ver-la-lista-de-ejecuciones-desde-google-script-para-ver-si-se-sigue-conectando-pero-no-puede-subir-la-imagen-o-es-otro-problema">Si la cámara deja de subir imágenes podes ver la lista de ejecuciones desde google script para ver si se sigue conectando pero no puede subir la imagen o es otro problema.</h4>
+<p>Creo que hay mejores tutoriales que este, por ejemplo enviar las fotos por Telegram, o por correo, o usar firebase. Acá algunos links:</p>
+<p><a href="https://randomnerdtutorials.com/page/5/?s=ESP32-CAM">https://randomnerdtutorials.com/page/5/?s=ESP32-CAM</a>
+<a href="https://randomnerdtutorials.com/esp32-cam-save-picture-firebase-storage/">https://randomnerdtutorials.com/esp32-cam-save-picture-firebase-storage/</a>
+<a href="https://randomnerdtutorials.com/esp32-cam-send-photos-email/">https://randomnerdtutorials.com/esp32-cam-send-photos-email/</a>
+<a href="https://randomnerdtutorials.com/telegram-esp32-cam-photo-arduino/">https://randomnerdtutorials.com/telegram-esp32-cam-photo-arduino/</a>
+<a href="https://randomnerdtutorials.com/esp32-cam-post-image-photo-server/">https://randomnerdtutorials.com/esp32-cam-post-image-photo-server/</a>
+<a href="https://randomnerdtutorials.com/esp32-cam-http-post-php-arduino/">https://randomnerdtutorials.com/esp32-cam-http-post-php-arduino/</a>
+<a href="https://randomnerdtutorials.com/esp32-cam-photo-microsd-card-timestamp/">https://randomnerdtutorials.com/esp32-cam-photo-microsd-card-timestamp/</a>
+<a href="https://randomnerdtutorials.com/esp32-cam-robotics-opencv-autonomous/">https://randomnerdtutorials.com/esp32-cam-robotics-opencv-autonomous/</a>
+<a href="https://randomnerdtutorials.com/esp32-cam-display-pictures-firebase-web-app/">https://randomnerdtutorials.com/esp32-cam-display-pictures-firebase-web-app/</a>
+<a href="https://randomnerdtutorials.com/esp32-cam-connect-external-antenna/">https://randomnerdtutorials.com/esp32-cam-connect-external-antenna/</a>
+<a href="https://randomnerdtutorials.com/send-notifications-esp32/">https://randomnerdtutorials.com/send-notifications-esp32/</a>
+<a href="https://randomnerdtutorials.com/firebase-control-esp32-gpios/">https://randomnerdtutorials.com/firebase-control-esp32-gpios/</a></p>
+<p>Disabling brownout: <a href="https://www.robmiles.com/journal/2020/1/20/disabling-the-esp32-brownout-detector">https://www.robmiles.com/journal/2020/1/20/disabling-the-esp32-brownout-detector</a></p>
+<hr>
+<p>Me compré una cámara ESP32 CAM de MercadoLibre y seguí esta guía para subir las fotos a google drive. <a href="https://web.archive.org/web/20230608061848/https://www.gsampallo.com/2019/10/13/esp32-cam-subir-fotos-a-google-drive/">https://web.archive.org/web/20230608061848/https://www.gsampallo.com/2019/10/13/esp32-cam-subir-fotos-a-google-drive/</a>. Backup: <a href="https://archive.is/ABArm">https://archive.is/ABArm</a></p>
+<p>Se usa google script. Hice un pequeño cambio en el código agregué sensores para que la cámara tenga una mejor calidad cuando hay mucha luz o poca luz y forcé el http en lugar del https porque no funcionaba con el siguiente parámetro: <code>client.setInsecure()</code>;</p>
+<h3 id="google-script">Google Script</h3>
+<p>Accedé a Google Script: <a href="https://script.google.com/">https://script.google.com/</a>  &gt; New Project
+Ahí pegá este código:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">doPost</span>(<span style="color:#a6e22e">e</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">data</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">Utilities</span>.<span style="color:#a6e22e">base64Decode</span>(<span style="color:#a6e22e">e</span>.<span style="color:#a6e22e">parameters</span>.<span style="color:#a6e22e">data</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">nombreArchivo</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">Utilities</span>.<span style="color:#a6e22e">formatDate</span>(<span style="color:#66d9ef">new</span> Date(), <span style="color:#e6db74">&#34;GMT-3&#34;</span>, <span style="color:#e6db74">&#34;yyyyMMdd_HHmmss&#34;</span>)<span style="color:#f92672">+</span><span style="color:#e6db74">&#34;.jpg&#34;</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">blob</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">Utilities</span>.<span style="color:#a6e22e">newBlob</span>(<span style="color:#a6e22e">data</span>, <span style="color:#a6e22e">e</span>.<span style="color:#a6e22e">parameters</span>.<span style="color:#a6e22e">mimetype</span>, <span style="color:#a6e22e">nombreArchivo</span> );
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>   <span style="color:#75715e">// Save the photo to Google Drive
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">folder</span>, <span style="color:#a6e22e">folders</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">DriveApp</span>.<span style="color:#a6e22e">getFoldersByName</span>(<span style="color:#e6db74">&#34;ESP32-CAM&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">folders</span>.<span style="color:#a6e22e">hasNext</span>()) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">folder</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">folders</span>.<span style="color:#a6e22e">next</span>();
+</span></span><span style="display:flex;"><span>  } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">folder</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">DriveApp</span>.<span style="color:#a6e22e">createFolder</span>(<span style="color:#e6db74">&#34;ESP32-CAM&#34;</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">file</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">folder</span>.<span style="color:#a6e22e">createFile</span>(<span style="color:#a6e22e">blob</span>); 
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">ContentService</span>.<span style="color:#a6e22e">createTextOutput</span>(<span style="color:#e6db74">&#39;Completo&#39;</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>El paso siguiente es guardar el script y publicarlo como aplicación web, esto ultimo lo hacemos desde
+Publicar(Deploy) &gt; Implementar como aplicación web</p>
+<p>Debemos elegir que se ejecute como nuestro usuario y que cualquier persona incluso los anónimos tengan acceso a la aplicación; luego confirmamos las opciones que se nos presenta.</p>
+<p>En la ultima opción Google nos mostrar una url donde estará publicada nuestra aplicación; debemos copiar esta url, la utilizaremos en el programa del ESP32-CAM.</p>
+<p>La url provista tendrá el siguiente formato:</p>
+<p><code>https://script.google.com/macros/s/XXXXXXXXXXXXXX/exec</code>
+Donde las XXXXXXXXXXXXXX serán reemplazadas por una secuencia alfanumérica que identifica a la aplicación.</p>
+<h5 id="para-subir-el-código-al-esp32-arduino">Para subir el código al ESP32 Arduino</h5>
+<p>Tenés que puentear GND(ground) con GPIO0 para poder programarlo. Explicado en este video: <a href="https://m.youtube.com/watch?v=oCA7XZl8ztk&amp;feature=youtu.be">https://m.youtube.com/watch?v=oCA7XZl8ztk&amp;feature=youtu.be</a></p>
+<p>Primero instalá arduino con en distros basadas en debian: <code>sudo apt install arduino</code> o en arch: <code>pacman -S arduino</code> si no funciona así podés instalar el paquete de la AUR <code>yay -S arduino-ide-bin</code></p>
+<p>Luego<br>
+Archivo &gt; preferencias (ctrl + ,) y agregá esta URL:</p>
+<p><a href="https://dl.espressif.com/dl/package_esp32_index.json">https://dl.espressif.com/dl/package_esp32_index.json</a>
+dale ok &gt; ok</p>
+<p>Ahora andate a<br>
+herramientas &gt; placas &gt; gestor de tarjetas, ahí descargará todos los controladores de las diferentes tarjetas ahí buscá <code>esp32</code> e instalá la de espressif systems.</p>
+<p>Tenés que usar la configuración de placa:</p>
+<p>tools &gt; board &gt; esp32 &gt; ESP32 Wrover Module<br>
+tools &gt; partition scheme lo ponés a Huge APP</p>
+<p>tools &gt; port /dev/usb</p>
+<p>Luego para configurar la velocidad:
+Tools &gt; Upload Speed &gt; 115200</p>
+<p>Para solucionar el error: <code>ModuleNotFoundError: No module named 'serial'</code> ejecutamos <code>pip install pyserial</code> o <code>sudo pacman -S python-pyserial</code> en arch</p>
+<p>Luego ubicate en donde guardaste el sketch y bajá la biblioteca <code>Base64.c</code> y <code>Base64.cpp</code> con el siguiente comando:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-console" data-lang="console"><span style="display:flex;"><span>curl -O https://raw.githubusercontent.com/gsampallo/esp32cam-gdrive/master/Base64.cpp
+</span></span><span style="display:flex;"><span>curl -O https://raw.githubusercontent.com/gsampallo/esp32cam-gdrive/master/Base64.h
+</span></span></code></pre></div><hr>
+<p>Backup de estas bibliotecas por si las dudas las borran:</p>
+<p>Base64.h <a href="https://archive.is/wjM0B">https://archive.is/wjM0B</a><br>
+Base64.cpp <a href="https://archive.is/I8sdh">https://archive.is/I8sdh</a></p>
+<p>Por si las dudas borran estos archivos el creador era:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span> * Copyright <span style="color:#f92672">(</span>c<span style="color:#f92672">)</span> <span style="color:#ae81ff">2013</span> Adam Rudd.
+</span></span><span style="display:flex;"><span> * See LICENSE <span style="color:#66d9ef">for</span> more information
+</span></span><span style="display:flex;"><span> * https://github.com/adamvr/arduino-base64
+</span></span></code></pre></div><hr>
+<p>Para compilar <code>Ctrl+R</code>, para compilar y subir el programa <code>Ctrl+U</code></p>
+<p>A veces cuando intentás cargar falla la carga un truco que me funcionaba era cambiar la velocidad de serie compilar sin subir y cambiarlo de nuevo a la que estaba antes y ahí sí compilar y subirlo</p>
+<p>Así me quedó el código (tenés que descargar las bibliotecas base64.cpp y base64.h y ponerlas en la misma carpeta como se mencionó anteriormente sino no compilará):</p>
+<pre tabindex="0"><code>Este código:
+
+1. No soporta HTTPS y hay que agregar el client.setInsecure(); que no es recomendable por ataques de hombre en el medio aparte en un futuro quedará obsoleto.
+2. El WiFi SE VA A DESCONECTAR y hay que programar la reconexión está mal poner el WiFi.begin AFUERA 
+ [code]
+WiFi.begin(ssid, password);  
+  while (WiFi.status() != WL_CONNECTED) {
+    Serial.print(&#34;.&#34;);
+    delay(500);
+  }
+[/code] Eso está mal.
+Y dentro del loop tenés que chequear si el WiFi se volvió a desconectar:
+
+Debería ser :
+
+[code]
+void connectWiFi()
+{
+  int status = WL_IDLE_STATUS;
+  
+  while (status != WL_CONNECTED)
+  {
+    status = WiFi.begin(ssid, password);
+    Serial.println(&#34;Connecting to WiFi...&#34;);
+    Serial.print(&#34;.&#34;);
+    delay(300);
+  }
+
+  Serial.print(&#34; IP: &#34;);
+  Serial.println(WiFi.localIP());
+  Serial.println();
+}
+void check_WiFi()
+{
+  if ( (WiFi.status() != WL_CONNECTED) )
+  {
+    Serial.println(F(&#34;\nWiFi lost. Call connectMultiWiFi in loop&#34;));
+    connectWiFi();
+  }
+}
+[/code]
+
+El WiFi.begin tiene que estar dentro del loop while.
+
+Y dentro de loop() hay que llamar a check_WiFi()
+
+Algo así: https://forum.arduino.cc/t/arduino-wifi-rev2-reconnecting-to-wifi-after-disconnected/1022789/5
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;WiFi.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;WiFiClientSecure.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&#34;soc/soc.h&#34;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&#34;soc/rtc_cntl_reg.h&#34;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&#34;Base64.h&#34;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&#34;esp_camera.h&#34;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span><span style="color:#f92672">*</span> ssid     <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;tu_red&#34;</span>;   <span style="color:#75715e">//your network SSID
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span><span style="color:#f92672">*</span> password <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;tu_clave&#34;</span>;   <span style="color:#75715e">//your network password
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span><span style="color:#f92672">*</span> myDomain <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;script.google.com&#34;</span>;
+</span></span><span style="display:flex;"><span>String myScript <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;/macros/s/XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX/exec&#34;</span>;    <span style="color:#75715e">//Replace with your own url
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>String myFilename <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;filename=ESP32-CAM.jpg&#34;</span>;
+</span></span><span style="display:flex;"><span>String mimeType <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;&amp;mimetype=image/jpeg&#34;</span>;
+</span></span><span style="display:flex;"><span>String myImage <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;&amp;data=&#34;</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> waitingTime <span style="color:#f92672">=</span> <span style="color:#ae81ff">360000</span>; <span style="color:#75715e">//Wait 6 minutes to google response.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#define CAMERA_MODEL_AI_THINKER </span><span style="color:#75715e">// Has PSRAM
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#define PWDN_GPIO_NUM     32
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define RESET_GPIO_NUM    -1
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define XCLK_GPIO_NUM      0
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define SIOD_GPIO_NUM     26
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define SIOC_GPIO_NUM     27
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#define Y9_GPIO_NUM       35
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define Y8_GPIO_NUM       34
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define Y7_GPIO_NUM       39
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define Y6_GPIO_NUM       36
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define Y5_GPIO_NUM       21
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define Y4_GPIO_NUM       19
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define Y3_GPIO_NUM       18
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define Y2_GPIO_NUM        5
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define VSYNC_GPIO_NUM    25
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define HREF_GPIO_NUM     23
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define PCLK_GPIO_NUM     22
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">setup</span>()
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">WRITE_PERI_REG</span>(RTC_CNTL_BROWN_OUT_REG, <span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  Serial.<span style="color:#a6e22e">begin</span>(<span style="color:#ae81ff">115200</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">delay</span>(<span style="color:#ae81ff">900000</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  WiFi.<span style="color:#a6e22e">mode</span>(WIFI_STA);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  Serial.<span style="color:#a6e22e">println</span>(<span style="color:#e6db74">&#34;&#34;</span>);
+</span></span><span style="display:flex;"><span>  Serial.<span style="color:#a6e22e">print</span>(<span style="color:#e6db74">&#34;Connecting to &#34;</span>);
+</span></span><span style="display:flex;"><span>  Serial.<span style="color:#a6e22e">println</span>(ssid);
+</span></span><span style="display:flex;"><span>  WiFi.<span style="color:#a6e22e">begin</span>(ssid, password);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">while</span> (WiFi.<span style="color:#a6e22e">status</span>() <span style="color:#f92672">!=</span> WL_CONNECTED) {
+</span></span><span style="display:flex;"><span>    Serial.<span style="color:#a6e22e">print</span>(<span style="color:#e6db74">&#34;.&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">delay</span>(<span style="color:#ae81ff">500</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  Serial.<span style="color:#a6e22e">println</span>(<span style="color:#e6db74">&#34;&#34;</span>);
+</span></span><span style="display:flex;"><span>  Serial.<span style="color:#a6e22e">println</span>(<span style="color:#e6db74">&#34;STAIP address: &#34;</span>);
+</span></span><span style="display:flex;"><span>  Serial.<span style="color:#a6e22e">println</span>(WiFi.<span style="color:#a6e22e">localIP</span>());
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  Serial.<span style="color:#a6e22e">println</span>(<span style="color:#e6db74">&#34;&#34;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">camera_config_t</span> config;
+</span></span><span style="display:flex;"><span>  config.ledc_channel <span style="color:#f92672">=</span> LEDC_CHANNEL_0;
+</span></span><span style="display:flex;"><span>  config.ledc_timer <span style="color:#f92672">=</span> LEDC_TIMER_0;
+</span></span><span style="display:flex;"><span>  config.pin_d0 <span style="color:#f92672">=</span> Y2_GPIO_NUM;
+</span></span><span style="display:flex;"><span>  config.pin_d1 <span style="color:#f92672">=</span> Y3_GPIO_NUM;
+</span></span><span style="display:flex;"><span>  config.pin_d2 <span style="color:#f92672">=</span> Y4_GPIO_NUM;
+</span></span><span style="display:flex;"><span>  config.pin_d3 <span style="color:#f92672">=</span> Y5_GPIO_NUM;
+</span></span><span style="display:flex;"><span>  config.pin_d4 <span style="color:#f92672">=</span> Y6_GPIO_NUM;
+</span></span><span style="display:flex;"><span>  config.pin_d5 <span style="color:#f92672">=</span> Y7_GPIO_NUM;
+</span></span><span style="display:flex;"><span>  config.pin_d6 <span style="color:#f92672">=</span> Y8_GPIO_NUM;
+</span></span><span style="display:flex;"><span>  config.pin_d7 <span style="color:#f92672">=</span> Y9_GPIO_NUM;
+</span></span><span style="display:flex;"><span>  config.pin_xclk <span style="color:#f92672">=</span> XCLK_GPIO_NUM;
+</span></span><span style="display:flex;"><span>  config.pin_pclk <span style="color:#f92672">=</span> PCLK_GPIO_NUM;
+</span></span><span style="display:flex;"><span>  config.pin_vsync <span style="color:#f92672">=</span> VSYNC_GPIO_NUM;
+</span></span><span style="display:flex;"><span>  config.pin_href <span style="color:#f92672">=</span> HREF_GPIO_NUM;
+</span></span><span style="display:flex;"><span>  config.pin_sscb_sda <span style="color:#f92672">=</span> SIOD_GPIO_NUM;
+</span></span><span style="display:flex;"><span>  config.pin_sscb_scl <span style="color:#f92672">=</span> SIOC_GPIO_NUM;
+</span></span><span style="display:flex;"><span>  config.pin_pwdn <span style="color:#f92672">=</span> PWDN_GPIO_NUM;
+</span></span><span style="display:flex;"><span>  config.pin_reset <span style="color:#f92672">=</span> RESET_GPIO_NUM;
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">//config.xclk_freq_hz = 20000000;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  config.xclk_freq_hz <span style="color:#f92672">=</span> <span style="color:#ae81ff">5000000</span>;
+</span></span><span style="display:flex;"><span>  config.pixel_format <span style="color:#f92672">=</span> PIXFORMAT_JPEG;
+</span></span><span style="display:flex;"><span>  config.frame_size <span style="color:#f92672">=</span> FRAMESIZE_VGA;  <span style="color:#75715e">// UXGA|SXGA|XGA|SVGA|VGA|CIF|QVGA|HQVGA|QQVGA
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  config.jpeg_quality <span style="color:#f92672">=</span> <span style="color:#ae81ff">10</span>;
+</span></span><span style="display:flex;"><span>  config.fb_count <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">esp_err_t</span> err <span style="color:#f92672">=</span> <span style="color:#a6e22e">esp_camera_init</span>(<span style="color:#f92672">&amp;</span>config);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (err <span style="color:#f92672">!=</span> ESP_OK) {
+</span></span><span style="display:flex;"><span>    Serial.<span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;Camera init failed with error 0x%x&#34;</span>, err);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">delay</span>(<span style="color:#ae81ff">1000</span>);
+</span></span><span style="display:flex;"><span>    ESP.<span style="color:#a6e22e">restart</span>();
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// Estos son los sensores que agregué
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">sensor_t</span> <span style="color:#f92672">*</span> s <span style="color:#f92672">=</span> <span style="color:#a6e22e">esp_camera_sensor_get</span>();
+</span></span><span style="display:flex;"><span>  s<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">set_brightness</span>(s, <span style="color:#ae81ff">0</span>);     <span style="color:#75715e">// -2 to 2
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  s<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">set_contrast</span>(s, <span style="color:#ae81ff">0</span>);       <span style="color:#75715e">// -2 to 2
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  s<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">set_saturation</span>(s, <span style="color:#ae81ff">0</span>);     <span style="color:#75715e">// -2 to 2
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  s<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">set_special_effect</span>(s, <span style="color:#ae81ff">0</span>); <span style="color:#75715e">// 0 to 6 (0 - No Effect, 1 - Negative, 2 - Grayscale, 3 - Red Tint, 4 - Green Tint, 5 - Blue Tint, 6 - Sepia)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  s<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">set_whitebal</span>(s, <span style="color:#ae81ff">1</span>);       <span style="color:#75715e">// 0 = disable , 1 = enable
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  s<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">set_awb_gain</span>(s, <span style="color:#ae81ff">1</span>);       <span style="color:#75715e">// 0 = disable , 1 = enable
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  s<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">set_wb_mode</span>(s, <span style="color:#ae81ff">0</span>);        <span style="color:#75715e">// 0 to 4 - if awb_gain enabled (0 - Auto, 1 - Sunny, 2 - Cloudy, 3 - Office, 4 - Home)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  s<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">set_exposure_ctrl</span>(s, <span style="color:#ae81ff">1</span>);  <span style="color:#75715e">// 0 = disable , 1 = enable
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  s<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">set_aec2</span>(s, <span style="color:#ae81ff">1</span>);           <span style="color:#75715e">// 0 = disable , 1 = enable
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  s<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">set_ae_level</span>(s, <span style="color:#ae81ff">0</span>);       <span style="color:#75715e">// -2 to 2
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  s<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">set_aec_value</span>(s, <span style="color:#ae81ff">300</span>);    <span style="color:#75715e">// 0 to 1200
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  s<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">set_gain_ctrl</span>(s, <span style="color:#ae81ff">1</span>);      <span style="color:#75715e">// 0 = disable , 1 = enable
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  s<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">set_agc_gain</span>(s, <span style="color:#ae81ff">0</span>);       <span style="color:#75715e">// 0 to 30
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#75715e">//s-&gt;set_gainceiling(s, (gainceiling_t)0);  // 0 to 6
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  s<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">set_gainceiling</span>(s, (<span style="color:#66d9ef">gainceiling_t</span>)<span style="color:#ae81ff">2</span>);  <span style="color:#75715e">// 0 to 6
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  s<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">set_bpc</span>(s, <span style="color:#ae81ff">1</span>);            <span style="color:#75715e">// 0 = disable , 1 = enable
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  s<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">set_wpc</span>(s, <span style="color:#ae81ff">1</span>);            <span style="color:#75715e">// 0 = disable , 1 = enable
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  s<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">set_raw_gma</span>(s, <span style="color:#ae81ff">1</span>);        <span style="color:#75715e">// 0 = disable , 1 = enable
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  s<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">set_lenc</span>(s, <span style="color:#ae81ff">1</span>);           <span style="color:#75715e">// 0 = disable , 1 = enable
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  s<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">set_hmirror</span>(s, <span style="color:#ae81ff">0</span>);        <span style="color:#75715e">// 0 = disable , 1 = enable
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  s<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">set_vflip</span>(s, <span style="color:#ae81ff">0</span>);          <span style="color:#75715e">// 0 = disable , 1 = enable
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  s<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">set_dcw</span>(s, <span style="color:#ae81ff">1</span>);            <span style="color:#75715e">// 0 = disable , 1 = enable
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  s<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">set_colorbar</span>(s, <span style="color:#ae81ff">0</span>);       <span style="color:#75715e">// 0 = disable , 1 = enable
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>boolean enviar <span style="color:#f92672">=</span> true;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">loop</span>() {
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">//if(enviar) {
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">saveCapturedImage</span>();
+</span></span><span style="display:flex;"><span>    enviar <span style="color:#f92672">=</span> false;
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">delay</span>(<span style="color:#ae81ff">300000</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">//}
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">saveCapturedImage</span>() {
+</span></span><span style="display:flex;"><span>  Serial.<span style="color:#a6e22e">println</span>(<span style="color:#e6db74">&#34;Connect to &#34;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">String</span>(myDomain));
+</span></span><span style="display:flex;"><span>  WiFiClientSecure client;
+</span></span><span style="display:flex;"><span>  client.<span style="color:#a6e22e">setInsecure</span>();
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (client.<span style="color:#a6e22e">connect</span>(myDomain, <span style="color:#ae81ff">443</span>)) {
+</span></span><span style="display:flex;"><span>    Serial.<span style="color:#a6e22e">println</span>(<span style="color:#e6db74">&#34;Connection successful&#34;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">camera_fb_t</span> <span style="color:#f92672">*</span> fb <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>    fb <span style="color:#f92672">=</span> <span style="color:#a6e22e">esp_camera_fb_get</span>();
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span>(<span style="color:#f92672">!</span>fb) {
+</span></span><span style="display:flex;"><span>      Serial.<span style="color:#a6e22e">println</span>(<span style="color:#e6db74">&#34;Camera capture failed&#34;</span>);
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">delay</span>(<span style="color:#ae81ff">1000</span>);
+</span></span><span style="display:flex;"><span>      ESP.<span style="color:#a6e22e">restart</span>();
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>input <span style="color:#f92672">=</span> (<span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>)fb<span style="color:#f92672">-&gt;</span>buf;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> output[<span style="color:#a6e22e">base64_enc_len</span>(<span style="color:#ae81ff">3</span>)];
+</span></span><span style="display:flex;"><span>    String imageFile <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;&#34;</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">int</span> i<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>;i<span style="color:#f92672">&lt;</span>fb<span style="color:#f92672">-&gt;</span>len;i<span style="color:#f92672">++</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">base64_encode</span>(output, (input<span style="color:#f92672">++</span>), <span style="color:#ae81ff">3</span>);
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">if</span> (i<span style="color:#f92672">%</span><span style="color:#ae81ff">3</span><span style="color:#f92672">==</span><span style="color:#ae81ff">0</span>) imageFile <span style="color:#f92672">+=</span> <span style="color:#a6e22e">urlencode</span>(<span style="color:#a6e22e">String</span>(output));
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    String Data <span style="color:#f92672">=</span> myFilename<span style="color:#f92672">+</span>mimeType<span style="color:#f92672">+</span>myImage;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">esp_camera_fb_return</span>(fb);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    Serial.<span style="color:#a6e22e">println</span>(<span style="color:#e6db74">&#34;Send a captured image to Google Drive.&#34;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    client.<span style="color:#a6e22e">println</span>(<span style="color:#e6db74">&#34;POST &#34;</span> <span style="color:#f92672">+</span> myScript <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34; HTTP/1.1&#34;</span>);
+</span></span><span style="display:flex;"><span>    client.<span style="color:#a6e22e">println</span>(<span style="color:#e6db74">&#34;Host: &#34;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">String</span>(myDomain));
+</span></span><span style="display:flex;"><span>    client.<span style="color:#a6e22e">println</span>(<span style="color:#e6db74">&#34;Content-Length: &#34;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">String</span>(Data.<span style="color:#a6e22e">length</span>()<span style="color:#f92672">+</span>imageFile.<span style="color:#a6e22e">length</span>()));
+</span></span><span style="display:flex;"><span>    client.<span style="color:#a6e22e">println</span>(<span style="color:#e6db74">&#34;Content-Type: application/x-www-form-urlencoded&#34;</span>);
+</span></span><span style="display:flex;"><span>    client.<span style="color:#a6e22e">println</span>();
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    client.<span style="color:#a6e22e">print</span>(Data);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> Index;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (Index <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; Index <span style="color:#f92672">&lt;</span> imageFile.<span style="color:#a6e22e">length</span>(); Index <span style="color:#f92672">=</span> Index<span style="color:#f92672">+</span><span style="color:#ae81ff">1000</span>) {
+</span></span><span style="display:flex;"><span>      client.<span style="color:#a6e22e">print</span>(imageFile.<span style="color:#a6e22e">substring</span>(Index, Index<span style="color:#f92672">+</span><span style="color:#ae81ff">1000</span>));
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    Serial.<span style="color:#a6e22e">println</span>(<span style="color:#e6db74">&#34;Waiting for response.&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">long</span> <span style="color:#66d9ef">int</span> StartTime<span style="color:#f92672">=</span><span style="color:#a6e22e">millis</span>();
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> (<span style="color:#f92672">!</span>client.<span style="color:#a6e22e">available</span>()) {
+</span></span><span style="display:flex;"><span>      Serial.<span style="color:#a6e22e">print</span>(<span style="color:#e6db74">&#34;.&#34;</span>);
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">delay</span>(<span style="color:#ae81ff">100</span>);
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">if</span> ((StartTime<span style="color:#f92672">+</span>waitingTime) <span style="color:#f92672">&lt;</span> <span style="color:#a6e22e">millis</span>()) {
+</span></span><span style="display:flex;"><span>        Serial.<span style="color:#a6e22e">println</span>();
+</span></span><span style="display:flex;"><span>        Serial.<span style="color:#a6e22e">println</span>(<span style="color:#e6db74">&#34;No response.&#34;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">//If you have no response, maybe need a greater value of waitingTime
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">break</span>;
+</span></span><span style="display:flex;"><span>      }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    Serial.<span style="color:#a6e22e">println</span>();
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> (client.<span style="color:#a6e22e">available</span>()) {
+</span></span><span style="display:flex;"><span>      Serial.<span style="color:#a6e22e">print</span>(<span style="color:#66d9ef">char</span>(client.<span style="color:#a6e22e">read</span>()));
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>    Serial.<span style="color:#a6e22e">println</span>(<span style="color:#e6db74">&#34;Connected to &#34;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">String</span>(myDomain) <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34; failed.&#34;</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  client.<span style="color:#a6e22e">stop</span>();
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//https://github.com/zenmanenergy/ESP8266-Arduino-Examples/
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>String <span style="color:#a6e22e">urlencode</span>(String str)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    String encodedString<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> c;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> code0;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> code1;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> code2;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">int</span> i <span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> str.<span style="color:#a6e22e">length</span>(); i<span style="color:#f92672">++</span>){
+</span></span><span style="display:flex;"><span>      c<span style="color:#f92672">=</span>str.<span style="color:#a6e22e">charAt</span>(i);
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">if</span> (c <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39; &#39;</span>){
+</span></span><span style="display:flex;"><span>        encodedString<span style="color:#f92672">+=</span> <span style="color:#e6db74">&#39;+&#39;</span>;
+</span></span><span style="display:flex;"><span>      } <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">isalnum</span>(c)){
+</span></span><span style="display:flex;"><span>        encodedString<span style="color:#f92672">+=</span>c;
+</span></span><span style="display:flex;"><span>      } <span style="color:#66d9ef">else</span>{
+</span></span><span style="display:flex;"><span>        code1<span style="color:#f92672">=</span>(c <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xf</span>)<span style="color:#f92672">+</span><span style="color:#e6db74">&#39;0&#39;</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> ((c <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xf</span>) <span style="color:#f92672">&gt;</span><span style="color:#ae81ff">9</span>){
+</span></span><span style="display:flex;"><span>            code1<span style="color:#f92672">=</span>(c <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xf</span>) <span style="color:#f92672">-</span> <span style="color:#ae81ff">10</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;A&#39;</span>;
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        c<span style="color:#f92672">=</span>(c<span style="color:#f92672">&gt;&gt;</span><span style="color:#ae81ff">4</span>)<span style="color:#f92672">&amp;</span><span style="color:#ae81ff">0xf</span>;
+</span></span><span style="display:flex;"><span>        code0<span style="color:#f92672">=</span>c<span style="color:#f92672">+</span><span style="color:#e6db74">&#39;0&#39;</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (c <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">9</span>){
+</span></span><span style="display:flex;"><span>            code0<span style="color:#f92672">=</span>c <span style="color:#f92672">-</span> <span style="color:#ae81ff">10</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;A&#39;</span>;
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        code2<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;\0&#39;</span>;
+</span></span><span style="display:flex;"><span>        encodedString<span style="color:#f92672">+=</span><span style="color:#e6db74">&#39;%&#39;</span>;
+</span></span><span style="display:flex;"><span>        encodedString<span style="color:#f92672">+=</span>code0;
+</span></span><span style="display:flex;"><span>        encodedString<span style="color:#f92672">+=</span>code1;
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">//encodedString+=code2;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      }
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">yield</span>();
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> encodedString;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Para grabar el programa en la ESP32 usé el programa Arduino y para configurar el arduino seguí este video: <a href="https://youtube.com/watch?v=gN8MamCE4qE">https://m.youtube.com/watch?v=oCA7XZl8ztk&amp;feature=youtu.be</a> a veces me puteaba diciendo que compiló mal le cambiaba la velocidad de la comunicación serial y volvía a poner la que estaba y funcionaba</p>
+<p><a href="https://youtube.com/watch?v=XqT1rLHl3DE">https://youtube.com/watch?v=XqT1rLHl3DE</a></p>
+<hr>
+<h4 id="si-querés-simplemente-tener-un-servidor-sin-subir-las-fotos-a-ningún-lado-hace-lo-siguiente">Si querés simplemente tener un servidor sin subir las fotos a ningún lado hace lo siguiente</h4>
+<p>Para crear un servidor web de transmisión de video con una placa ESP32-CAM, puedes seguir estos pasos:</p>
+<ol>
+<li>Conectá tu placa ESP32-CAM a tu computadora usando un cable USB y abre el IDE de Arduino (sudo apt install -y arduino).</li>
+<li>herramientas &gt; placas &gt; gestor de tarjetas &gt; buscá esp32 &gt; y lo instalamos. También instalá la biblioteca ESP32-CAM en el IDE de Arduino.</li>
+<li>Abra el código de ejemplo &ldquo;CameraWebServer&rdquo; de la biblioteca ESP32-CAM (Archivo - Ejemplos - ESP32 - Cámara - CameraWebServer).</li>
+<li>Configura los ajustes de tu red WiFi en el código editando las siguientes líneas:</li>
+</ol>
+<p>Sacá el comentario de la línea <code>#define CAMERA MODEL AI THINKER</code> y sacá el define que no está comentado: <code>WROVER</code> algo así</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span><span style="color:#f92672">*</span> ssid <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;tu_SSID&#34;</span>;  
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span><span style="color:#f92672">*</span> contraseña <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;tu_CONTRASEÑA&#34;</span>;  
+</span></span></code></pre></div><ol start="5">
+<li>Seleccioná el puerto de conexión (Tools &gt; port)</li>
+<li>Una vez cargado el código en el ESP32, abrí el Monitor Serial en el IDE de Arduino para ver la dirección IP asignada a su placa ESP32-CAM por su red WiFi o podés verla haciendo un escaneo con nmap.</li>
+</ol>
+<p>Podés personalizar el servidor web de transmisión de video modificando el código y agregando funciones adicionales, como detección de movimiento o control remoto del módulo de la cámara.</p>
+<h3 id="a-veces-no-funciona-porque-no-está-bien-conectada-la-camara">A veces no funciona porque no está bien conectada la camara.</h3>
+<p>Para conectarlo: <a href="https://imlauer.blogspot.com/2025/01/esp32.html">https://imlauer.blogspot.com/2025/01/esp32.html</a></p>
+
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+</footer>
+
+
+</body>
+</html>

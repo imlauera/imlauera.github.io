@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/post/recuperar_grub_debian_desde_usb_live/">
+  <meta property="og:site_name" content="Imlauer">
+  <meta property="og:title" content="Recuperar grub debian desde USB live">
+  <meta property="og:description" content="¿UEFI o BIOS? La forma más sencilla de saber si el sistema se ha iniciado en modo UEFI o BIOS es buscar una carpeta /sys/firmware/efi. La carpeta estará presente si su sistema utiliza UEFI.
+sudo grub-install /dev/sdX fdisk -l ó lsblk for i in /dev /dev/pts /proc /sys /run; do mount -B $i /mnt$i; done sudo chroot /mnt sudo grub-install /dev/sda sudo update-grub $ mount /dev/sdaY /mnt $ mount --bind /dev /mnt/dev $ mount --bind /dev/pts /mnt/dev/pts $ mount --bind /proc /mnt/proc $ mount --bind /sys /mnt/sys $ chroot /mnt $ grub-install /dev/sdX $ update-grub $ exit $ umount /mnt/dev/pts $ umount /mnt/dev $ umount /mnt/proc $ umount /mnt/sys $ umount /mnt Otra forma $ sudo mount /dev/sdXY /mnt $ sudo mount /dev/sda1/mnt/boot/efi #use only if /boot is on a different partition $ for i in /dev /dev/pts /proc /sys /run; do sudo mount -B $i /mnt$i; done $ sudo chroot /mnt $ grub-install /dev/sda $ update-grub Otra forma sudo mount /dev/sda1 /mnt sudo grub-install --boot-directory=/mnt/boot /dev/sda sudo mount /dev/sda1 /mnt Otra forma Precaución cambiá el nombre de las particiones.">
+  <meta property="og:locale" content="es_es">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="post">
+    <meta property="article:published_time" content="2023-11-08T14:29:18-03:00">
+    <meta property="article:modified_time" content="2023-11-08T14:29:18-03:00">
+    <meta property="article:tag" content="Grub">
+    <meta property="article:tag" content="Usb">
+    <meta property="article:tag" content="Linux">
+
+  
+  <meta itemprop="name" content="Recuperar grub debian desde USB live">
+  <meta itemprop="description" content="¿UEFI o BIOS? La forma más sencilla de saber si el sistema se ha iniciado en modo UEFI o BIOS es buscar una carpeta /sys/firmware/efi. La carpeta estará presente si su sistema utiliza UEFI.
+sudo grub-install /dev/sdX fdisk -l ó lsblk for i in /dev /dev/pts /proc /sys /run; do mount -B $i /mnt$i; done sudo chroot /mnt sudo grub-install /dev/sda sudo update-grub $ mount /dev/sdaY /mnt $ mount --bind /dev /mnt/dev $ mount --bind /dev/pts /mnt/dev/pts $ mount --bind /proc /mnt/proc $ mount --bind /sys /mnt/sys $ chroot /mnt $ grub-install /dev/sdX $ update-grub $ exit $ umount /mnt/dev/pts $ umount /mnt/dev $ umount /mnt/proc $ umount /mnt/sys $ umount /mnt Otra forma $ sudo mount /dev/sdXY /mnt $ sudo mount /dev/sda1/mnt/boot/efi #use only if /boot is on a different partition $ for i in /dev /dev/pts /proc /sys /run; do sudo mount -B $i /mnt$i; done $ sudo chroot /mnt $ grub-install /dev/sda $ update-grub Otra forma sudo mount /dev/sda1 /mnt sudo grub-install --boot-directory=/mnt/boot /dev/sda sudo mount /dev/sda1 /mnt Otra forma Precaución cambiá el nombre de las particiones.">
+  <meta itemprop="datePublished" content="2023-11-08T14:29:18-03:00">
+  <meta itemprop="dateModified" content="2023-11-08T14:29:18-03:00">
+  <meta itemprop="wordCount" content="300">
+  <meta itemprop="keywords" content="Grub,Usb,Linux">
+  
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Recuperar grub debian desde USB live">
+  <meta name="twitter:description" content="¿UEFI o BIOS? La forma más sencilla de saber si el sistema se ha iniciado en modo UEFI o BIOS es buscar una carpeta /sys/firmware/efi. La carpeta estará presente si su sistema utiliza UEFI.
+sudo grub-install /dev/sdX fdisk -l ó lsblk for i in /dev /dev/pts /proc /sys /run; do mount -B $i /mnt$i; done sudo chroot /mnt sudo grub-install /dev/sda sudo update-grub $ mount /dev/sdaY /mnt $ mount --bind /dev /mnt/dev $ mount --bind /dev/pts /mnt/dev/pts $ mount --bind /proc /mnt/proc $ mount --bind /sys /mnt/sys $ chroot /mnt $ grub-install /dev/sdX $ update-grub $ exit $ umount /mnt/dev/pts $ umount /mnt/dev $ umount /mnt/proc $ umount /mnt/sys $ umount /mnt Otra forma $ sudo mount /dev/sdXY /mnt $ sudo mount /dev/sda1/mnt/boot/efi #use only if /boot is on a different partition $ for i in /dev /dev/pts /proc /sys /run; do sudo mount -B $i /mnt$i; done $ sudo chroot /mnt $ grub-install /dev/sda $ update-grub Otra forma sudo mount /dev/sda1 /mnt sudo grub-install --boot-directory=/mnt/boot /dev/sda sudo mount /dev/sda1 /mnt Otra forma Precaución cambiá el nombre de las particiones.">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Recuperar grub debian desde USB live
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/post/recuperar_grub_debian_desde_usb_live/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="¿UEFI o BIOS? La forma más sencilla de saber si el sistema se ha iniciado en modo UEFI o BIOS es buscar una carpeta /sys/firmware/efi. La carpeta estará presente si su sistema utiliza UEFI.
+sudo grub-install /dev/sdX
+fdisk -l ó lsblk
+for i in /dev /dev/pts /proc /sys /run; do mount -B $i /mnt$i; done
+sudo chroot /mnt
+sudo grub-install /dev/sda
+sudo update-grub
+$ mount /dev/sdaY /mnt
+$ mount --bind /dev /mnt/dev
+$ mount --bind /dev/pts /mnt/dev/pts
+$ mount --bind /proc /mnt/proc
+$ mount --bind /sys /mnt/sys
+$ chroot /mnt
+$ grub-install /dev/sdX
+$ update-grub
+$ exit
+$ umount /mnt/dev/pts
+$ umount /mnt/dev
+$ umount /mnt/proc
+$ umount /mnt/sys
+$ umount /mnt
+Otra forma
+$ sudo mount /dev/sdXY /mnt
+$ sudo mount /dev/sda1/mnt/boot/efi          #use only if /boot is on a different partition
+$ for i in /dev /dev/pts /proc /sys /run; do sudo mount -B $i /mnt$i; done
+$ sudo chroot /mnt
+$ grub-install /dev/sda
+$ update-grub
+Otra forma
+sudo mount /dev/sda1 /mnt
+sudo grub-install --boot-directory=/mnt/boot /dev/sda
+sudo mount /dev/sda1 /mnt
+Otra forma
+Precaución cambiá el nombre de las particiones.">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Recuperar grub debian desde USB live
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2023-11-08T14:29:18-03:00'>
+      November 08, 2023
+    </time>
+    
+    <br>
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/grub/">Grub</a>
+    
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/usb/">Usb</a>
+    
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/linux/">Linux</a>
+    
+    
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <p>¿UEFI o BIOS? La forma más sencilla de saber si el sistema se ha iniciado en modo UEFI o BIOS es buscar una carpeta /sys/firmware/efi. La carpeta estará presente si su sistema utiliza UEFI.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-console" data-lang="console"><span style="display:flex;"><span>sudo grub-install /dev/sdX
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-console" data-lang="console"><span style="display:flex;"><span>fdisk -l ó lsblk
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-console" data-lang="console"><span style="display:flex;"><span>for i in /dev /dev/pts /proc /sys /run; do mount -B $i /mnt$i; done
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-console" data-lang="console"><span style="display:flex;"><span>sudo chroot /mnt
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-console" data-lang="console"><span style="display:flex;"><span>sudo grub-install /dev/sda
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-console" data-lang="console"><span style="display:flex;"><span>sudo update-grub
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-console" data-lang="console"><span style="display:flex;"><span>$ mount /dev/sdaY /mnt
+</span></span><span style="display:flex;"><span>$ mount --bind /dev /mnt/dev
+</span></span><span style="display:flex;"><span>$ mount --bind /dev/pts /mnt/dev/pts
+</span></span><span style="display:flex;"><span>$ mount --bind /proc /mnt/proc
+</span></span><span style="display:flex;"><span>$ mount --bind /sys /mnt/sys
+</span></span><span style="display:flex;"><span>$ chroot /mnt
+</span></span><span style="display:flex;"><span>$ grub-install /dev/sdX
+</span></span><span style="display:flex;"><span>$ update-grub
+</span></span><span style="display:flex;"><span>$ exit
+</span></span><span style="display:flex;"><span>$ umount /mnt/dev/pts
+</span></span><span style="display:flex;"><span>$ umount /mnt/dev
+</span></span><span style="display:flex;"><span>$ umount /mnt/proc
+</span></span><span style="display:flex;"><span>$ umount /mnt/sys
+</span></span><span style="display:flex;"><span>$ umount /mnt
+</span></span></code></pre></div><h3 id="otra-forma">Otra forma</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-console" data-lang="console"><span style="display:flex;"><span>$ sudo mount /dev/sdXY /mnt
+</span></span><span style="display:flex;"><span>$ sudo mount /dev/sda1/mnt/boot/efi          <span style="color:#75715e">#use only if /boot is on a different partition</span>
+</span></span><span style="display:flex;"><span>$ <span style="color:#66d9ef">for</span> i in /dev /dev/pts /proc /sys /run; <span style="color:#66d9ef">do</span> sudo mount -B $i /mnt$i; <span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span>$ sudo chroot /mnt
+</span></span><span style="display:flex;"><span>$ grub-install /dev/sda
+</span></span><span style="display:flex;"><span>$ update-grub
+</span></span></code></pre></div><h3 id="otra-forma-1">Otra forma</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-console" data-lang="console"><span style="display:flex;"><span>sudo mount /dev/sda1 /mnt
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-console" data-lang="console"><span style="display:flex;"><span>sudo grub-install --boot-directory=/mnt/boot /dev/sda
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-console" data-lang="console"><span style="display:flex;"><span>sudo mount /dev/sda1 /mnt
+</span></span></code></pre></div><h3 id="otra-forma-2">Otra forma</h3>
+<p>Precaución cambiá el nombre de las particiones.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-console" data-lang="console"><span style="display:flex;"><span>mount /dev/sda5 /mnt/
+</span></span><span style="display:flex;"><span>mount /dev/sda1 /mnt/boot
+</span></span><span style="display:flex;"><span>mount --bind /dev /mnt/dev/
+</span></span><span style="display:flex;"><span>mount --bind /proc /mnt/proc/
+</span></span><span style="display:flex;"><span>chroot /mnt
+</span></span><span style="display:flex;"><span># grub-install --recheck /dev/sda
+</span></span><span style="display:flex;"><span># exit
+</span></span></code></pre></div><p>Luego de reiniciar el sistema ejecutá:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-console" data-lang="console"><span style="display:flex;"><span>sudo update-grub
+</span></span></code></pre></div><h3 id="otra-forma-3">Otra forma</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-console" data-lang="console"><span style="display:flex;"><span>mount /dev/sda1 /mnt
+</span></span><span style="display:flex;"><span>mount --bind /sys /mnt/sys
+</span></span><span style="display:flex;"><span>mount --bind /proc /mnt/proc
+</span></span><span style="display:flex;"><span>mount --bind /run /mnt/run
+</span></span><span style="display:flex;"><span>mount --bind /dev /mnt/dev
+</span></span><span style="display:flex;"><span>chroot /mnt /bin/sh -i
+</span></span><span style="display:flex;"><span>/sbin/grub-install --target=i386-pc /dev/sda
+</span></span><span style="display:flex;"><span>/sbin/grub-mkconfig &gt; /boot/grub/grub.cfg
+</span></span><span style="display:flex;"><span>Control D para salir del chroot o exit
+</span></span><span style="display:flex;"><span>Luego ejecutá reboot
+</span></span></code></pre></div><h3 id="fedora">Fedora</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-console" data-lang="console"><span style="display:flex;"><span>sudo mount /dev/sda3 /mnt
+</span></span><span style="display:flex;"><span>sudo mount --bind /sys /mnt/root/sys
+</span></span><span style="display:flex;"><span>sudo mount --bind /proc /mnt/root/proc
+</span></span><span style="display:flex;"><span>sudo mount --bind /run /mnt/root/run
+</span></span><span style="display:flex;"><span>sudo mount --bind /dev /mnt/root/dev
+</span></span><span style="display:flex;"><span>sudo chroot /mnt/root bash
+</span></span><span style="display:flex;"><span>mount /dev/sd3 /
+</span></span><span style="display:flex;"><span>mount /dev/sda2 /boot
+</span></span><span style="display:flex;"><span>rm -f /etc/grub.d/*
+</span></span><span style="display:flex;"><span>rm -f /etc/sysconfig/grub
+</span></span><span style="display:flex;"><span>grub2-mkconfig -o /boot/grub2/grub.cfg
+</span></span><span style="display:flex;"><span>grub2-install --target=i386-pc /dev/sda
+</span></span></code></pre></div><p><a href="https://www.maketecheasier.com/restore-grub-2-as-the-main-bootloader/">https://www.maketecheasier.com/restore-grub-2-as-the-main-bootloader/</a></p>
+
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+</footer>
+
+
+</body>
+</html>

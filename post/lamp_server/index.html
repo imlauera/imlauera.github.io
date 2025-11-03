@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/post/lamp_server/">
+  <meta property="og:site_name" content="Imlauer">
+  <meta property="og:title" content="Lamp server">
+  <meta property="og:description" content="lamp_server
+Objective Configure Linux server. Genrally speaking, this is a LAMP server.
+Description Provided
+EC2 server with ssh access on AWS with AWS Linux installed with up to date OS. Server will be x86 64 bit. Public IP for ssh and www access A user with ssh access and a key file for ssh Server firewall will be open Domain names: clearlight.one, clearlight.app
+Install and configure following software:
+Amazon utilities: amazon-ec2-utils AWS CLI version 2 version 2.15.17 (current version) Cron: cronie version 1.5.7 (current version) Python 3 3.9.16 (current version) PHP 8.2.9 (current version) Apache HTTPD version 2.4.58 (current version) MySQL 8.4.2 LTS community (current version) Certbot: certbot version 2.6.0 (current version) Python for certbot: python-certbot-apache net-tools.x86_64 wget mod_ssl for httpd Configure httpd">
+  <meta property="og:locale" content="es_es">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="post">
+    <meta property="article:published_time" content="2024-09-26T12:39:55-03:00">
+    <meta property="article:modified_time" content="2024-09-26T12:39:55-03:00">
+    <meta property="article:tag" content="Lamp">
+
+  
+  <meta itemprop="name" content="Lamp server">
+  <meta itemprop="description" content="lamp_server
+Objective Configure Linux server. Genrally speaking, this is a LAMP server.
+Description Provided
+EC2 server with ssh access on AWS with AWS Linux installed with up to date OS. Server will be x86 64 bit. Public IP for ssh and www access A user with ssh access and a key file for ssh Server firewall will be open Domain names: clearlight.one, clearlight.app
+Install and configure following software:
+Amazon utilities: amazon-ec2-utils AWS CLI version 2 version 2.15.17 (current version) Cron: cronie version 1.5.7 (current version) Python 3 3.9.16 (current version) PHP 8.2.9 (current version) Apache HTTPD version 2.4.58 (current version) MySQL 8.4.2 LTS community (current version) Certbot: certbot version 2.6.0 (current version) Python for certbot: python-certbot-apache net-tools.x86_64 wget mod_ssl for httpd Configure httpd">
+  <meta itemprop="datePublished" content="2024-09-26T12:39:55-03:00">
+  <meta itemprop="dateModified" content="2024-09-26T12:39:55-03:00">
+  <meta itemprop="wordCount" content="642">
+  <meta itemprop="keywords" content="Lamp">
+  
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Lamp server">
+  <meta name="twitter:description" content="lamp_server
+Objective Configure Linux server. Genrally speaking, this is a LAMP server.
+Description Provided
+EC2 server with ssh access on AWS with AWS Linux installed with up to date OS. Server will be x86 64 bit. Public IP for ssh and www access A user with ssh access and a key file for ssh Server firewall will be open Domain names: clearlight.one, clearlight.app
+Install and configure following software:
+Amazon utilities: amazon-ec2-utils AWS CLI version 2 version 2.15.17 (current version) Cron: cronie version 1.5.7 (current version) Python 3 3.9.16 (current version) PHP 8.2.9 (current version) Apache HTTPD version 2.4.58 (current version) MySQL 8.4.2 LTS community (current version) Certbot: certbot version 2.6.0 (current version) Python for certbot: python-certbot-apache net-tools.x86_64 wget mod_ssl for httpd Configure httpd">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Lamp server
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/post/lamp_server/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="lamp_server
+Objective
+Configure Linux server. Genrally speaking, this is a LAMP server.
+Description
+
+
+Provided
+
+EC2 server with ssh access on AWS with AWS Linux installed with up to date OS. Server will be x86 64 bit.
+Public IP for ssh and www access
+A user with ssh access and a key file for ssh
+Server firewall will be open
+
+
+
+Domain names: clearlight.one, clearlight.app
+
+
+Install and configure following software:
+
+Amazon utilities: amazon-ec2-utils
+AWS CLI version 2 version 2.15.17 (current version)
+Cron: cronie version 1.5.7 (current version)
+Python 3 3.9.16 (current version)
+PHP 8.2.9 (current version)
+Apache HTTPD version 2.4.58 (current version)
+MySQL 8.4.2 LTS community (current version)
+Certbot: certbot version 2.6.0 (current version)
+Python for certbot: python-certbot-apache
+net-tools.x86_64
+wget
+mod_ssl for httpd
+
+
+
+Configure httpd">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Lamp server
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2024-09-26T12:39:55-03:00'>
+      September 26, 2024
+    </time>
+    
+    <br>
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/lamp/">Lamp</a>
+    
+    
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <p><a href="/files/upwork_job_desc_lamp_server_a2.pdf">lamp_server</a></p>
+<h4 id="objective">Objective</h4>
+<p>Configure Linux server. Genrally speaking, this is a LAMP server.</p>
+<h4 id="description">Description</h4>
+<ul>
+<li>
+<p>Provided</p>
+<ul>
+<li>EC2 server with ssh access on AWS with AWS Linux installed with up to date OS. Server will be x86 64 bit.</li>
+<li>Public IP for ssh and www access</li>
+<li>A user with ssh access and a key file for ssh</li>
+<li>Server firewall will be open</li>
+</ul>
+</li>
+<li>
+<p>Domain names: clearlight.one, clearlight.app</p>
+</li>
+<li>
+<p>Install and configure following software:</p>
+<ul>
+<li>Amazon utilities: amazon-ec2-utils</li>
+<li>AWS CLI version 2 version 2.15.17 (current version)</li>
+<li>Cron: cronie version 1.5.7 (current version)</li>
+<li>Python 3 3.9.16 (current version)</li>
+<li>PHP 8.2.9 (current version)</li>
+<li>Apache HTTPD version 2.4.58 (current version)</li>
+<li>MySQL 8.4.2 LTS community (current version)</li>
+<li>Certbot: certbot version 2.6.0 (current version)</li>
+<li>Python for certbot: python-certbot-apache</li>
+<li>net-tools.x86_64</li>
+<li>wget</li>
+<li>mod_ssl for httpd</li>
+</ul>
+</li>
+<li>
+<p>Configure httpd</p>
+<ul>
+<li>http port 80 redirects to https port 443 for both domains.</li>
+<li><a href="https://www.clearlight.one">www.clearlight.one</a> alias for clearlight.one</li>
+<li><a href="https://www.clearlight.app">www.clearlight.app</a> alias for clearlight.app</li>
+</ul>
+</li>
+<li>
+<p>Install HTTPD module mod_ssl</p>
+</li>
+<li>
+<p>Change mysql root password</p>
+</li>
+<li>
+<p>Install PHP modules if not already there</p>
+<ul>
+<li>php-pdo.x86_64</li>
+<li>php-mbstring.x86_64</li>
+<li>php-mysql.x86_64</li>
+<li>php8.1-mysqlnd.x86_64</li>
+<li>php-common</li>
+<li>php-process</li>
+<li>php-xml</li>
+<li>php-gd</li>
+<li>php-dba</li>
+</ul>
+</li>
+<li>
+<p>Host name is set to clearlight.app</p>
+</li>
+<li>
+<p>Use certbot for SSL certificates</p>
+<ul>
+<li><code>sudo certbot -d clearlight.one -d *clearlight.one --apache</code></li>
+<li><code>sudo certbot -d clearlight.app -d *clearlight.app --apache</code></li>
+</ul>
+</li>
+<li>
+<p>Contact will be available to answer questions via email and whatsapp</p>
+</li>
+</ul>
+<h4 id="skills-required">Skills Required</h4>
+<ul>
+<li>Unix system administration</li>
+<li>Command line proficiency</li>
+<li>Familiar with above listed software and their configuration</li>
+</ul>
+<h4 id="milestones-and-payment">Milestones and Payment</h4>
+<ul>
+<li>To be discusssed</li>
+</ul>
+<h4 id="timeframe">Timeframe</h4>
+<ul>
+<li>Build within 48 hours of taking on work</li>
+</ul>
+<h4 id="verification">Verification</h4>
+<ul>
+<li>aws -version shows AWS CLI version 2 and Python 3.</li>
+<li>hostname shows clearlight.app</li>
+<li>HTTPD runs on boot and is accessible from www https and http for domains
+<ul>
+<li>clearlight.one</li>
+<li>clearlight.app</li>
+</ul>
+</li>
+<li>mysqld runs or boot accessible from PHP and shell script</li>
+<li>Cron runs on boot</li>
+<li>SSH runs on boot</li>
+<li>SSL certificate via certbot, https is working with valid certificates from
+letsencrypt.org</li>
+<li>Application software is installed on server runs correctly</li>
+</ul>
+<hr>
+<h3 id="español">Español</h3>
+<h4 id="objetivo">Objetivo</h4>
+<p>Configurar un servidor Linux. En términos generales, se trata de un servidor LAMP.</p>
+<h4 id="descripción">Descripción</h4>
+<ul>
+<li>
+<p>Proporcionado</p>
+<ul>
+<li>Servidor EC2 con acceso SSH en AWS con AWS Linux instalado con un sistema operativo actualizado. El servidor será x86 de 64 bits.</li>
+<li>IP pública para acceso ssh y www</li>
+<li>Un usuario con acceso ssh y un archivo de clave para ssh</li>
+<li>El firewall del servidor estará abierto</li>
+</ul>
+</li>
+<li>
+<p>Nombres de dominio: clearlight.one, clearlight.app</p>
+</li>
+<li>
+<p>Instalar y configurar el siguiente software:</p>
+<ul>
+<li>Utilidades de Amazon: amazon-ec2-utils</li>
+<li>AWS CLI versión 2 versión 2.15.17 (versión actual)</li>
+<li>Cron: cronie versión 1.5.7 (versión actual)</li>
+<li>Python 3 3.9.16 (versión actual)</li>
+<li>PHP 8.2.9 (versión actual)</li>
+<li>Apache HTTPD versión 2.4.58 (versión actual)</li>
+<li>Comunidad MySQL 8.4.2 LTS (versión actual)</li>
+<li>Certbot: certbot versión 2.6.0 (versión actual)</li>
+<li>Python para certbot: python-certbot-apache</li>
+<li>net-tools.x86_64</li>
+<li>wget</li>
+<li>mod_ssl para httpd</li>
+</ul>
+</li>
+<li>
+<p>Configurar httpd</p>
+<ul>
+<li>El puerto http 80 redirige al puerto https 443 para ambos dominios.</li>
+<li><a href="https://www.clearlight.one">www.clearlight.one</a> alias para clearlight.one</li>
+<li><a href="https://www.clearlight.app">www.clearlight.app</a> alias para clearlight.app</li>
+</ul>
+</li>
+<li>
+<p>Instalar módulo HTTPD mod_ssl</p>
+</li>
+<li>
+<p>Cambiar contraseña de root de MySQL</p>
+</li>
+<li>
+<p>Instalar módulos PHP si aún no están allí</p>
+<ul>
+<li>php-pdo.x86_64</li>
+<li>php-mbstring.x86_64</li>
+<li>php-mysql.x86_64</li>
+<li>php8.1-mysqlnd.x86_64</li>
+<li>php-common</li>
+<li>php-process</li>
+<li>php-xml</li>
+<li>php-gd</li>
+<li>php-dba</li>
+</ul>
+</li>
+<li>
+<p>El nombre de host se establece en clearlight.app</p>
+</li>
+<li>
+<p>Usar certbot para certificados SSL</p>
+<ul>
+<li><code>sudo certbot -d clearlight.one -d *clearlight.one --apache</code></li>
+<li><code>sudo certbot -d clearlight.app -d *clearlight.app --apache</code></li>
+</ul>
+</li>
+<li>
+<p>El contacto estará disponible para responder preguntas por correo electrónico y whatsapp</p>
+</li>
+</ul>
+<h4 id="habilidades-requeridas">Habilidades requeridas</h4>
+<ul>
+<li>Administración de sistemas Unix</li>
+<li>Dominio de la línea de comandos</li>
+<li>Familiarizado con el software mencionado anteriormente y su configuración</li>
+</ul>
+<h4 id="hitos-y-pago">Hitos y pago</h4>
+<ul>
+<li>A discutir</li>
+</ul>
+<h4 id="plazo">Plazo</h4>
+<ul>
+<li>Compilación dentro de las 48 horas posteriores a la aceptación del trabajo</li>
+</ul>
+<h4 id="verificación">Verificación</h4>
+<ul>
+<li>aws -version muestra AWS CLI versión 2 y Python 3.</li>
+<li>hostname muestra clearlight.app</li>
+<li>HTTPD se ejecuta en el arranque y es accesible desde www https y http para dominios</li>
+<li>clearlight.one</li>
+<li>clearlight.app</li>
+<li>mysqld se ejecuta o se puede iniciar desde PHP y script de shell</li>
+<li>Cron se ejecuta en el arranque</li>
+<li>SSH se ejecuta en el arranque</li>
+<li>Certificado SSL a través de certbot, https funciona con certificados válidos de letsencrypt.org</li>
+<li>El software de la aplicación está instalado en el servidor y se ejecuta correctamente</li>
+</ul>
+
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+</footer>
+
+
+</body>
+</html>

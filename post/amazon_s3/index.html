@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/post/amazon_s3/">
+  <meta property="og:site_name" content="Imlauer">
+  <meta property="og:title" content="Amazon s3 y CLI">
+  <meta property="og:description" content="Amazon S3 (Simple Storage Service) es un servicio de almacenamiento de objetos en la nube que permite a los usuarios almacenar y recuperar cualquier cantidad de datos desde cualquier ubicación, ofreciendo alta durabilidad, disponibilidad y escalabilidad a un costo reducido.
+Hello, looking for a talented system admin who knows AWS S3 management who can help us remove files that are no longer in use from our S3 buckets. Our current monthly AWS bill needs to drop considerably.">
+  <meta property="og:locale" content="es_es">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="post">
+    <meta property="article:published_time" content="2024-09-23T21:50:37-03:00">
+    <meta property="article:modified_time" content="2024-09-23T21:50:37-03:00">
+    <meta property="article:tag" content="S3">
+    <meta property="article:tag" content="Aws">
+
+  
+  <meta itemprop="name" content="Amazon s3 y CLI">
+  <meta itemprop="description" content="Amazon S3 (Simple Storage Service) es un servicio de almacenamiento de objetos en la nube que permite a los usuarios almacenar y recuperar cualquier cantidad de datos desde cualquier ubicación, ofreciendo alta durabilidad, disponibilidad y escalabilidad a un costo reducido.
+Hello, looking for a talented system admin who knows AWS S3 management who can help us remove files that are no longer in use from our S3 buckets. Our current monthly AWS bill needs to drop considerably.">
+  <meta itemprop="datePublished" content="2024-09-23T21:50:37-03:00">
+  <meta itemprop="dateModified" content="2024-09-23T21:50:37-03:00">
+  <meta itemprop="wordCount" content="339">
+  <meta itemprop="keywords" content="S3,Aws">
+  
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Amazon s3 y CLI">
+  <meta name="twitter:description" content="Amazon S3 (Simple Storage Service) es un servicio de almacenamiento de objetos en la nube que permite a los usuarios almacenar y recuperar cualquier cantidad de datos desde cualquier ubicación, ofreciendo alta durabilidad, disponibilidad y escalabilidad a un costo reducido.
+Hello, looking for a talented system admin who knows AWS S3 management who can help us remove files that are no longer in use from our S3 buckets. Our current monthly AWS bill needs to drop considerably.">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Amazon s3 y CLI
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/post/amazon_s3/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="Amazon S3 (Simple Storage Service) es un servicio de almacenamiento de objetos en la nube que permite a los usuarios almacenar y recuperar cualquier cantidad de datos desde cualquier ubicación, ofreciendo alta durabilidad, disponibilidad y escalabilidad a un costo reducido.
+
+Hello, looking for a talented system admin who knows AWS S3 management who can help us remove files that are no longer in use from our S3 buckets. Our current monthly AWS bill needs to drop considerably.">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Amazon s3 y CLI
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2024-09-23T21:50:37-03:00'>
+      September 23, 2024
+    </time>
+    
+    <br>
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/s3/">S3</a>
+    
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/aws/">Aws</a>
+    
+    
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <p>Amazon S3 (Simple Storage Service) es un servicio de almacenamiento de objetos en la nube que permite a los usuarios almacenar y recuperar cualquier cantidad de datos desde cualquier ubicación, ofreciendo alta durabilidad, disponibilidad y escalabilidad a un costo reducido.</p>
+<blockquote>
+<p>Hello, looking for a talented system admin who knows AWS S3 management who can help us remove files that are no longer in use from our S3 buckets. Our current monthly AWS bill needs to drop considerably.</p>
+</blockquote>
+<h3 id="como-usarlo">Como usarlo</h3>
+<p>Primero hagamos un backup</p>
+<p>Amazon S3 &gt; create bucket &gt; tinyflix &gt; choose bucket</p>
+<p>Podemos crear acceso público a nuestros buckets de varias formas, dar acceso publico no es buena idea. Con bucket versioning podés tener muchas versiones de un archivo. Quizas tengas que volver a una versión anterior, o de alguna foto o archivo accidentalmente borrado y se necesita recuperarlo, o por algún tipo de falla, está desactivado porque sale más caro.</p>
+<p>En opciones avanzadas object lock evitará que los objetos se sobreescriban o se eliminen, la dejamos deshabilitada y creamos el bucket.</p>
+<p>Apretá en el nombre &gt; creá una carpeta llamada videos y otra llamada photos</p>
+<p>Tinyflix es para trabajar equipo en paralelo.</p>
+<p>Así que ingrese al servicio de almacenamiento simple (Simple Storage Service S3) (3 eses XD)</p>
+<p>Este es un almacenamiento de objetos económico en aws. Ahora si el almacenamiento de objetos no tiene sentido para vos para este ejercicio supongamos que se tratan de fotos, videos, un pdf, cualquier archivo.</p>
+<p>Amazon ofrece un sistema de archivos elástico llamado efs service este no es tecnicamente un file server (servidor de archivos) tiene ilimitada capacidad.</p>
+<h4 id="en-la-consola">En la consola</h4>
+<p><a href="https://docs.aws.amazon.com/cli/latest/reference/s3/">https://docs.aws.amazon.com/cli/latest/reference/s3/</a></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo apt install -y awscli
+</span></span><span style="display:flex;"><span>aws configure
+</span></span><span style="display:flex;"><span>aws s3 ls
+</span></span><span style="display:flex;"><span>aws s3 ls s3://thebucketofstephane
+</span></span><span style="display:flex;"><span>aws s3 cp help
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### Descargar una imagen</span>
+</span></span><span style="display:flex;"><span>aws s3 cp s3://thebucketofstephane/coffee.jpg coffee.png
+</span></span><span style="display:flex;"><span>ll
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### Crear bucker</span>
+</span></span><span style="display:flex;"><span>aws s3 mb s3://dsoifjsoner
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### Listar buckets</span>
+</span></span><span style="display:flex;"><span>aws s3 ls
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### Eliminar bucket</span>
+</span></span><span style="display:flex;"><span>aws s3 rb s3://dsoifjsoner
+</span></span><span style="display:flex;"><span>aws s3 ls
+</span></span><span style="display:flex;"><span>aws s3 rb s3://dsoifjsoner
+</span></span><span style="display:flex;"><span>aws s3 cp <span style="color:#e6db74">&#34;C:\users\asfsdf.jpg&#34;</span> s3://dsoifjsoner/
+</span></span><span style="display:flex;"><span>aws s3 cp s3://dsoifjsoner/ ./
+</span></span><span style="display:flex;"><span>aws s3 rm s3://dsoifjsoner/asfsdf.jpg 
+</span></span></code></pre></div>
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+</footer>
+
+
+</body>
+</html>

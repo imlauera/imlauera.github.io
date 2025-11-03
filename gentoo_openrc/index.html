@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/gentoo_openrc/">
+  <meta property="og:site_name" content="Imlauer">
+  <meta property="og:title" content="Nueva instalación binaria de Gentoo con OpenRC, XFS y Sway (Los binarios de Gentoo no son como los de ArchLinux)">
+  <meta property="og:description" content="Clásicos momentos usando Gentoo:
+Instalé OBS Studio en Gentoo sin mirar las banderas (USE Flags) cuando ejecuté obs no podía agregar la cámara, y tampoco podía compartir la pantalla.
+Con el comando emerge -pv obs-studio pude ver las banderas y leyendo la Wiki de Gentoo de OBS me dí cuenta que tengo que habilitar las siguientes banderas para tener esas funcionalidades:
+[ebuild R ] media-video/obs-studio-31.0.3-r2::gentoo USE=&#34;alsa truetype wayland -browser -decklink -fdk -jack -lua (-mpegts) -nvenc -pipewire -pulseaudio -python -qsv -sndio -speex -test-input -v4l -vlc -websocket&#34; LUA_SINGLE_TARGET=&#34;luajit&#34; PYTHON_SINGLE_TARGET=&#34;python3_13 -python3_11 -python3_12 -python3_14&#34; 0 KiB Ahí se pueden ver las banderas DESHABILITADAS (las que comienzan con un signo -)">
+  <meta property="og:locale" content="es_es">
+  <meta property="og:type" content="article">
+    <meta property="article:published_time" content="2025-06-22T22:25:52-03:00">
+    <meta property="article:modified_time" content="2025-06-22T22:25:52-03:00">
+    <meta property="article:tag" content="Gentoo">
+
+  
+  <meta itemprop="name" content="Nueva instalación binaria de Gentoo con OpenRC, XFS y Sway (Los binarios de Gentoo no son como los de ArchLinux)">
+  <meta itemprop="description" content="Clásicos momentos usando Gentoo:
+Instalé OBS Studio en Gentoo sin mirar las banderas (USE Flags) cuando ejecuté obs no podía agregar la cámara, y tampoco podía compartir la pantalla.
+Con el comando emerge -pv obs-studio pude ver las banderas y leyendo la Wiki de Gentoo de OBS me dí cuenta que tengo que habilitar las siguientes banderas para tener esas funcionalidades:
+[ebuild R ] media-video/obs-studio-31.0.3-r2::gentoo USE=&#34;alsa truetype wayland -browser -decklink -fdk -jack -lua (-mpegts) -nvenc -pipewire -pulseaudio -python -qsv -sndio -speex -test-input -v4l -vlc -websocket&#34; LUA_SINGLE_TARGET=&#34;luajit&#34; PYTHON_SINGLE_TARGET=&#34;python3_13 -python3_11 -python3_12 -python3_14&#34; 0 KiB Ahí se pueden ver las banderas DESHABILITADAS (las que comienzan con un signo -)">
+  <meta itemprop="datePublished" content="2025-06-22T22:25:52-03:00">
+  <meta itemprop="dateModified" content="2025-06-22T22:25:52-03:00">
+  <meta itemprop="wordCount" content="2115">
+  <meta itemprop="keywords" content="Gentoo">
+  
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Nueva instalación binaria de Gentoo con OpenRC, XFS y Sway (Los binarios de Gentoo no son como los de ArchLinux)">
+  <meta name="twitter:description" content="Clásicos momentos usando Gentoo:
+Instalé OBS Studio en Gentoo sin mirar las banderas (USE Flags) cuando ejecuté obs no podía agregar la cámara, y tampoco podía compartir la pantalla.
+Con el comando emerge -pv obs-studio pude ver las banderas y leyendo la Wiki de Gentoo de OBS me dí cuenta que tengo que habilitar las siguientes banderas para tener esas funcionalidades:
+[ebuild R ] media-video/obs-studio-31.0.3-r2::gentoo USE=&#34;alsa truetype wayland -browser -decklink -fdk -jack -lua (-mpegts) -nvenc -pipewire -pulseaudio -python -qsv -sndio -speex -test-input -v4l -vlc -websocket&#34; LUA_SINGLE_TARGET=&#34;luajit&#34; PYTHON_SINGLE_TARGET=&#34;python3_13 -python3_11 -python3_12 -python3_14&#34; 0 KiB Ahí se pueden ver las banderas DESHABILITADAS (las que comienzan con un signo -)">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Nueva instalación binaria de Gentoo con OpenRC, XFS y Sway (Los binarios de Gentoo no son como los de ArchLinux)
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/gentoo_openrc/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="Clásicos momentos usando Gentoo:
+Instalé OBS Studio en Gentoo sin mirar las banderas (USE Flags) cuando ejecuté obs no podía agregar la cámara, y tampoco podía compartir la pantalla.
+Con el comando emerge -pv obs-studio pude ver las banderas y leyendo la Wiki de Gentoo de OBS me dí cuenta que tengo que habilitar las siguientes banderas para tener esas funcionalidades:
+[ebuild   R    ] media-video/obs-studio-31.0.3-r2::gentoo  USE=&#34;alsa truetype wayland -browser -decklink -fdk -jack -lua (-mpegts) -nvenc -pipewire -pulseaudio -python -qsv -sndio -speex -test-input -v4l -vlc -websocket&#34; LUA_SINGLE_TARGET=&#34;luajit&#34; PYTHON_SINGLE_TARGET=&#34;python3_13 -python3_11 -python3_12 -python3_14&#34; 0 KiB  
+Ahí se pueden ver las banderas DESHABILITADAS (las que comienzan con un signo -)">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Nueva instalación binaria de Gentoo con OpenRC, XFS y Sway (Los binarios de Gentoo no son como los de ArchLinux)
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2025-06-22T22:25:52-03:00'>
+      June 22, 2025
+    </time>
+    
+    <br>
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/gentoo/">Gentoo</a>
+    
+    
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <p><strong>Clásicos momentos usando Gentoo:</strong><br>
+Instalé <code>OBS Studio</code> en Gentoo sin mirar las banderas (USE Flags) cuando ejecuté <code>obs</code> no podía agregar la cámara, y tampoco podía compartir la pantalla.<br>
+Con el comando <code>emerge -pv obs-studio</code> pude ver las banderas y leyendo la Wiki de Gentoo de OBS me dí cuenta que tengo que habilitar las siguientes banderas para tener esas funcionalidades:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#f92672">[</span>ebuild   R    <span style="color:#f92672">]</span> media-video/obs-studio-31.0.3-r2::gentoo  USE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;alsa truetype wayland -browser -decklink -fdk -jack -lua (-mpegts) -nvenc -pipewire -pulseaudio -python -qsv -sndio -speex -test-input -v4l -vlc -websocket&#34;</span> LUA_SINGLE_TARGET<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;luajit&#34;</span> PYTHON_SINGLE_TARGET<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;python3_13 -python3_11 -python3_12 -python3_14&#34;</span> <span style="color:#ae81ff">0</span> KiB  
+</span></span></code></pre></div><p>Ahí se pueden ver las banderas DESHABILITADAS (las que comienzan con un signo <code>-</code>)</p>
+<p>Según la Wiki de OBS de Gentoo: <a href="https://wiki.gentoo.org/wiki/OBS_Studio">https://wiki.gentoo.org/wiki/OBS_Studio</a> estas son las banderas disponibles:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>+alsa      Add support <span style="color:#66d9ef">for</span> media-libs/alsa-lib <span style="color:#f92672">(</span>Advanced Linux Sound Architecture<span style="color:#f92672">)</span>  
+</span></span><span style="display:flex;"><span>browser    Enable browser source support via <span style="color:#f92672">(</span>precompiled<span style="color:#f92672">)</span> CEF.  
+</span></span><span style="display:flex;"><span>decklink   Build the Decklink plugin.  
+</span></span><span style="display:flex;"><span>fdk        Build with LibFDK AAC support.  
+</span></span><span style="display:flex;"><span>jack       Add support <span style="color:#66d9ef">for</span> the JACK Audio Connection Kit  
+</span></span><span style="display:flex;"><span>lua        Enable Lua scripting support  
+</span></span><span style="display:flex;"><span>mpegts     Enable native SRT/RIST mpegts output.  
+</span></span><span style="display:flex;"><span>nvenc      Add support <span style="color:#66d9ef">for</span> NVIDIA Encoder/Decoder <span style="color:#f92672">(</span>NVENC/NVDEC<span style="color:#f92672">)</span> API <span style="color:#66d9ef">for</span> hardware accelerated encoding  
+</span></span><span style="display:flex;"><span>           and decoding on NVIDIA cards <span style="color:#f92672">(</span>requires x11-drivers/nvidia-drivers<span style="color:#f92672">)</span>  
+</span></span><span style="display:flex;"><span>pipewire   Build with PipeWire support.  
+</span></span><span style="display:flex;"><span>pulseaudio Add sound server support via media-libs/libpulse <span style="color:#f92672">(</span>may be PulseAudio or PipeWire<span style="color:#f92672">)</span>  
+</span></span><span style="display:flex;"><span>python     Build with scripting support <span style="color:#66d9ef">for</span> Python 3.  
+</span></span><span style="display:flex;"><span>qsv        Build with Intel Quick Sync Video support.  
+</span></span><span style="display:flex;"><span>sndio      Build with sndio support.  
+</span></span><span style="display:flex;"><span>speex      Build with Speex noise suppression filter support.  
+</span></span><span style="display:flex;"><span>test-input Build and install input sources used <span style="color:#66d9ef">for</span> testing.  
+</span></span><span style="display:flex;"><span>truetype   Add support <span style="color:#66d9ef">for</span> FreeType and/or FreeType2 fonts  
+</span></span><span style="display:flex;"><span>v4l        Enable support <span style="color:#66d9ef">for</span> video4linux <span style="color:#f92672">(</span>using linux-headers or userspace libv4l libraries<span style="color:#f92672">)</span>  
+</span></span><span style="display:flex;"><span>vlc        Build with VLC media source support.  
+</span></span><span style="display:flex;"><span>wayland    Enable dev-libs/wayland backend  
+</span></span><span style="display:flex;"><span>websocket  Build with WebSocket API support.  
+</span></span></code></pre></div><p>Entonces para que nos funcione la <strong>cámara y podamos compartir pantalla</strong> necesitamos:</p>
+<ul>
+<li><code>v4l</code></li>
+<li><code>browser</code> para poder cargar elementos programados con Javascript, HTML y CSS.</li>
+<li><code>pipewire</code> para captura de audio</li>
+<li><code>truetype</code> letras</li>
+<li><code>websocket</code></li>
+</ul>
+<p>Para saber donde escribimos estas banderas tenemos que leer lo básico de como usar Portage: <a href="https://wiki.gentoo.org/wiki/Handbook:AMD64/Full/Portage">https://wiki.gentoo.org/wiki/Handbook:AMD64/Full/Portage</a></p>
+<p>Within <code>/etc/portage/</code> users can create the following files:</p>
+<ul>
+<li><code>package.mask</code> which lists the packages that Portage should never try to install</li>
+<li><code>package.unmask</code> which lists the packages Portage should be able to install even though the Gentoo developers highly discourage users from emerging them</li>
+<li><code>package.accept_keywords</code> which lists the packages Portage should be able to install even though the package hasn&rsquo;t been found suitable for the system or architecture (yet)</li>
+<li><strong><code>package.use</code> which lists the USE flags to use for certain packages without having the entire system use those USE flags</strong></li>
+</ul>
+<p>Entonces todas esas banderas las escribiremos en el archivo <code>/etc/portage/package.use/obs</code> de la siguiente manera:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>media-video/obs-studio v4l browser pipewire truetype websocket  
+</span></span></code></pre></div><p>Y ahora recompilemos</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>emerge -av --quiet obs-studio  
+</span></span></code></pre></div><p>Debería aparecer en <strong>verde las nuevas banderas con un asterisco</strong>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#f92672">[</span>ebuild   R   <span style="color:#f92672">]</span> media-video/obs-studio-31.0.3-r2  USE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;alsa browser* pipewire* truetype v4l* wayland websocket* -decklink -fdk -jack -lua (-mpegts) -nvenc -pulseaudio -python -qsv -sndio -speex -test-input -vlc&#34;</span> LUA_SINGLE_TARGET<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;luajit&#34;</span> PYTHON_SINGLE_TARGET<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;python3_13 -python3_11 -python3_12 -python3_14&#34;</span>
+</span></span></code></pre></div><p>Como estoy en Wayland (Sway) para compartir la pantalla debo seguir los siguientes pasos: <a href="https://imlauera.github.io/sway/">https://imlauera.github.io/sway/</a></p>
+<hr>
+<p><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgHABzk8ar7MZ6s1NvBGSu_y54LtiYr0Igp7Fl9Q21Xniedh6_OT9l7EjHF5E6CCvWOBb-e8f5C4WnfbwhnDDtSmKsBi_vT1YnubrS8zB00axT48yUHrUv09CTyL_LeAQ2RBbSB5juTTqCHydiP-bpJoQmWD5dNnUEoVEVSrNVWWJsFGgmkGm2ef0S4F96w/s1366/reddit.png" alt=""></p>
+<p>Ya había hecho una guía anteriromente sobre instalar Gentoo: <a href="https://imlauera.github.io/post/gentoo_installation/">https://imlauera.github.io/post/gentoo_installation/</a></p>
+<h6 id="binarios">Binarios</h6>
+<p>Si instalas el binario del grub en Gentoo no es lo mismo que el binario en ArchLinux.<br>
+El binario de GRUB no viene con la bandera <code>mount (USE Flag)</code> habilitada por lo tanto si quiero usar <code>OS-PROBER</code> estoy obligado a compilar el GRUB porque <strong>el binario de GRUB en Gentoo no tiene la bandera mount activada</strong> entonces tengo que compilarlo para poder usar <code>OS-PROBER</code>.<br>
+Es decir los binarios vienen con la mínima cantidad de banderas posibles, a diferencia de ArchLinux que vienen con la máxima cantidad de banderas posibles activadas.</p>
+<hr>
+<h6 id="handbook-amd64-full">Handbook AMD64 FULL: <a href="https://wiki.gentoo.org/wiki/Handbook:AMD64/Full">https://wiki.gentoo.org/wiki/Handbook:AMD64/Full</a></h6>
+<ol>
+<li>Instalación: <a href="https://wiki.gentoo.org/wiki/Handbook:AMD64/Full/Installation">https://wiki.gentoo.org/wiki/Handbook:AMD64/Full/Installation</a></li>
+<li>Como usar emerge: <a href="https://wiki.gentoo.org/wiki/Handbook:AMD64/Full/Working">https://wiki.gentoo.org/wiki/Handbook:AMD64/Full/Working</a></li>
+<li>Portage: <a href="https://wiki.gentoo.org/wiki/Handbook:AMD64/Full/Portage">https://wiki.gentoo.org/wiki/Handbook:AMD64/Full/Portage</a></li>
+<li>Configurando la red en OpenRC: <a href="https://wiki.gentoo.org/wiki/Handbook:AMD64/Full/Networking">https://wiki.gentoo.org/wiki/Handbook:AMD64/Full/Networking</a></li>
+</ol>
+<p><a href="https://wiki.gentoo.org/wiki/Handbook:AMD64/Full">https://wiki.gentoo.org/wiki/Handbook:AMD64/Full</a></p>
+<p><strong>AVISO: Esta guía no incluye la creación del pendrive con Gentoo ni el particionado</strong>. Esta guía comienza después el particionado para adelante.<br>
+<strong>Como hacer crear el pendrive y el particionado están bien descriptos en el handbook</strong>.</p>
+<p>Instalé gentoo guíandome con el handbook: Usé XFS, OpenRC, Grub y agregué el binary host.</p>
+<p>NO instalé pipewire y funcionó el audio sin configurarlo.</p>
+<h5 id="en-el-handbook-usaba-efi-como-partición-yo-usé-bootque-supuestamente-es-para-legacy-bios-funcionó-pero-no-tengo-legacy-bios-tengo-uefi">En el handbook usaba <code>/efi</code> como partición yo usé <code>/boot</code>(que supuestamente es para Legacy BIOS), funcionó pero no tengo Legacy BIOS tengo UEFI.</h5>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mkfs.fat -F <span style="color:#ae81ff">32</span> /dev/sda2   
+</span></span><span style="display:flex;"><span>mkfs.xfs /dev/sda1   
+</span></span><span style="display:flex;"><span>mkswap /dev/sda6   
+</span></span><span style="display:flex;"><span>mount /dev/sda1 /mnt/gentoo   
+</span></span><span style="display:flex;"><span>mount /dev/sda2 /mnt/gentoo/boot <span style="color:#f92672">(</span>En la guía sugiere /efi pero no lo usé así<span style="color:#f92672">)</span>   
+</span></span><span style="display:flex;"><span>swapon /dev/sda6   
+</span></span><span style="display:flex;"><span>cd /mnt/gentoo   
+</span></span><span style="display:flex;"><span>chronyd -q   
+</span></span><span style="display:flex;"><span>links https://gentoo.org/downloads/mirrors/   
+</span></span><span style="display:flex;"><span>releases/amd64/autobuilds/   
+</span></span><span style="display:flex;"><span>Descargué OpenRC: current-stage3-amd64-desktop-openrc/   
+</span></span><span style="display:flex;"><span>tar xpvf stage3-*.tar.xz --xattrs-include<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;*.*&#39;</span> --numeric-owner -C /mnt/gentoo   
+</span></span></code></pre></div><p>nano <code>/mnt/gentoo/etc/portage/make.conf</code></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>COMMON_FLAGS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;-march=native -O2&#34;</span>
+</span></span><span style="display:flex;"><span>CFLAGS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>COMMON_FLAGS<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>CXXFLAGS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>COMMON_FLAGS<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>RUSTFLAGS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>RUSTFLAGS<span style="color:#e6db74">}</span><span style="color:#e6db74"> -C target-cpu=native&#34;</span>
+</span></span><span style="display:flex;"><span>FCFLAGS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>COMMON_FLAGS<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>FFLAGS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>COMMON_FLAGS<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># NOTE: This stage was built with the bindist USE flag enabled</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># This sets the language of build output to English.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Please keep this setting intact when reporting bugs.</span>
+</span></span><span style="display:flex;"><span>LC_MESSAGES<span style="color:#f92672">=</span>C.utf8
+</span></span><span style="display:flex;"><span>MAKEOPTS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;-j2 -l3&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>GENTOO_MIRRORS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;https://gentoo.zero.com.ar/gentoo/ \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    rsync://gentoo.zero.com.ar/gentoo&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>FEATURES<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>FEATURES<span style="color:#e6db74">}</span><span style="color:#e6db74"> getbinpkg&#34;</span>
+</span></span><span style="display:flex;"><span>FEATURES<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>FEATURES<span style="color:#e6db74">}</span><span style="color:#e6db74"> binpkg-request-signature&#34;</span>
+</span></span><span style="display:flex;"><span>ACCEPT_LICENSE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;*&#34;</span>
+</span></span><span style="display:flex;"><span>USE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;dist-kernel&#34;</span>
+</span></span><span style="display:flex;"><span>ACCEPT_KEYWORDS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;~amd64&#34;</span>
+</span></span></code></pre></div><p>nano /etc/resolv.conf</p>
+<p><strong>Borrá todo y poné las DNS de Cloudflare o Quad9</strong>. Las DNS de Personal, Claro, Movistar bloquean sitios como: <a href="https://librefutbol.su">https://librefutbol.su</a>, <a href="https://thepiratebay.org">https://thepiratebay.org</a>, <a href="https://example.com">https://example.com</a>, etc</p>
+<pre tabindex="0"><code># Cloudflare (no uso porque reporta como Malware sitios para aprender reversing)  
+nameserver 1.1.1.1   
+nameserver 1.0.0.1   
+# Quad9   
+9.9.9.9
+149.112.112.112
+# Quad9 - Otra DNS (Esta uso) (no uso más porque bloquea digdeeper.love)
+nameserver 9.9.9.11
+nameserver 149.112.112.11
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cp --dereference /etc/resolv.conf /mnt/gentoo/etc<span style="color:#e6db74">`</span> <span style="color:#75715e"># se usa --dereference para que copie el archivo y no el link simbólico   </span>
+</span></span><span style="display:flex;"><span>arch-chroot /mnt/gentoo<span style="color:#e6db74">`</span> o podes montar uno por uno como está en el Handbook   
+</span></span><span style="display:flex;"><span>source /etc/profile   
+</span></span><span style="display:flex;"><span>export PS1<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;(chroot) </span><span style="color:#e6db74">${</span>PS1<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>   
+</span></span><span style="display:flex;"><span>emerge-webrsync <span style="color:#75715e"># Baja una snapshot de los títulos de los paquetes disponibles, sirve si estás detrás de un firewall (se actualiza cada 24 horas)</span>
+</span></span><span style="display:flex;"><span>emerge --verbose --oneshot app-portage/mirrorselect   
+</span></span><span style="display:flex;"><span>mirrorselect -i -o &gt;&gt; /etc/portage/make.conf   
+</span></span><span style="display:flex;"><span>emerge --sync <span style="color:#75715e"># Lo mismo que emerge-webrsync pero más actualizado. No hace falta porque emerge-webrsync está bastante actualizado.   </span>
+</span></span><span style="display:flex;"><span>eselect news list   
+</span></span><span style="display:flex;"><span>eselect news read   
+</span></span><span style="display:flex;"><span>eselect profile list   
+</span></span><span style="display:flex;"><span>eselect profile set número <span style="color:#f92672">(</span>Probablemente ya está seleccionado con asterisco sino: default/linux/amd64/23.0/desktop no usé no-multilib<span style="color:#f92672">)</span>   
+</span></span></code></pre></div><h6 id="agregando-el-host-de-paquetes-binarios">Agregando el host de paquetes binarios.</h6>
+<p>Esta parte la hice igual que como está en el Handbook</p>
+<p>Este archivo <code>/etc/portage/binrepos.conf/gentoobinhost.conf</code> ya está creado pero le cambié la prioridad:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-console" data-lang="console"><span style="display:flex;"><span>[binhost]   
+</span></span><span style="display:flex;"><span>priority = 9999   
+</span></span><span style="display:flex;"><span>sync-uri = https://distfiles.gentoo.org/releases/&lt;arch&gt;/binpackages/&lt;profile&gt;/x86-64/   
+</span></span></code></pre></div><p>En el archivo <code>/etc/portage/make.conf</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Appending getbinpkg to the list of values within the FEATURES variable   </span>
+</span></span><span style="display:flex;"><span>FEATURES<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>FEATURES<span style="color:#e6db74">}</span><span style="color:#e6db74"> getbinpkg&#34;</span>   
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Require signatures   </span>
+</span></span><span style="display:flex;"><span>FEATURES<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>FEATURES<span style="color:#e6db74">}</span><span style="color:#e6db74"> binpkg-request-signature&#34;</span>   
+</span></span></code></pre></div><p>Luego:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>getuto   
+</span></span></code></pre></div><p>Para ver las banderas activas: <code>emerge --info | grep ^USE</code><br>
+Luego agregué <code>USE=&quot;&quot;</code> en /etc/portage/make.conf</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>emerge --ask --oneshot app-portage/cpuid2cpuflags   
+</span></span><span style="display:flex;"><span>cpuid2cpuflags   
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;*/* </span><span style="color:#66d9ef">$(</span>cpuid2cpuflags<span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span> &gt; /etc/portage/package.use/00cpu-flags   
+</span></span></code></pre></div><p>En el archivo: <code>/etc/portage/package.use/00video_cards</code></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>*/* VIDEO_CARDS: intel   
+</span></span></code></pre></div><h5 id="aceptá-la-licencia-ya-lo-hice-antes-en-el-makeconf">Aceptá la licencia (ya lo hice antes en el <code>make.conf</code>)</h5>
+<p>Para ver la licencia actual: <code>portageq envvar ACCEPT_LICENSE</code><br>
+Yo usé <code>ACCEPT_LICENCE=&quot;*&quot;</code> se puede aceptar licencia por cada paquete usando el archivo <code>/etc/portage/package.license/kernel</code>.<br>
+Para actualizar: <code>emerge --ask --verbose --update --deep --newuse --getbinpkg @world --quiet</code></p>
+<p>Eliminar paquetes obsoletos te muestra una lista: <code>emerge --ask --pretend --depclean</code> # Si le sacas <code>--pretend</code> los borra.</p>
+<p>Configurar fecha y hora:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;America/Buenos_Aires&#34;</span> &gt; /etc/timezone   
+</span></span><span style="display:flex;"><span>emerge --config sys-libs/timezone-data   
+</span></span></code></pre></div><p>En el archivo <code>nano /etc/locale.gen</code> habilitá US locales (es el idioma del sitema operativo).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>en_US ISO-8859-1   
+</span></span><span style="display:flex;"><span>en_US.UTF-8 UTF-8   
+</span></span></code></pre></div><p>Ejecutá:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>locale-gen   
+</span></span><span style="display:flex;"><span>eselect locale list   
+</span></span><span style="display:flex;"><span>eselect locale set <span style="color:#ae81ff">5</span> <span style="color:#f92672">(</span>en_US.utf8<span style="color:#f92672">)</span>   
+</span></span></code></pre></div><p>Ahora: <code>env-update &amp;&amp; source /etc/profile &amp;&amp; export PS1=&quot;(chroot) ${PS1}&quot;</code></p>
+<p>Ahora instalamos <code>linux-firmware</code> (sin esto probablemente no funcionará tu WiFi son los drivers).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>emerge -G sys-kernel/linux-firmware   
+</span></span><span style="display:flex;"><span>emerge -G sys-firmware/sof-firmware   
+</span></span><span style="display:flex;"><span>emerge -G sys-firmware/intel-microcode   
+</span></span></code></pre></div><h5 id="instalando-el-grub">Instalando el GRUB:</h5>
+<p><strong>Para mi esto no lo necesito pero igual lo hice así</strong>:<br>
+En el archivo <code>/etc/portage/package.use/installkernel</code> agregá:<br>
+<code>sys-kernel/installkernel grub dracut</code></p>
+<p>En el archivo <code>/etc/portage/package.use/uki</code> <strong>(Creo que no necesito hacer esto si vas a usar gentoo-kernel-bin)</strong>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sys-kernel/installkernel dracut uki   
+</span></span><span style="display:flex;"><span>sys-apps/systemd-utils boot kernel-install   
+</span></span></code></pre></div><p><code>emerge --ask sys-kernel/installkernel</code></p>
+<p>Ahora instalamos un &ldquo;distribution kernel&rdquo;: <code>emerge -G sys-kernel/gentoo-kernel</code> o <code>emerge sys-kernel/gentoo-kernel-bin</code></p>
+<p>Actualizando y limpiando: <code>emerge --depclean</code></p>
+<p>Agregá <code>USE=&quot;dist-kernel&quot;</code> para reconstruir automáticamente módulos externos instalados por otros paquetes.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>emerge --config sys-kernel/gentoo-kernel-bin   
+</span></span></code></pre></div><p>Podes usar <code>sys-kernel/modprobed-db</code> para recolectar información acerca de lo que el sistema requiere: si un control de Xbox es agregado a la instalación <code>modprobed-db</code> va a agregar módulos para ser compilados la próxima vez que el kernel es compilado.</p>
+<p>Usá <code>sys-apps/pciutils</code> que contiene el comando <code>lspci</code> para obtener más información del sistema y <code>lsmod</code>.</p>
+<p>En el handbook explica como compilar el kernel cosa que no lo vamos a hacer.</p>
+<p><strong>Información sobre sistema de archivos</strong>:<br>
+Ejecutá <code>blkid</code> para obtener el UUID para construir el <code>/etc/fstab</code> o simplemente ejecutá en otra TTY:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>genfstab /mnt/gentoo &gt;&gt; /mnt/gentoo/etc/fstab
+</span></span></code></pre></div><p>En el handbook explica que es cada propiedad del archivo <code>/etc/fstab</code>.</p>
+<p>Podes agregar <code>noatime</code> para mejorar el rendimiento en la partición de raiz (XFS): <code>defaults,noatime</code> en <code>/etc/fstab</code>.</p>
+<p>Agregá el <strong>hostname</strong>: <code>echo tux &gt; /etc/hostname</code></p>
+<p>Instalá NetworkManager:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>emerge -G NetworkManager   
+</span></span><span style="display:flex;"><span>rc-update add NetworkManager default   
+</span></span></code></pre></div><p>Ahora podes conectarte a una WiFi usando el comando: <code>nmtui</code>.</p>
+<p>Si no queres usar <code>NetworkManager</code> podes usar <code>netifrc</code> con <code>wpa_supplicant</code>.<br>
+Explicado en el handbook: <a href="https://wiki.gentoo.org/wiki/Handbook:AMD64/Full/Installation#netifrc_.28OpenRC.29">https://wiki.gentoo.org/wiki/Handbook:AMD64/Full/Installation#netifrc_.28OpenRC.29</a></p>
+<h6 id="en-el-archivo-etchosts">En el archivo <code>/etc/hosts</code>:</h6>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>127.0.0.1	tux.homenetwork	tux	localhost   
+</span></span><span style="display:flex;"><span>::1		tux.homenetwork	tux	localhost   
+</span></span></code></pre></div><h6 id="cambiá-la-contraseña-de-root">Cambiá la contraseña de <code>root</code>:</h6>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>passwd   
+</span></span></code></pre></div><p>Cuando usas OpenRC con Gentoo el archivo <code>/etc/rc.conf</code> configura los servicios, inicio y apagado de un sistema. Abrí el archivo <code>/etc/rc.conf</code> y disfrutá de todos los comentarios en el archivo. Observá las configuraciones y cambia lo que necesitás.</p>
+<h6 id="configurá-el-teclado-en-el-archivo-etcconfdkeymaps">Configurá el teclado en el archivo <code>/etc/conf.d/keymaps</code></h6>
+<p>Ahí usé <code>&quot;es&quot;</code> (teclado Español)</p>
+<h6 id="en-el-archivo-etcconfdhwclock-configurá-el-reloj">En el archivo <code>/etc/conf.d/hwclock</code> configurá el reloj:</h6>
+<p>Si el reloj de hardware no está usando UTC, entonces es necesario usar <code>clock=&quot;local&quot;</code> en el archivo. De lo contrario el sistema mostrará un mal comportamiento de reloj.</p>
+<h6 id="system-logger">System logger.</h6>
+<p>Sysklogd es recomendado para principiantes.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>emerge -G app-admin/sysklogd   
+</span></span><span style="display:flex;"><span>rc-update add sysklogd default   
+</span></span></code></pre></div><h6 id="cron-daemon">Cron daemon.</h6>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>emerge sys-process/cronie   
+</span></span><span style="display:flex;"><span>rc-update add cronie default   
+</span></span></code></pre></div><h6 id="file-indexing-para-búsqueda-rápida">File indexing (para búsqueda rápida)</h6>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>emerge -G --ask sys-apps/mlocate   
+</span></span></code></pre></div><h6 id="opcional-shell-para-acceso-remoto">Opcional: Shell para acceso remoto.</h6>
+<p>La configuración por defecto de <code>openssh</code> no permite ingresar como <code>root</code>. Por favor cree un usuario <code>no-root</code> y configuralo apropiadamente para permitir el acceso luego de la instalación si es requerido, o ajustá <code>/etc/ssh/sshd_config</code> para permitir acceso <code>root</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>rc-update add sshd default   
+</span></span></code></pre></div><h5 id="shell-completion">Shell completion</h5>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>emerge app-shells/bash-completion   
+</span></span></code></pre></div><h5 id="sincronicación-horaria">Sincronicación horaria</h5>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>emerge -G net-misc/chrony <span style="color:#75715e"># Con -G fijate si está el binario   </span>
+</span></span><span style="display:flex;"><span>rc-update add chronyq default   
+</span></span></code></pre></div><p>Es recomendable que <code>sys-block/io-scheduler-udev-rules</code> esté instalado para el correcto comportamiento horario (correct scheduler behavior) por ejemplo con dispositivos <code>nvme</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>emerge sys-block/io-scheduler-udev-rules   
+</span></span></code></pre></div><h5 id="herramientas-de-red">Herramientas de red</h5>
+<p>No usé Netirfc (<a href="https://wiki.gentoo.org/wiki/Netifrc">https://wiki.gentoo.org/wiki/Netifrc</a>) ni el cliente dhcp, directamente instalé NetworkManager que tiene soporte WiFi (instalación realizada anteriormente).<br>
+El handbook sugiere para WiFi: <code>emerge net-wireless/iw net-wireless/wpa_supplicant</code> <strong>pero yo no lo usé</strong>.</p>
+<h5 id="eligiendo-el-boot-loader">Eligiendo el <code>boot loader</code></h5>
+<p>Podes elegir: GRUB, systemd-boot(usando OpenRC también sirve), EFI Stub.</p>
+<h4 id="importante-si-tenes-uefi-directamente-podes-usar-efi-stub-porque-uefi-no-necesita-grub-para-bootear-grub-es-un-bootloader-secundario-grub-es-cómodo-ya-que-con-os-prober-te-permite-agregar-otros-sistemas-operativos">Importante: Si tenes UEFI directamente podes usar EFI STUB porque UEFI no necesita Grub para bootear. Grub es un bootloader secundario. Grub es cómodo ya que con <code>os-prober</code> te permite agregar otros sistemas operativos.</h4>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>emerge -G sys-boot/grub   
+</span></span></code></pre></div><h5 id="usando-grub-como-boot-loader">Usando <code>GRUB</code> como boot loader</h5>
+<p>Uso la opción <code>--removable</code> porque en algunas placas madres con pobres implementaciones UEFI parece que solo funcionan con el directorio <code>/BOOT/BOOT</code> para el archivo <code>.EFI</code>. El instalador GRUB crea el <code>.EFI</code> archivo en esa ubicación automáticamente agregando la opción <code>--removable</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>grub-install --target<span style="color:#f92672">=</span>x86_64-efi --efi-directory<span style="color:#f92672">=</span>/boot --removable   
+</span></span></code></pre></div><h6 id="si-instalaste-el-binario-de-grub-ahora-lo-tendrás-que-compilar-porque-el-binario-de-grub-no-posee-la-banderause-flag-">Si instalaste el binario de <code>GRUB</code> ahora lo tendrás que compilar porque el <strong>binario de GRUB no posee la bandera(USE flag) <code>mount</code> habilitada</strong>.</h6>
+<p>En el archivo <code>/etc/portage/package.use/os-prober</code> agregá:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>&gt;<span style="color:#f92672">=</span>sys-boot/grub-2.12-r7 mount   
+</span></span></code></pre></div><p>Instalamos OS-PROBER para detectar otras distros.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo emerge os-prober    
+</span></span></code></pre></div><p>En el archivo <code>/etc/default/grub</code> agregá:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>GRUB_DISABLE_OS_PROBER<span style="color:#f92672">=</span>false   
+</span></span></code></pre></div><p>Y ahora:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>grub-mkconfig -o /boot/grub/grub.cfg   
+</span></span></code></pre></div><p>En el handbook sugería usar: <code>grub-mkconfig -o /efi/EFI/Gentoo/grub.cfg</code> pero yo usé la partición <code>/boot</code> (explicado anteriormente).</p>
+<p>Hay una discusión sobre esto:</p>
+<blockquote>
+<p>Edit: 2024-04-19 20:09 (UTC) Handbook &gt; GRUB &gt; UEFI systems grub-install &ndash;efi-directory=/efi installs all files except grubx64.efi in /boot rather than /efi. Is that not a dangerous configuration, that will break for most? I propose recommending <code>grub-install --efi-directory=/efi --boot-directory=/efi</code> instead. <code>grub-mkconfig -o /efi/grub/grub.cfg</code> doesn&rsquo;t run without symlinking /boot into /efi. I also had to update that command from the wiki provided version using -o /boot/grub/grub.cfg</p>
+</blockquote>
+<h4 id="agregando-un-usuario">Agregando un usuario.</h4>
+<p>El handbook fue muy puto acá: me recomendó un comando para crear el usuario pero sin el grupo <code>video</code> y estuve peleando un poco para iniciar <code>sway</code>.</p>
+<p><strong>Acá está el comando con el grupo video agregado.</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>useradd -m -G users,video,wheel,audio -s /bin/bash esotericwarfare   
+</span></span><span style="display:flex;"><span>passwd esotericwarfare   
+</span></span></code></pre></div><h5 id="reiniciando-el-sistema">Reiniciando el sistema:</h5>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#f92672">(</span>chroot<span style="color:#f92672">)</span> livecd <span style="color:#75715e"># exit   </span>
+</span></span><span style="display:flex;"><span>livecd~# cd   
+</span></span><span style="display:flex;"><span>livecd~# umount -l /mnt/gentoo/dev<span style="color:#f92672">{</span>/shm,/pts,<span style="color:#f92672">}</span>   
+</span></span><span style="display:flex;"><span>livecd~# umount -R /mnt/gentoo   
+</span></span><span style="display:flex;"><span>livecd~# reboot   
+</span></span></code></pre></div><p>Cuando botea Gentoo, instalé <code>sudo</code> y cambié la configuración de <code>/etc/sudoers</code>.<br>
+Agregá al final:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>esotericwarfare ALL<span style="color:#f92672">=(</span>ALL:ALL<span style="color:#f92672">)</span> NOPASSWD:ALL   
+</span></span></code></pre></div><p>Y ahora eliminamos la contraseña del usuario <code>root</code> por seguridad:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>passwd -l root   
+</span></span><span style="display:flex;"><span>passwd -dl root   
+</span></span></code></pre></div><h5 id="eliminamos-los-artifactos-de-instalación">Eliminamos los artifactos de instalación.</h5>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cd /   
+</span></span><span style="display:flex;"><span>rm stage3-*   
+</span></span></code></pre></div><p>Podes consultar cualquier duda en el canal de IRC en LiberaChat: <code>#gentoo</code> o en los foros: <a href="https://forums.gentoo.org">https://forums.gentoo.org</a></p>
+<p>Cualquier bug: <a href="https://bugs.gentoo.org">https://bugs.gentoo.org</a></p>
+<h5 id="para-buscar-paquetes">Para buscar paquetes</h5>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>emerge -s hola
+</span></span></code></pre></div><p>O con <code>eix</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo emerge eix
+</span></span><span style="display:flex;"><span>sudo eix-update
+</span></span><span style="display:flex;"><span>eix wifite
+</span></span></code></pre></div><h3 id="lista-de-programas-que-instalé-luego">Lista de programas que instalé luego</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">### Binarios</span>
+</span></span><span style="display:flex;"><span>sudo emerge -G sys-devel/bc btop evince falkon gimp imagemagick jq neomutt pcmanfm-qt samba translate-shell wget wl-clipboard xhost xwayland libreoffice mpv git nim thunderbird grim
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>sudo emerge yt-dlp xdg-desktop-portal-wlr xdg-desktop-portal-wlr vim firefox-bin wmenu telegram-desktop-bin qbittorent tor rclone proxychains unrar unzip tor torsocks os-prober
+</span></span></code></pre></div>
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+</footer>
+
+
+</body>
+</html>

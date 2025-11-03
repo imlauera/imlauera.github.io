@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/post/enviar_correo_cifrado/">
+  <meta property="og:site_name" content="Imlauer">
+  <meta property="og:title" content="Enviar archivo cifrado">
+  <meta property="og:description" content="https://www.youtube.com/watch?v=DMGIlj7u7Eo
+gpg --gen-key gpg --armor --export imlauerandres@gmail.com &gt; public_key.asc gpg --encrypt --recipient &#39;imlauerandres@gmail.com&#39; --output confidential.txt.enc secret.txt gpg --decrypt --output secret.txt confidential.txt.enc cat secret.txt gpg --import publickey.gpg gpg --import &lt; publickey.gpg openssl rand -out secret.key 32 openssl aes-256-cbc -in secretfile.txt -out secretfile.txt.enc -pass file:secret.key https://medium.com/@michaelmeade3/using-gpg-71c6ae7c6199 https://archive.is/Zhz4T
+https://superuser.com/questions/576506/how-to-use-ssh-rsa-public-key-to-encrypt-a-text
+https://www.bjornjohansen.com/encrypt-file-using-ssh-key
+https://superuser.com/questions/576506/how-to-use-ssh-rsa-public-key-to-encrypt-a-text
+Note that this only works if the file is small enough. e.g. 200 bytes.
+ssh-keygen -f ~/.ssh/id_rsa.pub -e -m PKCS8 &gt; id_rsa.pem.pub openssl rsautl -encrypt -pubin -inkey id_rsa.pem.pub -ssl -in myMessage.txt -out myEncryptedMessage.txt Usando ssh public key para cifrar un archivo # Recently I had to send a password to someone over Skype. Since that&#39;s obviously not a good idea, I asked for # the person&#39;s public SSH RSA key, and used it to encrypt the password itself. # Convert the public key into PEM format ssh-keygen -f path/to/id_rsa.pub -e -m pem &gt; ~/id_rsa.pub.pem # Using the public pem file to encrypt a string echo &#34;sometext&#34; | openssl rsautl -encrypt -pubin -inkey ~/id_rsa.pub.pem &gt; ~/encrypted.txt # Or a file cat ~/some_file.txt | openssl rsautl -encrypt -pubin -inkey ~/id_rsa.pub.pem &gt; ~/encrypted.txt # To decrypt, you&#39;ll need the private key cat ~/encrypted.txt | openssl rsautl -decrypt -inkey path/to/id_rsa &gt; ~/decrypted.txt ssh-keygen -f id_rsa.pub -e -m pem &gt; ~/id_rsa.pub.pem cat mensaje_secreto.txt | openssl rsautl -encrypt -pubin -inkey ~/id_rsa.pub.pem &gt; ~/encrypted.txt split -b 200 -d secret.txt en_partes for i in *en_partes*; do cat $i | openssl rsautl -encrypt -pubin -inkey ~/id_rsa.pub.pem &gt; ~/mensajecifrado$i.txt ; done ```">
+  <meta property="og:locale" content="es_es">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="post">
+    <meta property="article:tag" content="Gpg">
+
+  
+  <meta itemprop="name" content="Enviar archivo cifrado">
+  <meta itemprop="description" content="https://www.youtube.com/watch?v=DMGIlj7u7Eo
+gpg --gen-key gpg --armor --export imlauerandres@gmail.com &gt; public_key.asc gpg --encrypt --recipient &#39;imlauerandres@gmail.com&#39; --output confidential.txt.enc secret.txt gpg --decrypt --output secret.txt confidential.txt.enc cat secret.txt gpg --import publickey.gpg gpg --import &lt; publickey.gpg openssl rand -out secret.key 32 openssl aes-256-cbc -in secretfile.txt -out secretfile.txt.enc -pass file:secret.key https://medium.com/@michaelmeade3/using-gpg-71c6ae7c6199 https://archive.is/Zhz4T
+https://superuser.com/questions/576506/how-to-use-ssh-rsa-public-key-to-encrypt-a-text
+https://www.bjornjohansen.com/encrypt-file-using-ssh-key
+https://superuser.com/questions/576506/how-to-use-ssh-rsa-public-key-to-encrypt-a-text
+Note that this only works if the file is small enough. e.g. 200 bytes.
+ssh-keygen -f ~/.ssh/id_rsa.pub -e -m PKCS8 &gt; id_rsa.pem.pub openssl rsautl -encrypt -pubin -inkey id_rsa.pem.pub -ssl -in myMessage.txt -out myEncryptedMessage.txt Usando ssh public key para cifrar un archivo # Recently I had to send a password to someone over Skype. Since that&#39;s obviously not a good idea, I asked for # the person&#39;s public SSH RSA key, and used it to encrypt the password itself. # Convert the public key into PEM format ssh-keygen -f path/to/id_rsa.pub -e -m pem &gt; ~/id_rsa.pub.pem # Using the public pem file to encrypt a string echo &#34;sometext&#34; | openssl rsautl -encrypt -pubin -inkey ~/id_rsa.pub.pem &gt; ~/encrypted.txt # Or a file cat ~/some_file.txt | openssl rsautl -encrypt -pubin -inkey ~/id_rsa.pub.pem &gt; ~/encrypted.txt # To decrypt, you&#39;ll need the private key cat ~/encrypted.txt | openssl rsautl -decrypt -inkey path/to/id_rsa &gt; ~/decrypted.txt ssh-keygen -f id_rsa.pub -e -m pem &gt; ~/id_rsa.pub.pem cat mensaje_secreto.txt | openssl rsautl -encrypt -pubin -inkey ~/id_rsa.pub.pem &gt; ~/encrypted.txt split -b 200 -d secret.txt en_partes for i in *en_partes*; do cat $i | openssl rsautl -encrypt -pubin -inkey ~/id_rsa.pub.pem &gt; ~/mensajecifrado$i.txt ; done ```">
+  <meta itemprop="wordCount" content="240">
+  <meta itemprop="keywords" content="Gpg">
+  
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Enviar archivo cifrado">
+  <meta name="twitter:description" content="https://www.youtube.com/watch?v=DMGIlj7u7Eo
+gpg --gen-key gpg --armor --export imlauerandres@gmail.com &gt; public_key.asc gpg --encrypt --recipient &#39;imlauerandres@gmail.com&#39; --output confidential.txt.enc secret.txt gpg --decrypt --output secret.txt confidential.txt.enc cat secret.txt gpg --import publickey.gpg gpg --import &lt; publickey.gpg openssl rand -out secret.key 32 openssl aes-256-cbc -in secretfile.txt -out secretfile.txt.enc -pass file:secret.key https://medium.com/@michaelmeade3/using-gpg-71c6ae7c6199 https://archive.is/Zhz4T
+https://superuser.com/questions/576506/how-to-use-ssh-rsa-public-key-to-encrypt-a-text
+https://www.bjornjohansen.com/encrypt-file-using-ssh-key
+https://superuser.com/questions/576506/how-to-use-ssh-rsa-public-key-to-encrypt-a-text
+Note that this only works if the file is small enough. e.g. 200 bytes.
+ssh-keygen -f ~/.ssh/id_rsa.pub -e -m PKCS8 &gt; id_rsa.pem.pub openssl rsautl -encrypt -pubin -inkey id_rsa.pem.pub -ssl -in myMessage.txt -out myEncryptedMessage.txt Usando ssh public key para cifrar un archivo # Recently I had to send a password to someone over Skype. Since that&#39;s obviously not a good idea, I asked for # the person&#39;s public SSH RSA key, and used it to encrypt the password itself. # Convert the public key into PEM format ssh-keygen -f path/to/id_rsa.pub -e -m pem &gt; ~/id_rsa.pub.pem # Using the public pem file to encrypt a string echo &#34;sometext&#34; | openssl rsautl -encrypt -pubin -inkey ~/id_rsa.pub.pem &gt; ~/encrypted.txt # Or a file cat ~/some_file.txt | openssl rsautl -encrypt -pubin -inkey ~/id_rsa.pub.pem &gt; ~/encrypted.txt # To decrypt, you&#39;ll need the private key cat ~/encrypted.txt | openssl rsautl -decrypt -inkey path/to/id_rsa &gt; ~/decrypted.txt ssh-keygen -f id_rsa.pub -e -m pem &gt; ~/id_rsa.pub.pem cat mensaje_secreto.txt | openssl rsautl -encrypt -pubin -inkey ~/id_rsa.pub.pem &gt; ~/encrypted.txt split -b 200 -d secret.txt en_partes for i in *en_partes*; do cat $i | openssl rsautl -encrypt -pubin -inkey ~/id_rsa.pub.pem &gt; ~/mensajecifrado$i.txt ; done ```">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Enviar archivo cifrado
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/post/enviar_correo_cifrado/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="https://www.youtube.com/watch?v=DMGIlj7u7Eo
+gpg --gen-key
+gpg --armor --export imlauerandres@gmail.com &gt; public_key.asc  
+gpg --encrypt --recipient &#39;imlauerandres@gmail.com&#39; --output confidential.txt.enc secret.txt 
+gpg --decrypt --output secret.txt confidential.txt.enc
+cat secret.txt
+
+gpg --import publickey.gpg
+gpg --import &lt; publickey.gpg
+
+openssl rand -out secret.key 32
+
+openssl aes-256-cbc -in secretfile.txt -out secretfile.txt.enc -pass file:secret.key
+https://medium.com/@michaelmeade3/using-gpg-71c6ae7c6199
+https://archive.is/Zhz4T
+https://superuser.com/questions/576506/how-to-use-ssh-rsa-public-key-to-encrypt-a-text
+https://www.bjornjohansen.com/encrypt-file-using-ssh-key
+https://superuser.com/questions/576506/how-to-use-ssh-rsa-public-key-to-encrypt-a-text
+Note that this only works if the file is small enough. e.g. 200 bytes.
+ssh-keygen -f ~/.ssh/id_rsa.pub -e -m PKCS8 &gt; id_rsa.pem.pub
+openssl rsautl -encrypt -pubin -inkey id_rsa.pem.pub -ssl -in myMessage.txt -out myEncryptedMessage.txt
+Usando ssh public key para cifrar un archivo
+# Recently I had to send a password to someone over Skype. Since that&#39;s obviously not a good idea, I asked for 
+# the person&#39;s public SSH RSA key, and used it to encrypt the password itself.
+
+
+# Convert the public key into PEM format
+ssh-keygen -f path/to/id_rsa.pub -e -m pem &gt; ~/id_rsa.pub.pem
+
+# Using the public pem file to encrypt a string
+echo &#34;sometext&#34; | openssl rsautl -encrypt -pubin -inkey ~/id_rsa.pub.pem &gt; ~/encrypted.txt
+
+# Or a file
+cat ~/some_file.txt | openssl rsautl -encrypt -pubin -inkey ~/id_rsa.pub.pem &gt; ~/encrypted.txt
+
+# To decrypt, you&#39;ll need the private key
+cat ~/encrypted.txt | openssl rsautl -decrypt -inkey path/to/id_rsa &gt; ~/decrypted.txt
+ssh-keygen -f id_rsa.pub -e -m pem &gt; ~/id_rsa.pub.pem
+cat mensaje_secreto.txt | openssl rsautl -encrypt -pubin -inkey ~/id_rsa.pub.pem &gt; ~/encrypted.txt
+
+split -b 200 -d  secret.txt en_partes
+
+for i in *en_partes*; do cat $i | openssl rsautl -encrypt -pubin -inkey ~/id_rsa.pub.pem &gt; ~/mensajecifrado$i.txt ; done ```
+">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Enviar archivo cifrado
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='0001-01-01T00:00:00Z'>
+      January 01, 0001
+    </time>
+    
+    <br>
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/gpg/">Gpg</a>
+    
+    
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <p><a href="https://www.youtube.com/watch?v=DMGIlj7u7Eo">https://www.youtube.com/watch?v=DMGIlj7u7Eo</a></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>gpg --gen-key
+</span></span><span style="display:flex;"><span>gpg --armor --export imlauerandres@gmail.com &gt; public_key.asc  
+</span></span><span style="display:flex;"><span>gpg --encrypt --recipient <span style="color:#e6db74">&#39;imlauerandres@gmail.com&#39;</span> --output confidential.txt.enc secret.txt 
+</span></span><span style="display:flex;"><span>gpg --decrypt --output secret.txt confidential.txt.enc
+</span></span><span style="display:flex;"><span>cat secret.txt
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>gpg --import publickey.gpg
+</span></span><span style="display:flex;"><span>gpg --import &lt; publickey.gpg
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>openssl rand -out secret.key <span style="color:#ae81ff">32</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>openssl aes-256-cbc -in secretfile.txt -out secretfile.txt.enc -pass file:secret.key
+</span></span></code></pre></div><p><a href="https://medium.com/@michaelmeade3/using-gpg-71c6ae7c6199">https://medium.com/@michaelmeade3/using-gpg-71c6ae7c6199</a>
+<a href="https://archive.is/Zhz4T">https://archive.is/Zhz4T</a></p>
+<p><a href="https://superuser.com/questions/576506/how-to-use-ssh-rsa-public-key-to-encrypt-a-text">https://superuser.com/questions/576506/how-to-use-ssh-rsa-public-key-to-encrypt-a-text</a></p>
+<p><a href="https://www.bjornjohansen.com/encrypt-file-using-ssh-key">https://www.bjornjohansen.com/encrypt-file-using-ssh-key</a></p>
+<p><a href="https://superuser.com/questions/576506/how-to-use-ssh-rsa-public-key-to-encrypt-a-text">https://superuser.com/questions/576506/how-to-use-ssh-rsa-public-key-to-encrypt-a-text</a></p>
+<p>Note that this only works if the file is small enough. e.g. 200 bytes.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ssh-keygen -f ~/.ssh/id_rsa.pub -e -m PKCS8 &gt; id_rsa.pem.pub
+</span></span><span style="display:flex;"><span>openssl rsautl -encrypt -pubin -inkey id_rsa.pem.pub -ssl -in myMessage.txt -out myEncryptedMessage.txt
+</span></span></code></pre></div><h4 id="usando-ssh-public-key-para-cifrar-un-archivo">Usando ssh public key para cifrar un archivo</h4>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Recently I had to send a password to someone over Skype. Since that&#39;s obviously not a good idea, I asked for </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># the person&#39;s public SSH RSA key, and used it to encrypt the password itself.</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Convert the public key into PEM format</span>
+</span></span><span style="display:flex;"><span>ssh-keygen -f path/to/id_rsa.pub -e -m pem &gt; ~/id_rsa.pub.pem
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Using the public pem file to encrypt a string</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;sometext&#34;</span> | openssl rsautl -encrypt -pubin -inkey ~/id_rsa.pub.pem &gt; ~/encrypted.txt
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Or a file</span>
+</span></span><span style="display:flex;"><span>cat ~/some_file.txt | openssl rsautl -encrypt -pubin -inkey ~/id_rsa.pub.pem &gt; ~/encrypted.txt
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># To decrypt, you&#39;ll need the private key</span>
+</span></span><span style="display:flex;"><span>cat ~/encrypted.txt | openssl rsautl -decrypt -inkey path/to/id_rsa &gt; ~/decrypted.txt
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ssh-keygen -f id_rsa.pub -e -m pem &gt; ~/id_rsa.pub.pem
+</span></span><span style="display:flex;"><span>cat mensaje_secreto.txt | openssl rsautl -encrypt -pubin -inkey ~/id_rsa.pub.pem &gt; ~/encrypted.txt
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>split -b <span style="color:#ae81ff">200</span> -d  secret.txt en_partes
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> i in *en_partes*; <span style="color:#66d9ef">do</span> cat $i | openssl rsautl -encrypt -pubin -inkey ~/id_rsa.pub.pem &gt; ~/mensajecifrado$i.txt ; <span style="color:#66d9ef">done</span> <span style="color:#e6db74">```</span>
+</span></span></code></pre></div>
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+</footer>
+
+
+</body>
+</html>

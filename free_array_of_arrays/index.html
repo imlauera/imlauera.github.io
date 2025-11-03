@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/free_array_of_arrays/">
+  <meta property="og:site_name" content="Imlauer">
+  <meta property="og:title" content="Free pointer of pointers">
+  <meta property="og:description" content="Sólo tenés que pensar en liberar memoria cuando tenés un programa muy grande que pide un poco de memoria en un loop y eso acumula memoria con el tiempo, pero si tenés un programa batch (por lotes) que pide memoria (allocated memory), no hay necesidad de liberar esa memoria porque el sistema operativo lo hará por vos cuando el programa finalice. (Leer al final más info).
+No podes “liberar” un puntero de punteros. Tenés que liberar todo lo que fue creado con malloc.">
+  <meta property="og:locale" content="es_es">
+  <meta property="og:type" content="article">
+    <meta property="article:published_time" content="2025-02-08T18:44:48-03:00">
+    <meta property="article:modified_time" content="2025-02-08T18:44:48-03:00">
+    <meta property="article:tag" content="C">
+
+  
+  <meta itemprop="name" content="Free pointer of pointers">
+  <meta itemprop="description" content="Sólo tenés que pensar en liberar memoria cuando tenés un programa muy grande que pide un poco de memoria en un loop y eso acumula memoria con el tiempo, pero si tenés un programa batch (por lotes) que pide memoria (allocated memory), no hay necesidad de liberar esa memoria porque el sistema operativo lo hará por vos cuando el programa finalice. (Leer al final más info).
+No podes “liberar” un puntero de punteros. Tenés que liberar todo lo que fue creado con malloc.">
+  <meta itemprop="datePublished" content="2025-02-08T18:44:48-03:00">
+  <meta itemprop="dateModified" content="2025-02-08T18:44:48-03:00">
+  <meta itemprop="wordCount" content="250">
+  <meta itemprop="keywords" content="C">
+  
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Free pointer of pointers">
+  <meta name="twitter:description" content="Sólo tenés que pensar en liberar memoria cuando tenés un programa muy grande que pide un poco de memoria en un loop y eso acumula memoria con el tiempo, pero si tenés un programa batch (por lotes) que pide memoria (allocated memory), no hay necesidad de liberar esa memoria porque el sistema operativo lo hará por vos cuando el programa finalice. (Leer al final más info).
+No podes “liberar” un puntero de punteros. Tenés que liberar todo lo que fue creado con malloc.">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Free pointer of pointers
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/free_array_of_arrays/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="Sólo tenés que pensar en liberar memoria cuando tenés un programa muy grande que pide un poco de memoria en un loop y eso acumula memoria con el tiempo, pero si tenés un programa batch (por lotes) que pide memoria (allocated memory), no hay necesidad de liberar esa memoria porque el sistema operativo lo hará por vos cuando el programa finalice. (Leer al final más info).
+No podes &ldquo;liberar&rdquo; un puntero de punteros. Tenés que liberar todo lo que fue creado con malloc.">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Free pointer of pointers
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2025-02-08T18:44:48-03:00'>
+      February 08, 2025
+    </time>
+    
+    <br>
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/c/">C</a>
+    
+    
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <p>Sólo tenés que pensar en liberar memoria cuando tenés un programa muy grande que pide un poco de memoria en un loop y eso acumula memoria con el tiempo, pero si tenés un programa batch (por lotes) que pide memoria (allocated memory), no hay necesidad de liberar esa memoria porque el sistema operativo lo hará por vos cuando el programa finalice. (Leer al final más info).</p>
+<p>No podes &ldquo;liberar&rdquo; un puntero de punteros. <strong>Tenés que liberar todo lo que fue creado con malloc.</strong></p>
+<p>Si definiste así: <code>static char buffer[25]</code> esto no necesita ser liberado.</p>
+<h3 id="ejemplo">Ejemplo</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdlib.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;string.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;errno.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>(){
+</span></span><span style="display:flex;"><span>  FILE <span style="color:#f92672">*</span>f <span style="color:#f92672">=</span> <span style="color:#a6e22e">fopen</span>(<span style="color:#e6db74">&#34;/tmp/asdf&#34;</span>, <span style="color:#e6db74">&#34;r+&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> ( f <span style="color:#f92672">==</span> NULL ){
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;%s</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>,<span style="color:#a6e22e">strerror</span>(errno));
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>palabra <span style="color:#f92672">=</span> <span style="color:#a6e22e">malloc</span>(<span style="color:#ae81ff">30</span><span style="color:#f92672">*</span><span style="color:#66d9ef">sizeof</span>(<span style="color:#66d9ef">char</span>));
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">char</span> <span style="color:#f92672">**</span>texto <span style="color:#f92672">=</span> <span style="color:#a6e22e">malloc</span>(<span style="color:#66d9ef">sizeof</span>(<span style="color:#66d9ef">char</span><span style="color:#f92672">*</span>));
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">int</span> cantidad_palabras <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">while</span> ( <span style="color:#a6e22e">fscanf</span>(f, <span style="color:#e6db74">&#34;%30s&#34;</span>, palabra) <span style="color:#f92672">==</span> <span style="color:#ae81ff">1</span> ){
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">puts</span>(palabra);
+</span></span><span style="display:flex;"><span>    texto[cantidad_palabras] <span style="color:#f92672">=</span> <span style="color:#a6e22e">malloc</span>(<span style="color:#ae81ff">30</span><span style="color:#f92672">*</span><span style="color:#66d9ef">sizeof</span>(<span style="color:#66d9ef">char</span>));
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">strncpy</span>(texto[cantidad_palabras], palabra, <span style="color:#ae81ff">30</span>);
+</span></span><span style="display:flex;"><span>    cantidad_palabras<span style="color:#f92672">++</span>;
+</span></span><span style="display:flex;"><span>    texto <span style="color:#f92672">=</span> <span style="color:#a6e22e">realloc</span>(texto, (cantidad_palabras<span style="color:#f92672">+</span><span style="color:#ae81ff">1</span>)<span style="color:#f92672">*</span><span style="color:#66d9ef">sizeof</span>(<span style="color:#66d9ef">char</span><span style="color:#f92672">*</span>));
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;Palabras cargadas: </span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">int</span> i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> cantidad_palabras; i<span style="color:#f92672">++</span>){
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;%s</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>,texto[i]);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;Cantidad de palabras leídas: %d</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>,cantidad_palabras);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">free</span>(palabra);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">int</span> i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> cantidad_palabras; i<span style="color:#f92672">++</span>){
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">free</span>(texto[i]);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">free</span>(texto);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><a href="https://stackoverflow.com/questions/33170802/c-does-freeing-an-array-of-pointers-also-free-what-theyre-pointing-to">https://stackoverflow.com/questions/33170802/c-does-freeing-an-array-of-pointers-also-free-what-theyre-pointing-to</a></p>
+<p>Quizás como es un programa de lotes (batch program) podés alocarlo y no desalocar nada porque todo será &ldquo;desalocado&rdquo; (free) al final del programa de todas formas porque será desalocado por el sistema operativo cuando el programa terminó.  Los sistemas operativos modernos cerrarán todos los archivos que abriste y unmap todas las regiones de memoria en las que hiciste un map.</p>
+
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+</footer>
+
+
+</body>
+</html>

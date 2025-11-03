@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/como_desamblar_un_binario/">
+  <meta property="og:site_name" content="Imlauer">
+  <meta property="og:title" content="Reversing: Diferentes formas de desarmar un binario">
+  <meta property="og:description" content="objdump -drwC -Mintel -d p Podes fijar un alias en .bashrc o .config/fish/config.fish:
+disas=&#39;objdump -drwC -Mintel&#39; (-w is no line-wrapping, -c is demangle, -r prints relocations in object files.) Otras formas:
+llvm-objdump -drwC -Mintel ndisasm gdb -q ./a.out disassemble main disassemble /m main Agner Fog’s disassembler: objconv Para generar archivo ASM usando sintaxis intel: gcc p.c -c -S -masm=intel Otras alternativas: IDA, Ghidra, radare.">
+  <meta property="og:locale" content="es_es">
+  <meta property="og:type" content="article">
+    <meta property="article:published_time" content="2025-01-22T06:15:44-03:00">
+    <meta property="article:modified_time" content="2025-01-22T06:15:44-03:00">
+    <meta property="article:tag" content="Reversing">
+
+  
+  <meta itemprop="name" content="Reversing: Diferentes formas de desarmar un binario">
+  <meta itemprop="description" content="objdump -drwC -Mintel -d p Podes fijar un alias en .bashrc o .config/fish/config.fish:
+disas=&#39;objdump -drwC -Mintel&#39; (-w is no line-wrapping, -c is demangle, -r prints relocations in object files.) Otras formas:
+llvm-objdump -drwC -Mintel ndisasm gdb -q ./a.out disassemble main disassemble /m main Agner Fog’s disassembler: objconv Para generar archivo ASM usando sintaxis intel: gcc p.c -c -S -masm=intel Otras alternativas: IDA, Ghidra, radare.">
+  <meta itemprop="datePublished" content="2025-01-22T06:15:44-03:00">
+  <meta itemprop="dateModified" content="2025-01-22T06:15:44-03:00">
+  <meta itemprop="wordCount" content="64">
+  <meta itemprop="keywords" content="Reversing">
+  
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Reversing: Diferentes formas de desarmar un binario">
+  <meta name="twitter:description" content="objdump -drwC -Mintel -d p Podes fijar un alias en .bashrc o .config/fish/config.fish:
+disas=&#39;objdump -drwC -Mintel&#39; (-w is no line-wrapping, -c is demangle, -r prints relocations in object files.) Otras formas:
+llvm-objdump -drwC -Mintel ndisasm gdb -q ./a.out disassemble main disassemble /m main Agner Fog’s disassembler: objconv Para generar archivo ASM usando sintaxis intel: gcc p.c -c -S -masm=intel Otras alternativas: IDA, Ghidra, radare.">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Reversing: Diferentes formas de desarmar un binario
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/como_desamblar_un_binario/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="objdump -drwC -Mintel -d p
+Podes fijar un alias en .bashrc o .config/fish/config.fish:
+disas=&#39;objdump -drwC -Mintel&#39; (-w is no line-wrapping, -c is demangle, -r prints relocations in object files.)
+Otras formas:
+
+llvm-objdump -drwC -Mintel
+ndisasm
+
+
+gdb -q ./a.out
+
+disassemble main
+disassemble /m main
+Agner Fog&rsquo;s disassembler: objconv
+Para generar archivo ASM usando sintaxis intel: gcc p.c -c -S -masm=intel
+Otras alternativas: IDA, Ghidra, radare.">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Reversing: Diferentes formas de desarmar un binario
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2025-01-22T06:15:44-03:00'>
+      January 22, 2025
+    </time>
+    
+    <br>
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/reversing/">Reversing</a>
+    
+    
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>objdump -drwC -Mintel -d p
+</span></span></code></pre></div><p>Podes fijar un alias en <code>.bashrc</code> o <code>.config/fish/config.fish</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>disas<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;objdump -drwC -Mintel&#39;</span> <span style="color:#f92672">(</span>-w is no line-wrapping, -c is demangle, -r prints relocations in object files.<span style="color:#f92672">)</span>
+</span></span></code></pre></div><p>Otras formas:</p>
+<ol>
+<li><code>llvm-objdump -drwC -Mintel</code></li>
+<li><code>ndisasm</code></li>
+<li></li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>gdb -q ./a.out
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>disassemble main
+</span></span><span style="display:flex;"><span>disassemble /m main
+</span></span></code></pre></div><h5 id="agner-fogs-disassembler-objconv">Agner Fog&rsquo;s disassembler: objconv</h5>
+<h3 id="para-generar-archivo-asm-usando-sintaxis-intel-gcc-pc--c--s--masmintel">Para generar archivo ASM usando sintaxis intel: <code>gcc p.c -c -S -masm=intel</code></h3>
+<p>Otras alternativas: IDA, Ghidra, radare.</p>
+
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+</footer>
+
+
+</body>
+</html>

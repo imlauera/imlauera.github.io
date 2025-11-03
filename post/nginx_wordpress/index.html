@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/post/nginx_wordpress/">
+  <meta property="og:site_name" content="Imlauer">
+  <meta property="og:title" content="Nginx_wordpress">
+  <meta property="og:description" content="https://www.youtube.com/watch?v=Wv3uogmRFBU
+sudo apt install -y ngnix systemctl status ngnix La instalación de la base de datos es todo lo mismo que explicamos en el antiguo tutorial
+sudo apt install -y mysql-server (no se usa más ahora se usa mariadb salvo que tengas una aplicación con una base de datos que usaba mysql ahi vas a tener que usar docker) sudo mysql -u root CREATE DATABASE wordpress_db; CREATE USER &#39;zack&#39;@&#39;localhost&#39; IDENTIFIED BY &#39;password&#39;; GRANT ALL PRIVILEGES ON wordpress_db.* TO &#39;sam&#39;@&#39;localhost&#39;; FLUSH PRIVILEGES; EXIT; sudo apt install -y php8.1 php8.1-cli php8.1-fpm php8.1-mysql # es importante fpm porque es el socket de comunicacion ls /var/run/php Ahí encontraremos un archivo php8.1-fpm.sock que es usado para la comunicación entre php y el servidor web.">
+  <meta property="og:locale" content="es_es">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="post">
+    <meta property="article:published_time" content="2024-09-22T18:04:38-03:00">
+    <meta property="article:modified_time" content="2024-09-22T18:04:38-03:00">
+    <meta property="article:tag" content="Nginx">
+
+  
+  <meta itemprop="name" content="Nginx_wordpress">
+  <meta itemprop="description" content="https://www.youtube.com/watch?v=Wv3uogmRFBU
+sudo apt install -y ngnix systemctl status ngnix La instalación de la base de datos es todo lo mismo que explicamos en el antiguo tutorial
+sudo apt install -y mysql-server (no se usa más ahora se usa mariadb salvo que tengas una aplicación con una base de datos que usaba mysql ahi vas a tener que usar docker) sudo mysql -u root CREATE DATABASE wordpress_db; CREATE USER &#39;zack&#39;@&#39;localhost&#39; IDENTIFIED BY &#39;password&#39;; GRANT ALL PRIVILEGES ON wordpress_db.* TO &#39;sam&#39;@&#39;localhost&#39;; FLUSH PRIVILEGES; EXIT; sudo apt install -y php8.1 php8.1-cli php8.1-fpm php8.1-mysql # es importante fpm porque es el socket de comunicacion ls /var/run/php Ahí encontraremos un archivo php8.1-fpm.sock que es usado para la comunicación entre php y el servidor web.">
+  <meta itemprop="datePublished" content="2024-09-22T18:04:38-03:00">
+  <meta itemprop="dateModified" content="2024-09-22T18:04:38-03:00">
+  <meta itemprop="wordCount" content="298">
+  <meta itemprop="keywords" content="Nginx">
+  
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Nginx_wordpress">
+  <meta name="twitter:description" content="https://www.youtube.com/watch?v=Wv3uogmRFBU
+sudo apt install -y ngnix systemctl status ngnix La instalación de la base de datos es todo lo mismo que explicamos en el antiguo tutorial
+sudo apt install -y mysql-server (no se usa más ahora se usa mariadb salvo que tengas una aplicación con una base de datos que usaba mysql ahi vas a tener que usar docker) sudo mysql -u root CREATE DATABASE wordpress_db; CREATE USER &#39;zack&#39;@&#39;localhost&#39; IDENTIFIED BY &#39;password&#39;; GRANT ALL PRIVILEGES ON wordpress_db.* TO &#39;sam&#39;@&#39;localhost&#39;; FLUSH PRIVILEGES; EXIT; sudo apt install -y php8.1 php8.1-cli php8.1-fpm php8.1-mysql # es importante fpm porque es el socket de comunicacion ls /var/run/php Ahí encontraremos un archivo php8.1-fpm.sock que es usado para la comunicación entre php y el servidor web.">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Nginx_wordpress
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/post/nginx_wordpress/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="https://www.youtube.com/watch?v=Wv3uogmRFBU
+sudo apt install -y ngnix
+systemctl status ngnix
+La instalación de la base de datos es todo lo mismo que explicamos en el antiguo tutorial
+sudo apt install -y mysql-server (no se usa más ahora se usa mariadb salvo que tengas una aplicación con una base de datos que usaba mysql ahi vas a tener que usar docker)
+sudo mysql -u root
+CREATE DATABASE wordpress_db;
+CREATE USER &#39;zack&#39;@&#39;localhost&#39; IDENTIFIED BY &#39;password&#39;;
+GRANT ALL PRIVILEGES ON wordpress_db.* TO &#39;sam&#39;@&#39;localhost&#39;;
+FLUSH PRIVILEGES;
+EXIT;
+sudo apt install -y php8.1 php8.1-cli php8.1-fpm php8.1-mysql # es importante fpm porque es el socket de comunicacion
+ls /var/run/php
+Ahí encontraremos un archivo php8.1-fpm.sock que es usado para la comunicación entre php y el servidor web.">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Nginx_wordpress
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2024-09-22T18:04:38-03:00'>
+      September 22, 2024
+    </time>
+    
+    <br>
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/nginx/">Nginx</a>
+    
+    
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <p><a href="https://www.youtube.com/watch?v=Wv3uogmRFBU">https://www.youtube.com/watch?v=Wv3uogmRFBU</a></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo apt install -y ngnix
+</span></span><span style="display:flex;"><span>systemctl status ngnix
+</span></span></code></pre></div><p>La instalación de la base de datos es todo lo mismo que explicamos en el antiguo tutorial</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo apt install -y mysql-server <span style="color:#f92672">(</span>no se usa más ahora se usa mariadb salvo que tengas una aplicación con una base de datos que usaba mysql ahi vas a tener que usar docker<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>sudo mysql -u root
+</span></span><span style="display:flex;"><span>CREATE DATABASE wordpress_db;
+</span></span><span style="display:flex;"><span>CREATE USER <span style="color:#e6db74">&#39;zack&#39;</span>@<span style="color:#e6db74">&#39;localhost&#39;</span> IDENTIFIED BY <span style="color:#e6db74">&#39;password&#39;</span>;
+</span></span><span style="display:flex;"><span>GRANT ALL PRIVILEGES ON wordpress_db.* TO <span style="color:#e6db74">&#39;sam&#39;</span>@<span style="color:#e6db74">&#39;localhost&#39;</span>;
+</span></span><span style="display:flex;"><span>FLUSH PRIVILEGES;
+</span></span><span style="display:flex;"><span>EXIT;
+</span></span><span style="display:flex;"><span>sudo apt install -y php8.1 php8.1-cli php8.1-fpm php8.1-mysql <span style="color:#75715e"># es importante fpm porque es el socket de comunicacion</span>
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ls /var/run/php
+</span></span></code></pre></div><p>Ahí encontraremos un archivo <code>php8.1-fpm.sock</code> que es usado para la comunicación entre php y el servidor web.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>wget https://wordpress.org/latest.zip
+</span></span><span style="display:flex;"><span>sudo apt install -y unzip
+</span></span><span style="display:flex;"><span>unzip latest.zip
+</span></span><span style="display:flex;"><span>sudo mv wordpress/* /var/www/html
+</span></span><span style="display:flex;"><span>rm -rf wordpress
+</span></span><span style="display:flex;"><span>sudo chown -R www-data:www-data /var/www/html/*
+</span></span><span style="display:flex;"><span>cd /var/www/html
+</span></span><span style="display:flex;"><span>sudo rm index.html index.nginx-debian.html
+</span></span><span style="display:flex;"><span>sudo mv wp-config-sample.php wp-config.php
+</span></span><span style="display:flex;"><span>sudo vim wp-config.php
+</span></span></code></pre></div><p>Adaptá ahí dentro a los datos de tu base de datos <code>DB_NAME</code>, <code>DB_USER</code>, <code>DB_PASSWORD</code>, <code>DB_HOST</code>.</p>
+<p>Si no existe ese archivo wordpress creará un archivo de configuración para vos tenés que copiar el que te dá en el proceso de instalación y ponerlo ahí.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo vim /etc/nginx/sites-available/default
+</span></span></code></pre></div><p>Borrá todo con rm</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo rm /etc/nginx/sites-enabled/default
+</span></span></code></pre></div><p>Y copiá lo siguiente:</p>
+<p><a href="https://zacs-tech.com/how-to-install-and-configure-wordpress-in-ubuntu-24-04/">https://zacs-tech.com/how-to-install-and-configure-wordpress-in-ubuntu-24-04/</a></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>server <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span> listen 80;
+</span></span><span style="display:flex;"><span> server_name your_domain.com www.your_domain.com;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span> root /var/www/html/;
+</span></span><span style="display:flex;"><span> index index.php;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span> location / <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>   try_files $uri $uri/ /index.php?$args;
+</span></span><span style="display:flex;"><span> <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span> location ~ <span style="color:#ae81ff">\.</span>php$ <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>   include snippets/fastcgi-php.conf;
+</span></span><span style="display:flex;"><span>   <span style="color:#75715e"># Acá va el archivo sock que está en /var/run/php</span>
+</span></span><span style="display:flex;"><span>   fastcgi_pass unix:/var/run/php/php8.1-fpm.sock;
+</span></span><span style="display:flex;"><span> <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span> location ~ /<span style="color:#ae81ff">\.</span>ht <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>   deny all;
+</span></span><span style="display:flex;"><span> <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo nginx -t
+</span></span><span style="display:flex;"><span>sudo rm /etc/nginx/sites-enabled/default
+</span></span><span style="display:flex;"><span>sudo ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/
+</span></span><span style="display:flex;"><span>sudo systemctl restart nginx.service
+</span></span></code></pre></div><p>Ahora ingresá a localhost y hacé la instalación hasta que te dé la configuración del archivo <code>wp-config.php</code> que lo tenés que crear en <code>/var/www/html</code> (explicado anteriormente)</p>
+
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+</footer>
+
+
+</body>
+</html>

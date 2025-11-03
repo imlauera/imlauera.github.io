@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/post/arduino_faniot_led_firebase/">
+  <meta property="og:site_name" content="Imlauer">
+  <meta property="og:title" content="Manejando casa remotamente a través de internet con Arduino FanIOT y firebase">
+  <meta property="og:description" content="Hace 2 años creé una aplicación en ReactJS con Firebase y leía esos campos de FireBase desde un ESP32 así podía prender y apagar luces remotamente, leer sensores.
+Aplicación de ReactJS sudo apt remove cmdtest sudo npm install -g yarn unzip reactjs_ESP32logger-main.zip cd reactjs_ESP32logger-main rm -rf node_modules rm -rf yarn.lock yarn add caniuse-lite@1.0.30001632 ### Agregá en package.json &#34;resolutions&#34;: { &#34;caniuse-lite&#34;: &#34;1.0.30001632&#34; }, ### Borrá todos los babels de yarn.lock The solution was to manually delete all @babel/* entries from yarn.lock and running: yarn cache clean &amp;&amp; yarn install &amp;&amp; yarn dedupe to let Yarn regenerate those with the latest applicable version and hopefully compatible manner. This helped the parsing issue, but a new issue that&#39;s mentioned by OP popped up. yarn install yarn build export NODE_OPTIONS=--openssl-legacy-provider yarn start Para arreglar el problema de 404: https://stackoverflow.com/questions/45412014/how-do-i-set-the-start-url-of-a-manifest-json-to-be-the-root-of-the-site">
+  <meta property="og:locale" content="es_es">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="post">
+    <meta property="article:published_time" content="2024-10-18T07:56:44-03:00">
+    <meta property="article:modified_time" content="2024-10-18T07:56:44-03:00">
+    <meta property="article:tag" content="Esp32">
+
+  
+  <meta itemprop="name" content="Manejando casa remotamente a través de internet con Arduino FanIOT y firebase">
+  <meta itemprop="description" content="Hace 2 años creé una aplicación en ReactJS con Firebase y leía esos campos de FireBase desde un ESP32 así podía prender y apagar luces remotamente, leer sensores.
+Aplicación de ReactJS sudo apt remove cmdtest sudo npm install -g yarn unzip reactjs_ESP32logger-main.zip cd reactjs_ESP32logger-main rm -rf node_modules rm -rf yarn.lock yarn add caniuse-lite@1.0.30001632 ### Agregá en package.json &#34;resolutions&#34;: { &#34;caniuse-lite&#34;: &#34;1.0.30001632&#34; }, ### Borrá todos los babels de yarn.lock The solution was to manually delete all @babel/* entries from yarn.lock and running: yarn cache clean &amp;&amp; yarn install &amp;&amp; yarn dedupe to let Yarn regenerate those with the latest applicable version and hopefully compatible manner. This helped the parsing issue, but a new issue that&#39;s mentioned by OP popped up. yarn install yarn build export NODE_OPTIONS=--openssl-legacy-provider yarn start Para arreglar el problema de 404: https://stackoverflow.com/questions/45412014/how-do-i-set-the-start-url-of-a-manifest-json-to-be-the-root-of-the-site">
+  <meta itemprop="datePublished" content="2024-10-18T07:56:44-03:00">
+  <meta itemprop="dateModified" content="2024-10-18T07:56:44-03:00">
+  <meta itemprop="wordCount" content="2345">
+  <meta itemprop="keywords" content="Esp32">
+  
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Manejando casa remotamente a través de internet con Arduino FanIOT y firebase">
+  <meta name="twitter:description" content="Hace 2 años creé una aplicación en ReactJS con Firebase y leía esos campos de FireBase desde un ESP32 así podía prender y apagar luces remotamente, leer sensores.
+Aplicación de ReactJS sudo apt remove cmdtest sudo npm install -g yarn unzip reactjs_ESP32logger-main.zip cd reactjs_ESP32logger-main rm -rf node_modules rm -rf yarn.lock yarn add caniuse-lite@1.0.30001632 ### Agregá en package.json &#34;resolutions&#34;: { &#34;caniuse-lite&#34;: &#34;1.0.30001632&#34; }, ### Borrá todos los babels de yarn.lock The solution was to manually delete all @babel/* entries from yarn.lock and running: yarn cache clean &amp;&amp; yarn install &amp;&amp; yarn dedupe to let Yarn regenerate those with the latest applicable version and hopefully compatible manner. This helped the parsing issue, but a new issue that&#39;s mentioned by OP popped up. yarn install yarn build export NODE_OPTIONS=--openssl-legacy-provider yarn start Para arreglar el problema de 404: https://stackoverflow.com/questions/45412014/how-do-i-set-the-start-url-of-a-manifest-json-to-be-the-root-of-the-site">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Manejando casa remotamente a través de internet con Arduino FanIOT y firebase
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/post/arduino_faniot_led_firebase/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="Hace 2 años creé una aplicación en ReactJS con Firebase y leía esos campos de FireBase desde un ESP32 así podía prender y apagar luces remotamente, leer sensores.
+Aplicación de ReactJS
+sudo apt remove cmdtest
+sudo npm install -g yarn
+unzip reactjs_ESP32logger-main.zip
+cd reactjs_ESP32logger-main
+rm -rf node_modules
+rm -rf yarn.lock
+yarn add caniuse-lite@1.0.30001632
+### Agregá en package.json
+&#34;resolutions&#34;: {
+  &#34;caniuse-lite&#34;: &#34;1.0.30001632&#34;
+},
+### Borrá todos los babels de yarn.lock
+The solution was to manually delete all @babel/* entries from yarn.lock and running:
+
+yarn cache clean &amp;&amp; yarn install &amp;&amp; yarn dedupe
+
+to let Yarn regenerate those with the latest applicable version and hopefully compatible manner. This helped the parsing issue, but a new issue that&#39;s mentioned by OP popped up.
+
+yarn install
+yarn build
+export NODE_OPTIONS=--openssl-legacy-provider
+yarn start
+Para arreglar el problema de 404:
+https://stackoverflow.com/questions/45412014/how-do-i-set-the-start-url-of-a-manifest-json-to-be-the-root-of-the-site">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Manejando casa remotamente a través de internet con Arduino FanIOT y firebase
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2024-10-18T07:56:44-03:00'>
+      October 18, 2024
+    </time>
+    
+    <br>
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/esp32/">Esp32</a>
+    
+    
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <p>Hace 2 años creé una aplicación en ReactJS con Firebase y leía esos campos de FireBase desde un ESP32 así podía prender y apagar luces remotamente, leer sensores.</p>
+<h4 id="aplicación-de-reactjs"><a href="/files/reactjs_ESP32logger-main.zip">Aplicación de ReactJS</a></h4>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo apt remove cmdtest
+</span></span><span style="display:flex;"><span>sudo npm install -g yarn
+</span></span><span style="display:flex;"><span>unzip reactjs_ESP32logger-main.zip
+</span></span><span style="display:flex;"><span>cd reactjs_ESP32logger-main
+</span></span><span style="display:flex;"><span>rm -rf node_modules
+</span></span><span style="display:flex;"><span>rm -rf yarn.lock
+</span></span><span style="display:flex;"><span>yarn add caniuse-lite@1.0.30001632
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### Agregá en package.json</span>
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;resolutions&#34;</span>: <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;caniuse-lite&#34;</span>: <span style="color:#e6db74">&#34;1.0.30001632&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>,
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### Borrá todos los babels de yarn.lock</span>
+</span></span><span style="display:flex;"><span>The solution was to manually delete all @babel/* entries from yarn.lock and running:
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>yarn cache clean <span style="color:#f92672">&amp;&amp;</span> yarn install <span style="color:#f92672">&amp;&amp;</span> yarn dedupe
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>to let Yarn regenerate those with the latest applicable version and hopefully compatible manner. This helped the parsing issue, but a new issue that<span style="color:#960050;background-color:#1e0010">&#39;</span>s mentioned by OP popped up.
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>yarn install
+</span></span><span style="display:flex;"><span>yarn build
+</span></span><span style="display:flex;"><span>export NODE_OPTIONS<span style="color:#f92672">=</span>--openssl-legacy-provider
+</span></span><span style="display:flex;"><span>yarn start
+</span></span></code></pre></div><h5 id="para-arreglar-el-problema-de-404">Para arreglar el problema de 404:</h5>
+<p><a href="https://stackoverflow.com/questions/45412014/how-do-i-set-the-start-url-of-a-manifest-json-to-be-the-root-of-the-site">https://stackoverflow.com/questions/45412014/how-do-i-set-the-start-url-of-a-manifest-json-to-be-the-root-of-the-site</a></p>
+<p><a href="https://stackoverflow.com/questions/78856773/requires-babel-7-16-0-but-was-loaded-with-7-12-3">https://stackoverflow.com/questions/78856773/requires-babel-7-16-0-but-was-loaded-with-7-12-3</a></p>
+<h3 id="código-que-usé-en-el-arduino-o-faniot">Código que usé en el Arduino o FanIOT.</h3>
+<p>Para este código usé librerías que ahora las voy a escribir.</p>
+<p>Como crear el usuario firebase y obtener la <code>API_KEY</code>: <a href="https://www.youtube.com/watch?v=cm-Qe2HMJGk">https://www.youtube.com/watch?v=cm-Qe2HMJGk</a></p>
+<h4 id="temp-logger">Temp Logger</h4>
+<p>WifiManager -&gt; acceder Wifi usando AP temporal para no hardcodear credenciales.
+Abrir servidor web en Arduino (crear)</p>
+<ul>
+<li>Crear página web para loggear y registrar cuentas en el servidor de Arduino usando Firebase.</li>
+<li>Pasar el token de login a Arduino.</li>
+<li>Usar mDNS para no utilizar IP dinámica.</li>
+<li>Guardar en la EEPROM su identificación de FireBase (opcional).</li>
+<li>Usar SNIFFS para servir archivos HTML y un servidor asíncrono para parsear argumento tipo GET y POST.</li>
+<li>Instalar Firebase client esp32.</li>
+<li>Guardar datos de humedad en el respectivo usuario logueado.</li>
+</ul>
+<h5 id="bibliotecas-usadas">Bibliotecas usadas:</h5>
+<ul>
+<li>WifiManager</li>
+<li>ESPmDNS</li>
+<li>AsyncWebServerESP32</li>
+<li>SNIFFS</li>
+<li>FirebaseESP32</li>
+<li>AsyncTCP</li>
+<li>ArduinoJson</li>
+<li>ds18b20 (dallas temp.)</li>
+<li>OneWire (Max 31850)</li>
+<li>Adafruit ssd1306</li>
+<li>adafruit GFX</li>
+</ul>
+<p>Probablemente no necesito usar todas esas librerías pero eso es lo que usé.</p>
+<p><strong>Todo este código lo cargás en el ESP32 o FanIOT y levantará un servidor web en donde tendrás que ingresar el mismo usuario que ingresás en la app de reactjs, y ahí podrás leer los datos, aparte es mejor que cambies la base de datos de firebase por una tuya</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;WiFiManager.h&gt; // https://github.com/tzapu/WiFiManager</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// A simple server implementation showing how to:
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">//  * serve static messages
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">//  * read GET and POST parameters
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">//  * handle missing pages / 404s
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;Arduino.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;ArduinoJson.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;OneWire.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;DallasTemperature.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;AsyncTCP.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;ESPAsyncWebServer.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;Wire.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;Adafruit_GFX.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;Adafruit_SSD1306.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;Firebase_ESP_Client.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&#34;time.h&#34;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;FastLED.h&gt;//https://github.com/FastLED/FastLED</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#define LED_PIN  27
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define NUM_LEDS 4
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define BRIGHTNESS 75
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define LED_TYPE WS2812B
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define COLOR_ORDER GRB</span><span style="color:#75715e">//RGB
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>CRGB leds[NUM_LEDS];
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#define SCREEN_WIDTH 128 </span><span style="color:#75715e">// OLED display width, in pixels
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e">#define SCREEN_HEIGHT 32 </span><span style="color:#75715e">// OLED display height, in pixels
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>Adafruit_SSD1306 <span style="color:#a6e22e">display</span>(SCREEN_WIDTH, SCREEN_HEIGHT, <span style="color:#f92672">&amp;</span>Wire, <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#define Pagina_Login R&#34;====(&lt;meta content=&#34;width=device-width,initial-scale=1&#34;name=viewport&gt;&lt;style&gt;body{font-family:Arial,Helvetica,sans-serif}form{border:3px solid #f1f1f1}input[type=password],input[type=text]{width:100%;padding:12px 20px;margin:8px 0;display:inline-block;border:1px solid #ccc;box-sizing:border-box}button{background-color:#04AA6D;color:#fff;padding:14px 20px;margin:8px 0;border:none;cursor:pointer;width:100%}button:hover{opacity:.8}.cancelbtn{width:auto;padding:10px 18px;background-color:#f44336}.imgcontainer{text-align:center;margin:24px 0 12px 0}img.avatar{width:40%;border-radius:50%}.container{padding:16px}span.psw{float:right;padding-top:16px}@media screen and (max-width:300px){span.psw{display:block;float:none}.cancelbtn{width:100%}}&lt;/style&gt;&lt;h2&gt;Login Form&lt;/h2&gt;&lt;form action=/_login&gt;&lt;div class=container&gt;&lt;label for=uname&gt;&lt;b&gt;Username&lt;/b&gt;&lt;/label&gt;&lt;input name=uname placeholder=&#34;Enter Username&#34;required&gt;&lt;label for=psw&gt;&lt;b&gt;Password&lt;/b&gt;&lt;/label&gt;&lt;input name=psw placeholder=&#34;Enter Password&#34;required type=password&gt; &lt;button type=submit&gt;Login&lt;/button&gt;&lt;label&gt;&lt;input name=remember type=checkbox checked&gt; Remember me&lt;/label&gt;&lt;/div&gt;&lt;div class=container style=background-color:#f1f1f1&gt;&lt;button type=button class=cancelbtn&gt;Cancel&lt;/button&gt; &lt;span class=psw&gt;Forgot &lt;a href=#&gt;password?&lt;/a&gt;&lt;/span&gt;&lt;/div&gt;&lt;/form&gt;)====&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>Pagina <span style="color:#f92672">=</span> R<span style="color:#e6db74">&#34;====(&lt;title&gt;Panel&lt;/title&gt;&lt;meta charset=utf-8&gt;&lt;meta name=viewport content=&#34;</span>width<span style="color:#f92672">=</span>device<span style="color:#f92672">-</span>width,initial<span style="color:#f92672">-</span>scale<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span><span style="color:#e6db74">&#34;&gt;&lt;style&gt;body{font-family:monospace}.cards{margin:auto;max-width:800px;display:flex;flex-wrap:wrap;align-items:center}.card{flex:1 0 200px;text-align:center}.card .text{padding:0 20px 20px}.title{text-align:center}.hide{display:none}.green{background:green}.red{background:red}@-webkit-keyframes spin{0%{-webkit-transform:rotate(0)}100%{-webkit-transform:rotate(360deg)}}@keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}.alert{padding:20px;background-color:#f44336;color:#fff;opacity:1;transition:opacity .6s;margin-bottom:15px}.alert.success{background-color:#04aa6d}.alert.info{background-color:#2196f3}.alert.warning{background-color:#ff9800}.closebtn{margin-left:15px;color:#fff;font-weight:700;float:right;font-size:22px;line-height:20px;cursor:pointer;transition:.3s}.center{text-align:center;max-width:900px}.closebtn:hover{color:#000}&lt;/style&gt;&lt;div id=loading style=height:100%;width:99%;position:absolute;background-color:#fff;text-align:center&gt;&lt;h3 class=loader&gt;Cargando...&lt;/h3&gt;&lt;/div&gt;&lt;div id=alerts style=position:fixed;text-align:center&gt;&lt;/div&gt;&lt;h3 class=title&gt;Panel&lt;/h3&gt;&lt;hr&gt;&lt;span class=center&gt;&lt;p&gt;&lt;b&gt;Guardando cada 3 minutos valores de los sensores en el usuario: &lt;/b&gt;&lt;span id=user&gt;&lt;/span&gt;&lt;p&gt;Reloj Arduino (&lt;a href=https://www.worlddata.info/timezones/gmt-greenwich-mean-time.php&gt;GMT&lt;/a&gt;): &lt;span id=localtime&gt;&lt;/span&gt;&lt;p id=refreshing&gt;&lt;/span&gt;&lt;main class=&#34;</span>cards hide<span style="color:#e6db74">&#34; id=inicio&gt;&lt;article class=card&gt;&lt;div class=text&gt;&lt;h5&gt;Sensor Temperatura&lt;/h5&gt;&lt;span id=celsius&gt;&lt;/span&gt;&lt;br&gt;&lt;span id=fahrenheit&gt;&lt;/span&gt;&lt;/div&gt;&lt;/article&gt;&lt;article class=card&gt;&lt;div class=text&gt;&lt;h5&gt;Sensor LDR&lt;/h5&gt;Intensidad de Luz: &lt;span id=ldr&gt;&lt;/span&gt;&lt;/div&gt;&lt;/article&gt;&lt;article class=card&gt;&lt;div class=text&gt;&lt;h5&gt;Sensor TILT&lt;/h5&gt;&lt;span id=tilt&gt;&lt;/span&gt;&lt;/div&gt;&lt;/article&gt;&lt;article class=card&gt;&lt;div class=text&gt;&lt;h5&gt;Buzzer&lt;/h5&gt;&lt;button class=green onclick=enviar_sonido()&gt;Enviar Sonido&lt;/button&gt;&lt;/div&gt;&lt;/article&gt;&lt;article class=card&gt;&lt;div class=text&gt;&lt;h5&gt;LED 1&lt;/h5&gt;&lt;button class=green onclick=&#34;</span><span style="color:#a6e22e">accion_led</span>(<span style="color:#ae81ff">1</span>,<span style="color:#960050;background-color:#1e0010">&#39;</span>encender<span style="color:#960050;background-color:#1e0010">&#39;</span>)<span style="color:#e6db74">&#34;&gt;Encender&lt;/button&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;</span>button class<span style="color:#f92672">=</span>red onclick<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;accion_led(1,&#39;apagar&#39;)&#34;</span> value<span style="color:#f92672">=</span>Apagar<span style="color:#f92672">&gt;</span>Apagar<span style="color:#f92672">&lt;/</span>button<span style="color:#f92672">&gt;&lt;/</span>div<span style="color:#f92672">&gt;&lt;/</span>article<span style="color:#f92672">&gt;&lt;</span>article class<span style="color:#f92672">=</span>card<span style="color:#f92672">&gt;&lt;</span>div class<span style="color:#f92672">=</span>text<span style="color:#f92672">&gt;&lt;</span>h5<span style="color:#f92672">&gt;</span>LED <span style="color:#ae81ff">2</span><span style="color:#f92672">&lt;/</span>h5<span style="color:#f92672">&gt;&lt;</span>button class<span style="color:#f92672">=</span>green onclick<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;accion_led(2,&#39;encender&#39;)&#34;</span><span style="color:#f92672">&gt;</span>Encender<span style="color:#f92672">&lt;/</span>button<span style="color:#f92672">&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;</span>button class<span style="color:#f92672">=</span>red onclick<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;accion_led(2,&#39;apagar&#39;)&#34;</span> value<span style="color:#f92672">=</span>Apagar<span style="color:#f92672">&gt;</span>Apagar<span style="color:#f92672">&lt;/</span>button<span style="color:#f92672">&gt;&lt;/</span>div<span style="color:#f92672">&gt;&lt;/</span>article<span style="color:#f92672">&gt;&lt;</span>article class<span style="color:#f92672">=</span>card<span style="color:#f92672">&gt;&lt;</span>div class<span style="color:#f92672">=</span>text<span style="color:#f92672">&gt;&lt;</span>h5<span style="color:#f92672">&gt;</span>LED <span style="color:#ae81ff">3</span><span style="color:#f92672">&lt;/</span>h5<span style="color:#f92672">&gt;&lt;</span>button class<span style="color:#f92672">=</span>green onclick<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;accion_led(3,&#39;encender&#39;)&#34;</span><span style="color:#f92672">&gt;</span>Encender<span style="color:#f92672">&lt;/</span>button<span style="color:#f92672">&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;</span>button class<span style="color:#f92672">=</span>red onclick<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;accion_led(3,&#39;apagar&#39;)&#34;</span> value<span style="color:#f92672">=</span>Apagar<span style="color:#f92672">&gt;</span>Apagar<span style="color:#f92672">&lt;/</span>button<span style="color:#f92672">&gt;&lt;/</span>div<span style="color:#f92672">&gt;&lt;/</span>article<span style="color:#f92672">&gt;&lt;</span>article class<span style="color:#f92672">=</span>card<span style="color:#f92672">&gt;&lt;</span>div class<span style="color:#f92672">=</span>text<span style="color:#f92672">&gt;&lt;</span>h5<span style="color:#f92672">&gt;</span>LEDs Inteligentes WS2812b<span style="color:#f92672">&lt;/</span>h5<span style="color:#f92672">&gt;&lt;</span>button class<span style="color:#f92672">=</span>green onclick<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;accion_led(4,&#39;encender&#39;)&#34;</span><span style="color:#f92672">&gt;</span>Encender<span style="color:#f92672">&lt;/</span>button<span style="color:#f92672">&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;</span>button class<span style="color:#f92672">=</span>red onclick<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;accion_led(4,&#39;apagar&#39;)&#34;</span><span style="color:#f92672">&gt;</span>Apagar<span style="color:#f92672">&lt;/</span>button<span style="color:#f92672">&gt;&lt;/</span>div<span style="color:#f92672">&gt;&lt;/</span>article<span style="color:#f92672">&gt;&lt;</span>article class<span style="color:#f92672">=</span>card<span style="color:#f92672">&gt;&lt;</span>div class<span style="color:#f92672">=</span>text<span style="color:#f92672">&gt;&lt;</span>h5<span style="color:#f92672">&gt;</span>OLED <span style="color:#ae81ff">128</span>X32<span style="color:#f92672">&lt;/</span>h5<span style="color:#f92672">&gt;&lt;</span>form onsubmit<span style="color:#f92672">=</span><span style="color:#a6e22e">send_oled_message</span>(event)<span style="color:#f92672">&gt;</span>Ingresa el Mensaje: <span style="color:#f92672">&lt;</span>input name<span style="color:#f92672">=</span>oled id<span style="color:#f92672">=</span>oled<span style="color:#f92672">&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;</span>input class<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;button green&#34;</span> type<span style="color:#f92672">=</span>submit value<span style="color:#f92672">=</span>Enviar<span style="color:#f92672">&gt;&lt;/</span>form<span style="color:#f92672">&gt;&lt;/</span>div<span style="color:#f92672">&gt;&lt;/</span>article<span style="color:#f92672">&gt;&lt;/</span>main<span style="color:#f92672">&gt;&lt;</span>script<span style="color:#f92672">&gt;</span><span style="color:#a6e22e">getdata</span>();function <span style="color:#a6e22e">countdown</span>(remaining){<span style="color:#66d9ef">if</span>(remaining<span style="color:#f92672">&lt;=</span><span style="color:#ae81ff">0</span>){<span style="color:#a6e22e">getdata</span>();remaining<span style="color:#f92672">=</span><span style="color:#ae81ff">5</span>;}
+</span></span><span style="display:flex;"><span>document.<span style="color:#a6e22e">getElementById</span>(<span style="color:#960050;background-color:#1e0010">&#39;</span>refreshing<span style="color:#960050;background-color:#1e0010">&#39;</span>).innerText<span style="color:#f92672">=</span><span style="color:#960050;background-color:#1e0010">&#39;</span>Auto refresco en... <span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">+</span>remaining;<span style="color:#a6e22e">setTimeout</span>(<span style="color:#a6e22e">function</span>(){<span style="color:#a6e22e">countdown</span>(remaining<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>);},<span style="color:#ae81ff">1000</span>);}
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">countdown</span>(<span style="color:#ae81ff">5</span>)
+</span></span><span style="display:flex;"><span>function <span style="color:#a6e22e">close_alert</span>(element){document.<span style="color:#a6e22e">getElementById</span>(<span style="color:#960050;background-color:#1e0010">&#39;</span>alerts<span style="color:#960050;background-color:#1e0010">&#39;</span>).innerHTML<span style="color:#f92672">=</span><span style="color:#960050;background-color:#1e0010">&#39;&#39;</span>}
+</span></span><span style="display:flex;"><span>async function <span style="color:#a6e22e">accion_led</span>(led,accion){async function <span style="color:#a6e22e">enviar_peticion</span>(){var response;<span style="color:#66d9ef">if</span>(accion<span style="color:#f92672">==</span><span style="color:#e6db74">&#34;encender&#34;</span>){document.<span style="color:#a6e22e">getElementById</span>(<span style="color:#960050;background-color:#1e0010">&#39;</span>alerts<span style="color:#960050;background-color:#1e0010">&#39;</span>).innerHTML<span style="color:#f92672">+=</span><span style="color:#e6db74">&#34;&lt;div class=</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">alert info</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">&gt; &lt;span class=</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">closebtn</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74"> onclick=</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">close_alert()</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">&gt;&amp;times;&lt;/span&gt;  &lt;strong&gt;Info!&lt;/strong&gt; Encendiendo el led: &#34;</span><span style="color:#f92672">+</span>led<span style="color:#f92672">+</span><span style="color:#e6db74">&#34;&lt;/div&gt;&#34;</span>
+</span></span><span style="display:flex;"><span>response<span style="color:#f92672">=</span>await <span style="color:#a6e22e">fetch</span>(<span style="color:#960050;background-color:#1e0010">`</span><span style="color:#f92672">/</span>api<span style="color:#f92672">/</span>led<span style="color:#f92672">/</span>encender<span style="color:#f92672">?</span>led<span style="color:#f92672">=</span><span style="color:#960050;background-color:#1e0010">$</span>{led}<span style="color:#960050;background-color:#1e0010">`</span>);}<span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span>(accion<span style="color:#f92672">==</span><span style="color:#e6db74">&#34;apagar&#34;</span>){document.<span style="color:#a6e22e">getElementById</span>(<span style="color:#960050;background-color:#1e0010">&#39;</span>alerts<span style="color:#960050;background-color:#1e0010">&#39;</span>).innerHTML<span style="color:#f92672">+=</span><span style="color:#e6db74">&#34;&lt;div class=</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">alert info</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">&gt; &lt;span class=</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">closebtn</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74"> onclick=</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">close_alert()</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">&gt;&amp;times;&lt;/span&gt;  &lt;strong&gt;Info!&lt;/strong&gt; Apagando el led: &#34;</span><span style="color:#f92672">+</span>led<span style="color:#f92672">+</span><span style="color:#e6db74">&#34;&lt;/div&gt;&#34;</span>
+</span></span><span style="display:flex;"><span>response<span style="color:#f92672">=</span>await <span style="color:#a6e22e">fetch</span>(<span style="color:#960050;background-color:#1e0010">`</span><span style="color:#f92672">/</span>api<span style="color:#f92672">/</span>led<span style="color:#f92672">/</span>apagar<span style="color:#f92672">?</span>led<span style="color:#f92672">=</span><span style="color:#960050;background-color:#1e0010">$</span>{led}<span style="color:#960050;background-color:#1e0010">`</span>);}
+</span></span><span style="display:flex;"><span>var data<span style="color:#f92672">=</span>await response.<span style="color:#a6e22e">json</span>();console.<span style="color:#a6e22e">log</span>(<span style="color:#960050;background-color:#1e0010">&#39;</span>printing data server<span style="color:#960050;background-color:#1e0010">&#39;</span>)
+</span></span><span style="display:flex;"><span>console.<span style="color:#a6e22e">log</span>(data);<span style="color:#66d9ef">return</span> data;}
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">enviar_peticion</span>().<span style="color:#a6e22e">then</span>(<span style="color:#a6e22e">function</span>(data){document.<span style="color:#a6e22e">getElementById</span>(<span style="color:#960050;background-color:#1e0010">&#39;</span>alerts<span style="color:#960050;background-color:#1e0010">&#39;</span>).innerHTML<span style="color:#f92672">+=</span><span style="color:#e6db74">&#34;&lt;div class=</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">alert success</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74"> &gt; &lt;span class=</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">closebtn</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74"> onclick=</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">close_alert()</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">&gt;&amp;times;&lt;/span&gt;  &lt;strong&gt;Exito!&lt;/strong&gt; La petición se envió correctamente.  &lt;/div&gt;&#34;</span>}).<span style="color:#a6e22e">catch</span>(<span style="color:#a6e22e">function</span>(reason){document.<span style="color:#a6e22e">getElementById</span>(<span style="color:#960050;background-color:#1e0010">&#39;</span>alerts<span style="color:#960050;background-color:#1e0010">&#39;</span>).innerHTML<span style="color:#f92672">+=</span><span style="color:#e6db74">&#34;&lt;div class=</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">alert error</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74"> &gt; &lt;span class=</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">closebtn</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74"> onclick=</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">close_alert()</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">&gt;&amp;times;&lt;/span&gt;  &lt;strong&gt;Error!&lt;/strong&gt; &#34;</span><span style="color:#f92672">+</span>reason<span style="color:#f92672">+</span><span style="color:#e6db74">&#34;  &lt;/div&gt;&#34;</span>;})}
+</span></span><span style="display:flex;"><span>async function <span style="color:#a6e22e">send_oled_message</span>(e){e.<span style="color:#a6e22e">preventDefault</span>();currentvalue<span style="color:#f92672">=</span>document.<span style="color:#a6e22e">getElementById</span>(<span style="color:#960050;background-color:#1e0010">&#39;</span>oled<span style="color:#960050;background-color:#1e0010">&#39;</span>).value;<span style="color:#66d9ef">if</span>(currentvalue<span style="color:#f92672">==</span><span style="color:#960050;background-color:#1e0010">&#39;&#39;</span>){document.<span style="color:#a6e22e">getElementById</span>(<span style="color:#960050;background-color:#1e0010">&#39;</span>alerts<span style="color:#960050;background-color:#1e0010">&#39;</span>).innerHTML<span style="color:#f92672">+=</span><span style="color:#e6db74">&#34;&lt;div class=</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">alert error</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74"> &gt; &lt;span class=</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">closebtn</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74"> onclick=</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">close_alert()</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">&gt;&amp;times;&lt;/span&gt;  &lt;strong&gt;Error!&lt;/strong&gt; El mensaje no puede estar vacio.  &lt;/div&gt;&#34;</span>;<span style="color:#66d9ef">return</span>;}
+</span></span><span style="display:flex;"><span>document.<span style="color:#a6e22e">getElementById</span>(<span style="color:#960050;background-color:#1e0010">&#39;</span>alerts<span style="color:#960050;background-color:#1e0010">&#39;</span>).innerHTML<span style="color:#f92672">+=</span><span style="color:#e6db74">&#34;&lt;div class=</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">alert info</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">&gt; &lt;span class=</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">closebtn</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74"> onclick=</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">close_alert()</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">&gt;&amp;times;&lt;/span&gt;  &lt;strong&gt;Info!&lt;/strong&gt; Enviando texto &#34;</span><span style="color:#f92672">+</span>currentvalue<span style="color:#f92672">+</span><span style="color:#e6db74">&#34; al display&lt;/div&gt;&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">fetch</span>(<span style="color:#960050;background-color:#1e0010">`</span><span style="color:#f92672">/</span>api<span style="color:#f92672">/</span>display<span style="color:#f92672">?</span>message<span style="color:#f92672">=</span><span style="color:#960050;background-color:#1e0010">$</span>{currentvalue}<span style="color:#960050;background-color:#1e0010">`</span>).<span style="color:#a6e22e">then</span>(response<span style="color:#f92672">=&gt;</span>response.<span style="color:#a6e22e">json</span>()).<span style="color:#a6e22e">then</span>(<span style="color:#a6e22e">function</span>(data){document.<span style="color:#a6e22e">getElementById</span>(<span style="color:#960050;background-color:#1e0010">&#39;</span>alerts<span style="color:#960050;background-color:#1e0010">&#39;</span>).innerHTML<span style="color:#f92672">+=</span><span style="color:#e6db74">&#34;&lt;div class=</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">alert success</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74"> &gt; &lt;span class=</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">closebtn</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74"> onclick=</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">close_alert()</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">&gt;&amp;times;&lt;/span&gt;  &lt;strong&gt;Exito!&lt;/strong&gt; La petición se envió correctamente.  &lt;/div&gt;&#34;</span>}).<span style="color:#a6e22e">catch</span>(<span style="color:#a6e22e">function</span>(reason){document.<span style="color:#a6e22e">getElementById</span>(<span style="color:#960050;background-color:#1e0010">&#39;</span>alerts<span style="color:#960050;background-color:#1e0010">&#39;</span>).innerHTML<span style="color:#f92672">+=</span><span style="color:#e6db74">&#34;&lt;div class=</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">alert error</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74"> &gt; &lt;span class=</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">closebtn</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74"> onclick=</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">close_alert()</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">&gt;&amp;times;&lt;/span&gt;  &lt;strong&gt;Error!&lt;/strong&gt; &#34;</span><span style="color:#f92672">+</span>reason<span style="color:#f92672">+</span><span style="color:#e6db74">&#34;  &lt;/div&gt;&#34;</span>;})}
+</span></span><span style="display:flex;"><span>function <span style="color:#a6e22e">enviar_sonido</span>(){document.<span style="color:#a6e22e">getElementById</span>(<span style="color:#960050;background-color:#1e0010">&#39;</span>alerts<span style="color:#960050;background-color:#1e0010">&#39;</span>).innerHTML<span style="color:#f92672">+=</span><span style="color:#e6db74">&#34;&lt;div class=</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">alert info</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">&gt; &lt;span class=</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">closebtn</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74"> onclick=</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">close_alert()</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">&gt;&amp;times;&lt;/span&gt;  &lt;strong&gt;Info!&lt;/strong&gt; Enviando sonido al Buzzer&lt;/div&gt;&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">fetch</span>(<span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">/</span>buzzer<span style="color:#960050;background-color:#1e0010">&#39;</span>).<span style="color:#a6e22e">then</span>(response<span style="color:#f92672">=&gt;</span>response.<span style="color:#a6e22e">json</span>()).<span style="color:#a6e22e">then</span>(<span style="color:#a6e22e">function</span>(data){document.<span style="color:#a6e22e">getElementById</span>(<span style="color:#960050;background-color:#1e0010">&#39;</span>alerts<span style="color:#960050;background-color:#1e0010">&#39;</span>).innerHTML<span style="color:#f92672">+=</span><span style="color:#e6db74">&#34;&lt;div class=</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">alert success</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74"> &gt; &lt;span class=</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">closebtn</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74"> onclick=</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">close_alert()</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">&gt;&amp;times;&lt;/span&gt;  &lt;strong&gt;Exito!&lt;/strong&gt; La petición se envió correctamente.  &lt;/div&gt;&#34;</span>}).<span style="color:#a6e22e">catch</span>(<span style="color:#a6e22e">function</span>(reason){document.<span style="color:#a6e22e">getElementById</span>(<span style="color:#960050;background-color:#1e0010">&#39;</span>alerts<span style="color:#960050;background-color:#1e0010">&#39;</span>).innerHTML<span style="color:#f92672">+=</span><span style="color:#e6db74">&#34;&lt;div class=</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">alert error</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74"> &gt; &lt;span class=</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">closebtn</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74"> onclick=</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">close_alert()</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">&gt;&amp;times;&lt;/span&gt;  &lt;strong&gt;Error!&lt;/strong&gt; &#34;</span><span style="color:#f92672">+</span>reason<span style="color:#f92672">+</span><span style="color:#e6db74">&#34;  &lt;/div&gt;&#34;</span>;})}
+</span></span><span style="display:flex;"><span>async function <span style="color:#a6e22e">getdata</span>(){<span style="color:#a6e22e">getdata_sensors</span>().<span style="color:#a6e22e">then</span>(<span style="color:#a6e22e">function</span>(data){document.<span style="color:#a6e22e">getElementById</span>(<span style="color:#960050;background-color:#1e0010">&#39;</span>celsius<span style="color:#960050;background-color:#1e0010">&#39;</span>).innerText<span style="color:#f92672">=</span>data[<span style="color:#e6db74">&#34;temp_celsius&#34;</span>]<span style="color:#f92672">+</span><span style="color:#960050;background-color:#1e0010">&#39;°</span> Celsius<span style="color:#960050;background-color:#1e0010">&#39;</span>;document.<span style="color:#a6e22e">getElementById</span>(<span style="color:#960050;background-color:#1e0010">&#39;</span>fahrenheit<span style="color:#960050;background-color:#1e0010">&#39;</span>).innerText<span style="color:#f92672">=</span>data[<span style="color:#960050;background-color:#1e0010">&#39;</span>temp_fahrenheit<span style="color:#960050;background-color:#1e0010">&#39;</span>]<span style="color:#f92672">+</span><span style="color:#960050;background-color:#1e0010">&#39;°</span> Fahrenheit<span style="color:#960050;background-color:#1e0010">&#39;</span>;document.<span style="color:#a6e22e">getElementById</span>(<span style="color:#960050;background-color:#1e0010">&#39;</span>ldr<span style="color:#960050;background-color:#1e0010">&#39;</span>).innerText<span style="color:#f92672">=</span>data[<span style="color:#960050;background-color:#1e0010">&#39;</span>ldr<span style="color:#960050;background-color:#1e0010">&#39;</span>];document.<span style="color:#a6e22e">getElementById</span>(<span style="color:#960050;background-color:#1e0010">&#39;</span>tilt<span style="color:#960050;background-color:#1e0010">&#39;</span>).innerText<span style="color:#f92672">=</span>data[<span style="color:#960050;background-color:#1e0010">&#39;</span>tilt<span style="color:#960050;background-color:#1e0010">&#39;</span>];document.<span style="color:#a6e22e">getElementById</span>(<span style="color:#960050;background-color:#1e0010">&#39;</span>user<span style="color:#960050;background-color:#1e0010">&#39;</span>).innerText<span style="color:#f92672">=</span>data[<span style="color:#960050;background-color:#1e0010">&#39;</span>user<span style="color:#960050;background-color:#1e0010">&#39;</span>];document.<span style="color:#a6e22e">getElementById</span>(<span style="color:#960050;background-color:#1e0010">&#39;</span>localtime<span style="color:#960050;background-color:#1e0010">&#39;</span>).innerText<span style="color:#f92672">=</span>data[<span style="color:#960050;background-color:#1e0010">&#39;</span>localtime<span style="color:#960050;background-color:#1e0010">&#39;</span>];document.<span style="color:#a6e22e">getElementById</span>(<span style="color:#960050;background-color:#1e0010">&#39;</span>loading<span style="color:#960050;background-color:#1e0010">&#39;</span>).style<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;display:none;&#34;</span>
+</span></span><span style="display:flex;"><span>document.<span style="color:#a6e22e">getElementById</span>(<span style="color:#960050;background-color:#1e0010">&#39;</span>inicio<span style="color:#960050;background-color:#1e0010">&#39;</span>).classList.<span style="color:#a6e22e">remove</span>(<span style="color:#960050;background-color:#1e0010">&#39;</span>hide<span style="color:#960050;background-color:#1e0010">&#39;</span>);}).<span style="color:#a6e22e">catch</span>(<span style="color:#a6e22e">function</span>(reason){document.<span style="color:#a6e22e">getElementById</span>(<span style="color:#960050;background-color:#1e0010">&#39;</span>alerts<span style="color:#960050;background-color:#1e0010">&#39;</span>).innerHTML<span style="color:#f92672">+=</span><span style="color:#e6db74">&#34;&lt;div class=</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">alert error</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74"> &gt; &lt;span class=</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">closebtn</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74"> onclick=</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">close_alert()</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">&gt;&amp;times;&lt;/span&gt;  &lt;strong&gt;Error!&lt;/strong&gt; &#34;</span><span style="color:#f92672">+</span>reason<span style="color:#f92672">+</span><span style="color:#e6db74">&#34;  &lt;/div&gt;&#34;</span>;})}
+</span></span><span style="display:flex;"><span>async function <span style="color:#a6e22e">getdata_sensors</span>(){let response<span style="color:#f92672">=</span>await <span style="color:#a6e22e">fetch</span>(<span style="color:#960050;background-color:#1e0010">&#39;</span><span style="color:#f92672">/</span>api<span style="color:#f92672">/</span>sensors<span style="color:#960050;background-color:#1e0010">&#39;</span>);var data<span style="color:#f92672">=</span>await response.<span style="color:#a6e22e">json</span>();console.<span style="color:#a6e22e">log</span>(<span style="color:#960050;background-color:#1e0010">&#39;</span>printing data server<span style="color:#960050;background-color:#1e0010">&#39;</span>)
+</span></span><span style="display:flex;"><span>console.<span style="color:#a6e22e">log</span>(data);<span style="color:#66d9ef">return</span> data;}<span style="color:#f92672">&lt;/</span>script<span style="color:#f92672">&gt;</span>)<span style="color:#f92672">====</span><span style="color:#e6db74">&#34;;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Provide the token generation process info.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;addons/TokenHelper.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Provide the RTDB payload printing info and other helper functions.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;addons/RTDBHelper.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#define API_KEY &#34;AIzaSyAXZzTwC_Nqh-ZCepllSi8XKTnOcd6UtY4&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* 3. If work with RTDB, define the RTDB URL */</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//#define DATABASE_URL &#34;http://35.201.97.85/&#34; 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e">#define DATABASE_URL &#34;http:</span><span style="color:#75715e">//esp32-bd971-default-rtdb.firebaseio.com/&#34; 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// GPIO where the DS18B20 is connected to
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#66d9ef">int</span> oneWireBus <span style="color:#f92672">=</span> <span style="color:#ae81ff">19</span>;     
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Setup a oneWire instance to communicate with any OneWire devices
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>OneWire <span style="color:#a6e22e">oneWire</span>(oneWireBus);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Pass our oneWire reference to Dallas Temperature sensor 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>DallasTemperature <span style="color:#a6e22e">sensors</span>(<span style="color:#f92672">&amp;</span>oneWire);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">bool</span> logged <span style="color:#f92672">=</span> false;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>FirebaseJson json;
+</span></span><span style="display:flex;"><span>FirebaseJsonArray WS2812b_;
+</span></span><span style="display:flex;"><span>FirebaseJsonData result;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* 4. Define the Firebase Data object */</span>
+</span></span><span style="display:flex;"><span>FirebaseData fbdo;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* 5. Define the FirebaseAuth data for authentication data */</span>
+</span></span><span style="display:flex;"><span>FirebaseAuth auth;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* 6. Define the FirebaseConfig data for config data */</span>
+</span></span><span style="display:flex;"><span>FirebaseConfig config;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">signIn</span>(String email, String password)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/* Assign the user sign in credentials */</span>
+</span></span><span style="display:flex;"><span>    auth.user.email <span style="color:#f92672">=</span> email;
+</span></span><span style="display:flex;"><span>    auth.user.password <span style="color:#f92672">=</span> password;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/* Initialize the library with the Firebase authen and config */</span>
+</span></span><span style="display:flex;"><span>    logged <span style="color:#f92672">=</span> true;
+</span></span><span style="display:flex;"><span>    Firebase.<span style="color:#a6e22e">begin</span>(<span style="color:#f92672">&amp;</span>config, <span style="color:#f92672">&amp;</span>auth);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> one_light_pin<span style="color:#f92672">=</span> <span style="color:#ae81ff">32</span>;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> two_light_pin <span style="color:#f92672">=</span> <span style="color:#ae81ff">33</span>;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> three_light_pin <span style="color:#f92672">=</span> <span style="color:#ae81ff">25</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Variable to save USER UID
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>String uid;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Database main path (to be updated in setup with the user UID)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>String databasePath;
+</span></span><span style="display:flex;"><span>String databasePath_write;
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Database child nodes
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>tempPath_c <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;/temperature_c&#34;</span>;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>tempPath_f <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;/temperature_f&#34;</span>;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>ldrPath <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;/ldr&#34;</span>;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>timePath <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;/timestamp&#34;</span>;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>tiltPath <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;/tilt&#34;</span>;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>gmtTimePath <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;/gmtTime&#34;</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Parent Node (to be updated in every loop)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">//char parentPath[100];
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#define BUZZER_PIN  14 </span><span style="color:#75715e">// ESP32 pin GIOP18 connected to piezo buzzer
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> timestamp;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span><span style="color:#f92672">*</span> ntpServer <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;pool.ntp.org&#34;</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">float</span> temperature;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Timer variables (send new readings every three minutes)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> sendDataPrevMillis <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> timerDelay <span style="color:#f92672">=</span> <span style="color:#ae81ff">1800000</span>;
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 180000
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//unsigned long timerDelay = 3600;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> sensorPinTILT <span style="color:#f92672">=</span> <span style="color:#ae81ff">26</span>;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> sensorPinLDR <span style="color:#f92672">=</span> <span style="color:#ae81ff">39</span>; <span style="color:#75715e">// select the input pin for LDR 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">int</span> sensorValue <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; <span style="color:#75715e">// variable to store the value coming from the sensor
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Function that gets current epoch time
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> <span style="color:#a6e22e">getTime</span>() {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">time_t</span> now;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">struct</span> tm timeinfo;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">getLocalTime</span>(<span style="color:#f92672">&amp;</span>timeinfo)) {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//Serial.println(&#34;Failed to obtain time&#34;);
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">return</span>(<span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">time</span>(<span style="color:#f92672">&amp;</span>now);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> now;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">char</span> timeStringBuff[<span style="color:#ae81ff">50</span>];
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">printLocalTime</span>()
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">time_t</span> rawtime;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">struct</span> tm timeinfo;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span>(<span style="color:#f92672">!</span><span style="color:#a6e22e">getLocalTime</span>(<span style="color:#f92672">&amp;</span>timeinfo))
+</span></span><span style="display:flex;"><span>  {
+</span></span><span style="display:flex;"><span>    Serial.<span style="color:#a6e22e">println</span>(<span style="color:#e6db74">&#34;Failed to obtain time&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">sprintf</span>(timeStringBuff,<span style="color:#e6db74">&#34;Error al obtener fecha&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> timeStringBuff; 
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">//char timeStringBuff[50]; //50 chars should be enough
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#75715e">//strftime(timeStringBuff, sizeof(timeStringBuff), &#34;%A, %B %d %Y %H:%M:%S&#34;, &amp;timeinfo);
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">strftime</span>(timeStringBuff, <span style="color:#ae81ff">50</span>, <span style="color:#e6db74">&#34;%A, %B %d %Y %H:%M:%S&#34;</span>, <span style="color:#f92672">&amp;</span>timeinfo);
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">//print like &#34;const char*&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  Serial.<span style="color:#a6e22e">println</span>(timeStringBuff);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">//Optional: Construct String object 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">return</span> timeStringBuff;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">bool</span> signupOK <span style="color:#f92672">=</span> false;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>AsyncWebServer <span style="color:#a6e22e">server</span>(<span style="color:#ae81ff">1234</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">notFound</span>(AsyncWebServerRequest <span style="color:#f92672">*</span>request) {
+</span></span><span style="display:flex;"><span>    request<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">send</span>(<span style="color:#ae81ff">404</span>, <span style="color:#e6db74">&#34;text/plain&#34;</span>, <span style="color:#e6db74">&#34;Not found&#34;</span>);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// ...
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">RGB_color</span>(<span style="color:#66d9ef">int</span> red_light_value, <span style="color:#66d9ef">int</span> green_light_value, <span style="color:#66d9ef">int</span> blue_light_value)
+</span></span><span style="display:flex;"><span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">analogWrite</span>(one_light_pin, red_light_value);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">analogWrite</span>(two_light_pin, green_light_value);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">analogWrite</span>(three_light_pin, blue_light_value);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">setup</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// put your setup code here, to run once:
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    Serial.<span style="color:#a6e22e">begin</span>(<span style="color:#ae81ff">115200</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">configTime</span>(<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span><span style="color:#f92672">*</span><span style="color:#ae81ff">3600</span><span style="color:#f92672">*</span><span style="color:#ae81ff">3</span>, <span style="color:#ae81ff">0</span>, ntpServer);
+</span></span><span style="display:flex;"><span>    WiFi.<span style="color:#a6e22e">mode</span>(WIFI_STA); <span style="color:#75715e">// explicitly set mode, esp defaults to STA+AP
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">// it is a good practice to make sure your code sets wifi mode how you want it.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>    FastLED.addLeds<span style="color:#f92672">&lt;</span>LED_TYPE, LED_PIN, COLOR_ORDER<span style="color:#f92672">&gt;</span>(leds, NUM_LEDS);
+</span></span><span style="display:flex;"><span>    FastLED.<span style="color:#a6e22e">setBrightness</span>(BRIGHTNESS);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span>(<span style="color:#f92672">!</span>display.<span style="color:#a6e22e">begin</span>(SSD1306_SWITCHCAPVCC, <span style="color:#ae81ff">0x3C</span>)) { <span style="color:#75715e">// Address 0x3D for 128x64
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      Serial.<span style="color:#a6e22e">println</span>(<span style="color:#a6e22e">F</span>(<span style="color:#e6db74">&#34;SSD1306 allocation failed&#34;</span>));
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">for</span>(;;);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>    display.<span style="color:#a6e22e">clearDisplay</span>();
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>    display.<span style="color:#a6e22e">setTextSize</span>(<span style="color:#ae81ff">1</span>);
+</span></span><span style="display:flex;"><span>    display.<span style="color:#a6e22e">setTextColor</span>(WHITE);
+</span></span><span style="display:flex;"><span>    display.<span style="color:#a6e22e">setCursor</span>(<span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Display static text
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    display.<span style="color:#a6e22e">println</span>(<span style="color:#e6db74">&#34;Ingrese con su cuenta de Firebase.&#34;</span>);
+</span></span><span style="display:flex;"><span>    display.<span style="color:#a6e22e">display</span>(); 
+</span></span><span style="display:flex;"><span>    display.<span style="color:#a6e22e">startscrollleft</span>(<span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x0F</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">pinMode</span>(one_light_pin, OUTPUT);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">pinMode</span>(two_light_pin, OUTPUT);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">pinMode</span>(three_light_pin, OUTPUT);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">pinMode</span>(BUZZER_PIN, OUTPUT);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">pinMode</span>(sensorPinTILT, INPUT);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">digitalWrite</span>(sensorPinTILT, HIGH);
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//WiFiManager, Local intialization. Once its business is done, there is no need to keep it around
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    WiFiManager wm;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// settings - wipe stored credentials for testing
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">// these are stored by the esp library
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//wm.resetSettings();
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Automatically connect using saved credentials,
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">// if connection fails, it starts an access point with the specified name ( &#34;AutoConnectAP&#34;),
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">// if empty will auto generate SSID, if password is blank it will be anonymous AP (wm.autoConnect())
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">// then goes into a blocking loop awaiting configuration and will return success result
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">bool</span> res;
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// res = wm.autoConnect(); // auto generated AP name from chipid
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">// res = wm.autoConnect(&#34;AutoConnectAP&#34;); // anonymous ap
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    res <span style="color:#f92672">=</span> wm.<span style="color:#a6e22e">autoConnect</span>(<span style="color:#e6db74">&#34;AutoConnectAP&#34;</span>,<span style="color:#e6db74">&#34;password&#34;</span>); <span style="color:#75715e">// password protected ap
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span>(<span style="color:#f92672">!</span>res) {
+</span></span><span style="display:flex;"><span>        Serial.<span style="color:#a6e22e">println</span>(<span style="color:#e6db74">&#34;Failed to connect&#34;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">//return;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        ESP.<span style="color:#a6e22e">restart</span>();
+</span></span><span style="display:flex;"><span>    } 
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">//if you get here you have connected to the WiFi    
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        Serial.<span style="color:#a6e22e">println</span>(<span style="color:#e6db74">&#34;connected...yeey :)&#34;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span> 
+</span></span><span style="display:flex;"><span>            
+</span></span><span style="display:flex;"><span>        Serial.<span style="color:#a6e22e">print</span>(<span style="color:#e6db74">&#34;Connected with IP: &#34;</span>);
+</span></span><span style="display:flex;"><span>        Serial.<span style="color:#a6e22e">println</span>(WiFi.<span style="color:#a6e22e">localIP</span>());
+</span></span><span style="display:flex;"><span>        Serial.<span style="color:#a6e22e">println</span>();
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        Serial.<span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;Firebase Client v%s</span><span style="color:#ae81ff">\n\n</span><span style="color:#e6db74">&#34;</span>, FIREBASE_CLIENT_VERSION);
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">/* Assign the API key (required) */</span>
+</span></span><span style="display:flex;"><span>        config.api_key <span style="color:#f92672">=</span> API_KEY;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">/* Assign the RTDB URL */</span>
+</span></span><span style="display:flex;"><span>        config.database_url <span style="color:#f92672">=</span> DATABASE_URL;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        Firebase.<span style="color:#a6e22e">reconnectWiFi</span>(true);
+</span></span><span style="display:flex;"><span>        fbdo.<span style="color:#a6e22e">setResponseSize</span>(<span style="color:#ae81ff">2048</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// If the signupError.message showed &#34;ADMIN_ONLY_OPERATION&#34;, you need to enable Anonymous provider in project&#39;s Authentication.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">/* Assign the callback function for the long running token generation task */</span>
+</span></span><span style="display:flex;"><span>        config.token_status_callback <span style="color:#f92672">=</span> tokenStatusCallback; <span style="color:#75715e">// see addons/TokenHelper.h
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">/** The id token (C++ string) will be available from config.signer.tokens.id_token
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">         * if the sig-up was successful.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">         *
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">         * Now you can initialize the library using the internal created credentials.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">         *
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">         * If the sign-up was failed, the following function will initialize because
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">         * the internal authentication credentials are not created.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">         */</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">//config.max_token_generation_retry = 5;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#75715e">//Firebase.begin(&amp;config, &amp;auth);
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>      
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        display.<span style="color:#a6e22e">clearDisplay</span>();
+</span></span><span style="display:flex;"><span>      
+</span></span><span style="display:flex;"><span>        display.<span style="color:#a6e22e">setTextSize</span>(<span style="color:#ae81ff">1</span>);
+</span></span><span style="display:flex;"><span>        display.<span style="color:#a6e22e">setTextColor</span>(WHITE);
+</span></span><span style="display:flex;"><span>        display.<span style="color:#a6e22e">setCursor</span>(<span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// Display static text
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        display.<span style="color:#a6e22e">println</span>(WiFi.<span style="color:#a6e22e">localIP</span>().<span style="color:#a6e22e">toString</span>());
+</span></span><span style="display:flex;"><span>        display.<span style="color:#a6e22e">startscrollleft</span>(<span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x0F</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">/*server.on(&#34;/&#34;, HTTP_GET, [](AsyncWebServerRequest *request){
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            sensors.requestTemperatures(); 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">            request-&gt;send(200, &#34;text/html&#34;, &#34;&lt;meta name=\&#34;viewport\&#34; content=\&#34;width=device-width, height=device-height, initial-scale=1\&#34;&gt;&lt;h2&gt;HOLA USUARIO &#34;+String(uid)+&#34;&lt;/h2&gt;&lt;h3&gt;SENSOR LDR: &#34; + String(analogRead(sensorPinLDR)) + &#34;&lt;BR&gt; TEMPERATURA EN CELSIUS: &#34;+String(sensors.getTempCByIndex(0))+&#34;&lt;BR&gt;Temp en Fahrenheit: &#34;+String(sensors.getTempFByIndex(0))+&#34;&lt;BR&gt;  TILT: &#34;+ String(digitalRead(sensorPinTILT)) +&#34;&lt;/h3&gt;&#34;);
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">        });*/</span>
+</span></span><span style="display:flex;"><span>        server.<span style="color:#a6e22e">on</span>(<span style="color:#e6db74">&#34;/&#34;</span>, HTTP_GET, [](AsyncWebServerRequest <span style="color:#f92672">*</span>request){
+</span></span><span style="display:flex;"><span>            request<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">send</span>(<span style="color:#ae81ff">200</span>, <span style="color:#e6db74">&#34;text/html&#34;</span>, Pagina);
+</span></span><span style="display:flex;"><span>        });
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        server.<span style="color:#a6e22e">on</span>(<span style="color:#e6db74">&#34;/buzzer&#34;</span>, HTTP_GET, [](AsyncWebServerRequest <span style="color:#f92672">*</span>request){
+</span></span><span style="display:flex;"><span>            AsyncResponseStream <span style="color:#f92672">*</span>response <span style="color:#f92672">=</span> request<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">beginResponseStream</span>(<span style="color:#e6db74">&#34;application/json&#34;</span>);
+</span></span><span style="display:flex;"><span>            DynamicJsonDocument <span style="color:#a6e22e">json</span>(<span style="color:#ae81ff">1024</span>);
+</span></span><span style="display:flex;"><span>            
+</span></span><span style="display:flex;"><span>            json[<span style="color:#e6db74">&#34;status&#34;</span>] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;ok&#34;</span>;
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">digitalWrite</span>(BUZZER_PIN, HIGH);
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">delay</span>(<span style="color:#ae81ff">2000</span>);
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">digitalWrite</span>(BUZZER_PIN, LOW);
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">serializeJson</span>(json, <span style="color:#f92672">*</span>response);
+</span></span><span style="display:flex;"><span>            request<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">send</span>(response);
+</span></span><span style="display:flex;"><span>        });
+</span></span><span style="display:flex;"><span>        server.<span style="color:#a6e22e">on</span>(<span style="color:#e6db74">&#34;/login&#34;</span>, HTTP_GET, [](AsyncWebServerRequest <span style="color:#f92672">*</span>request){
+</span></span><span style="display:flex;"><span>            request<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">send</span>(<span style="color:#ae81ff">200</span>, <span style="color:#e6db74">&#34;text/html&#34;</span>, Pagina_Login);
+</span></span><span style="display:flex;"><span>        });
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        server.<span style="color:#a6e22e">on</span>(<span style="color:#e6db74">&#34;/_login&#34;</span>, HTTP_GET, [] (AsyncWebServerRequest <span style="color:#f92672">*</span>request) {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>          AsyncResponseStream <span style="color:#f92672">*</span>response <span style="color:#f92672">=</span> request<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">beginResponseStream</span>(<span style="color:#e6db74">&#34;application/json&#34;</span>);
+</span></span><span style="display:flex;"><span>          DynamicJsonDocument <span style="color:#a6e22e">json</span>(<span style="color:#ae81ff">1024</span>);
+</span></span><span style="display:flex;"><span>          
+</span></span><span style="display:flex;"><span>          String usuario; String clave; <span style="color:#66d9ef">bool</span> error <span style="color:#f92672">=</span> false;
+</span></span><span style="display:flex;"><span>          <span style="color:#66d9ef">if</span> (request<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">hasParam</span>(<span style="color:#e6db74">&#34;uname&#34;</span>) <span style="color:#f92672">&amp;&amp;</span> request<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">hasParam</span>(<span style="color:#e6db74">&#34;psw&#34;</span>)) {
+</span></span><span style="display:flex;"><span>              usuario <span style="color:#f92672">=</span> request<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">getParam</span>(<span style="color:#e6db74">&#34;uname&#34;</span>)<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">value</span>(); 
+</span></span><span style="display:flex;"><span>              clave <span style="color:#f92672">=</span> request<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">getParam</span>(<span style="color:#e6db74">&#34;psw&#34;</span>)<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">value</span>(); 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>              <span style="color:#a6e22e">signIn</span>(usuario, clave);
+</span></span><span style="display:flex;"><span>              display.<span style="color:#a6e22e">clearDisplay</span>();
+</span></span><span style="display:flex;"><span>              display.<span style="color:#a6e22e">setTextSize</span>(<span style="color:#ae81ff">1</span>);
+</span></span><span style="display:flex;"><span>              display.<span style="color:#a6e22e">setTextColor</span>(WHITE);
+</span></span><span style="display:flex;"><span>              display.<span style="color:#a6e22e">setCursor</span>(<span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>              <span style="color:#75715e">// Display static text
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>              display.<span style="color:#a6e22e">println</span>(<span style="color:#e6db74">&#34;OK.&#34;</span>);
+</span></span><span style="display:flex;"><span>              display.<span style="color:#a6e22e">display</span>(); 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>              json[<span style="color:#e6db74">&#34;status&#34;</span>] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;ok&#34;</span>;
+</span></span><span style="display:flex;"><span>              <span style="color:#a6e22e">serializeJson</span>(json, <span style="color:#f92672">*</span>response);
+</span></span><span style="display:flex;"><span>              request<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">send</span>(response);
+</span></span><span style="display:flex;"><span>          } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>              error <span style="color:#f92672">=</span> true;
+</span></span><span style="display:flex;"><span>              json[<span style="color:#e6db74">&#34;status&#34;</span>] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;error&#34;</span>;
+</span></span><span style="display:flex;"><span>              <span style="color:#a6e22e">serializeJson</span>(json, <span style="color:#f92672">*</span>response);
+</span></span><span style="display:flex;"><span>              request<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">send</span>(response);
+</span></span><span style="display:flex;"><span>          }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        });
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        server.<span style="color:#a6e22e">on</span>(<span style="color:#e6db74">&#34;/api/led/apagar&#34;</span>, HTTP_GET, [] (AsyncWebServerRequest <span style="color:#f92672">*</span>request) {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>          AsyncResponseStream <span style="color:#f92672">*</span>response <span style="color:#f92672">=</span> request<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">beginResponseStream</span>(<span style="color:#e6db74">&#34;application/json&#34;</span>);
+</span></span><span style="display:flex;"><span>          DynamicJsonDocument <span style="color:#a6e22e">json</span>(<span style="color:#ae81ff">1024</span>);
+</span></span><span style="display:flex;"><span>          
+</span></span><span style="display:flex;"><span>          String led; <span style="color:#66d9ef">bool</span> error <span style="color:#f92672">=</span> false;
+</span></span><span style="display:flex;"><span>          <span style="color:#66d9ef">if</span> (request<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">hasParam</span>(<span style="color:#e6db74">&#34;led&#34;</span>)) {
+</span></span><span style="display:flex;"><span>              led <span style="color:#f92672">=</span> request<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">getParam</span>(<span style="color:#e6db74">&#34;led&#34;</span>)<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">value</span>(); 
+</span></span><span style="display:flex;"><span>              <span style="color:#66d9ef">if</span> (led.<span style="color:#a6e22e">compareTo</span>(<span style="color:#e6db74">&#34;1&#34;</span>) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) <span style="color:#a6e22e">analogWrite</span>(one_light_pin, <span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>              <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (led.<span style="color:#a6e22e">compareTo</span>(<span style="color:#e6db74">&#34;2&#34;</span>) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) <span style="color:#a6e22e">analogWrite</span>(two_light_pin, <span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>              <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (led.<span style="color:#a6e22e">compareTo</span>(<span style="color:#e6db74">&#34;3&#34;</span>) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) <span style="color:#a6e22e">analogWrite</span>(three_light_pin, <span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>              <span style="color:#75715e">//else if (led.compareTo(&#34;4&#34;) == 0) {FastLED.clear();FastLED.show();}
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>          } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>              error <span style="color:#f92672">=</span> true;
+</span></span><span style="display:flex;"><span>          }
+</span></span><span style="display:flex;"><span>          
+</span></span><span style="display:flex;"><span>          <span style="color:#66d9ef">if</span> (error) json[<span style="color:#e6db74">&#34;status&#34;</span>] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;ok&#34;</span>;
+</span></span><span style="display:flex;"><span>          <span style="color:#66d9ef">else</span>{json[<span style="color:#e6db74">&#34;status&#34;</span>] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;error&#34;</span>;json[<span style="color:#e6db74">&#34;message&#34;</span>] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;El parametro led no puede ser nulo.&#34;</span>;}
+</span></span><span style="display:flex;"><span>          
+</span></span><span style="display:flex;"><span>          <span style="color:#a6e22e">serializeJson</span>(json, <span style="color:#f92672">*</span>response);
+</span></span><span style="display:flex;"><span>          request<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">send</span>(response);
+</span></span><span style="display:flex;"><span>        });
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        server.<span style="color:#a6e22e">on</span>(<span style="color:#e6db74">&#34;/api/led/encender&#34;</span>, HTTP_GET, [] (AsyncWebServerRequest <span style="color:#f92672">*</span>request) {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>          AsyncResponseStream <span style="color:#f92672">*</span>response <span style="color:#f92672">=</span> request<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">beginResponseStream</span>(<span style="color:#e6db74">&#34;application/json&#34;</span>);
+</span></span><span style="display:flex;"><span>          DynamicJsonDocument <span style="color:#a6e22e">json</span>(<span style="color:#ae81ff">1024</span>);
+</span></span><span style="display:flex;"><span>          
+</span></span><span style="display:flex;"><span>          String led; <span style="color:#66d9ef">bool</span> error <span style="color:#f92672">=</span> false;
+</span></span><span style="display:flex;"><span>          <span style="color:#66d9ef">if</span> (request<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">hasParam</span>(<span style="color:#e6db74">&#34;led&#34;</span>)) {
+</span></span><span style="display:flex;"><span>              led <span style="color:#f92672">=</span> request<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">getParam</span>(<span style="color:#e6db74">&#34;led&#34;</span>)<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">value</span>(); 
+</span></span><span style="display:flex;"><span>              Serial.<span style="color:#a6e22e">println</span>(<span style="color:#e6db74">&#34;el doctor muerte a la yuta uno por uno&#34;</span>);
+</span></span><span style="display:flex;"><span>              Serial.<span style="color:#a6e22e">println</span>(led);
+</span></span><span style="display:flex;"><span>              <span style="color:#66d9ef">if</span> (led.<span style="color:#a6e22e">compareTo</span>(<span style="color:#e6db74">&#34;1&#34;</span>) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) <span style="color:#a6e22e">analogWrite</span>(one_light_pin, <span style="color:#ae81ff">255</span>);
+</span></span><span style="display:flex;"><span>              <span style="color:#66d9ef">if</span> (led.<span style="color:#a6e22e">compareTo</span>(<span style="color:#e6db74">&#34;2&#34;</span>) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) <span style="color:#a6e22e">analogWrite</span>(two_light_pin, <span style="color:#ae81ff">255</span>);
+</span></span><span style="display:flex;"><span>              <span style="color:#66d9ef">if</span> (led.<span style="color:#a6e22e">compareTo</span>(<span style="color:#e6db74">&#34;3&#34;</span>) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>)<span style="color:#a6e22e">analogWrite</span>(three_light_pin, <span style="color:#ae81ff">255</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                            
+</span></span><span style="display:flex;"><span>          } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>              error <span style="color:#f92672">=</span> true;
+</span></span><span style="display:flex;"><span>          }
+</span></span><span style="display:flex;"><span>          
+</span></span><span style="display:flex;"><span>          <span style="color:#66d9ef">if</span> (error) json[<span style="color:#e6db74">&#34;status&#34;</span>] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;ok&#34;</span>;
+</span></span><span style="display:flex;"><span>          <span style="color:#66d9ef">else</span>{json[<span style="color:#e6db74">&#34;status&#34;</span>] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;error&#34;</span>;json[<span style="color:#e6db74">&#34;message&#34;</span>] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;Falta el parametro led.&#34;</span>;}
+</span></span><span style="display:flex;"><span>          
+</span></span><span style="display:flex;"><span>          <span style="color:#a6e22e">serializeJson</span>(json, <span style="color:#f92672">*</span>response);
+</span></span><span style="display:flex;"><span>          request<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">send</span>(response);
+</span></span><span style="display:flex;"><span>        });
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        server.<span style="color:#a6e22e">on</span>(<span style="color:#e6db74">&#34;/api/display&#34;</span>, HTTP_GET, [] (AsyncWebServerRequest <span style="color:#f92672">*</span>request) {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>          AsyncResponseStream <span style="color:#f92672">*</span>response <span style="color:#f92672">=</span> request<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">beginResponseStream</span>(<span style="color:#e6db74">&#34;application/json&#34;</span>);
+</span></span><span style="display:flex;"><span>          DynamicJsonDocument <span style="color:#a6e22e">json</span>(<span style="color:#ae81ff">1024</span>);
+</span></span><span style="display:flex;"><span>          
+</span></span><span style="display:flex;"><span>          <span style="color:#66d9ef">bool</span> error <span style="color:#f92672">=</span> false; String text;
+</span></span><span style="display:flex;"><span>          <span style="color:#66d9ef">if</span> (request<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">hasParam</span>(<span style="color:#e6db74">&#34;message&#34;</span>)) {
+</span></span><span style="display:flex;"><span>              text <span style="color:#f92672">=</span> request<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">getParam</span>(<span style="color:#e6db74">&#34;message&#34;</span>)<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">value</span>(); 
+</span></span><span style="display:flex;"><span>              display.<span style="color:#a6e22e">clearDisplay</span>();
+</span></span><span style="display:flex;"><span>              display.<span style="color:#a6e22e">setTextSize</span>(<span style="color:#ae81ff">1</span>);
+</span></span><span style="display:flex;"><span>              display.<span style="color:#a6e22e">setTextColor</span>(WHITE);
+</span></span><span style="display:flex;"><span>              display.<span style="color:#a6e22e">setCursor</span>(<span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>              <span style="color:#75715e">// Display static text
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>              display.<span style="color:#a6e22e">println</span>(text);
+</span></span><span style="display:flex;"><span>              display.<span style="color:#a6e22e">display</span>(); 
+</span></span><span style="display:flex;"><span>              display.<span style="color:#a6e22e">startscrollleft</span>(<span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x0F</span>);
+</span></span><span style="display:flex;"><span>          } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>              error <span style="color:#f92672">=</span> true;
+</span></span><span style="display:flex;"><span>          }
+</span></span><span style="display:flex;"><span>          
+</span></span><span style="display:flex;"><span>          <span style="color:#66d9ef">if</span> (error) json[<span style="color:#e6db74">&#34;status&#34;</span>] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;ok&#34;</span>;
+</span></span><span style="display:flex;"><span>          <span style="color:#66d9ef">else</span>{json[<span style="color:#e6db74">&#34;status&#34;</span>] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;error&#34;</span>;json[<span style="color:#e6db74">&#34;message&#34;</span>] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;Falta el parametro message.&#34;</span>;}
+</span></span><span style="display:flex;"><span>          
+</span></span><span style="display:flex;"><span>          <span style="color:#a6e22e">serializeJson</span>(json, <span style="color:#f92672">*</span>response);
+</span></span><span style="display:flex;"><span>          request<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">send</span>(response);
+</span></span><span style="display:flex;"><span>        });
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// Send a GET request to &lt;IP&gt;/get?message=&lt;message&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        server.<span style="color:#a6e22e">on</span>(<span style="color:#e6db74">&#34;/api/sensors&#34;</span>, HTTP_GET, [] (AsyncWebServerRequest <span style="color:#f92672">*</span>request) {
+</span></span><span style="display:flex;"><span>          AsyncResponseStream <span style="color:#f92672">*</span>response <span style="color:#f92672">=</span> request<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">beginResponseStream</span>(<span style="color:#e6db74">&#34;application/json&#34;</span>);
+</span></span><span style="display:flex;"><span>          DynamicJsonDocument <span style="color:#a6e22e">json</span>(<span style="color:#ae81ff">1024</span>);
+</span></span><span style="display:flex;"><span>          
+</span></span><span style="display:flex;"><span>          <span style="color:#75715e">//json[&#34;localtime&#34;] = String(printLocalTime());
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>          json[<span style="color:#e6db74">&#34;localtime&#34;</span>] <span style="color:#f92672">=</span> <span style="color:#a6e22e">printLocalTime</span>();
+</span></span><span style="display:flex;"><span>          json[<span style="color:#e6db74">&#34;temp_celsius&#34;</span>] <span style="color:#f92672">=</span> sensors.<span style="color:#a6e22e">getTempCByIndex</span>(<span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>          json[<span style="color:#e6db74">&#34;temp_fahrenheit&#34;</span>] <span style="color:#f92672">=</span> sensors.<span style="color:#a6e22e">getTempFByIndex</span>(<span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>          json[<span style="color:#e6db74">&#34;tilt&#34;</span>] <span style="color:#f92672">=</span> <span style="color:#a6e22e">digitalRead</span>(sensorPinTILT);
+</span></span><span style="display:flex;"><span>          json[<span style="color:#e6db74">&#34;ldr&#34;</span>] <span style="color:#f92672">=</span> <span style="color:#a6e22e">analogRead</span>(sensorPinLDR);
+</span></span><span style="display:flex;"><span>          json[<span style="color:#e6db74">&#34;user&#34;</span>] <span style="color:#f92672">=</span> uid;
+</span></span><span style="display:flex;"><span>          <span style="color:#a6e22e">serializeJson</span>(json, <span style="color:#f92672">*</span>response);
+</span></span><span style="display:flex;"><span>          request<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">send</span>(response);
+</span></span><span style="display:flex;"><span>        });
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        server.<span style="color:#a6e22e">onNotFound</span>(notFound);
+</span></span><span style="display:flex;"><span>        DefaultHeaders<span style="color:#f92672">::</span><span style="color:#a6e22e">Instance</span>().<span style="color:#a6e22e">addHeader</span>(<span style="color:#e6db74">&#34;Access-Control-Allow-Origin&#34;</span>, <span style="color:#e6db74">&#34;*&#34;</span>);
+</span></span><span style="display:flex;"><span>        server.<span style="color:#a6e22e">begin</span>();
+</span></span><span style="display:flex;"><span>        sensors.<span style="color:#a6e22e">begin</span>();
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// Getting the user UID might take a few seconds
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        Serial.<span style="color:#a6e22e">println</span>(<span style="color:#e6db74">&#34;Getting User UID&#34;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">while</span> ((auth.token.uid) <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;&#34;</span>) {
+</span></span><span style="display:flex;"><span>          Serial.<span style="color:#a6e22e">print</span>(<span style="color:#e6db74">&#39;.&#39;</span>);
+</span></span><span style="display:flex;"><span>          <span style="color:#a6e22e">delay</span>(<span style="color:#ae81ff">1000</span>);
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// Print user UID
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        uid <span style="color:#f92672">=</span> auth.token.uid.<span style="color:#a6e22e">c_str</span>();
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">//sprintf(uid, &#34;%s&#34;, auth.token.uid);
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        Serial.<span style="color:#a6e22e">print</span>(<span style="color:#e6db74">&#34;User UID: &#34;</span>);
+</span></span><span style="display:flex;"><span>        Serial.<span style="color:#a6e22e">println</span>(uid);
+</span></span><span style="display:flex;"><span>      
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// Update database path
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        databasePath <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;/UsersData/&#34;</span> <span style="color:#f92672">+</span> uid <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;/readings&#34;</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">//sprintf(databasePath, &#34;/UsersData/%s/readings&#34;, uid);
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        databasePath_write <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;/UsersData/&#34;</span> <span style="color:#f92672">+</span> uid <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;/writtings/tempLogger&#34;</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">//sprintf(databasePath_write, &#34;/UsersData/%s/writtings/tempLogger&#34;, uid);
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//         String path = auth.token.uid.c_str(); //&lt;- user uid
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">loop</span>() {
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// Send new readings to database
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">if</span> (Firebase.<span style="color:#a6e22e">ready</span>() <span style="color:#f92672">&amp;&amp;</span> logged <span style="color:#f92672">&amp;&amp;</span> (<span style="color:#a6e22e">millis</span>() <span style="color:#f92672">-</span> sendDataPrevMillis <span style="color:#f92672">&gt;</span> timerDelay <span style="color:#f92672">||</span> sendDataPrevMillis <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>)){
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    sendDataPrevMillis <span style="color:#f92672">=</span> <span style="color:#a6e22e">millis</span>();
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//Get current timestamp
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">//timestamp = getTime();
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">time_t</span> now;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">struct</span> tm timeinfo;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">getLocalTime</span>(<span style="color:#f92672">&amp;</span>timeinfo)) {
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e">//Serial.println(&#34;Failed to obtain time&#34;);
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      timestamp <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">time</span>(<span style="color:#f92672">&amp;</span>now);
+</span></span><span style="display:flex;"><span>    timestamp <span style="color:#f92672">=</span> now;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//timestamp = 1234;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    Serial.<span style="color:#a6e22e">print</span> (<span style="color:#e6db74">&#34;time: &#34;</span>);
+</span></span><span style="display:flex;"><span>    Serial.<span style="color:#a6e22e">println</span> (timestamp);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//String parentPath;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">//parentPath = databasePath.c_str() + &#34;/&#34; + String(timestamp);
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">char</span> parentPath[<span style="color:#ae81ff">100</span>];
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">sprintf</span>(parentPath,<span style="color:#e6db74">&#34;%s/%d&#34;</span>,databasePath.<span style="color:#a6e22e">c_str</span>(),timestamp); 
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    sensors.<span style="color:#a6e22e">requestTemperatures</span>(); 
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">float</span> celsius <span style="color:#f92672">=</span> sensors.<span style="color:#a6e22e">getTempCByIndex</span>(<span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">float</span> fahrenheit <span style="color:#f92672">=</span> sensors.<span style="color:#a6e22e">getTempFByIndex</span>(<span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> (celsius <span style="color:#f92672">==</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">127.00</span> <span style="color:#f92672">||</span> fahrenheit <span style="color:#f92672">==</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">196.60</span>){
+</span></span><span style="display:flex;"><span>        sensors.<span style="color:#a6e22e">requestTemperatures</span>(); 
+</span></span><span style="display:flex;"><span>        celsius <span style="color:#f92672">=</span> sensors.<span style="color:#a6e22e">getTempCByIndex</span>(<span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>        fahrenheit <span style="color:#f92672">=</span> sensors.<span style="color:#a6e22e">getTempFByIndex</span>(<span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">delay</span>(<span style="color:#ae81ff">5000</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    json.<span style="color:#a6e22e">set</span>(tempPath_c, <span style="color:#a6e22e">String</span>(celsius));
+</span></span><span style="display:flex;"><span>    json.<span style="color:#a6e22e">set</span>(tempPath_f, <span style="color:#a6e22e">String</span>(fahrenheit));
+</span></span><span style="display:flex;"><span>    json.<span style="color:#a6e22e">set</span>(ldrPath, <span style="color:#a6e22e">String</span>(<span style="color:#a6e22e">analogRead</span>(sensorPinLDR)));
+</span></span><span style="display:flex;"><span>    json.<span style="color:#a6e22e">set</span>(tiltPath, <span style="color:#a6e22e">String</span>(<span style="color:#a6e22e">digitalRead</span>(sensorPinTILT)));
+</span></span><span style="display:flex;"><span>    json.<span style="color:#a6e22e">set</span>(timePath, timestamp);
+</span></span><span style="display:flex;"><span>    json.<span style="color:#a6e22e">set</span>(gmtTimePath, <span style="color:#a6e22e">printLocalTime</span>());
+</span></span><span style="display:flex;"><span>    Serial.<span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;Set json... %s</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, Firebase.RTDB.<span style="color:#a6e22e">setJSON</span>(<span style="color:#f92672">&amp;</span>fbdo, parentPath, <span style="color:#f92672">&amp;</span>json) <span style="color:#f92672">?</span> <span style="color:#e6db74">&#34;ok&#34;</span> <span style="color:#f92672">:</span> fbdo.<span style="color:#a6e22e">errorReason</span>().<span style="color:#a6e22e">c_str</span>());
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    Serial.<span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;Getting json...</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> aux[<span style="color:#ae81ff">100</span>];
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> led_rojo,led_amarillo,led_verde,_buzzer;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> _oled[<span style="color:#ae81ff">200</span>];
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">sprintf</span>(aux,<span style="color:#e6db74">&#34;%s/led_rojo&#34;</span>,databasePath_write.<span style="color:#a6e22e">c_str</span>()); 
+</span></span><span style="display:flex;"><span>    Serial.<span style="color:#a6e22e">println</span>(aux);
+</span></span><span style="display:flex;"><span>    Firebase.RTDB.<span style="color:#a6e22e">getInt</span>(<span style="color:#f92672">&amp;</span>fbdo, aux, <span style="color:#f92672">&amp;</span>led_rojo);
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">sprintf</span>(aux,<span style="color:#e6db74">&#34;%s/led_amarillo&#34;</span>,databasePath_write.<span style="color:#a6e22e">c_str</span>()); 
+</span></span><span style="display:flex;"><span>    Serial.<span style="color:#a6e22e">println</span>(aux);
+</span></span><span style="display:flex;"><span>    Firebase.RTDB.<span style="color:#a6e22e">getInt</span>(<span style="color:#f92672">&amp;</span>fbdo, aux, <span style="color:#f92672">&amp;</span>led_amarillo);
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">sprintf</span>(aux,<span style="color:#e6db74">&#34;%s/led_verde&#34;</span>,databasePath_write.<span style="color:#a6e22e">c_str</span>()); 
+</span></span><span style="display:flex;"><span>    Serial.<span style="color:#a6e22e">println</span>(aux);
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//Serial.println(&#39;led verde:&#39;);
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    Serial.<span style="color:#a6e22e">println</span>(led_verde);
+</span></span><span style="display:flex;"><span>    Firebase.RTDB.<span style="color:#a6e22e">getInt</span>(<span style="color:#f92672">&amp;</span>fbdo, aux, <span style="color:#f92672">&amp;</span>led_verde);
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">sprintf</span>(aux,<span style="color:#e6db74">&#34;%s/buzzer&#34;</span>,databasePath_write.<span style="color:#a6e22e">c_str</span>()); 
+</span></span><span style="display:flex;"><span>    Serial.<span style="color:#a6e22e">println</span>(aux);
+</span></span><span style="display:flex;"><span>    Firebase.RTDB.<span style="color:#a6e22e">getInt</span>(<span style="color:#f92672">&amp;</span>fbdo, aux, <span style="color:#f92672">&amp;</span>_buzzer);
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> on_off;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">int</span> i<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>; i<span style="color:#f92672">&lt;</span><span style="color:#ae81ff">5</span>; i<span style="color:#f92672">++</span>){
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">sprintf</span>(aux,<span style="color:#e6db74">&#34;%s/WS2812b%d&#34;</span>,databasePath_write.<span style="color:#a6e22e">c_str</span>(),i);
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">//Serial.println(&#39;working?&#39;);
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        Serial.<span style="color:#a6e22e">println</span>(aux);
+</span></span><span style="display:flex;"><span>        Firebase.RTDB.<span style="color:#a6e22e">getArray</span>(<span style="color:#f92672">&amp;</span>fbdo, aux, <span style="color:#f92672">&amp;</span>WS2812b_);
+</span></span><span style="display:flex;"><span>        WS2812b_.<span style="color:#a6e22e">get</span>(result,<span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>        String colorString <span style="color:#f92672">=</span> result.to<span style="color:#f92672">&lt;</span>String<span style="color:#f92672">&gt;</span>();
+</span></span><span style="display:flex;"><span>        Serial.<span style="color:#a6e22e">println</span>(colorString);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">long</span> color_hex <span style="color:#f92672">=</span> <span style="color:#a6e22e">strtol</span>(colorString.<span style="color:#a6e22e">c_str</span>(), NULL, <span style="color:#ae81ff">16</span>);
+</span></span><span style="display:flex;"><span>        leds[i<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>] <span style="color:#f92672">=</span> color_hex;
+</span></span><span style="display:flex;"><span>        WS2812b_.<span style="color:#a6e22e">get</span>(result,<span style="color:#ae81ff">1</span>);
+</span></span><span style="display:flex;"><span>        on_off <span style="color:#f92672">=</span> result.to<span style="color:#f92672">&lt;</span><span style="color:#66d9ef">int</span><span style="color:#f92672">&gt;</span>();
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">//Serial.println(&#39;reckful&#39;);
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        Serial.<span style="color:#a6e22e">println</span>(on_off);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span>(on_off) FastLED.<span style="color:#a6e22e">show</span>();
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">else</span>{ leds[i<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>] <span style="color:#f92672">=</span> <span style="color:#a6e22e">strtol</span>(<span style="color:#e6db74">&#34;0x000000&#34;</span>, NULL,<span style="color:#ae81ff">16</span>) ;FastLED.<span style="color:#a6e22e">show</span>(); }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">sprintf</span>(aux,<span style="color:#e6db74">&#34;%s/oled&#34;</span>,databasePath_write.<span style="color:#a6e22e">c_str</span>()); 
+</span></span><span style="display:flex;"><span>    Firebase.RTDB.<span style="color:#a6e22e">getString</span>(<span style="color:#f92672">&amp;</span>fbdo, aux, _oled);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">/*if (_led1 == 1) analogWrite(one_light_pin, 255);
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">    if (_led2 == 1) analogWrite(two_light_pin, 255);
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">    if (_led3 == 1) analogWrite(three_light_pin, 255);
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">    if (_led1 == 0) analogWrite(one_light_pin, 0);
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">    if (_led2 == 0) analogWrite(two_light_pin, 0);
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">    if (_led3 == 0) analogWrite(three_light_pin, 0);*/</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (_buzzer){
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">sprintf</span>(aux,<span style="color:#e6db74">&#34;%s/buzzer&#34;</span>,databasePath_write.<span style="color:#a6e22e">c_str</span>()); 
+</span></span><span style="display:flex;"><span>        Firebase.RTDB.<span style="color:#a6e22e">set</span>(<span style="color:#f92672">&amp;</span>fbdo, aux, false);
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">digitalWrite</span>(BUZZER_PIN, HIGH);
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">delay</span>(<span style="color:#ae81ff">2000</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">digitalWrite</span>(BUZZER_PIN, LOW);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>led_rojo) <span style="color:#a6e22e">analogWrite</span>(one_light_pin, <span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>led_amarillo) <span style="color:#a6e22e">analogWrite</span>(two_light_pin, <span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>led_verde) <span style="color:#a6e22e">analogWrite</span>(three_light_pin, <span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (led_rojo) <span style="color:#a6e22e">analogWrite</span>(one_light_pin, <span style="color:#ae81ff">255</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (led_amarillo) <span style="color:#a6e22e">analogWrite</span>(two_light_pin, <span style="color:#ae81ff">255</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (led_verde) <span style="color:#a6e22e">analogWrite</span>(three_light_pin, <span style="color:#ae81ff">255</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    Serial.<span style="color:#a6e22e">println</span>(<span style="color:#e6db74">&#34;Contenido de _oled: &#34;</span>);
+</span></span><span style="display:flex;"><span>    Serial.<span style="color:#a6e22e">println</span>(_oled);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span>(<span style="color:#a6e22e">strcmp</span>(_oled,<span style="color:#e6db74">&#34;&#34;</span>) <span style="color:#f92672">!=</span> <span style="color:#ae81ff">0</span>){
+</span></span><span style="display:flex;"><span>      display.<span style="color:#a6e22e">clearDisplay</span>();
+</span></span><span style="display:flex;"><span>      display.<span style="color:#a6e22e">setTextSize</span>(<span style="color:#ae81ff">1</span>);
+</span></span><span style="display:flex;"><span>      display.<span style="color:#a6e22e">setTextColor</span>(WHITE);
+</span></span><span style="display:flex;"><span>      display.<span style="color:#a6e22e">setCursor</span>(<span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>);
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e">// Display static text
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      display.<span style="color:#a6e22e">println</span>(_oled);
+</span></span><span style="display:flex;"><span>      display.<span style="color:#a6e22e">display</span>(); 
+</span></span><span style="display:flex;"><span>      display.<span style="color:#a6e22e">startscrollleft</span>(<span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x0F</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Más información:</p>
+<p><a href="https://redirect.invidious.io/search?q=firebase+esp32">https://redirect.invidious.io/search?q=firebase+esp32</a></p>
+
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+</footer>
+
+
+</body>
+</html>
