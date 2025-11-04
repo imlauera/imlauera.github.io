@@ -23,7 +23,7 @@
 1️⃣ Preparar el entorno Modo de depuración: Usa una cuenta con permisos de administrador si es posible. Desactiva antivirus temporalmente para descartar que esté bloqueando el juego. Modo de compatibilidad: A veces ejecutar en modo Windows 7/8 ayuda, pero para debug profundo no es crítico. 2️⃣ Usar un depurador en Windows a) WinDbg (de Microsoft) Instala WinDbg desde el Windows SDK. Abre WinDbg → File → Open Executable. Selecciona el .exe del juego. WinDbg lanzará el juego y podrás ver excepciones, fallos de memoria, o errores de librerías. Usa !analyze -v después de un crash para obtener un stack trace detallado. b) Visual Studio Si tienes Visual Studio:">
   <meta itemprop="datePublished" content="2025-11-02T14:49:49-03:00">
   <meta itemprop="dateModified" content="2025-11-02T14:49:49-03:00">
-  <meta itemprop="wordCount" content="804">
+  <meta itemprop="wordCount" content="1251">
   <meta itemprop="keywords" content="Exe">
   
   <meta name="twitter:card" content="summary">
@@ -336,6 +336,173 @@ Si tienes Visual Studio:">
 </ul>
 <hr>
 <p>Want to start with the <strong>Event Viewer crash logs</strong>? Paste them here 👇</p>
+<hr>
+<p>Richard Burns Rally (RBR) is very old (2004) and often crashes on Windows 10 due to graphics + compatibility issues and modern mod loaders (RBRCIT / RBR Pro / RallySimFans).</p>
+<p>Here’s a clean step-by-step way to <strong>debug + fix</strong> crashes.</p>
+<hr>
+<h2 id="-1-check-if-you">✅ <strong>1. Check if you&rsquo;re running modded or original</strong></h2>
+<p>Which one are you using?</p>
+<table>
+  <thead>
+      <tr>
+          <th>Version</th>
+          <th>Notes</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Original CD/digital</td>
+          <td>Runs with fixes</td>
+      </tr>
+      <tr>
+          <td>RallySimFans Mod</td>
+          <td>Very stable if installed correctly</td>
+      </tr>
+      <tr>
+          <td>RBRPro</td>
+          <td>Can be unstable</td>
+      </tr>
+      <tr>
+          <td>RBRCIT + plugins</td>
+          <td>Depends on DLL plugins</td>
+      </tr>
+  </tbody>
+</table>
+<blockquote>
+<p>Tell me which version you&rsquo;re using — fixes differ.</p>
+</blockquote>
+<hr>
+<h2 id="-2-enable-logs">✅ <strong>2. Enable Logs</strong></h2>
+<h3 id="-rbr-log-location">📂 RBR log location</h3>
+<p>Check for crash logs in:</p>
+<pre tabindex="0"><code>Richard Burns Rally\RichardBurnsRally.ini
+</code></pre><p>Enable logging by adding:</p>
+<pre tabindex="0"><code>LOG = 1
+</code></pre><p>Then check <code>RichardBurnsRally.log</code> after crash.</p>
+<hr>
+<h2 id="-3-check-event-viewer">✅ <strong>3. Check Event Viewer</strong></h2>
+<p>Find crashing module:</p>
+<ol>
+<li><code>Win + R</code> → <code>eventvwr.msc</code></li>
+<li>Windows Logs → <strong>Application</strong></li>
+<li>Look for “RichardBurnsRally_SSE.exe” error</li>
+</ol>
+<p>Common fault modules:</p>
+<table>
+  <thead>
+      <tr>
+          <th>Faulting DLL</th>
+          <th>Meaning</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><code>d3d9.dll</code></td>
+          <td>DX9 wrapper / graphics plugin crash</td>
+      </tr>
+      <tr>
+          <td><code>dinput.dll</code></td>
+          <td>Input plugin crash</td>
+      </tr>
+      <tr>
+          <td><code>mss32.dll</code></td>
+          <td>Audio engine crash</td>
+      </tr>
+      <tr>
+          <td><code>nvd3dum.dll</code> / <code>atidxx64.dll</code></td>
+          <td>GPU driver crash</td>
+      </tr>
+  </tbody>
+</table>
+<p>Paste the event error here and I’ll read it.</p>
+<hr>
+<h2 id="-4-install-required-rbr-fixes">✅ <strong>4. Install Required RBR Fixes</strong></h2>
+<h3 id="directx-9-legacy">DirectX 9 Legacy</h3>
+<p>Install <strong>DirectX June 2010</strong> runtime:
+<a href="https://www.microsoft.com/en-us/download/details.aspx?id=8109">https://www.microsoft.com/en-us/download/details.aspx?id=8109</a></p>
+<h3 id="microsoft-visual-c-runtimes">Microsoft Visual C++ Runtimes</h3>
+<p>Install:</p>
+<ul>
+<li>2005 → 2022 x86 and x64</li>
+</ul>
+<h3 id="run-as-administrator--disable-fullscreen-optimizations">Run as Administrator + Disable Fullscreen Optimizations</h3>
+<p>Right-click → Properties → Compatibility:</p>
+<p>✔ Run as admin
+✔ Disable fullscreen optimizations</p>
+<p>(Optional) set to Windows XP SP3</p>
+<hr>
+<h2 id="-5-gpu-compatibility">✅ <strong>5. GPU Compatibility</strong></h2>
+<h3 id="nvidia-users">NVIDIA users</h3>
+<ul>
+<li>Enable <strong>NVIDIA Control Panel → Power Management = Prefer maximum performance</strong></li>
+<li>Disable <strong>DSR</strong></li>
+<li>Do not force Antialiasing</li>
+</ul>
+<h3 id="amd-users">AMD users</h3>
+<ul>
+<li>Disable Radeon Anti-Lag</li>
+<li>Disable Radeon Boost</li>
+<li>Disable Enhanced Sync</li>
+</ul>
+<hr>
+<h2 id="-6-common-fixes-for-crashes">✅ <strong>6. Common Fixes for Crashes</strong></h2>
+<h3 id="-d3d9-wrapper-essential">✔ d3d9 wrapper (essential)</h3>
+<p>Download <strong>dgVoodoo2</strong> and place these in game folder:</p>
+<pre tabindex="0"><code>d3d8.dll
+d3d9.dll
+D3DImm.dll
+DDraw.dll
+</code></pre><p>Configure:</p>
+<ul>
+<li>API = DirectX 11</li>
+<li>VRAM = 256MB–512MB</li>
+</ul>
+<p>RBR is very picky; this fix alone stops 90% crashes.</p>
+<hr>
+<h3 id="-audio-crash-fix">✔ Audio Crash Fix</h3>
+<p>Copy <code>mss32.dll</code> from a known working RBR installation or reinstall sound drivers.</p>
+<hr>
+<h3 id="-plugin--dll-problems">✔ Plugin / DLL problems</h3>
+<p>Trouble mods/plugins?
+Rename plugin folder:</p>
+<pre tabindex="0"><code>Richard Burns Rally\Plugins → Plugins.off
+</code></pre><p>Test game — if works, a plugin is crashing it.</p>
+<hr>
+<h2 id="-7-modern-community-installer-best-long-term">✅ <strong>7. Modern Community Installer (best long-term)</strong></h2>
+<p>If you want the best stability:</p>
+<table>
+  <thead>
+      <tr>
+          <th>Installer</th>
+          <th>Link</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><strong>RallySimFans RBR</strong></td>
+          <td><a href="https://rallysimfans.hu/rbr/index.php">https://rallysimfans.hu/rbr/index.php</a></td>
+      </tr>
+  </tbody>
+</table>
+<p>RSF RBR fixes almost all compatibility issues automatically.</p>
+<hr>
+<h2 id="-8-memory--run-windowed-to-debug">✅ <strong>8. Memory / Run Windowed to Debug</strong></h2>
+<p>Add to <code>RichardBurnsRally.ini</code>:</p>
+<pre tabindex="0"><code>FULLSCREEN=0
+</code></pre><p>Also cap framerate (60 or 90) — unlimited FPS crashes physics sometimes.</p>
+<hr>
+<h2 id="-tell-me-what-to-send-me-to-diagnose-it">✅ Tell me what to send me to diagnose it</h2>
+<p>Reply with:</p>
+<ul>
+<li>Event Viewer crash info</li>
+<li>Whether you use mods (which?)</li>
+<li>GPU, CPU, RAM</li>
+<li>If you use Intel, AMD, or Nvidia graphics</li>
+<li>Your <code>RichardBurnsRally.log</code> if exists</li>
+</ul>
+<p>You paste, I read it 👍</p>
+<hr>
+<p>Want me to guide you through opening Event Viewer and reading the crash entry step-by-step?</p>
 
 </div>
 
