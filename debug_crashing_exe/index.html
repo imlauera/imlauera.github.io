@@ -23,7 +23,7 @@
 1️⃣ Preparar el entorno Modo de depuración: Usa una cuenta con permisos de administrador si es posible. Desactiva antivirus temporalmente para descartar que esté bloqueando el juego. Modo de compatibilidad: A veces ejecutar en modo Windows 7/8 ayuda, pero para debug profundo no es crítico. 2️⃣ Usar un depurador en Windows a) WinDbg (de Microsoft) Instala WinDbg desde el Windows SDK. Abre WinDbg → File → Open Executable. Selecciona el .exe del juego. WinDbg lanzará el juego y podrás ver excepciones, fallos de memoria, o errores de librerías. Usa !analyze -v después de un crash para obtener un stack trace detallado. b) Visual Studio Si tienes Visual Studio:">
   <meta itemprop="datePublished" content="2025-11-02T14:49:49-03:00">
   <meta itemprop="dateModified" content="2025-11-02T14:49:49-03:00">
-  <meta itemprop="wordCount" content="351">
+  <meta itemprop="wordCount" content="804">
   <meta itemprop="keywords" content="Exe">
   
   <meta name="twitter:card" content="summary">
@@ -182,6 +182,160 @@ Si tienes Visual Studio:">
 <hr>
 <p>Si quieres, puedo hacer una <strong>guía concreta paso a paso con x64dbg</strong> para abrir el binario del juego y capturar el crash, lista para principiantes en depuración de juegos en Windows.</p>
 <p>¿Quieres que haga eso?</p>
+<p>When a game closes by itself in <strong>Windows 10</strong> with no error message, you can debug it by checking logs, system resources, and drivers. Here&rsquo;s a step-by-step troubleshooting + debugging method:</p>
+<hr>
+<h2 id="-1-check-windows-event-viewer-crash-logs">✅ <strong>1. Check Windows Event Viewer (Crash Logs)</strong></h2>
+<ol>
+<li>
+<p>Press <strong>Win + R</strong></p>
+</li>
+<li>
+<p>Type: <code>eventvwr.msc</code></p>
+</li>
+<li>
+<p>Go to:</p>
+<pre tabindex="0"><code>Windows Logs → Application
+</code></pre></li>
+<li>
+<p>Look for <strong>Error</strong> entries around the time of the crash (usually Application Error).</p>
+</li>
+</ol>
+<p>Common faulting modules:</p>
+<table>
+  <thead>
+      <tr>
+          <th>Module</th>
+          <th>Meaning</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><code>nvlddmkm.dll</code></td>
+          <td>NVIDIA driver crash</td>
+      </tr>
+      <tr>
+          <td><code>atidxx64.dll</code></td>
+          <td>AMD GPU driver crash</td>
+      </tr>
+      <tr>
+          <td><code>d3d11.dll</code> / <code>dxgi.dll</code></td>
+          <td>DirectX crash</td>
+      </tr>
+      <tr>
+          <td><code>ucrtbase.dll</code></td>
+          <td>VC++ runtime crash</td>
+      </tr>
+      <tr>
+          <td><code>ntdll.dll</code></td>
+          <td>Windows internal error</td>
+      </tr>
+  </tbody>
+</table>
+<p>Tell me what you find there if you want help reading it.</p>
+<hr>
+<h2 id="-2-run-the-game-with-debug-logging">✅ <strong>2. Run the game with Debug Logging</strong></h2>
+<p>Some games support launch options like:</p>
+<ul>
+<li><code>-log</code></li>
+<li><code>-debug</code></li>
+<li><code>-d3d11</code> / <code>-dx12</code></li>
+</ul>
+<p>You can also enable <strong>Windows crash logs</strong>:</p>
+<ol>
+<li>Search <em>Windows Reliability Monitor</em></li>
+<li>See game crash history</li>
+<li>Click <strong>View Technical Details</strong></li>
+</ol>
+<hr>
+<h2 id="-3-update--reinstall-graphics-drivers">✅ <strong>3. Update / Reinstall Graphics Drivers</strong></h2>
+<p>For NVIDIA:</p>
+<pre tabindex="0"><code>Download from NVIDIA → Clean Install
+(Optional) Use DDU in Safe Mode
+</code></pre><p>For AMD:</p>
+<pre tabindex="0"><code>Use AMD Cleanup Utility + latest driver
+</code></pre><hr>
+<h2 id="-4-check-missing-runtime-libraries">✅ <strong>4. Check Missing Runtime Libraries</strong></h2>
+<p>Install/reinstall:</p>
+<h3 id="microsoft-visual-c-redistributables">Microsoft Visual C++ Redistributables</h3>
+<p><a href="https://aka.ms/vs/17/release/vc_redist.x64.exe">https://aka.ms/vs/17/release/vc_redist.x64.exe</a>
+<a href="https://aka.ms/vs/17/release/vc_redist.x86.exe">https://aka.ms/vs/17/release/vc_redist.x86.exe</a></p>
+<h3 id="directx-runtimes">DirectX Runtimes</h3>
+<p><a href="https://www.microsoft.com/en-us/download/details.aspx?id=8109">https://www.microsoft.com/en-us/download/details.aspx?id=8109</a></p>
+<h3 id="net-framework">.NET Framework</h3>
+<p>Windows Update usually installs this.</p>
+<hr>
+<h2 id="-5-check-gpu--cpu--ram-health">✅ <strong>5. Check GPU / CPU / RAM Health</strong></h2>
+<h3 id="gpu--cpu-temps"><strong>GPU / CPU Temps</strong></h3>
+<p>Use <strong>MSI Afterburner</strong> / <strong>HWInfo</strong></p>
+<ul>
+<li>GPU should be &lt; 85°C</li>
+<li>CPU &lt; 90°C</li>
+</ul>
+<h3 id="ram-test"><strong>RAM Test</strong></h3>
+<p>Run:</p>
+<pre tabindex="0"><code>mdsched.exe
+</code></pre><hr>
+<h2 id="-6-disable-overlays--background-apps">✅ <strong>6. Disable Overlays &amp; Background Apps</strong></h2>
+<p>Turn off:</p>
+<ul>
+<li>Discord overlay</li>
+<li>Steam overlay</li>
+<li>Xbox Game Bar</li>
+<li>MSI Afterburner OSD</li>
+<li>GeForce Experience overlay</li>
+</ul>
+<hr>
+<h2 id="-7-try-compatibility--admin-mode">✅ <strong>7. Try Compatibility / Admin Mode</strong></h2>
+<p>Right-click game EXE → <strong>Properties</strong>:</p>
+<ul>
+<li>Run as administrator</li>
+<li>Disable fullscreen optimizations</li>
+<li>Compatibility mode Windows 7/8 (only sometimes helps)</li>
+</ul>
+<hr>
+<h2 id="-8-check-game-folder-integrity">✅ <strong>8. Check Game Folder Integrity</strong></h2>
+<p>Steam:</p>
+<pre tabindex="0"><code>Steam → Game → Properties → Verify Integrity of Files
+</code></pre><p>Epic:</p>
+<pre tabindex="0"><code>Library → three dots → Verify
+</code></pre><hr>
+<h2 id="-9-memory-leak--vram-debug">✅ <strong>9. Memory Leak / VRAM Debug</strong></h2>
+<p>Open <strong>Task Manager → Performance Tab</strong></p>
+<p>Watch:</p>
+<ul>
+<li>GPU memory usage</li>
+<li>CPU usage</li>
+<li>RAM usage</li>
+</ul>
+<p>If a resource spikes then game dies → that&rsquo;s your culprit.</p>
+<hr>
+<h2 id="-if-it-still-crashes--advanced-debugging">✅ If It Still Crashes — Advanced Debugging</h2>
+<h3 id="windows-debugging-tools">Windows Debugging Tools</h3>
+<p>Install:</p>
+<pre tabindex="0"><code>Windows SDK → Debugging Tools for Windows
+</code></pre><p>Run:</p>
+<pre tabindex="0"><code>WinDbg (Preview)
+</code></pre><p>Load crash dump from:</p>
+<pre tabindex="0"><code>C:\Windows\Minidump
+</code></pre><p>If you want, tell me the game&rsquo;s crash <code>.dmp</code> file results and I&rsquo;ll interpret them.</p>
+<hr>
+<h2 id="-tell-me-what-info-you-want-to-provide">✅ Tell me what info you want to provide:</h2>
+<p>Reply with any of these:</p>
+<h3 id="-event-viewer-error-text">⬜ Event Viewer error text</h3>
+<h3 id="-reliability-monitor-details">⬜ Reliability Monitor details</h3>
+<h3 id="-gpu--cpu-temps">⬜ GPU / CPU temps</h3>
+<h3 id="-game-name--launcher-steamepicetc">⬜ Game name &amp; launcher (Steam/Epic/etc.)</h3>
+<h3 id="-specs-cpu-gpu-ram">⬜ Specs (CPU, GPU, RAM)</h3>
+<h3 id="-crash-dump-file-ill-help-read-it">⬜ Crash dump file (I&rsquo;ll help read it)</h3>
+<hr>
+<p>If you want, I can give you:</p>
+<ul>
+<li><strong>WinDbg command guide</strong></li>
+<li>A <strong>script to monitor real-time crash logs</strong></li>
+<li><strong>Anti-cheat crash troubleshooting</strong> (Valorant, Apex, CS2, etc.)</li>
+</ul>
+<hr>
+<p>Want to start with the <strong>Event Viewer crash logs</strong>? Paste them here 👇</p>
 
 </div>
 
