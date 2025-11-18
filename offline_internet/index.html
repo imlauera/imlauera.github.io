@@ -26,7 +26,7 @@ Autonomía de software Autonomía de información Autonomía de computación (mo
 ✔ Un sistema operativo que vos controlás ✔ Todas las herramientas instaladas local ✔ Un repositorio sin internet ✔ Un buscador local, un LLM local, una wiki local, y documentación local ✔ Ningún servicio que consulte a terceros ✔ No salir a internet salvo cuando vos quieras Esto sí es independencia.">
   <meta itemprop="datePublished" content="2025-11-18T08:17:42-03:00">
   <meta itemprop="dateModified" content="2025-11-18T08:17:42-03:00">
-  <meta itemprop="wordCount" content="682">
+  <meta itemprop="wordCount" content="898">
   
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="Chatgpt: Offline internet?">
@@ -251,6 +251,66 @@ sudo ip route flush 0.0.0.0/0   # Sin gateway
 <h2 id="-tené-tu-propio-chatgpt--llm-local-ollamagpt4all">🧠 Tené tu propio ChatGPT → <strong>LLM local (Ollama/GPT4All)</strong></h2>
 <h2 id="-cortá-internet-pero-mantené-servicios-locales">📴 Cortá internet pero mantené servicios locales</h2>
 <p>Eso <strong>sí</strong> es libertad digital.</p>
+<hr>
+<p>Yes — <strong>you can run Kiwix completely from the command line</strong>.
+In fact, the CLI tools are <em>more powerful</em> than the GUI.</p>
+<p>Kiwix provides two main command-line programs:</p>
+<h1 id="-1-kiwix-serve">✅ 1. <strong>kiwix-serve</strong></h1>
+<p>A tiny web server that hosts ZIM files.
+You access the content through a browser (Firefox, Lynx, w3m, etc.).</p>
+<p>Example:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>kiwix-serve wikipedia_es_all.zim
+</span></span></code></pre></div><p>It will open a local server at:</p>
+<pre tabindex="0"><code>http://127.0.0.1:8080
+</code></pre><p>You can also specify the port:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>kiwix-serve --port<span style="color:#f92672">=</span><span style="color:#ae81ff">9090</span> wikipedia_es_all.zim
+</span></span></code></pre></div><p>Or serve multiple ZIMs:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>kiwix-serve --library library.xml
+</span></span></code></pre></div><hr>
+<h1 id="-2-kiwix-search">✅ 2. <strong>kiwix-search</strong></h1>
+<p>Allows <strong>full-text search</strong> on a ZIM file from the terminal.</p>
+<p>Example:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>kiwix-search wikipedia_es_all.zim <span style="color:#e6db74">&#34;electricidad&#34;</span>
+</span></span></code></pre></div><p>It returns the list of matching article URLs inside the ZIM.</p>
+<p>Then you can open one with:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>kiwix-serve wikipedia_es_all.zim
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># and navigate to the returned URL</span>
+</span></span></code></pre></div><hr>
+<h1 id="-3-install-kiwix-cli-on-linux">✅ 3. Install Kiwix CLI on Linux</h1>
+<h3 id="arch-linux">Arch Linux:</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo pacman -S kiwix-tools
+</span></span></code></pre></div><h3 id="debianubuntu">Debian/Ubuntu:</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo apt install kiwix-tools
+</span></span></code></pre></div><p>This installs:</p>
+<ul>
+<li><code>kiwix-serve</code></li>
+<li><code>kiwix-search</code></li>
+<li><code>kiwix-manage</code></li>
+<li><code>kiwix-xapian-build</code></li>
+</ul>
+<hr>
+<h1 id="-bonus-browse-wikipedia-offline-directly-in-terminal">🔥 Bonus: Browse Wikipedia offline <em>directly in terminal</em></h1>
+<p>If you want to use <strong>Lynx</strong> or <strong>w3m</strong> to browse Wikipedia offline:</p>
+<ol>
+<li>
+<p>Start the server:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>kiwix-serve wikipedia_es_all.zim
+</span></span></code></pre></div></li>
+<li>
+<p>Browse it:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>lynx http://127.0.0.1:8080
+</span></span></code></pre></div><p>or</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>w3m http://127.0.0.1:8080
+</span></span></code></pre></div></li>
+</ol>
+<p>This gives you a <em>completely offline Wikipedia from the terminal</em>.</p>
+<hr>
+<p>If you want, I can show you:</p>
+<ul>
+<li>how to auto-launch Kiwix-serve at boot,</li>
+<li>how to host a <strong>whole offline internet</strong>,</li>
+<li>how to integrate it with w3m, lynx, or custom keybindings.</li>
+</ul>
 
 </div>
 
