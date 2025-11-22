@@ -9,8 +9,8 @@
   <meta property="og:url" content="https://imlauera.github.io/bluetooth_arch/">
   <meta property="og:site_name" content="Imlauer">
   <meta property="og:title" content="Conectar a dispositivo bluetooth en ArchLinux y transferir archivos.">
-  <meta property="og:description" content="Bluetooth is a standard for the short-range wireless interconnection of cellular phones, computers, and other electronic devices. In Linux, the canonical implementation of the Bluetooth protocol stack is BlueZ.
-Installation Install the bluez package, providing the Bluetooth protocol stack. Install the bluez-utils package, providing the bluetoothctl utility. Additionally install bluez-deprecated-tools to have the deprecated BlueZ tools as well. The generic Bluetooth driver is the btusb kernel module. Check whether that module is loaded. If it is not, then load the module. Start/enable bluetooth.service. sudo pacman -S bluez bluez-utils sudo systemctl start bluetooth bluetoothctl &gt; power on &gt; agent on &gt; scan on &gt; devices &gt; pair MAC_ADDRESS &gt; connect MAC_ADDRESS En caso de una mala conexión usar disconnect MAC_ADDRESS">
+  <meta property="og:description" content="Si queres transferir archivos tendras que instalar obex primero (explicado más abajo) y después levantar el servicio de bluetooth. Si solo queres compartir audio podes hacer lo siguiente.
+sudo pacman -S bluez bluez-utils bluez-obexd bluez-tools sudo systemctl start bluetooth Levantamos el servicio obex sudo systemctl start obex # Si falla correlo como usuario systemctl status obex.service systemctl status bluetooth.service ### Levantar obex como usuario systemctl --user start --now obex.service systemctl --user enable --now obex systemctl --user status obex No es necesario: Para que bootee con bluetooth activado sudo systemctl enable --now bluetooth.service # Si queres que bluetooth inicie en el boot. sudo systemctl enable --now obex.service # Si queres que obex inicie en el boot. Nos conectamos a nuestro Android. bluetoothctl &gt; power on &gt; agent on &gt; scan on &gt; devices &gt; pair MAC_ADDRESS &gt; connect MAC_ADDRESS En caso de una mala conexión usar disconnect MAC_ADDRESS">
   <meta property="og:locale" content="es_es">
   <meta property="og:type" content="article">
     <meta property="article:published_time" content="2025-03-22T14:27:39-03:00">
@@ -19,17 +19,17 @@ Installation Install the bluez package, providing the Bluetooth protocol stack. 
 
   
   <meta itemprop="name" content="Conectar a dispositivo bluetooth en ArchLinux y transferir archivos.">
-  <meta itemprop="description" content="Bluetooth is a standard for the short-range wireless interconnection of cellular phones, computers, and other electronic devices. In Linux, the canonical implementation of the Bluetooth protocol stack is BlueZ.
-Installation Install the bluez package, providing the Bluetooth protocol stack. Install the bluez-utils package, providing the bluetoothctl utility. Additionally install bluez-deprecated-tools to have the deprecated BlueZ tools as well. The generic Bluetooth driver is the btusb kernel module. Check whether that module is loaded. If it is not, then load the module. Start/enable bluetooth.service. sudo pacman -S bluez bluez-utils sudo systemctl start bluetooth bluetoothctl &gt; power on &gt; agent on &gt; scan on &gt; devices &gt; pair MAC_ADDRESS &gt; connect MAC_ADDRESS En caso de una mala conexión usar disconnect MAC_ADDRESS">
+  <meta itemprop="description" content="Si queres transferir archivos tendras que instalar obex primero (explicado más abajo) y después levantar el servicio de bluetooth. Si solo queres compartir audio podes hacer lo siguiente.
+sudo pacman -S bluez bluez-utils bluez-obexd bluez-tools sudo systemctl start bluetooth Levantamos el servicio obex sudo systemctl start obex # Si falla correlo como usuario systemctl status obex.service systemctl status bluetooth.service ### Levantar obex como usuario systemctl --user start --now obex.service systemctl --user enable --now obex systemctl --user status obex No es necesario: Para que bootee con bluetooth activado sudo systemctl enable --now bluetooth.service # Si queres que bluetooth inicie en el boot. sudo systemctl enable --now obex.service # Si queres que obex inicie en el boot. Nos conectamos a nuestro Android. bluetoothctl &gt; power on &gt; agent on &gt; scan on &gt; devices &gt; pair MAC_ADDRESS &gt; connect MAC_ADDRESS En caso de una mala conexión usar disconnect MAC_ADDRESS">
   <meta itemprop="datePublished" content="2025-03-22T14:27:39-03:00">
   <meta itemprop="dateModified" content="2025-03-22T14:27:39-03:00">
-  <meta itemprop="wordCount" content="2044">
+  <meta itemprop="wordCount" content="213">
   <meta itemprop="keywords" content="Linux">
   
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="Conectar a dispositivo bluetooth en ArchLinux y transferir archivos.">
-  <meta name="twitter:description" content="Bluetooth is a standard for the short-range wireless interconnection of cellular phones, computers, and other electronic devices. In Linux, the canonical implementation of the Bluetooth protocol stack is BlueZ.
-Installation Install the bluez package, providing the Bluetooth protocol stack. Install the bluez-utils package, providing the bluetoothctl utility. Additionally install bluez-deprecated-tools to have the deprecated BlueZ tools as well. The generic Bluetooth driver is the btusb kernel module. Check whether that module is loaded. If it is not, then load the module. Start/enable bluetooth.service. sudo pacman -S bluez bluez-utils sudo systemctl start bluetooth bluetoothctl &gt; power on &gt; agent on &gt; scan on &gt; devices &gt; pair MAC_ADDRESS &gt; connect MAC_ADDRESS En caso de una mala conexión usar disconnect MAC_ADDRESS">
+  <meta name="twitter:description" content="Si queres transferir archivos tendras que instalar obex primero (explicado más abajo) y después levantar el servicio de bluetooth. Si solo queres compartir audio podes hacer lo siguiente.
+sudo pacman -S bluez bluez-utils bluez-obexd bluez-tools sudo systemctl start bluetooth Levantamos el servicio obex sudo systemctl start obex # Si falla correlo como usuario systemctl status obex.service systemctl status bluetooth.service ### Levantar obex como usuario systemctl --user start --now obex.service systemctl --user enable --now obex systemctl --user status obex No es necesario: Para que bootee con bluetooth activado sudo systemctl enable --now bluetooth.service # Si queres que bluetooth inicie en el boot. sudo systemctl enable --now obex.service # Si queres que obex inicie en el boot. Nos conectamos a nuestro Android. bluetoothctl &gt; power on &gt; agent on &gt; scan on &gt; devices &gt; pair MAC_ADDRESS &gt; connect MAC_ADDRESS En caso de una mala conexión usar disconnect MAC_ADDRESS">
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -47,18 +47,23 @@ Installation Install the bluez package, providing the Bluetooth protocol stack. 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="referrer" content="no-referrer">
   <meta name="author" content="Imlauer.">
-  <meta name="description" content="Bluetooth is a standard for the short-range wireless interconnection of cellular
-phones, computers, and other electronic devices. In Linux, the canonical
-implementation of the Bluetooth protocol stack is BlueZ.
-Installation
-
-Install the bluez package, providing the Bluetooth protocol stack.
-Install the bluez-utils package, providing the bluetoothctl utility. Additionally install bluez-deprecated-tools to have the deprecated BlueZ tools as well.
-The generic Bluetooth driver is the btusb kernel module. Check whether that module is loaded. If it is not, then load the module.
-Start/enable bluetooth.service.
-
-sudo pacman -S bluez bluez-utils
+  <meta name="description" content="Si queres transferir archivos tendras que instalar obex primero (explicado más abajo) y después levantar el servicio de bluetooth. Si solo queres compartir audio podes hacer lo siguiente.
+sudo pacman -S bluez bluez-utils bluez-obexd bluez-tools
 sudo systemctl start bluetooth
+Levantamos el servicio obex
+sudo systemctl start obex  # Si falla correlo como usuario 
+systemctl status obex.service
+systemctl status bluetooth.service
+
+### Levantar obex como usuario
+
+systemctl --user start --now obex.service
+systemctl --user enable --now obex
+systemctl --user status obex
+No es necesario: Para que bootee con bluetooth activado
+sudo systemctl enable --now bluetooth.service # Si queres que bluetooth inicie en el boot.
+sudo systemctl enable --now obex.service # Si queres que obex inicie en el boot. 
+Nos conectamos a nuestro Android.
 bluetoothctl
 &gt; power on
 &gt; agent on
@@ -114,19 +119,24 @@ En caso de una mala conexión usar disconnect MAC_ADDRESS">
     <section class="section">
       <div class="container">
 <div class="content is-medium">
-  <p>Bluetooth is a standard for the short-range wireless interconnection of cellular
-phones, computers, and other electronic devices. In Linux, the canonical
-implementation of the Bluetooth protocol stack is BlueZ.</p>
-<h4 id="installation">Installation</h4>
-<ol>
-<li>Install the <code>bluez</code> package, providing the Bluetooth protocol stack.</li>
-<li>Install the <code>bluez-utils</code> package, providing the bluetoothctl utility. Additionally install <code>bluez-deprecated-tools</code> to have the deprecated BlueZ tools as well.</li>
-<li>The generic Bluetooth driver is the btusb kernel module. Check whether that module is loaded. If it is not, then load the module.</li>
-<li>Start/enable <code>bluetooth.service</code>.</li>
-</ol>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo pacman -S bluez bluez-utils
+  <p><strong>Si queres transferir archivos tendras que instalar obex primero (explicado más abajo) y después levantar el servicio de bluetooth.</strong> Si solo queres compartir audio podes hacer lo siguiente.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo pacman -S bluez bluez-utils bluez-obexd bluez-tools
 </span></span><span style="display:flex;"><span>sudo systemctl start bluetooth
-</span></span><span style="display:flex;"><span>bluetoothctl
+</span></span></code></pre></div><h4 id="levantamos-el-servicio-obex">Levantamos el servicio obex</h4>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo systemctl start obex  <span style="color:#75715e"># Si falla correlo como usuario </span>
+</span></span><span style="display:flex;"><span>systemctl status obex.service
+</span></span><span style="display:flex;"><span>systemctl status bluetooth.service
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">### Levantar obex como usuario</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>systemctl --user start --now obex.service
+</span></span><span style="display:flex;"><span>systemctl --user enable --now obex
+</span></span><span style="display:flex;"><span>systemctl --user status obex
+</span></span></code></pre></div><h3 id="no-es-necesario-para-que-bootee-con-bluetooth-activado">No es necesario: Para que bootee con bluetooth activado</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo systemctl enable --now bluetooth.service <span style="color:#75715e"># Si queres que bluetooth inicie en el boot.</span>
+</span></span><span style="display:flex;"><span>sudo systemctl enable --now obex.service <span style="color:#75715e"># Si queres que obex inicie en el boot. </span>
+</span></span></code></pre></div><h4 id="nos-conectamos-a-nuestro-android">Nos conectamos a nuestro Android.</h4>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>bluetoothctl
 </span></span><span style="display:flex;"><span>&gt; power on
 </span></span><span style="display:flex;"><span>&gt; agent on
 </span></span><span style="display:flex;"><span>&gt; scan on
@@ -134,384 +144,16 @@ implementation of the Bluetooth protocol stack is BlueZ.</p>
 </span></span><span style="display:flex;"><span>&gt; pair MAC_ADDRESS
 </span></span><span style="display:flex;"><span>&gt; connect MAC_ADDRESS
 </span></span></code></pre></div><p>En caso de una mala conexión usar <code>disconnect MAC_ADDRESS</code></p>
-<p><a href="https://old.reddit.com/r/archlinux/comments/13cr6mj/how_to_setup_bluetooth_service_on_arch_linux/">https://old.reddit.com/r/archlinux/comments/13cr6mj/how_to_setup_bluetooth_service_on_arch_linux/</a></p>
-<h2 id="transferir-archivos">Transferir archivos</h2>
-<p>To receive <strong>Bluetooth files from your phone to your Arch Linux PC using ONLY the command line</strong>, the correct tool is <strong>obexd / obexctl</strong>, not bluetoothctl.
-<code>bluetoothctl</code> handles pairing and connection, <strong>not file transfers</strong>.</p>
-<p>Here is the full working setup <strong>100% CLI only</strong>:</p>
-<hr>
-<h1 id="-1-install-needed-packages">✅ 1. Install needed packages</h1>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo pacman -S bluez bluez-utils bluez-obexd
-</span></span><span style="display:flex;"><span>yay -S obexftp
-</span></span></code></pre></div><hr>
-<h1 id="-2-enable-the-obex-file-receive-service">✅ 2. Enable the OBEX file-receive service</h1>
-<p>This is what actually receives files.</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo systemctl enable --now obex.service
-</span></span></code></pre></div><p>Check status:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>systemctl status obex.service
-</span></span></code></pre></div><p>If it fails, try the user service instead:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>systemctl --user enable --now obex
-</span></span></code></pre></div><hr>
-<h1 id="-3-pair-your-phone-with-bluetoothctl">✅ 3. Pair your phone with bluetoothctl</h1>
-<p>Enter bluetoothctl:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>bluetoothctl
-</span></span></code></pre></div><p>Inside:</p>
-<pre tabindex="0"><code>power on
-agent on
-discoverable on
-pairable on
-scan on
-</code></pre><p>Find your phone’s MAC, then:</p>
-<pre tabindex="0"><code>pair XX:XX:XX:XX:XX:XX
-trust XX:XX:XX:XX:XX:XX
-</code></pre><p>You do <strong>not</strong> need to “connect” for file transfer.</p>
-<hr>
-<h1 id="-4-start-obex-file-receiver-manually-if-needed">✅ 4. Start OBEX file receiver manually (if needed)</h1>
-<p>Depending on your setup, you may need:</p>
+<h4 id="enviar-archivos-con-obexctl-de-archlinux-a-android">Enviar archivos con <code>obexctl</code> (de ArchLinux a Android).</h4>
+<p>Start obexctl: <code>systemctl start --user obex</code> conectate con bluetoothctl (explicado más arriba). Y luego ejecutá:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>obexctl
-</span></span></code></pre></div><p>Then inside obexctl:</p>
-<pre tabindex="0"><code>power on
-agent on
-</code></pre><p>Then exit (<code>quit</code>).
-Often just having <code>obex.service</code> running is enough.</p>
-<hr>
-<h1 id="-5-send-a-file-from-your-phone">✅ 5. Send a file <strong>from your phone</strong></h1>
-<p>Go into your phone → “Bluetooth → Share file”.</p>
-<p>It should show your PC as <em>“OBEX file transfer”</em>.</p>
-<p>Send it.</p>
-<hr>
-<h1 id="-6-where-do-the-files-go">✅ 6. Where do the files go?</h1>
-<p>Default directory:</p>
-<pre tabindex="0"><code>~/Downloads/
-</code></pre><p>Sometimes:</p>
-<pre tabindex="0"><code>~/.cache/obexd/
-</code></pre><p>Check both.</p>
-<hr>
-<h1 id="-full-example-setup">⭐ Full Example Setup</h1>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo pacman -S bluez bluez-utils obexd
-</span></span><span style="display:flex;"><span>sudo systemctl enable --now bluetooth.service
-</span></span><span style="display:flex;"><span>sudo systemctl enable --now obex.service
-</span></span><span style="display:flex;"><span>bluetoothctl <span style="color:#e6db74">&lt;&lt;EOF
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">power on
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">agent on
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">discoverable on
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">pairable on
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">scan on
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOF</span>
-</span></span></code></pre></div><p>On your phone: <strong>send file → choose PC → confirm on PC if asked</strong>.</p>
-<hr>
-<h1 id="-if-your-phone-says-device-doesnt-support-file-transfer">❗ If your phone says “device doesn’t support file transfer”</h1>
-<p>Run this:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo sdptool add OPUSH
-</span></span></code></pre></div><p>And restart Bluetooth:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo systemctl restart bluetooth
-</span></span></code></pre></div><hr>
-<h1 id="if-you-want-i-can-also-show">If you want, I can also show:</h1>
-<p>✓ how to send files <em>from PC to phone</em> using <code>obexftp</code>
-✓ how to make your PC auto-accept files without prompts
-✓ how to log OBEX transfers</p>
-<h5 id="para-recibir-un-archivo">Para recibir un archivo</h5>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>obexftp -b &lt;mac_address_of_your_phone&gt; -B <span style="color:#ae81ff">25</span> -l
-</span></span><span style="display:flex;"><span>obexftp -b &lt;mac_address_of_your_phone&gt; -g &lt;filename&gt;
-</span></span></code></pre></div><h5 id="enviar-un-archivo-desde-linux-a-android">Enviar un archivo desde Linux a Android:</h5>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>obexftp -b &lt;mac_address_of_your_phone&gt; -p /path/to/your/file
-</span></span></code></pre></div><h3 id="para-transferir-archivos-no-necesitas-obexftp-solo-con-bluez-obex">Para transferir archivos no necesitas obexftp solo con bluez-obex</h3>
-<p>Your log means:</p>
-<p><strong>Android → Arch Linux OBEX connection succeeds,
-BUT Arch Linux immediately cancels the transfer.</strong></p>
-<p>This is ALWAYS caused by ONE of these four issues.</p>
-<p>Let’s fix them one by one — the solution is short.</p>
-<hr>
-<h1 id="-1-your-obex-server-has-no-writable-download-folder">✅ 1) Your OBEX server has no writable download folder</h1>
-<p>MOST COMMON REASON on Arch.</p>
-<p>Create the default directory manually:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mkdir -p ~/Downloads
-</span></span><span style="display:flex;"><span>chmod <span style="color:#ae81ff">700</span> ~/Downloads
-</span></span><span style="display:flex;"><span>systemctl --user restart obex.service
-</span></span></code></pre></div><p>Try sending again.</p>
-<p>If <code>~/Downloads</code> doesn’t exist, BlueZ aborts transfers exactly like your log:</p>
-<pre tabindex="0"><code>[DEL] Transfer ...
-[DEL] Session ...
-</code></pre><hr>
-<h1 id="-2-your-android-device-is-not-trusted">✅ 2) Your Android device is <strong>not trusted</strong></h1>
-<p>OBEX sessions get deleted instantly when the device isn’t trusted.</p>
-<p>Run:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>bluetoothctl
-</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>bluetooth<span style="color:#f92672">]</span><span style="color:#75715e"># trust XX:XX:XX:XX:XX:XX</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>bluetooth<span style="color:#f92672">]</span><span style="color:#75715e"># info XX:XX:XX:XX:XX:XX</span>
-</span></span></code></pre></div><p>Ensure it shows:</p>
-<pre tabindex="0"><code>Trusted: yes
-</code></pre><p>Otherwise the server drops the transfer instantly.</p>
-<hr>
-<h1 id="-3-run-agent--default-agent">✅ 3) Run agent + default-agent</h1>
-<p>This is required if you&rsquo;re in TTY or a WM without a Bluetooth GUI.</p>
-<pre tabindex="0"><code>bluetoothctl
-[bluetooth]# agent on
-[bluetooth]# default-agent
-</code></pre><p>Without this, transfers get rejected silently.</p>
-<hr>
-<h1 id="-4-your-obexservice-is-running-as-user-not-root">✅ 4) Your obex.service is running as user (not root)</h1>
-<p>Verify:</p>
-<pre tabindex="0"><code>systemctl --user status obex.service
-</code></pre><p>Must show <strong>active (running)</strong>.</p>
-<p>If not:</p>
-<pre tabindex="0"><code>systemctl --user restart obex.service
-</code></pre><hr>
-<h1 id="-quick-fix-checklist-works-for-90-of-cases">🔥 QUICK FIX CHECKLIST (works for 90% of cases)</h1>
-<p>Run ALL of this exactly:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mkdir -p ~/Downloads
-</span></span><span style="display:flex;"><span>chmod <span style="color:#ae81ff">700</span> ~/Downloads
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>systemctl --user restart obex.service
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>bluetoothctl
-</span></span><span style="display:flex;"><span>agent on
-</span></span><span style="display:flex;"><span>default-agent
-</span></span><span style="display:flex;"><span>pairable on
-</span></span><span style="display:flex;"><span>discoverable on
-</span></span><span style="display:flex;"><span>trust XX:XX:XX:XX:XX:XX <span style="color:#f92672">(</span>TAB<span style="color:#f92672">)</span>
-</span></span></code></pre></div><p>Then try sending from Android again.</p>
-<hr>
-<h1 id="-if-it-still-fails">❗ If it still fails</h1>
-<p>Run this and send me the error output:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>journalctl --user -u obex --follow
-</span></span></code></pre></div><p>Send a file from Android while this log runs.
-The error message there will tell the exact cause.</p>
-<hr>
-<p><strong>Perfect — now we know the problem.</strong>
-Your Android is connected using an <strong>A2DP audio endpoint</strong>:</p>
-<pre tabindex="0"><code>/org/bluez/hci0/dev_CC_61_E5_D1_3A_C9/sep2/fd0
-</code></pre><p>That is <strong>NOT OBEX</strong>, it’s the <strong>Bluetooth audio (A2DP) profile</strong>.</p>
-<p>OBEX file transfer CANNOT use A2DP transport.
-That’s why you get:</p>
-<pre tabindex="0"><code>Transport ... not acquired
-transport endpoint not found
-</code></pre><p>You are trying to “send a file” inside a device <em>audio</em> connection, which BlueZ does not support.</p>
-<hr>
-<h1 id="-real-solution">🔥 REAL SOLUTION</h1>
-<p>To receive files from Android, you <strong>must use OBEX</strong>, not bluetoothctl <em>send</em>.</p>
-<p><strong>You should NOT run send inside bluetoothctl.
-Android sends the file directly to obexd.</strong></p>
-<p>To fix:</p>
-<hr>
-<h1 id="-step-1--enable-obex-server-correct-service">✅ STEP 1 — Enable OBEX server (correct service)</h1>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>systemctl --user enable --now obex.service
-</span></span></code></pre></div><p>Verify:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>systemctl --user status obex.service
-</span></span></code></pre></div><p>Must be <strong>active (running)</strong>.</p>
-<hr>
-<h1 id="-step-2--pair--trust-the-android">✅ STEP 2 — Pair + Trust the Android</h1>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>bluetoothctl
-</span></span><span style="display:flex;"><span>power on
-</span></span><span style="display:flex;"><span>agent on
-</span></span><span style="display:flex;"><span>default-agent
-</span></span><span style="display:flex;"><span>pair XX:XX:XX:XX:XX:XX
-</span></span><span style="display:flex;"><span>trust XX:XX:XX:XX:XX:XX
-</span></span><span style="display:flex;"><span>exit
-</span></span></code></pre></div><hr>
-<h1 id="-step-3--android-use-send-via-bluetooth-share--bluetooth--your-pc">✅ STEP 3 — Android: use <strong>“Send via Bluetooth”</strong> (Share → Bluetooth → Your PC)</h1>
-<p>DO NOT TRY TO USE:</p>
-<pre tabindex="0"><code>send ...
-</code></pre><p>inside bluetoothctl.
-That’s not how file transfers work.</p>
-<p>Instead:
-<strong>Android must initiate the transfer.</strong></p>
-<hr>
-<h1 id="-why-your-transfer-fails">⚠ WHY YOUR TRANSFER FAILS</h1>
-<p>Android does not automatically use OBEX unless your Arch Linux machine advertises the OBEX service.
-If obex.service is not running, Android will fall back to A2DP/HFP (audio roles), and then file transfer fails.</p>
-<hr>
-<h1 id="-test-obex-is-announced-correctly">🚀 TEST OBEX is announced correctly</h1>
-<p>Run:</p>
-<pre tabindex="0"><code>sdptool browse local | grep -i OBEX -A5
-</code></pre><p>You MUST see:</p>
-<ul>
-<li>OBEX Object Push</li>
-<li>OBEX File Transfer</li>
-</ul>
-<p>If you do <strong>not</strong>, then Arch Linux isn’t publishing OBEX and Android will refuse to send.</p>
-<hr>
-<h1 id="-most-important-check">🧨 MOST IMPORTANT CHECK</h1>
-<p>Run this:</p>
-<pre tabindex="0"><code>journalctl --user -u obex --follow
-</code></pre><p>Now from Android → Share → Bluetooth → Your PC.</p>
-<p>You should see:</p>
-<pre tabindex="0"><code>NEW Session ...
-NEW Transfer ...
-</code></pre><p>If you see it getting deleted again, copy the exact error and I will fix it.</p>
-<hr>
-<p>If you want, I can also show how to manually test OBEX with:</p>
-<pre tabindex="0"><code>obexctl
-</code></pre><p>but <strong>bluetoothctl send</strong> will <em>never</em> work because that uses audio transport, not OBEX.</p>
-<p>Send me:</p>
-<pre tabindex="0"><code>sdptool browse local | grep -i OBEX -A5
-</code></pre><p>and I’ll tell you exactly what’s missing.</p>
-<hr>
-<h3 id="recibir-archivos">Recibir archivos</h3>
-<p>Receiving files via Bluetooth OBEX on the command line using BlueZ involves setting up an OBEX push server and ensuring proper Bluetooth configuration.</p>
-<ol>
-<li>Install OBEX Push Server:
-Code</li>
-</ol>
-<p>sudo apt-get install obexpushd
-2. Configure Bluetooth Daemon:
-Edit the Bluetooth daemon service file to enable compatibility mode.
-Code</p>
-<p>sudo nano /etc/systemd/system/dbus-org.bluez.service
-Locate the ExecStart= line and add the -C flag at the end. For example:
-Code</p>
-<p>ExecStart=/usr/lib/bluez/bluetoothd -C
-Save the file and reboot your system.
-3. Start OBEX Push Server:
-Create a directory for received files and start obexpushd.
-Code</p>
-<p>sudo mkdir /bluetooth
-sudo obexpushd -B -o /bluetooth -n
--B: Runs obexpushd in the background.
--o /bluetooth: Specifies /bluetooth as the directory for received files.
--n: Disables notification of received files.
-4. Verify OBEX Service:
-Confirm that the OBEX service is registered with the Bluetooth Service Discovery Protocol (SDP).
-Code</p>
-<p>sudo sdptool browse local
-Look for an OBEX service entry in the output.
-5. Pair and Receive Files:
-Make your device discoverable.
-Code</p>
-<p>bluetoothctl
-discoverable on
-Initiate pairing from the sending device (e.g., phone): Pair with your Linux system.
-Send the file from the sending device: The file will be received and saved in the /bluetooth directory (or the directory you specified with -o).
-Important Notes:
-Permissions: Files received will be owned by root. You may need sudo to access them or change directory permissions (e.g., sudo chmod 0777 /bluetooth) for easier access.
-Re-pairing: If you previously paired your devices before setting up obexpushd, you might need to remove the pairing on both devices and re-pair them for the OBEX service to be recognized.
-obexd service: In some newer BlueZ setups, you might need to ensure the obexd service is running. You can check its status and enable it if necessary:
-Code</p>
-<p>systemctl &ndash;user status obex
-systemctl &ndash;user enable &ndash;now obex</p>
-<hr>
-<h4 id="enviar-archivos">Enviar archivos:</h4>
-<p>Sending files via Bluetooth using the command-line interface (CLI) with BlueZ and OBEX involves several steps, primarily using the obexctl tool.
-Prerequisites:
-BlueZ and OBEX Tools: Ensure that BlueZ and the necessary OBEX tools (like obexctl) are installed. On many Linux distributions, this might involve installing packages like bluez and bluez-tools.
-Bluetooth Service: Verify that the Bluetooth service is running on your system.
-Device Pairing: The devices involved in the file transfer must be paired successfully. You can use bluetoothctl for pairing.
-Steps to Send Files:
-Start obexctl: Open a terminal and run sudo obexctl. This will open the obexctl interactive prompt.
-Connect to the OBEX Object Push Profile:
-First, ensure the target device is discoverable and accepting incoming connections.
-In the obexctl prompt, use the connect command followed by the MAC address of the target device. For example:
-Code</p>
-<pre><code>    [bluetooth]# connect 00:11:22:33:44:55
-</code></pre>
-<p>Replace 00:11:22:33:44:55 with the actual MAC address of your target device.
-Send the File: Once connected, use the send command followed by the absolute path to the file you want to transfer. For example:
-Code</p>
-<pre><code>[00:11:22:33:44:55]# send /home/user/documents/my_file.txt
-</code></pre>
-<p>Ensure the file is in a location accessible to the obexctl process (especially if running as root or within a restricted environment like a snap).
-Quit obexctl: After the transfer is complete, you can type quit to exit the obexctl prompt.
-Important Notes:
-Permissions: You might need sudo to run obexctl or ensure that the user running the command has the necessary permissions to access Bluetooth devices.
-Receiving Device: The receiving device must be configured to accept incoming OBEX push requests. This often involves an agent or service running on the receiving end to handle the transfer and potentially prompt for acceptance.
-Error Handling: If you encounter issues like &ldquo;Client proxy not available&rdquo; when scripting obexctl, it might be related to how the D-Bus session is managed or environmental variables like DISPLAY are set, especially in headless environments. Consider using expect scripts carefully or exploring alternatives for automated transfers.</p>
-<h1 id="chatgpt">ChatGPT</h1>
-<p>Below is a clear, practical guide for <strong>sending and receiving files via Bluetooth on Arch Linux</strong>, using the standard BlueZ stack and Blueman (recommended), plus CLI options.</p>
-<hr>
-<h1 id="-1-install-bluetooth-packages">✅ <strong>1. Install Bluetooth Packages</strong></h1>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo pacman -S bluez bluez-utils blueman
-</span></span></code></pre></div><p>Enable and start the Bluetooth service:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo systemctl enable --now bluetooth.service
-</span></span></code></pre></div><hr>
-<h1 id="-2-start-the-bluetooth-manager-gui-method--easiest">✅ <strong>2. Start the Bluetooth Manager (GUI Method – Easiest)</strong></h1>
-<p>If you&rsquo;re running a desktop environment, open <strong>Blueman</strong>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>blueman-manager
-</span></span></code></pre></div><h3 id="pair-your-device"><strong>Pair your device</strong></h3>
-<ol>
-<li>Turn on Bluetooth on your phone/laptop.</li>
-<li>In Blueman → search → pair with the device.</li>
-<li>For Android phones, accept the pairing code.</li>
-</ol>
-<hr>
-<h1 id="-3-receive-files-via-bluetooth">✅ <strong>3. Receive Files via Bluetooth</strong></h1>
-<h3 id="enable-the-blueman-file-receiver-plugin"><strong>Enable the Blueman File Receiver plugin</strong></h3>
-<p>Blueman ships with a file-receiver service using <code>obexd</code>.</p>
-<p>Check that it’s enabled:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>blueman-services
-</span></span></code></pre></div><p>Make sure <strong>&ldquo;Transfer files&rdquo;</strong> and <strong>&ldquo;Receive files (OBEX)&rdquo;</strong> are enabled.</p>
-<p>Files usually arrive in:</p>
-<pre tabindex="0"><code>~/Downloads/
-</code></pre><h3 id="if-obex-agent-is-not-running-automatically">If OBEX agent is not running automatically</h3>
-<p>Start it manually:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>/usr/lib/bluetooth/obexd
-</span></span></code></pre></div><p>Or enable the <code>obex</code> systemd user service:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>systemctl --user enable --now obex.service
-</span></span></code></pre></div><p>Now you can send a file from your phone → Arch machine.</p>
-<hr>
-<h1 id="-4-send-files-from-arch-linux">✅ <strong>4. Send Files from Arch Linux</strong></h1>
-<p>Blueman includes a GUI sender:</p>
-<p><strong>Right-click a paired device → “Send File”</strong>
-Or from the terminal:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>blueman-sendto
-</span></span></code></pre></div><p>This opens a file picker and transfers via OBEX.</p>
-<hr>
-<h1 id="-5-cli-method-no-gui">✅ <strong>5. CLI Method (No GUI)</strong></h1>
-<h3 id="pair-with-the-device"><strong>Pair with the device</strong></h3>
-<p>Enter the Bluetooth shell:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>bluetoothctl
-</span></span></code></pre></div><p>Then:</p>
-<pre tabindex="0"><code>power on
-agent on
-default-agent
-scan on
-</code></pre><p>Find your device’s MAC address, then:</p>
-<pre tabindex="0"><code>pair XX:XX:XX:XX:XX:XX
-trust XX:XX:XX:XX:XX:XX
-connect XX:XX:XX:XX:XX:XX
-</code></pre><hr>
-<h3 id="send-a-file-using"><strong>Send a file using <code>obexctl</code></strong></h3>
-<p>Start obexctl:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>obexctl
-</span></span></code></pre></div><p>Then:</p>
-<pre tabindex="0"><code>connect XX:XX:XX:XX:XX:XX
-send /path/to/file.jpg
-</code></pre><hr>
-<h3 id="receive-files-with-obexd"><strong>Receive files with obexd</strong></h3>
-<p>Start the OBEX server:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>obexd --nopath --root<span style="color:#f92672">=</span>/home/$USER/Downloads
-</span></span></code></pre></div><p>(Or use the built-in service as described earlier.)</p>
-<hr>
-<h1 id="-summary">✨ Summary</h1>
-<table>
-  <thead>
-      <tr>
-          <th>Task</th>
-          <th>Easiest Method</th>
-      </tr>
-  </thead>
-  <tbody>
-      <tr>
-          <td><strong>Send file</strong></td>
-          <td><code>blueman-sendto</code> or right-click → “Send File”</td>
-      </tr>
-      <tr>
-          <td><strong>Receive file</strong></td>
-          <td>Ensure OBEX file receiving is enabled in <code>blueman-services</code></td>
-      </tr>
-      <tr>
-          <td><strong>CLI only</strong></td>
-          <td><code>bluetoothctl</code> + <code>obexctl</code></td>
-      </tr>
-  </tbody>
-</table>
-<hr>
-<p>If you want, I can help you:</p>
-<p>✔ troubleshoot if a device doesn’t show up
-✔ configure KDE/GNOME Bluetooth specifically
-✔ use only terminal (no GUI)
-✔ fix OBEX errors like &ldquo;Not Authorized&rdquo; or &ldquo;No such file or directory&rdquo;</p>
-<p>Just tell me!</p>
-
+</span></span><span style="display:flex;"><span>connect XX:XX:XX:XX:XX:XX
+</span></span><span style="display:flex;"><span>send /home/user/documents/my_file.txt
+</span></span><span style="display:flex;"><span>journalctl --user -u obex.service -f
+</span></span></code></pre></div><h4 id="recibir-archivo-desde-android-a-la-pc-antes-tenes-que-estar-conectado-con-bluetoothctl-y-tenes-que-tener-el-servicio-de-bluez-obex-instalado-e-iniciado">Recibir archivo desde Android a la PC (antes tenes que estar conectado con bluetoothctl y tenes que tener el servicio de bluez-obex instalado e iniciado).</h4>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo pacman -S bluez-tools
+</span></span><span style="display:flex;"><span>bt-obex --auto-accept -s ~/Downloads
+</span></span></code></pre></div>
 </div>
 
 
