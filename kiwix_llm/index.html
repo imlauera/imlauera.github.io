@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/kiwix_llm/">
+  <meta property="og:site_name" content="Imlauer">
+  <meta property="og:title" content="Ejecutar un LLM con archivos Kiwix">
+  <meta property="og:description" content="Below is a practical “menu” of the three most common ways people are combining local LLMs and Kiwix ZIM files today. Pick the style that matches your hardware, patience, and privacy needs.
+One-command plug-in (lightweight, no RAG) Install the official “llm-tools-kiwix” plug-in inside the same Python environment as the llm CLI tool (works with any local model that llm can see, e.g. Llamafile, Ollama, LM-Studio, etc.).
+# 1. Install the plug-in pip install llm-tools-kiwix # or: llm install llm-tools-kiwix # 2. Drop your .zim files in the folder where you will run commands # (or export KIWIX_HOME=/path/to/zim/folder) # 3. Ask anything – the LLM automatically searches the ZIMs for you llm -m deepseek-r1:7b --tool kiwix_search_and_collect \ &#34;Explain how a transistor works&#34; --tools-debug No vector DB, no GPU needed, instant start-up. The LLM receives the raw article text as context, so keep prompts concise or choose a model with a big context window. Works completely offline once the ZIMs are on disk . Full RAG pipeline (best answers, needs RAM/CPU) Clone the “zim-llm” project. It extracts every article from the ZIMs, chunks them, creates embeddings, and stores them in Chroma/FAISS so a local LLM can do retrieval-augmented generation.">
+  <meta property="og:locale" content="es_es">
+  <meta property="og:type" content="article">
+    <meta property="article:published_time" content="2025-11-22T19:44:13-03:00">
+    <meta property="article:modified_time" content="2025-11-22T19:44:13-03:00">
+
+  
+  <meta itemprop="name" content="Ejecutar un LLM con archivos Kiwix">
+  <meta itemprop="description" content="Below is a practical “menu” of the three most common ways people are combining local LLMs and Kiwix ZIM files today. Pick the style that matches your hardware, patience, and privacy needs.
+One-command plug-in (lightweight, no RAG) Install the official “llm-tools-kiwix” plug-in inside the same Python environment as the llm CLI tool (works with any local model that llm can see, e.g. Llamafile, Ollama, LM-Studio, etc.).
+# 1. Install the plug-in pip install llm-tools-kiwix # or: llm install llm-tools-kiwix # 2. Drop your .zim files in the folder where you will run commands # (or export KIWIX_HOME=/path/to/zim/folder) # 3. Ask anything – the LLM automatically searches the ZIMs for you llm -m deepseek-r1:7b --tool kiwix_search_and_collect \ &#34;Explain how a transistor works&#34; --tools-debug No vector DB, no GPU needed, instant start-up. The LLM receives the raw article text as context, so keep prompts concise or choose a model with a big context window. Works completely offline once the ZIMs are on disk . Full RAG pipeline (best answers, needs RAM/CPU) Clone the “zim-llm” project. It extracts every article from the ZIMs, chunks them, creates embeddings, and stores them in Chroma/FAISS so a local LLM can do retrieval-augmented generation.">
+  <meta itemprop="datePublished" content="2025-11-22T19:44:13-03:00">
+  <meta itemprop="dateModified" content="2025-11-22T19:44:13-03:00">
+  <meta itemprop="wordCount" content="475">
+  
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Ejecutar un LLM con archivos Kiwix">
+  <meta name="twitter:description" content="Below is a practical “menu” of the three most common ways people are combining local LLMs and Kiwix ZIM files today. Pick the style that matches your hardware, patience, and privacy needs.
+One-command plug-in (lightweight, no RAG) Install the official “llm-tools-kiwix” plug-in inside the same Python environment as the llm CLI tool (works with any local model that llm can see, e.g. Llamafile, Ollama, LM-Studio, etc.).
+# 1. Install the plug-in pip install llm-tools-kiwix # or: llm install llm-tools-kiwix # 2. Drop your .zim files in the folder where you will run commands # (or export KIWIX_HOME=/path/to/zim/folder) # 3. Ask anything – the LLM automatically searches the ZIMs for you llm -m deepseek-r1:7b --tool kiwix_search_and_collect \ &#34;Explain how a transistor works&#34; --tools-debug No vector DB, no GPU needed, instant start-up. The LLM receives the raw article text as context, so keep prompts concise or choose a model with a big context window. Works completely offline once the ZIMs are on disk . Full RAG pipeline (best answers, needs RAM/CPU) Clone the “zim-llm” project. It extracts every article from the ZIMs, chunks them, creates embeddings, and stores them in Chroma/FAISS so a local LLM can do retrieval-augmented generation.">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Ejecutar un LLM con archivos Kiwix
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/kiwix_llm/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="Below is a practical “menu” of the three most common ways people are combining local LLMs and Kiwix ZIM files today.  Pick the style that matches your hardware, patience, and privacy needs.
+
+
+One-command plug-in (lightweight, no RAG)
+
+
+Install the official “llm-tools-kiwix” plug-in inside the same Python environment as the llm CLI tool (works with any local model that llm can see, e.g. Llamafile, Ollama, LM-Studio, etc.).
+# 1. Install the plug-in
+pip install llm-tools-kiwix      # or: llm install llm-tools-kiwix
+
+# 2. Drop your .zim files in the folder where you will run commands
+#    (or export KIWIX_HOME=/path/to/zim/folder)
+
+# 3. Ask anything – the LLM automatically searches the ZIMs for you
+llm -m deepseek-r1:7b --tool kiwix_search_and_collect \
+  &#34;Explain how a transistor works&#34; --tools-debug
+
+No vector DB, no GPU needed, instant start-up.
+The LLM receives the raw article text as context, so keep prompts concise or choose a model with a big context window.
+Works completely offline once the ZIMs are on disk .
+
+
+
+Full RAG pipeline (best answers, needs RAM/CPU)
+
+
+Clone the “zim-llm” project.  It extracts every article from the ZIMs, chunks them, creates embeddings, and stores them in Chroma/FAISS so a local LLM can do retrieval-augmented generation.">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Ejecutar un LLM con archivos Kiwix
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2025-11-22T19:44:13-03:00'>
+      November 22, 2025
+    </time>
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <p>Below is a practical “menu” of the three most common ways people are combining local LLMs and Kiwix ZIM files today.  Pick the style that matches your hardware, patience, and privacy needs.</p>
+<hr>
+<ol>
+<li>One-command plug-in (lightweight, no RAG)</li>
+</ol>
+<hr>
+<p>Install the official “llm-tools-kiwix” plug-in inside the same Python environment as the <code>llm</code> CLI tool (works with any local model that <code>llm</code> can see, e.g. Llamafile, Ollama, LM-Studio, etc.).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># 1. Install the plug-in</span>
+</span></span><span style="display:flex;"><span>pip install llm-tools-kiwix      <span style="color:#75715e"># or: llm install llm-tools-kiwix</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 2. Drop your .zim files in the folder where you will run commands</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#    (or export KIWIX_HOME=/path/to/zim/folder)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 3. Ask anything – the LLM automatically searches the ZIMs for you</span>
+</span></span><span style="display:flex;"><span>llm -m deepseek-r1:7b --tool kiwix_search_and_collect <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  <span style="color:#e6db74">&#34;Explain how a transistor works&#34;</span> --tools-debug
+</span></span></code></pre></div><ul>
+<li>No vector DB, no GPU needed, instant start-up.</li>
+<li>The LLM receives the raw article text as context, so keep prompts concise or choose a model with a big context window.</li>
+<li>Works completely offline once the ZIMs are on disk .</li>
+</ul>
+<hr>
+<ol start="2">
+<li>Full RAG pipeline (best answers, needs RAM/CPU)</li>
+</ol>
+<hr>
+<p>Clone the “zim-llm” project.  It extracts every article from the ZIMs, chunks them, creates embeddings, and stores them in Chroma/FAISS so a local LLM can do retrieval-augmented generation.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># 1. Clone &amp; install</span>
+</span></span><span style="display:flex;"><span>git clone https://github.com/rouralberto/zim-llm.git
+</span></span><span style="display:flex;"><span>cd zim-llm <span style="color:#f92672">&amp;&amp;</span> ./setup.sh          <span style="color:#75715e"># creates venv + installs libzim, sentence-transformers, langchain, etc.</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 2. Drop ZIM files into zim_library/</span>
+</span></span><span style="display:flex;"><span>curl -L -o zim_library/en_wiki.zim <span style="color:#e6db74">&#34;https://download.kiwix.org/zim/wikipedia_en_all_maxi.zim&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 3. Build the vector index (one-time, hours for big ZIMs)</span>
+</span></span><span style="display:flex;"><span>source zim_rag_env/bin/activate
+</span></span><span style="display:flex;"><span>python zim_rag.py build
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 4. Chat with your offline archive</span>
+</span></span><span style="display:flex;"><span>python zim_rag.py rag-query <span style="color:#e6db74">&#34;Compare Newton’s and Leibniz’s notation for calculus&#34;</span>
+</span></span></code></pre></div><ul>
+<li>First build is CPU-heavy; afterwards queries are ~1 s.</li>
+<li>Works with any LLM LangChain can call (Ollama, Llama-cpp, Transformers, etc.).</li>
+<li>Keeps every answer grounded in the exact articles it retrieved .</li>
+</ul>
+<hr>
+<ol start="3">
+<li>MCP server route (nice GUI, LM-Studio / OpenWebUI)</li>
+</ol>
+<hr>
+<p>If you prefer point-and-click, run an MCP (Model-Context-Protocol) server that exposes the ZIMs as tools your chat GUI can call.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pip install openzim-mcp
+</span></span><span style="display:flex;"><span>mkdir ~/zim-files <span style="color:#f92672">&amp;&amp;</span> cd ~/zim-files
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># (download a small .zim first, e.g. wikipedia_en_simple)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># start the server</span>
+</span></span><span style="display:flex;"><span>openzim-mcp --mode simple ~/zim-files
+</span></span></code></pre></div><p>Then in LM-Studio (or any MCP client) add a new MCP server pointing to <code>http://localhost:8000</code> and tick the “search_with_filters” tool.  From now on you can simply ask questions in the chat and the LLM will transparently pull the relevant Wikipedia articles from your local ZIM file .</p>
+<hr>
+<h2 id="quick-checklist-of-ingredients">Quick checklist of ingredients</h2>
+<ul>
+<li>Kiwix ZIM files – get them from <a href="https://library.kiwix.org">https://library.kiwix.org</a> or the torrent feeds.</li>
+<li>Local LLM – easiest via Ollama (<code>ollama pull llama3.1:8b</code>) or LM-Studio.</li>
+<li>(Optional but handy) GPU with 8 GB+ VRAM if you want &gt;10 tokens/s on 7–13 B models.</li>
+<li>Disk: 100 GB+ if you plan to store Wikipedia + Stack-Exchange + LibreTexts, etc.</li>
+</ul>
+<p>Pick one of the three recipes, keep everything on localhost, and you have a completely private, off-grid “AI Internet” running on your own hardware.</p>
+
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+</footer>
+
+
+</body>
+</html>
