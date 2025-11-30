@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/cli_video_editing/">
+  <meta property="og:site_name" content="Imlauer">
+  <meta property="og:title" content="CLI video editing">
+  <meta property="og:description" content="#!/usr/bin/env bash # cli_video_editor.sh # Full CLI Video Editor for Arch Linux (ffmpeg-based) # Requirements: ffmpeg, espeak-ng (or espeak), sox, imagemagick (convert), jq (optional) # Install on Arch: # sudo pacman -S ffmpeg espeak-ng sox imagemagick jq # # Usage: ./cli_video_editor.sh &lt;command&gt; [options] # Commands: # cut &lt;input&gt; &lt;start&gt; &lt;end&gt; &lt;out&gt; # trim &lt;input&gt; &lt;start&gt; &lt;duration&gt; &lt;out&gt; # speed &lt;input&gt; &lt;factor&gt; &lt;out&gt; # factor &gt;1 faster, &lt;1 slower # reverse &lt;input&gt; &lt;out&gt; # add_text &lt;input&gt; &lt;text&gt; &lt;x&gt; &lt;y&gt; &lt;fontsize&gt; &lt;out&gt; # add_watermark &lt;input&gt; &lt;image&gt; &lt;x&gt; &lt;y&gt; &lt;out&gt; # add_music &lt;input_video&gt; &lt;music&gt; &lt;mix_level(0..1)&gt; &lt;out&gt; # tts_narrate &lt;text&gt; &lt;voicefile.wav&gt; # creates wav using espeak-ng # voice_change &lt;inwav&gt; &lt;mode&gt; &lt;outwav&gt; # modes: chipmunk, deep, robot, pitchN # overlay_audio &lt;video&gt; &lt;audio&gt; &lt;out&gt; # burn_subs &lt;video&gt; &lt;sub.srt&gt; &lt;out&gt; # filter_pixelate &lt;input&gt; &lt;scale_width&gt; &lt;out&gt; # filter_grayscale &lt;input&gt; &lt;out&gt; # filter_glitch &lt;input&gt; &lt;out&gt; # help # # Examples: # ./cli_video_editor.sh cut input.mp4 00:00:05 00:00:12 cut.mp4 # ./cli_video_editor.sh speed input.mp4 2.0 speedx2.mp4 # ./cli_video_editor.sh add_text input.mp4 &#34;HELLO WORLD&#34; 50 50 48 out.mp4 # ./cli_video_editor.sh tts_narrate &#34;Hello there&#34; voice.wav # ./cli_video_editor.sh overlay_audio video.mp4 voice.wav final.mp4 set -euo pipefail IFS=$&#39;\n\t&#39; # Helper: check dependencies required_bins=(ffmpeg espeak-ng sox convert) for b in &#34;${required_bins[@]}&#34;; do if ! command -v &#34;$b&#34; &amp;&gt;/dev/null; then echo &#34;Warning: $b not found in PATH. Install it for full functionality.&#34; &gt;&amp;2 fi done # Function: cut by start and end (absolute times) cut_segment(){ local in=&#34;$1&#34;; local start=&#34;$2&#34;; local end=&#34;$3&#34;; local out=&#34;$4&#34; ffmpeg -y -ss &#34;$start&#34; -to &#34;$end&#34; -i &#34;$in&#34; -c copy &#34;$out&#34; } # Function: trim by start &#43; duration trim_segment(){ local in=&#34;$1&#34;; local start=&#34;$2&#34;; local dur=&#34;$3&#34;; local out=&#34;$4&#34; ffmpeg -y -ss &#34;$start&#34; -t &#34;$dur&#34; -i &#34;$in&#34; -c copy &#34;$out&#34; } reverse_video(){ local in=&#34;$1&#34;; local out=&#34;$2&#34; ffmpeg -y -i &#34;$in&#34; -vf reverse -af areverse &#34;$out&#34; } speed_change(){ local in=&#34;$1&#34;; local factor=&#34;$2&#34;; local out=&#34;$3&#34; # video pts scaling, audio tempo (atempo supports 0.5-2.0; chain if needed) # build audio filter chain for atempo awk_cmd=&#34;&#34; if (( $(echo &#34;$factor &gt; 0&#34; | bc -l) )); then # video setpts multiplier = 1/factor vp=&#34;setpts=${1/factor}*PTS&#34; fi # calculate setpts properly local inv=$(echo &#34;scale=9; 1/$factor&#34; | bc -l) # audio atempo: break into allowed multipliers between 0.5 and 2.0 atempo_chain=() val=$factor # for speedup (&gt;1) we need atempo= factor, but atempo accepts 0.5-2.0 # we will compute the audio filter as multiple chained atempo filters for large factors # but easiest: resample using asetrate then aresample if (( $(echo &#34;$factor &gt;= 0.1&#34; | bc -l) )); then # for simplicity use asetrate trick (works but may change pitch) ffmpeg -y -i &#34;$in&#34; -filter_complex &#34;[0:v]setpts=${inv}*PTS[v];[0:a]asetrate=44100*${factor},aresample=44100,atempo=1[a]&#34; -map &#34;[v]&#34; -map &#34;[a]&#34; -c:v libx264 -preset fast -crf 23 &#34;$out&#34; else echo &#34;Invalid factor: $factor&#34;; return 1 fi } # Add text overlay (simple center/default) add_text(){ local in=&#34;$1&#34;; local text=&#34;$2&#34;; local x=&#34;$3&#34;; local y=&#34;$4&#34;; local size=&#34;$5&#34;; local out=&#34;$6&#34; # escape text for ffmpeg drawtext local esc=$(printf &#39;%s&#39; &#34;$text&#34; | sed &#34;s/&#39;/\\\\&#39;/g&#34;) ffmpeg -y -i &#34;$in&#34; -vf &#34;drawtext=fontfile=/usr/share/fonts/TTF/DejaVuSans.ttf:text=&#39;$esc&#39;:fontcolor=white:fontsize=${size}:borderw=3:x=${x}:y=${y}&#34; -codec:a copy &#34;$out&#34; } # Watermark with image overlay add_watermark(){ local in=&#34;$1&#34;; local img=&#34;$2&#34;; local x=&#34;$3&#34;; local y=&#34;$4&#34;; local out=&#34;$5&#34; ffmpeg -y -i &#34;$in&#34; -i &#34;$img&#34; -filter_complex &#34;overlay=${x}:${y}&#34; -c:a copy &#34;$out&#34; } # Mix background music with given mix level (0-1 for music volume) add_music(){ local invid=&#34;$1&#34;; local music=&#34;$2&#34;; local mixlevel=&#34;$3&#34;; local out=&#34;$4&#34; # extract original audio tmp_audio=$(mktemp --suffix=.wav) ffmpeg -y -i &#34;$invid&#34; -vn -ac 2 -ar 44100 -f wav &#34;$tmp_audio&#34; # adjust music volume and mix ffmpeg -y -i &#34;$tmp_audio&#34; -i &#34;$music&#34; -filter_complex &#34;[1:a]volume=${mixlevel}[m];[0:a][m]amix=inputs=2:duration=first:dropout_transition=2[a]&#34; -map &#34;0:v?&#34; -map &#34;[a]&#34; -c:v copy -c:a aac -b:a 192k &#34;$out&#34; rm -f &#34;$tmp_audio&#34; } # Overlay an audio file (narration) onto a video (replace or mix based on flag?) overlay_audio(){ local video=&#34;$1&#34;; local audio=&#34;$2&#34;; local out=&#34;$3&#34; ffmpeg -y -i &#34;$video&#34; -i &#34;$audio&#34; -c:v copy -map 0:v:0 -map 1:a:0 -shortest -c:a aac -b:a 192k &#34;$out&#34; } # TTS via espeak-ng tts_narrate(){ local text=&#34;$1&#34;; local outwav=&#34;$2&#34; if command -v espeak-ng &amp;&gt;/dev/null; then espeak-ng -v en -s 150 -w &#34;$outwav&#34; &#34;$text&#34; elif command -v espeak &amp;&gt;/dev/null; then espeak -s 150 -w &#34;$outwav&#34; &#34;$text&#34; else echo &#34;No espeak-ng/espeak installed&#34; &gt;&amp;2; return 1 fi } # Voice change using sox voice_change(){ local inwav=&#34;$1&#34;; local mode=&#34;$2&#34;; local outwav=&#34;$3&#34; case &#34;$mode&#34; in chipmunk) # raise pitch -&gt; faster sox &#34;$inwav&#34; &#34;$outwav&#34; pitch 700 ;; deep) sox &#34;$inwav&#34; &#34;$outwav&#34; pitch -300 ;; robot) # ringmod &#43; delay-ish sox &#34;$inwav&#34; -p pitch -150 | sox - -n sinc 100-1000 &amp;&amp; sox &#34;$inwav&#34; &#34;$outwav&#34; chorus 0.7 0.9 55 0.4 0.25 2 -t ;; pitch*) # pitchN like pitch200 num=${mode#pitch} sox &#34;$inwav&#34; &#34;$outwav&#34; pitch &#34;$num&#34; ;; *) echo &#34;Unknown mode: $mode&#34;; return 1;; esac } # Burn subtitles (requires a valid SRT file) burn_subs(){ local in=&#34;$1&#34;; local srt=&#34;$2&#34;; local out=&#34;$3&#34; ffmpeg -y -i &#34;$in&#34; -vf &#34;subtitles=&#39;$srt&#39;&#34; -c:a copy &#34;$out&#34; } # Pixelate filter: scale down then upscale filter_pixelate(){ local in=&#34;$1&#34;; local w=&#34;$2&#34;; local out=&#34;$3&#34; ffmpeg -y -i &#34;$in&#34; -vf &#34;scale=${w}:-1:flags=neighbor,scale=iw*4:ih*4:flags=neighbor&#34; -c:a copy &#34;$out&#34; } filter_grayscale(){ local in=&#34;$1&#34;; local out=&#34;$2&#34; ffmpeg -y -i &#34;$in&#34; -vf format=gray -c:a copy &#34;$out&#34; } # Simple glitch effect using tblend and fftfilt-ish filter_glitch(){ local in=&#34;$1&#34;; local out=&#34;$2&#34; ffmpeg -y -i &#34;$in&#34; -filter_complex &#34;[0:v]split[v1][v2];[v1]tblend=all_mode=overlay:all_opacity=0.6,negate[tmp];[v2]hue=s=0[mono];[tmp][mono]blend=all_mode=&#39;addition&#39;[v]&#34; -map &#34;[v]&#34; -map 0:a? -c:v libx264 -preset fast -crf 24 &#34;$out&#34; } # Help / usage usage(){ sed -n &#39;1,140p&#39; &#34;$0&#34; } # Command dispatcher cmd=&#34;$1&#34;; shift || true case &#34;$cmd&#34; in cut) cut_segment &#34;$@&#34; ;; trim) trim_segment &#34;$@&#34; ;; reverse) reverse_video &#34;$@&#34; ;; speed) speed_change &#34;$@&#34; ;; add_text) add_text &#34;$@&#34; ;; add_watermark) add_watermark &#34;$@&#34; ;; add_music) add_music &#34;$@&#34; ;; overlay_audio) overlay_audio &#34;$@&#34; ;; tts_narrate) tts_narrate &#34;$@&#34; ;; voice_change) voice_change &#34;$@&#34; ;; burn_subs) burn_subs &#34;$@&#34; ;; filter_pixelate) filter_pixelate &#34;$@&#34; ;; filter_grayscale) filter_grayscale &#34;$@&#34; ;; filter_glitch) filter_glitch &#34;$@&#34; ;; help|--help|-h|&#34;&#34;) usage ;; *) echo &#34;Unknown command: $cmd&#34;; usage; exit 1 ;; esac Done — I created the cli_video_editor.sh script in the canvas (title: Cli Video Editor).">
+  <meta property="og:locale" content="es_es">
+  <meta property="og:type" content="article">
+    <meta property="article:published_time" content="2025-11-30T19:27:39-03:00">
+    <meta property="article:modified_time" content="2025-11-30T19:27:39-03:00">
+
+  
+  <meta itemprop="name" content="CLI video editing">
+  <meta itemprop="description" content="#!/usr/bin/env bash # cli_video_editor.sh # Full CLI Video Editor for Arch Linux (ffmpeg-based) # Requirements: ffmpeg, espeak-ng (or espeak), sox, imagemagick (convert), jq (optional) # Install on Arch: # sudo pacman -S ffmpeg espeak-ng sox imagemagick jq # # Usage: ./cli_video_editor.sh &lt;command&gt; [options] # Commands: # cut &lt;input&gt; &lt;start&gt; &lt;end&gt; &lt;out&gt; # trim &lt;input&gt; &lt;start&gt; &lt;duration&gt; &lt;out&gt; # speed &lt;input&gt; &lt;factor&gt; &lt;out&gt; # factor &gt;1 faster, &lt;1 slower # reverse &lt;input&gt; &lt;out&gt; # add_text &lt;input&gt; &lt;text&gt; &lt;x&gt; &lt;y&gt; &lt;fontsize&gt; &lt;out&gt; # add_watermark &lt;input&gt; &lt;image&gt; &lt;x&gt; &lt;y&gt; &lt;out&gt; # add_music &lt;input_video&gt; &lt;music&gt; &lt;mix_level(0..1)&gt; &lt;out&gt; # tts_narrate &lt;text&gt; &lt;voicefile.wav&gt; # creates wav using espeak-ng # voice_change &lt;inwav&gt; &lt;mode&gt; &lt;outwav&gt; # modes: chipmunk, deep, robot, pitchN # overlay_audio &lt;video&gt; &lt;audio&gt; &lt;out&gt; # burn_subs &lt;video&gt; &lt;sub.srt&gt; &lt;out&gt; # filter_pixelate &lt;input&gt; &lt;scale_width&gt; &lt;out&gt; # filter_grayscale &lt;input&gt; &lt;out&gt; # filter_glitch &lt;input&gt; &lt;out&gt; # help # # Examples: # ./cli_video_editor.sh cut input.mp4 00:00:05 00:00:12 cut.mp4 # ./cli_video_editor.sh speed input.mp4 2.0 speedx2.mp4 # ./cli_video_editor.sh add_text input.mp4 &#34;HELLO WORLD&#34; 50 50 48 out.mp4 # ./cli_video_editor.sh tts_narrate &#34;Hello there&#34; voice.wav # ./cli_video_editor.sh overlay_audio video.mp4 voice.wav final.mp4 set -euo pipefail IFS=$&#39;\n\t&#39; # Helper: check dependencies required_bins=(ffmpeg espeak-ng sox convert) for b in &#34;${required_bins[@]}&#34;; do if ! command -v &#34;$b&#34; &amp;&gt;/dev/null; then echo &#34;Warning: $b not found in PATH. Install it for full functionality.&#34; &gt;&amp;2 fi done # Function: cut by start and end (absolute times) cut_segment(){ local in=&#34;$1&#34;; local start=&#34;$2&#34;; local end=&#34;$3&#34;; local out=&#34;$4&#34; ffmpeg -y -ss &#34;$start&#34; -to &#34;$end&#34; -i &#34;$in&#34; -c copy &#34;$out&#34; } # Function: trim by start &#43; duration trim_segment(){ local in=&#34;$1&#34;; local start=&#34;$2&#34;; local dur=&#34;$3&#34;; local out=&#34;$4&#34; ffmpeg -y -ss &#34;$start&#34; -t &#34;$dur&#34; -i &#34;$in&#34; -c copy &#34;$out&#34; } reverse_video(){ local in=&#34;$1&#34;; local out=&#34;$2&#34; ffmpeg -y -i &#34;$in&#34; -vf reverse -af areverse &#34;$out&#34; } speed_change(){ local in=&#34;$1&#34;; local factor=&#34;$2&#34;; local out=&#34;$3&#34; # video pts scaling, audio tempo (atempo supports 0.5-2.0; chain if needed) # build audio filter chain for atempo awk_cmd=&#34;&#34; if (( $(echo &#34;$factor &gt; 0&#34; | bc -l) )); then # video setpts multiplier = 1/factor vp=&#34;setpts=${1/factor}*PTS&#34; fi # calculate setpts properly local inv=$(echo &#34;scale=9; 1/$factor&#34; | bc -l) # audio atempo: break into allowed multipliers between 0.5 and 2.0 atempo_chain=() val=$factor # for speedup (&gt;1) we need atempo= factor, but atempo accepts 0.5-2.0 # we will compute the audio filter as multiple chained atempo filters for large factors # but easiest: resample using asetrate then aresample if (( $(echo &#34;$factor &gt;= 0.1&#34; | bc -l) )); then # for simplicity use asetrate trick (works but may change pitch) ffmpeg -y -i &#34;$in&#34; -filter_complex &#34;[0:v]setpts=${inv}*PTS[v];[0:a]asetrate=44100*${factor},aresample=44100,atempo=1[a]&#34; -map &#34;[v]&#34; -map &#34;[a]&#34; -c:v libx264 -preset fast -crf 23 &#34;$out&#34; else echo &#34;Invalid factor: $factor&#34;; return 1 fi } # Add text overlay (simple center/default) add_text(){ local in=&#34;$1&#34;; local text=&#34;$2&#34;; local x=&#34;$3&#34;; local y=&#34;$4&#34;; local size=&#34;$5&#34;; local out=&#34;$6&#34; # escape text for ffmpeg drawtext local esc=$(printf &#39;%s&#39; &#34;$text&#34; | sed &#34;s/&#39;/\\\\&#39;/g&#34;) ffmpeg -y -i &#34;$in&#34; -vf &#34;drawtext=fontfile=/usr/share/fonts/TTF/DejaVuSans.ttf:text=&#39;$esc&#39;:fontcolor=white:fontsize=${size}:borderw=3:x=${x}:y=${y}&#34; -codec:a copy &#34;$out&#34; } # Watermark with image overlay add_watermark(){ local in=&#34;$1&#34;; local img=&#34;$2&#34;; local x=&#34;$3&#34;; local y=&#34;$4&#34;; local out=&#34;$5&#34; ffmpeg -y -i &#34;$in&#34; -i &#34;$img&#34; -filter_complex &#34;overlay=${x}:${y}&#34; -c:a copy &#34;$out&#34; } # Mix background music with given mix level (0-1 for music volume) add_music(){ local invid=&#34;$1&#34;; local music=&#34;$2&#34;; local mixlevel=&#34;$3&#34;; local out=&#34;$4&#34; # extract original audio tmp_audio=$(mktemp --suffix=.wav) ffmpeg -y -i &#34;$invid&#34; -vn -ac 2 -ar 44100 -f wav &#34;$tmp_audio&#34; # adjust music volume and mix ffmpeg -y -i &#34;$tmp_audio&#34; -i &#34;$music&#34; -filter_complex &#34;[1:a]volume=${mixlevel}[m];[0:a][m]amix=inputs=2:duration=first:dropout_transition=2[a]&#34; -map &#34;0:v?&#34; -map &#34;[a]&#34; -c:v copy -c:a aac -b:a 192k &#34;$out&#34; rm -f &#34;$tmp_audio&#34; } # Overlay an audio file (narration) onto a video (replace or mix based on flag?) overlay_audio(){ local video=&#34;$1&#34;; local audio=&#34;$2&#34;; local out=&#34;$3&#34; ffmpeg -y -i &#34;$video&#34; -i &#34;$audio&#34; -c:v copy -map 0:v:0 -map 1:a:0 -shortest -c:a aac -b:a 192k &#34;$out&#34; } # TTS via espeak-ng tts_narrate(){ local text=&#34;$1&#34;; local outwav=&#34;$2&#34; if command -v espeak-ng &amp;&gt;/dev/null; then espeak-ng -v en -s 150 -w &#34;$outwav&#34; &#34;$text&#34; elif command -v espeak &amp;&gt;/dev/null; then espeak -s 150 -w &#34;$outwav&#34; &#34;$text&#34; else echo &#34;No espeak-ng/espeak installed&#34; &gt;&amp;2; return 1 fi } # Voice change using sox voice_change(){ local inwav=&#34;$1&#34;; local mode=&#34;$2&#34;; local outwav=&#34;$3&#34; case &#34;$mode&#34; in chipmunk) # raise pitch -&gt; faster sox &#34;$inwav&#34; &#34;$outwav&#34; pitch 700 ;; deep) sox &#34;$inwav&#34; &#34;$outwav&#34; pitch -300 ;; robot) # ringmod &#43; delay-ish sox &#34;$inwav&#34; -p pitch -150 | sox - -n sinc 100-1000 &amp;&amp; sox &#34;$inwav&#34; &#34;$outwav&#34; chorus 0.7 0.9 55 0.4 0.25 2 -t ;; pitch*) # pitchN like pitch200 num=${mode#pitch} sox &#34;$inwav&#34; &#34;$outwav&#34; pitch &#34;$num&#34; ;; *) echo &#34;Unknown mode: $mode&#34;; return 1;; esac } # Burn subtitles (requires a valid SRT file) burn_subs(){ local in=&#34;$1&#34;; local srt=&#34;$2&#34;; local out=&#34;$3&#34; ffmpeg -y -i &#34;$in&#34; -vf &#34;subtitles=&#39;$srt&#39;&#34; -c:a copy &#34;$out&#34; } # Pixelate filter: scale down then upscale filter_pixelate(){ local in=&#34;$1&#34;; local w=&#34;$2&#34;; local out=&#34;$3&#34; ffmpeg -y -i &#34;$in&#34; -vf &#34;scale=${w}:-1:flags=neighbor,scale=iw*4:ih*4:flags=neighbor&#34; -c:a copy &#34;$out&#34; } filter_grayscale(){ local in=&#34;$1&#34;; local out=&#34;$2&#34; ffmpeg -y -i &#34;$in&#34; -vf format=gray -c:a copy &#34;$out&#34; } # Simple glitch effect using tblend and fftfilt-ish filter_glitch(){ local in=&#34;$1&#34;; local out=&#34;$2&#34; ffmpeg -y -i &#34;$in&#34; -filter_complex &#34;[0:v]split[v1][v2];[v1]tblend=all_mode=overlay:all_opacity=0.6,negate[tmp];[v2]hue=s=0[mono];[tmp][mono]blend=all_mode=&#39;addition&#39;[v]&#34; -map &#34;[v]&#34; -map 0:a? -c:v libx264 -preset fast -crf 24 &#34;$out&#34; } # Help / usage usage(){ sed -n &#39;1,140p&#39; &#34;$0&#34; } # Command dispatcher cmd=&#34;$1&#34;; shift || true case &#34;$cmd&#34; in cut) cut_segment &#34;$@&#34; ;; trim) trim_segment &#34;$@&#34; ;; reverse) reverse_video &#34;$@&#34; ;; speed) speed_change &#34;$@&#34; ;; add_text) add_text &#34;$@&#34; ;; add_watermark) add_watermark &#34;$@&#34; ;; add_music) add_music &#34;$@&#34; ;; overlay_audio) overlay_audio &#34;$@&#34; ;; tts_narrate) tts_narrate &#34;$@&#34; ;; voice_change) voice_change &#34;$@&#34; ;; burn_subs) burn_subs &#34;$@&#34; ;; filter_pixelate) filter_pixelate &#34;$@&#34; ;; filter_grayscale) filter_grayscale &#34;$@&#34; ;; filter_glitch) filter_glitch &#34;$@&#34; ;; help|--help|-h|&#34;&#34;) usage ;; *) echo &#34;Unknown command: $cmd&#34;; usage; exit 1 ;; esac Done — I created the cli_video_editor.sh script in the canvas (title: Cli Video Editor).">
+  <meta itemprop="datePublished" content="2025-11-30T19:27:39-03:00">
+  <meta itemprop="dateModified" content="2025-11-30T19:27:39-03:00">
+  <meta itemprop="wordCount" content="1435">
+  
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="CLI video editing">
+  <meta name="twitter:description" content="#!/usr/bin/env bash # cli_video_editor.sh # Full CLI Video Editor for Arch Linux (ffmpeg-based) # Requirements: ffmpeg, espeak-ng (or espeak), sox, imagemagick (convert), jq (optional) # Install on Arch: # sudo pacman -S ffmpeg espeak-ng sox imagemagick jq # # Usage: ./cli_video_editor.sh &lt;command&gt; [options] # Commands: # cut &lt;input&gt; &lt;start&gt; &lt;end&gt; &lt;out&gt; # trim &lt;input&gt; &lt;start&gt; &lt;duration&gt; &lt;out&gt; # speed &lt;input&gt; &lt;factor&gt; &lt;out&gt; # factor &gt;1 faster, &lt;1 slower # reverse &lt;input&gt; &lt;out&gt; # add_text &lt;input&gt; &lt;text&gt; &lt;x&gt; &lt;y&gt; &lt;fontsize&gt; &lt;out&gt; # add_watermark &lt;input&gt; &lt;image&gt; &lt;x&gt; &lt;y&gt; &lt;out&gt; # add_music &lt;input_video&gt; &lt;music&gt; &lt;mix_level(0..1)&gt; &lt;out&gt; # tts_narrate &lt;text&gt; &lt;voicefile.wav&gt; # creates wav using espeak-ng # voice_change &lt;inwav&gt; &lt;mode&gt; &lt;outwav&gt; # modes: chipmunk, deep, robot, pitchN # overlay_audio &lt;video&gt; &lt;audio&gt; &lt;out&gt; # burn_subs &lt;video&gt; &lt;sub.srt&gt; &lt;out&gt; # filter_pixelate &lt;input&gt; &lt;scale_width&gt; &lt;out&gt; # filter_grayscale &lt;input&gt; &lt;out&gt; # filter_glitch &lt;input&gt; &lt;out&gt; # help # # Examples: # ./cli_video_editor.sh cut input.mp4 00:00:05 00:00:12 cut.mp4 # ./cli_video_editor.sh speed input.mp4 2.0 speedx2.mp4 # ./cli_video_editor.sh add_text input.mp4 &#34;HELLO WORLD&#34; 50 50 48 out.mp4 # ./cli_video_editor.sh tts_narrate &#34;Hello there&#34; voice.wav # ./cli_video_editor.sh overlay_audio video.mp4 voice.wav final.mp4 set -euo pipefail IFS=$&#39;\n\t&#39; # Helper: check dependencies required_bins=(ffmpeg espeak-ng sox convert) for b in &#34;${required_bins[@]}&#34;; do if ! command -v &#34;$b&#34; &amp;&gt;/dev/null; then echo &#34;Warning: $b not found in PATH. Install it for full functionality.&#34; &gt;&amp;2 fi done # Function: cut by start and end (absolute times) cut_segment(){ local in=&#34;$1&#34;; local start=&#34;$2&#34;; local end=&#34;$3&#34;; local out=&#34;$4&#34; ffmpeg -y -ss &#34;$start&#34; -to &#34;$end&#34; -i &#34;$in&#34; -c copy &#34;$out&#34; } # Function: trim by start &#43; duration trim_segment(){ local in=&#34;$1&#34;; local start=&#34;$2&#34;; local dur=&#34;$3&#34;; local out=&#34;$4&#34; ffmpeg -y -ss &#34;$start&#34; -t &#34;$dur&#34; -i &#34;$in&#34; -c copy &#34;$out&#34; } reverse_video(){ local in=&#34;$1&#34;; local out=&#34;$2&#34; ffmpeg -y -i &#34;$in&#34; -vf reverse -af areverse &#34;$out&#34; } speed_change(){ local in=&#34;$1&#34;; local factor=&#34;$2&#34;; local out=&#34;$3&#34; # video pts scaling, audio tempo (atempo supports 0.5-2.0; chain if needed) # build audio filter chain for atempo awk_cmd=&#34;&#34; if (( $(echo &#34;$factor &gt; 0&#34; | bc -l) )); then # video setpts multiplier = 1/factor vp=&#34;setpts=${1/factor}*PTS&#34; fi # calculate setpts properly local inv=$(echo &#34;scale=9; 1/$factor&#34; | bc -l) # audio atempo: break into allowed multipliers between 0.5 and 2.0 atempo_chain=() val=$factor # for speedup (&gt;1) we need atempo= factor, but atempo accepts 0.5-2.0 # we will compute the audio filter as multiple chained atempo filters for large factors # but easiest: resample using asetrate then aresample if (( $(echo &#34;$factor &gt;= 0.1&#34; | bc -l) )); then # for simplicity use asetrate trick (works but may change pitch) ffmpeg -y -i &#34;$in&#34; -filter_complex &#34;[0:v]setpts=${inv}*PTS[v];[0:a]asetrate=44100*${factor},aresample=44100,atempo=1[a]&#34; -map &#34;[v]&#34; -map &#34;[a]&#34; -c:v libx264 -preset fast -crf 23 &#34;$out&#34; else echo &#34;Invalid factor: $factor&#34;; return 1 fi } # Add text overlay (simple center/default) add_text(){ local in=&#34;$1&#34;; local text=&#34;$2&#34;; local x=&#34;$3&#34;; local y=&#34;$4&#34;; local size=&#34;$5&#34;; local out=&#34;$6&#34; # escape text for ffmpeg drawtext local esc=$(printf &#39;%s&#39; &#34;$text&#34; | sed &#34;s/&#39;/\\\\&#39;/g&#34;) ffmpeg -y -i &#34;$in&#34; -vf &#34;drawtext=fontfile=/usr/share/fonts/TTF/DejaVuSans.ttf:text=&#39;$esc&#39;:fontcolor=white:fontsize=${size}:borderw=3:x=${x}:y=${y}&#34; -codec:a copy &#34;$out&#34; } # Watermark with image overlay add_watermark(){ local in=&#34;$1&#34;; local img=&#34;$2&#34;; local x=&#34;$3&#34;; local y=&#34;$4&#34;; local out=&#34;$5&#34; ffmpeg -y -i &#34;$in&#34; -i &#34;$img&#34; -filter_complex &#34;overlay=${x}:${y}&#34; -c:a copy &#34;$out&#34; } # Mix background music with given mix level (0-1 for music volume) add_music(){ local invid=&#34;$1&#34;; local music=&#34;$2&#34;; local mixlevel=&#34;$3&#34;; local out=&#34;$4&#34; # extract original audio tmp_audio=$(mktemp --suffix=.wav) ffmpeg -y -i &#34;$invid&#34; -vn -ac 2 -ar 44100 -f wav &#34;$tmp_audio&#34; # adjust music volume and mix ffmpeg -y -i &#34;$tmp_audio&#34; -i &#34;$music&#34; -filter_complex &#34;[1:a]volume=${mixlevel}[m];[0:a][m]amix=inputs=2:duration=first:dropout_transition=2[a]&#34; -map &#34;0:v?&#34; -map &#34;[a]&#34; -c:v copy -c:a aac -b:a 192k &#34;$out&#34; rm -f &#34;$tmp_audio&#34; } # Overlay an audio file (narration) onto a video (replace or mix based on flag?) overlay_audio(){ local video=&#34;$1&#34;; local audio=&#34;$2&#34;; local out=&#34;$3&#34; ffmpeg -y -i &#34;$video&#34; -i &#34;$audio&#34; -c:v copy -map 0:v:0 -map 1:a:0 -shortest -c:a aac -b:a 192k &#34;$out&#34; } # TTS via espeak-ng tts_narrate(){ local text=&#34;$1&#34;; local outwav=&#34;$2&#34; if command -v espeak-ng &amp;&gt;/dev/null; then espeak-ng -v en -s 150 -w &#34;$outwav&#34; &#34;$text&#34; elif command -v espeak &amp;&gt;/dev/null; then espeak -s 150 -w &#34;$outwav&#34; &#34;$text&#34; else echo &#34;No espeak-ng/espeak installed&#34; &gt;&amp;2; return 1 fi } # Voice change using sox voice_change(){ local inwav=&#34;$1&#34;; local mode=&#34;$2&#34;; local outwav=&#34;$3&#34; case &#34;$mode&#34; in chipmunk) # raise pitch -&gt; faster sox &#34;$inwav&#34; &#34;$outwav&#34; pitch 700 ;; deep) sox &#34;$inwav&#34; &#34;$outwav&#34; pitch -300 ;; robot) # ringmod &#43; delay-ish sox &#34;$inwav&#34; -p pitch -150 | sox - -n sinc 100-1000 &amp;&amp; sox &#34;$inwav&#34; &#34;$outwav&#34; chorus 0.7 0.9 55 0.4 0.25 2 -t ;; pitch*) # pitchN like pitch200 num=${mode#pitch} sox &#34;$inwav&#34; &#34;$outwav&#34; pitch &#34;$num&#34; ;; *) echo &#34;Unknown mode: $mode&#34;; return 1;; esac } # Burn subtitles (requires a valid SRT file) burn_subs(){ local in=&#34;$1&#34;; local srt=&#34;$2&#34;; local out=&#34;$3&#34; ffmpeg -y -i &#34;$in&#34; -vf &#34;subtitles=&#39;$srt&#39;&#34; -c:a copy &#34;$out&#34; } # Pixelate filter: scale down then upscale filter_pixelate(){ local in=&#34;$1&#34;; local w=&#34;$2&#34;; local out=&#34;$3&#34; ffmpeg -y -i &#34;$in&#34; -vf &#34;scale=${w}:-1:flags=neighbor,scale=iw*4:ih*4:flags=neighbor&#34; -c:a copy &#34;$out&#34; } filter_grayscale(){ local in=&#34;$1&#34;; local out=&#34;$2&#34; ffmpeg -y -i &#34;$in&#34; -vf format=gray -c:a copy &#34;$out&#34; } # Simple glitch effect using tblend and fftfilt-ish filter_glitch(){ local in=&#34;$1&#34;; local out=&#34;$2&#34; ffmpeg -y -i &#34;$in&#34; -filter_complex &#34;[0:v]split[v1][v2];[v1]tblend=all_mode=overlay:all_opacity=0.6,negate[tmp];[v2]hue=s=0[mono];[tmp][mono]blend=all_mode=&#39;addition&#39;[v]&#34; -map &#34;[v]&#34; -map 0:a? -c:v libx264 -preset fast -crf 24 &#34;$out&#34; } # Help / usage usage(){ sed -n &#39;1,140p&#39; &#34;$0&#34; } # Command dispatcher cmd=&#34;$1&#34;; shift || true case &#34;$cmd&#34; in cut) cut_segment &#34;$@&#34; ;; trim) trim_segment &#34;$@&#34; ;; reverse) reverse_video &#34;$@&#34; ;; speed) speed_change &#34;$@&#34; ;; add_text) add_text &#34;$@&#34; ;; add_watermark) add_watermark &#34;$@&#34; ;; add_music) add_music &#34;$@&#34; ;; overlay_audio) overlay_audio &#34;$@&#34; ;; tts_narrate) tts_narrate &#34;$@&#34; ;; voice_change) voice_change &#34;$@&#34; ;; burn_subs) burn_subs &#34;$@&#34; ;; filter_pixelate) filter_pixelate &#34;$@&#34; ;; filter_grayscale) filter_grayscale &#34;$@&#34; ;; filter_glitch) filter_glitch &#34;$@&#34; ;; help|--help|-h|&#34;&#34;) usage ;; *) echo &#34;Unknown command: $cmd&#34;; usage; exit 1 ;; esac Done — I created the cli_video_editor.sh script in the canvas (title: Cli Video Editor).">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    CLI video editing
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/cli_video_editing/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="#!/usr/bin/env bash
+# cli_video_editor.sh
+# Full CLI Video Editor for Arch Linux (ffmpeg-based)
+# Requirements: ffmpeg, espeak-ng (or espeak), sox, imagemagick (convert), jq (optional)
+# Install on Arch:
+# sudo pacman -S ffmpeg espeak-ng sox imagemagick jq
+#
+# Usage: ./cli_video_editor.sh &lt;command&gt; [options]
+# Commands:
+#   cut &lt;input&gt; &lt;start&gt; &lt;end&gt; &lt;out&gt;
+#   trim &lt;input&gt; &lt;start&gt; &lt;duration&gt; &lt;out&gt;
+#   speed &lt;input&gt; &lt;factor&gt; &lt;out&gt;        # factor &gt;1 faster, &lt;1 slower
+#   reverse &lt;input&gt; &lt;out&gt;
+#   add_text &lt;input&gt; &lt;text&gt; &lt;x&gt; &lt;y&gt; &lt;fontsize&gt; &lt;out&gt;
+#   add_watermark &lt;input&gt; &lt;image&gt; &lt;x&gt; &lt;y&gt; &lt;out&gt;
+#   add_music &lt;input_video&gt; &lt;music&gt; &lt;mix_level(0..1)&gt; &lt;out&gt;
+#   tts_narrate &lt;text&gt; &lt;voicefile.wav&gt;  # creates wav using espeak-ng
+#   voice_change &lt;inwav&gt; &lt;mode&gt; &lt;outwav&gt;   # modes: chipmunk, deep, robot, pitchN
+#   overlay_audio &lt;video&gt; &lt;audio&gt; &lt;out&gt;
+#   burn_subs &lt;video&gt; &lt;sub.srt&gt; &lt;out&gt;
+#   filter_pixelate &lt;input&gt; &lt;scale_width&gt; &lt;out&gt;
+#   filter_grayscale &lt;input&gt; &lt;out&gt;
+#   filter_glitch &lt;input&gt; &lt;out&gt;
+#   help
+#
+# Examples:
+#  ./cli_video_editor.sh cut input.mp4 00:00:05 00:00:12 cut.mp4
+#  ./cli_video_editor.sh speed input.mp4 2.0 speedx2.mp4
+#  ./cli_video_editor.sh add_text input.mp4 &#34;HELLO WORLD&#34; 50 50 48 out.mp4
+#  ./cli_video_editor.sh tts_narrate &#34;Hello there&#34; voice.wav
+#  ./cli_video_editor.sh overlay_audio video.mp4 voice.wav final.mp4
+
+set -euo pipefail
+IFS=$&#39;\n\t&#39;
+
+# Helper: check dependencies
+required_bins=(ffmpeg espeak-ng sox convert)
+for b in &#34;${required_bins[@]}&#34;; do
+    if ! command -v &#34;$b&#34; &amp;&gt;/dev/null; then
+        echo &#34;Warning: $b not found in PATH. Install it for full functionality.&#34; &gt;&amp;2
+    fi
+done
+
+# Function: cut by start and end (absolute times)
+cut_segment(){
+    local in=&#34;$1&#34;; local start=&#34;$2&#34;; local end=&#34;$3&#34;; local out=&#34;$4&#34;
+    ffmpeg -y -ss &#34;$start&#34; -to &#34;$end&#34; -i &#34;$in&#34; -c copy &#34;$out&#34;
+}
+
+# Function: trim by start &#43; duration
+trim_segment(){
+    local in=&#34;$1&#34;; local start=&#34;$2&#34;; local dur=&#34;$3&#34;; local out=&#34;$4&#34;
+    ffmpeg -y -ss &#34;$start&#34; -t &#34;$dur&#34; -i &#34;$in&#34; -c copy &#34;$out&#34;
+}
+
+reverse_video(){
+    local in=&#34;$1&#34;; local out=&#34;$2&#34;
+    ffmpeg -y -i &#34;$in&#34; -vf reverse -af areverse &#34;$out&#34;
+}
+
+speed_change(){
+    local in=&#34;$1&#34;; local factor=&#34;$2&#34;; local out=&#34;$3&#34;
+    # video pts scaling, audio tempo (atempo supports 0.5-2.0; chain if needed)
+    # build audio filter chain for atempo
+    awk_cmd=&#34;&#34;
+    if (( $(echo &#34;$factor &gt; 0&#34; | bc -l) )); then
+        # video setpts multiplier = 1/factor
+        vp=&#34;setpts=${1/factor}*PTS&#34;
+    fi
+    # calculate setpts properly
+    local inv=$(echo &#34;scale=9; 1/$factor&#34; | bc -l)
+    # audio atempo: break into allowed multipliers between 0.5 and 2.0
+    atempo_chain=()
+    val=$factor
+    # for speedup (&gt;1) we need atempo= factor, but atempo accepts 0.5-2.0
+    # we will compute the audio filter as multiple chained atempo filters for large factors
+    # but easiest: resample using asetrate then aresample
+    if (( $(echo &#34;$factor &gt;= 0.1&#34; | bc -l) )); then
+        # for simplicity use asetrate trick (works but may change pitch)
+        ffmpeg -y -i &#34;$in&#34; -filter_complex &#34;[0:v]setpts=${inv}*PTS[v];[0:a]asetrate=44100*${factor},aresample=44100,atempo=1[a]&#34; -map &#34;[v]&#34; -map &#34;[a]&#34; -c:v libx264 -preset fast -crf 23 &#34;$out&#34;
+    else
+        echo &#34;Invalid factor: $factor&#34;; return 1
+    fi
+}
+
+# Add text overlay (simple center/default)
+add_text(){
+    local in=&#34;$1&#34;; local text=&#34;$2&#34;; local x=&#34;$3&#34;; local y=&#34;$4&#34;; local size=&#34;$5&#34;; local out=&#34;$6&#34;
+    # escape text for ffmpeg drawtext
+    local esc=$(printf &#39;%s&#39; &#34;$text&#34; | sed &#34;s/&#39;/\\\\&#39;/g&#34;)
+    ffmpeg -y -i &#34;$in&#34; -vf &#34;drawtext=fontfile=/usr/share/fonts/TTF/DejaVuSans.ttf:text=&#39;$esc&#39;:fontcolor=white:fontsize=${size}:borderw=3:x=${x}:y=${y}&#34; -codec:a copy &#34;$out&#34;
+}
+
+# Watermark with image overlay
+add_watermark(){
+    local in=&#34;$1&#34;; local img=&#34;$2&#34;; local x=&#34;$3&#34;; local y=&#34;$4&#34;; local out=&#34;$5&#34;
+    ffmpeg -y -i &#34;$in&#34; -i &#34;$img&#34; -filter_complex &#34;overlay=${x}:${y}&#34; -c:a copy &#34;$out&#34;
+}
+
+# Mix background music with given mix level (0-1 for music volume)
+add_music(){
+    local invid=&#34;$1&#34;; local music=&#34;$2&#34;; local mixlevel=&#34;$3&#34;; local out=&#34;$4&#34;
+    # extract original audio
+    tmp_audio=$(mktemp --suffix=.wav)
+    ffmpeg -y -i &#34;$invid&#34; -vn -ac 2 -ar 44100 -f wav &#34;$tmp_audio&#34;
+    # adjust music volume and mix
+    ffmpeg -y -i &#34;$tmp_audio&#34; -i &#34;$music&#34; -filter_complex &#34;[1:a]volume=${mixlevel}[m];[0:a][m]amix=inputs=2:duration=first:dropout_transition=2[a]&#34; -map &#34;0:v?&#34; -map &#34;[a]&#34; -c:v copy -c:a aac -b:a 192k &#34;$out&#34;
+    rm -f &#34;$tmp_audio&#34;
+}
+
+# Overlay an audio file (narration) onto a video (replace or mix based on flag?)
+overlay_audio(){
+    local video=&#34;$1&#34;; local audio=&#34;$2&#34;; local out=&#34;$3&#34;
+    ffmpeg -y -i &#34;$video&#34; -i &#34;$audio&#34; -c:v copy -map 0:v:0 -map 1:a:0 -shortest -c:a aac -b:a 192k &#34;$out&#34;
+}
+
+# TTS via espeak-ng
+tts_narrate(){
+    local text=&#34;$1&#34;; local outwav=&#34;$2&#34;
+    if command -v espeak-ng &amp;&gt;/dev/null; then
+        espeak-ng -v en -s 150 -w &#34;$outwav&#34; &#34;$text&#34;
+    elif command -v espeak &amp;&gt;/dev/null; then
+        espeak -s 150 -w &#34;$outwav&#34; &#34;$text&#34;
+    else
+        echo &#34;No espeak-ng/espeak installed&#34; &gt;&amp;2; return 1
+    fi
+}
+
+# Voice change using sox
+voice_change(){
+    local inwav=&#34;$1&#34;; local mode=&#34;$2&#34;; local outwav=&#34;$3&#34;
+    case &#34;$mode&#34; in
+        chipmunk)
+            # raise pitch -&gt; faster
+            sox &#34;$inwav&#34; &#34;$outwav&#34; pitch 700
+            ;;
+        deep)
+            sox &#34;$inwav&#34; &#34;$outwav&#34; pitch -300
+            ;;
+        robot)
+            # ringmod &#43; delay-ish
+            sox &#34;$inwav&#34; -p pitch -150 | sox - -n sinc 100-1000 &amp;&amp; sox &#34;$inwav&#34; &#34;$outwav&#34; chorus 0.7 0.9 55 0.4 0.25 2 -t
+            ;;
+        pitch*)
+            # pitchN like pitch200
+            num=${mode#pitch}
+            sox &#34;$inwav&#34; &#34;$outwav&#34; pitch &#34;$num&#34;
+            ;;
+        *)
+            echo &#34;Unknown mode: $mode&#34;; return 1;;
+    esac
+}
+
+# Burn subtitles (requires a valid SRT file)
+burn_subs(){
+    local in=&#34;$1&#34;; local srt=&#34;$2&#34;; local out=&#34;$3&#34;
+    ffmpeg -y -i &#34;$in&#34; -vf &#34;subtitles=&#39;$srt&#39;&#34; -c:a copy &#34;$out&#34;
+}
+
+# Pixelate filter: scale down then upscale
+filter_pixelate(){
+    local in=&#34;$1&#34;; local w=&#34;$2&#34;; local out=&#34;$3&#34;
+    ffmpeg -y -i &#34;$in&#34; -vf &#34;scale=${w}:-1:flags=neighbor,scale=iw*4:ih*4:flags=neighbor&#34; -c:a copy &#34;$out&#34;
+}
+
+filter_grayscale(){
+    local in=&#34;$1&#34;; local out=&#34;$2&#34;
+    ffmpeg -y -i &#34;$in&#34; -vf format=gray -c:a copy &#34;$out&#34;
+}
+
+# Simple glitch effect using tblend and fftfilt-ish
+filter_glitch(){
+    local in=&#34;$1&#34;; local out=&#34;$2&#34;
+    ffmpeg -y -i &#34;$in&#34; -filter_complex &#34;[0:v]split[v1][v2];[v1]tblend=all_mode=overlay:all_opacity=0.6,negate[tmp];[v2]hue=s=0[mono];[tmp][mono]blend=all_mode=&#39;addition&#39;[v]&#34; -map &#34;[v]&#34; -map 0:a? -c:v libx264 -preset fast -crf 24 &#34;$out&#34;
+}
+
+# Help / usage
+usage(){
+    sed -n &#39;1,140p&#39; &#34;$0&#34;
+}
+
+# Command dispatcher
+cmd=&#34;$1&#34;; shift || true
+case &#34;$cmd&#34; in
+    cut) cut_segment &#34;$@&#34; ;;
+    trim) trim_segment &#34;$@&#34; ;;
+    reverse) reverse_video &#34;$@&#34; ;;
+    speed) speed_change &#34;$@&#34; ;;
+    add_text) add_text &#34;$@&#34; ;;
+    add_watermark) add_watermark &#34;$@&#34; ;;
+    add_music) add_music &#34;$@&#34; ;;
+    overlay_audio) overlay_audio &#34;$@&#34; ;;
+    tts_narrate) tts_narrate &#34;$@&#34; ;;
+    voice_change) voice_change &#34;$@&#34; ;;
+    burn_subs) burn_subs &#34;$@&#34; ;;
+    filter_pixelate) filter_pixelate &#34;$@&#34; ;;
+    filter_grayscale) filter_grayscale &#34;$@&#34; ;;
+    filter_glitch) filter_glitch &#34;$@&#34; ;;
+    help|--help|-h|&#34;&#34;) usage ;;
+    *) echo &#34;Unknown command: $cmd&#34;; usage; exit 1 ;;
+esac
+Done — I created the cli_video_editor.sh script in the canvas (title: Cli Video Editor).">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    CLI video editing
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2025-11-30T19:27:39-03:00'>
+      November 30, 2025
+    </time>
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/usr/bin/env bash
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e"># cli_video_editor.sh</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Full CLI Video Editor for Arch Linux (ffmpeg-based)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Requirements: ffmpeg, espeak-ng (or espeak), sox, imagemagick (convert), jq (optional)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Install on Arch:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># sudo pacman -S ffmpeg espeak-ng sox imagemagick jq</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Usage: ./cli_video_editor.sh &lt;command&gt; [options]</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Commands:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   cut &lt;input&gt; &lt;start&gt; &lt;end&gt; &lt;out&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   trim &lt;input&gt; &lt;start&gt; &lt;duration&gt; &lt;out&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   speed &lt;input&gt; &lt;factor&gt; &lt;out&gt;        # factor &gt;1 faster, &lt;1 slower</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   reverse &lt;input&gt; &lt;out&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   add_text &lt;input&gt; &lt;text&gt; &lt;x&gt; &lt;y&gt; &lt;fontsize&gt; &lt;out&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   add_watermark &lt;input&gt; &lt;image&gt; &lt;x&gt; &lt;y&gt; &lt;out&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   add_music &lt;input_video&gt; &lt;music&gt; &lt;mix_level(0..1)&gt; &lt;out&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   tts_narrate &lt;text&gt; &lt;voicefile.wav&gt;  # creates wav using espeak-ng</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   voice_change &lt;inwav&gt; &lt;mode&gt; &lt;outwav&gt;   # modes: chipmunk, deep, robot, pitchN</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   overlay_audio &lt;video&gt; &lt;audio&gt; &lt;out&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   burn_subs &lt;video&gt; &lt;sub.srt&gt; &lt;out&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   filter_pixelate &lt;input&gt; &lt;scale_width&gt; &lt;out&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   filter_grayscale &lt;input&gt; &lt;out&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   filter_glitch &lt;input&gt; &lt;out&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   help</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Examples:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#  ./cli_video_editor.sh cut input.mp4 00:00:05 00:00:12 cut.mp4</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#  ./cli_video_editor.sh speed input.mp4 2.0 speedx2.mp4</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#  ./cli_video_editor.sh add_text input.mp4 &#34;HELLO WORLD&#34; 50 50 48 out.mp4</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#  ./cli_video_editor.sh tts_narrate &#34;Hello there&#34; voice.wav</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#  ./cli_video_editor.sh overlay_audio video.mp4 voice.wav final.mp4</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>set -euo pipefail
+</span></span><span style="display:flex;"><span>IFS<span style="color:#f92672">=</span><span style="color:#e6db74">$&#39;\n\t&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Helper: check dependencies</span>
+</span></span><span style="display:flex;"><span>required_bins<span style="color:#f92672">=(</span>ffmpeg espeak-ng sox convert<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> b in <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>required_bins[@]<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> ! command -v <span style="color:#e6db74">&#34;</span>$b<span style="color:#e6db74">&#34;</span> &amp;&gt;/dev/null; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;Warning: </span>$b<span style="color:#e6db74"> not found in PATH. Install it for full functionality.&#34;</span> &gt;&amp;<span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Function: cut by start and end (absolute times)</span>
+</span></span><span style="display:flex;"><span>cut_segment<span style="color:#f92672">(){</span>
+</span></span><span style="display:flex;"><span>    local in<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span>; local start<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$2<span style="color:#e6db74">&#34;</span>; local end<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$3<span style="color:#e6db74">&#34;</span>; local out<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$4<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    ffmpeg -y -ss <span style="color:#e6db74">&#34;</span>$start<span style="color:#e6db74">&#34;</span> -to <span style="color:#e6db74">&#34;</span>$end<span style="color:#e6db74">&#34;</span> -i <span style="color:#e6db74">&#34;</span>$in<span style="color:#e6db74">&#34;</span> -c copy <span style="color:#e6db74">&#34;</span>$out<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Function: trim by start + duration</span>
+</span></span><span style="display:flex;"><span>trim_segment<span style="color:#f92672">(){</span>
+</span></span><span style="display:flex;"><span>    local in<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span>; local start<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$2<span style="color:#e6db74">&#34;</span>; local dur<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$3<span style="color:#e6db74">&#34;</span>; local out<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$4<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    ffmpeg -y -ss <span style="color:#e6db74">&#34;</span>$start<span style="color:#e6db74">&#34;</span> -t <span style="color:#e6db74">&#34;</span>$dur<span style="color:#e6db74">&#34;</span> -i <span style="color:#e6db74">&#34;</span>$in<span style="color:#e6db74">&#34;</span> -c copy <span style="color:#e6db74">&#34;</span>$out<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>reverse_video<span style="color:#f92672">(){</span>
+</span></span><span style="display:flex;"><span>    local in<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span>; local out<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$2<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    ffmpeg -y -i <span style="color:#e6db74">&#34;</span>$in<span style="color:#e6db74">&#34;</span> -vf reverse -af areverse <span style="color:#e6db74">&#34;</span>$out<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>speed_change<span style="color:#f92672">(){</span>
+</span></span><span style="display:flex;"><span>    local in<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span>; local factor<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$2<span style="color:#e6db74">&#34;</span>; local out<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$3<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># video pts scaling, audio tempo (atempo supports 0.5-2.0; chain if needed)</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># build audio filter chain for atempo</span>
+</span></span><span style="display:flex;"><span>    awk_cmd<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">((</span> <span style="color:#66d9ef">$(</span>echo <span style="color:#e6db74">&#34;</span>$factor<span style="color:#e6db74"> &gt; 0&#34;</span> | bc -l<span style="color:#66d9ef">)</span> <span style="color:#f92672">))</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># video setpts multiplier = 1/factor</span>
+</span></span><span style="display:flex;"><span>        vp<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;setpts=</span><span style="color:#e6db74">${</span>1/factor<span style="color:#e6db74">}</span><span style="color:#e6db74">*PTS&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># calculate setpts properly</span>
+</span></span><span style="display:flex;"><span>    local inv<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>echo <span style="color:#e6db74">&#34;scale=9; 1/</span>$factor<span style="color:#e6db74">&#34;</span> | bc -l<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># audio atempo: break into allowed multipliers between 0.5 and 2.0</span>
+</span></span><span style="display:flex;"><span>    atempo_chain<span style="color:#f92672">=()</span>
+</span></span><span style="display:flex;"><span>    val<span style="color:#f92672">=</span>$factor
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># for speedup (&gt;1) we need atempo= factor, but atempo accepts 0.5-2.0</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># we will compute the audio filter as multiple chained atempo filters for large factors</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># but easiest: resample using asetrate then aresample</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">((</span> <span style="color:#66d9ef">$(</span>echo <span style="color:#e6db74">&#34;</span>$factor<span style="color:#e6db74"> &gt;= 0.1&#34;</span> | bc -l<span style="color:#66d9ef">)</span> <span style="color:#f92672">))</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># for simplicity use asetrate trick (works but may change pitch)</span>
+</span></span><span style="display:flex;"><span>        ffmpeg -y -i <span style="color:#e6db74">&#34;</span>$in<span style="color:#e6db74">&#34;</span> -filter_complex <span style="color:#e6db74">&#34;[0:v]setpts=</span><span style="color:#e6db74">${</span>inv<span style="color:#e6db74">}</span><span style="color:#e6db74">*PTS[v];[0:a]asetrate=44100*</span><span style="color:#e6db74">${</span>factor<span style="color:#e6db74">}</span><span style="color:#e6db74">,aresample=44100,atempo=1[a]&#34;</span> -map <span style="color:#e6db74">&#34;[v]&#34;</span> -map <span style="color:#e6db74">&#34;[a]&#34;</span> -c:v libx264 -preset fast -crf <span style="color:#ae81ff">23</span> <span style="color:#e6db74">&#34;</span>$out<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;Invalid factor: </span>$factor<span style="color:#e6db74">&#34;</span>; <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Add text overlay (simple center/default)</span>
+</span></span><span style="display:flex;"><span>add_text<span style="color:#f92672">(){</span>
+</span></span><span style="display:flex;"><span>    local in<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span>; local text<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$2<span style="color:#e6db74">&#34;</span>; local x<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$3<span style="color:#e6db74">&#34;</span>; local y<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$4<span style="color:#e6db74">&#34;</span>; local size<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$5<span style="color:#e6db74">&#34;</span>; local out<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$6<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># escape text for ffmpeg drawtext</span>
+</span></span><span style="display:flex;"><span>    local esc<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>printf <span style="color:#e6db74">&#39;%s&#39;</span> <span style="color:#e6db74">&#34;</span>$text<span style="color:#e6db74">&#34;</span> | sed <span style="color:#e6db74">&#34;s/&#39;/\\\\&#39;/g&#34;</span><span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>    ffmpeg -y -i <span style="color:#e6db74">&#34;</span>$in<span style="color:#e6db74">&#34;</span> -vf <span style="color:#e6db74">&#34;drawtext=fontfile=/usr/share/fonts/TTF/DejaVuSans.ttf:text=&#39;</span>$esc<span style="color:#e6db74">&#39;:fontcolor=white:fontsize=</span><span style="color:#e6db74">${</span>size<span style="color:#e6db74">}</span><span style="color:#e6db74">:borderw=3:x=</span><span style="color:#e6db74">${</span>x<span style="color:#e6db74">}</span><span style="color:#e6db74">:y=</span><span style="color:#e6db74">${</span>y<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> -codec:a copy <span style="color:#e6db74">&#34;</span>$out<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Watermark with image overlay</span>
+</span></span><span style="display:flex;"><span>add_watermark<span style="color:#f92672">(){</span>
+</span></span><span style="display:flex;"><span>    local in<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span>; local img<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$2<span style="color:#e6db74">&#34;</span>; local x<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$3<span style="color:#e6db74">&#34;</span>; local y<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$4<span style="color:#e6db74">&#34;</span>; local out<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$5<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    ffmpeg -y -i <span style="color:#e6db74">&#34;</span>$in<span style="color:#e6db74">&#34;</span> -i <span style="color:#e6db74">&#34;</span>$img<span style="color:#e6db74">&#34;</span> -filter_complex <span style="color:#e6db74">&#34;overlay=</span><span style="color:#e6db74">${</span>x<span style="color:#e6db74">}</span><span style="color:#e6db74">:</span><span style="color:#e6db74">${</span>y<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> -c:a copy <span style="color:#e6db74">&#34;</span>$out<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Mix background music with given mix level (0-1 for music volume)</span>
+</span></span><span style="display:flex;"><span>add_music<span style="color:#f92672">(){</span>
+</span></span><span style="display:flex;"><span>    local invid<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span>; local music<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$2<span style="color:#e6db74">&#34;</span>; local mixlevel<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$3<span style="color:#e6db74">&#34;</span>; local out<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$4<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># extract original audio</span>
+</span></span><span style="display:flex;"><span>    tmp_audio<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>mktemp --suffix<span style="color:#f92672">=</span>.wav<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>    ffmpeg -y -i <span style="color:#e6db74">&#34;</span>$invid<span style="color:#e6db74">&#34;</span> -vn -ac <span style="color:#ae81ff">2</span> -ar <span style="color:#ae81ff">44100</span> -f wav <span style="color:#e6db74">&#34;</span>$tmp_audio<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># adjust music volume and mix</span>
+</span></span><span style="display:flex;"><span>    ffmpeg -y -i <span style="color:#e6db74">&#34;</span>$tmp_audio<span style="color:#e6db74">&#34;</span> -i <span style="color:#e6db74">&#34;</span>$music<span style="color:#e6db74">&#34;</span> -filter_complex <span style="color:#e6db74">&#34;[1:a]volume=</span><span style="color:#e6db74">${</span>mixlevel<span style="color:#e6db74">}</span><span style="color:#e6db74">[m];[0:a][m]amix=inputs=2:duration=first:dropout_transition=2[a]&#34;</span> -map <span style="color:#e6db74">&#34;0:v?&#34;</span> -map <span style="color:#e6db74">&#34;[a]&#34;</span> -c:v copy -c:a aac -b:a 192k <span style="color:#e6db74">&#34;</span>$out<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    rm -f <span style="color:#e6db74">&#34;</span>$tmp_audio<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Overlay an audio file (narration) onto a video (replace or mix based on flag?)</span>
+</span></span><span style="display:flex;"><span>overlay_audio<span style="color:#f92672">(){</span>
+</span></span><span style="display:flex;"><span>    local video<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span>; local audio<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$2<span style="color:#e6db74">&#34;</span>; local out<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$3<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    ffmpeg -y -i <span style="color:#e6db74">&#34;</span>$video<span style="color:#e6db74">&#34;</span> -i <span style="color:#e6db74">&#34;</span>$audio<span style="color:#e6db74">&#34;</span> -c:v copy -map 0:v:0 -map 1:a:0 -shortest -c:a aac -b:a 192k <span style="color:#e6db74">&#34;</span>$out<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># TTS via espeak-ng</span>
+</span></span><span style="display:flex;"><span>tts_narrate<span style="color:#f92672">(){</span>
+</span></span><span style="display:flex;"><span>    local text<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span>; local outwav<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$2<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> command -v espeak-ng &amp;&gt;/dev/null; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        espeak-ng -v en -s <span style="color:#ae81ff">150</span> -w <span style="color:#e6db74">&#34;</span>$outwav<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;</span>$text<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">elif</span> command -v espeak &amp;&gt;/dev/null; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        espeak -s <span style="color:#ae81ff">150</span> -w <span style="color:#e6db74">&#34;</span>$outwav<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;</span>$text<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;No espeak-ng/espeak installed&#34;</span> &gt;&amp;2; <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Voice change using sox</span>
+</span></span><span style="display:flex;"><span>voice_change<span style="color:#f92672">(){</span>
+</span></span><span style="display:flex;"><span>    local inwav<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span>; local mode<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$2<span style="color:#e6db74">&#34;</span>; local outwav<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$3<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;</span>$mode<span style="color:#e6db74">&#34;</span> in
+</span></span><span style="display:flex;"><span>        chipmunk<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e"># raise pitch -&gt; faster</span>
+</span></span><span style="display:flex;"><span>            sox <span style="color:#e6db74">&#34;</span>$inwav<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;</span>$outwav<span style="color:#e6db74">&#34;</span> pitch <span style="color:#ae81ff">700</span>
+</span></span><span style="display:flex;"><span>            ;;
+</span></span><span style="display:flex;"><span>        deep<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>            sox <span style="color:#e6db74">&#34;</span>$inwav<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;</span>$outwav<span style="color:#e6db74">&#34;</span> pitch -300
+</span></span><span style="display:flex;"><span>            ;;
+</span></span><span style="display:flex;"><span>        robot<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e"># ringmod + delay-ish</span>
+</span></span><span style="display:flex;"><span>            sox <span style="color:#e6db74">&#34;</span>$inwav<span style="color:#e6db74">&#34;</span> -p pitch -150 | sox - -n sinc 100-1000 <span style="color:#f92672">&amp;&amp;</span> sox <span style="color:#e6db74">&#34;</span>$inwav<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;</span>$outwav<span style="color:#e6db74">&#34;</span> chorus 0.7 0.9 <span style="color:#ae81ff">55</span> 0.4 0.25 <span style="color:#ae81ff">2</span> -t
+</span></span><span style="display:flex;"><span>            ;;
+</span></span><span style="display:flex;"><span>        pitch*<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e"># pitchN like pitch200</span>
+</span></span><span style="display:flex;"><span>            num<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>mode#pitch<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>            sox <span style="color:#e6db74">&#34;</span>$inwav<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;</span>$outwav<span style="color:#e6db74">&#34;</span> pitch <span style="color:#e6db74">&#34;</span>$num<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>            ;;
+</span></span><span style="display:flex;"><span>        *<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>            echo <span style="color:#e6db74">&#34;Unknown mode: </span>$mode<span style="color:#e6db74">&#34;</span>; <span style="color:#66d9ef">return</span> 1;;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">esac</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Burn subtitles (requires a valid SRT file)</span>
+</span></span><span style="display:flex;"><span>burn_subs<span style="color:#f92672">(){</span>
+</span></span><span style="display:flex;"><span>    local in<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span>; local srt<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$2<span style="color:#e6db74">&#34;</span>; local out<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$3<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    ffmpeg -y -i <span style="color:#e6db74">&#34;</span>$in<span style="color:#e6db74">&#34;</span> -vf <span style="color:#e6db74">&#34;subtitles=&#39;</span>$srt<span style="color:#e6db74">&#39;&#34;</span> -c:a copy <span style="color:#e6db74">&#34;</span>$out<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Pixelate filter: scale down then upscale</span>
+</span></span><span style="display:flex;"><span>filter_pixelate<span style="color:#f92672">(){</span>
+</span></span><span style="display:flex;"><span>    local in<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span>; local w<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$2<span style="color:#e6db74">&#34;</span>; local out<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$3<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    ffmpeg -y -i <span style="color:#e6db74">&#34;</span>$in<span style="color:#e6db74">&#34;</span> -vf <span style="color:#e6db74">&#34;scale=</span><span style="color:#e6db74">${</span>w<span style="color:#e6db74">}</span><span style="color:#e6db74">:-1:flags=neighbor,scale=iw*4:ih*4:flags=neighbor&#34;</span> -c:a copy <span style="color:#e6db74">&#34;</span>$out<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>filter_grayscale<span style="color:#f92672">(){</span>
+</span></span><span style="display:flex;"><span>    local in<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span>; local out<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$2<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    ffmpeg -y -i <span style="color:#e6db74">&#34;</span>$in<span style="color:#e6db74">&#34;</span> -vf format<span style="color:#f92672">=</span>gray -c:a copy <span style="color:#e6db74">&#34;</span>$out<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Simple glitch effect using tblend and fftfilt-ish</span>
+</span></span><span style="display:flex;"><span>filter_glitch<span style="color:#f92672">(){</span>
+</span></span><span style="display:flex;"><span>    local in<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span>; local out<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$2<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    ffmpeg -y -i <span style="color:#e6db74">&#34;</span>$in<span style="color:#e6db74">&#34;</span> -filter_complex <span style="color:#e6db74">&#34;[0:v]split[v1][v2];[v1]tblend=all_mode=overlay:all_opacity=0.6,negate[tmp];[v2]hue=s=0[mono];[tmp][mono]blend=all_mode=&#39;addition&#39;[v]&#34;</span> -map <span style="color:#e6db74">&#34;[v]&#34;</span> -map 0:a? -c:v libx264 -preset fast -crf <span style="color:#ae81ff">24</span> <span style="color:#e6db74">&#34;</span>$out<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Help / usage</span>
+</span></span><span style="display:flex;"><span>usage<span style="color:#f92672">(){</span>
+</span></span><span style="display:flex;"><span>    sed -n <span style="color:#e6db74">&#39;1,140p&#39;</span> <span style="color:#e6db74">&#34;</span>$0<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Command dispatcher</span>
+</span></span><span style="display:flex;"><span>cmd<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span>; shift <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;</span>$cmd<span style="color:#e6db74">&#34;</span> in
+</span></span><span style="display:flex;"><span>    cut<span style="color:#f92672">)</span> cut_segment <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;</span> ;;
+</span></span><span style="display:flex;"><span>    trim<span style="color:#f92672">)</span> trim_segment <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;</span> ;;
+</span></span><span style="display:flex;"><span>    reverse<span style="color:#f92672">)</span> reverse_video <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;</span> ;;
+</span></span><span style="display:flex;"><span>    speed<span style="color:#f92672">)</span> speed_change <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;</span> ;;
+</span></span><span style="display:flex;"><span>    add_text<span style="color:#f92672">)</span> add_text <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;</span> ;;
+</span></span><span style="display:flex;"><span>    add_watermark<span style="color:#f92672">)</span> add_watermark <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;</span> ;;
+</span></span><span style="display:flex;"><span>    add_music<span style="color:#f92672">)</span> add_music <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;</span> ;;
+</span></span><span style="display:flex;"><span>    overlay_audio<span style="color:#f92672">)</span> overlay_audio <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;</span> ;;
+</span></span><span style="display:flex;"><span>    tts_narrate<span style="color:#f92672">)</span> tts_narrate <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;</span> ;;
+</span></span><span style="display:flex;"><span>    voice_change<span style="color:#f92672">)</span> voice_change <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;</span> ;;
+</span></span><span style="display:flex;"><span>    burn_subs<span style="color:#f92672">)</span> burn_subs <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;</span> ;;
+</span></span><span style="display:flex;"><span>    filter_pixelate<span style="color:#f92672">)</span> filter_pixelate <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;</span> ;;
+</span></span><span style="display:flex;"><span>    filter_grayscale<span style="color:#f92672">)</span> filter_grayscale <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;</span> ;;
+</span></span><span style="display:flex;"><span>    filter_glitch<span style="color:#f92672">)</span> filter_glitch <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;</span> ;;
+</span></span><span style="display:flex;"><span>    help|--help|-h|<span style="color:#e6db74">&#34;&#34;</span><span style="color:#f92672">)</span> usage ;;
+</span></span><span style="display:flex;"><span>    *<span style="color:#f92672">)</span> echo <span style="color:#e6db74">&#34;Unknown command: </span>$cmd<span style="color:#e6db74">&#34;</span>; usage; exit <span style="color:#ae81ff">1</span> ;;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">esac</span>
+</span></span></code></pre></div><p>Done — I created the <strong><code>cli_video_editor.sh</code></strong> script in the canvas (title: <em>Cli Video Editor</em>).</p>
+<p>Quick next steps:</p>
+<ul>
+<li>
+<p>Open the script in the canvas, copy it to your machine and make it executable:
+<code>chmod +x cli_video_editor.sh</code></p>
+</li>
+<li>
+<p>Examples you can run right away:</p>
+<ul>
+<li>Cut: <code>./cli_video_editor.sh cut input.mp4 00:00:05 00:00:12 cut.mp4</code></li>
+<li>TTS + overlay:
+<code>./cli_video_editor.sh tts_narrate \&quot;Hello world\&quot; voice.wav</code>
+<code>./cli_video_editor.sh overlay_audio input.mp4 voice.wav output.mp4</code></li>
+<li>Add meme text:
+<code>./cli_video_editor.sh add_text input.mp4 \&quot;ARCH USERS BE LIKE\&quot; 50 50 60 out.mp4</code></li>
+</ul>
+</li>
+</ul>
+<p>If you want, I can now:</p>
+<ul>
+<li>Tweak the script to use your preferred fonts/voice/language,</li>
+<li>Add a single-command pipeline that makes a full meme (image → TTS → music → final),</li>
+<li>Or convert it into a small interactive menu script.</li>
+</ul>
+<p>Which of those would you like next?</p>
+<p><strong>Yes — there <em>are</em> existing command-line video editors</strong>, but none of them do <em>everything</em> in one place like the script I made.
+Here’s what already exists on Linux, especially Arch:</p>
+<hr>
+<h1 id="-1">✅ <strong>1. <code>ffmpeg</code> (the core tool)</strong></h1>
+<p>This is the main foundation.
+It can edit videos, add text, filters, audio, etc.</p>
+<p>But <strong>ffmpeg alone is not a full editor</strong> — it&rsquo;s a huge toolbox, not a workflow.</p>
+<hr>
+<h1 id="-2">✅ <strong>2. <code>melt</code> (MLT framework)</strong></h1>
+<p>Arch package: <code>mlt</code>
+CLI video editing engine behind <strong>Shotcut, Kdenlive</strong>.</p>
+<p>CLI example:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>melt input.mp4 -filter greyscale -consumer avformat:out.mp4
+</span></span></code></pre></div><p>Pros:</p>
+<ul>
+<li>Very powerful</li>
+<li>Can build full timelines</li>
+<li>Multi-track editing</li>
+</ul>
+<p>Cons:</p>
+<ul>
+<li>Harder syntax</li>
+<li>Not aimed at quick meme or TTS videos</li>
+<li>No voice/TTS, no music mixing shortcuts</li>
+</ul>
+<hr>
+<h1 id="-3">✅ <strong>3. <code>mpv</code> + scripting</strong></h1>
+<p><code>mpv</code> can apply filters, speed changes, etc.
+But doesn&rsquo;t export/edit video (only plays).</p>
+<hr>
+<h1 id="-4">✅ <strong>4. <code>avconv</code> / <code>libav-tools</code></strong></h1>
+<p>Old alternative to <code>ffmpeg</code>, mostly deprecated.</p>
+<hr>
+<h1 id="-5">✅ <strong>5. <code>kdenlive-render</code> (CLI rendering from Kdenlive project files)</strong></h1>
+<p>If you use Kdenlive, you can render from terminal.
+But not for live editing.</p>
+<hr>
+<h1 id="-what-does-not-exist">❌ What <em>does NOT</em> exist:</h1>
+<p>There is <strong>no single, simple, all-in-one CLI video editor</strong> that:</p>
+<ul>
+<li>cuts</li>
+<li>trims</li>
+<li>speeds up</li>
+<li>reverses</li>
+<li>adds text</li>
+<li>adds watermarks</li>
+<li>adds TTS</li>
+<li>changes voice</li>
+<li>mixes background music</li>
+<li>adds filters</li>
+<li>repairs audio</li>
+<li>exports final video</li>
+</ul>
+<p><strong>all in one command-line tool</strong>, with short, easy commands.</p>
+<p>That&rsquo;s why people usually:</p>
+<ul>
+<li>use <strong>ffmpeg</strong> manually</li>
+<li>or build their own wrapper scripts</li>
+<li>or use a UI editor</li>
+</ul>
+<hr>
+<h1 id="-what-your-script-does-differently-and-why-its-useful">⭐ What your script does differently (and why it’s useful)</h1>
+<p>Your script is a <strong>wrapper toolkit</strong>, similar to:</p>
+<ul>
+<li><code>ytfzf</code> (wrapper around <code>yt-dlp</code>)</li>
+<li><code>mediabackup</code> scripts</li>
+<li><code>imagemagick</code> helper scripts</li>
+</ul>
+<p>It’s meant to simplify:</p>
+<pre tabindex="0"><code>./cli_video_editor.sh add_text video.mp4 &#34;HELLO&#34; 50 50 60 out.mp4
+</code></pre><p>instead of:</p>
+<pre tabindex="0"><code>ffmpeg -i video.mp4 -vf &#34;drawtext=fontfile=/usr/share/fonts/TTF/DejaVuSans.ttf:text=&#39;HELLO&#39;:...
+</code></pre><p>AND</p>
+<p>It adds features <strong>no CLI editor includes</strong> by default:</p>
+<ul>
+<li>TTS generation</li>
+<li>funny voice effects</li>
+<li>meme text</li>
+<li>pixel filters</li>
+<li>glitch effects</li>
+<li>watermarking</li>
+<li>narration overlay</li>
+<li>background music mixing</li>
+</ul>
+<p>Unless you install <strong>10 separate tools</strong> and run <strong>10 different commands</strong>, nothing does this out of the box.</p>
+<hr>
+<h1 id="if-you-want">If you want…</h1>
+<p>I can turn this into:</p>
+<h3 id="option-a--aur-package"><strong>Option A — AUR package</strong></h3>
+<p><code>cli-video-editor-git</code></p>
+<h3 id="option-b--single-archlinux-script-in-usrlocalbin"><strong>Option B — Single archlinux script in /usr/local/bin</strong></h3>
+<p>One command: <code>editvid</code></p>
+<h3 id="option-c--add-interactive-menu"><strong>Option C — Add interactive menu</strong></h3>
+<p>TUI like:</p>
+<pre tabindex="0"><code>1) Cut video
+2) Add text
+3) Add music
+4) Generate meme
+5) Voice effects
+6) TTS narration
+</code></pre><p>Just tell me <strong>A, B, or C</strong>.</p>
+
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+</footer>
+
+
+</body>
+</html>
