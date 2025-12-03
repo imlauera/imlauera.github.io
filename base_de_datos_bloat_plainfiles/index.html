@@ -10,7 +10,7 @@
   <meta property="og:site_name" content="Imlauer">
   <meta property="og:title" content="Las base de datos son bloat mejor usa un archivo de texto plano.">
   <meta property="og:description" content="Las bases de datos son bloat, es mejor usar un archivo texto plano y usar las herramientas de Unix para buscar informacion dentro de ellos.
-You can absolutely use a plain text file as a database in Unix. This is classic Unix philosophy: “Text is the universal interface.” Below are practical patterns depending on how you want to store and query data — all without jq, without SQLite, without JSON — just text &#43; grep/awk/sed.">
+Aquí tenés una guía práctica y realista para usar un archivo de texto plano como “base de datos” para un colegio, usando solo grep, awk, sed, sort, cut y herramientas Unix. La clave es formato bien definido, un registro por línea y campos separados de forma consistente.">
   <meta property="og:locale" content="es_es">
   <meta property="og:type" content="article">
     <meta property="article:published_time" content="2025-12-03T04:01:56-03:00">
@@ -20,16 +20,16 @@ You can absolutely use a plain text file as a database in Unix. This is classic 
   
   <meta itemprop="name" content="Las base de datos son bloat mejor usa un archivo de texto plano.">
   <meta itemprop="description" content="Las bases de datos son bloat, es mejor usar un archivo texto plano y usar las herramientas de Unix para buscar informacion dentro de ellos.
-You can absolutely use a plain text file as a database in Unix. This is classic Unix philosophy: “Text is the universal interface.” Below are practical patterns depending on how you want to store and query data — all without jq, without SQLite, without JSON — just text &#43; grep/awk/sed.">
+Aquí tenés una guía práctica y realista para usar un archivo de texto plano como “base de datos” para un colegio, usando solo grep, awk, sed, sort, cut y herramientas Unix. La clave es formato bien definido, un registro por línea y campos separados de forma consistente.">
   <meta itemprop="datePublished" content="2025-12-03T04:01:56-03:00">
   <meta itemprop="dateModified" content="2025-12-03T04:01:56-03:00">
-  <meta itemprop="wordCount" content="2182">
+  <meta itemprop="wordCount" content="2581">
   <meta itemprop="keywords" content="Db">
   
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="Las base de datos son bloat mejor usa un archivo de texto plano.">
   <meta name="twitter:description" content="Las bases de datos son bloat, es mejor usar un archivo texto plano y usar las herramientas de Unix para buscar informacion dentro de ellos.
-You can absolutely use a plain text file as a database in Unix. This is classic Unix philosophy: “Text is the universal interface.” Below are practical patterns depending on how you want to store and query data — all without jq, without SQLite, without JSON — just text &#43; grep/awk/sed.">
+Aquí tenés una guía práctica y realista para usar un archivo de texto plano como “base de datos” para un colegio, usando solo grep, awk, sed, sort, cut y herramientas Unix. La clave es formato bien definido, un registro por línea y campos separados de forma consistente.">
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -49,8 +49,8 @@ You can absolutely use a plain text file as a database in Unix. This is classic 
   <meta name="author" content="Imlauer.">
   <meta name="description" content="Las bases de datos son bloat, es mejor usar un archivo texto plano y usar las herramientas de Unix para buscar informacion dentro de ellos.
 
-You can absolutely use a plain text file as a database in Unix. This is classic Unix philosophy: “Text is the universal interface.”
-Below are practical patterns depending on how you want to store and query data — all without jq, without SQLite, without JSON — just text &#43; grep/awk/sed.">
+Aquí tenés una guía práctica y realista para usar un archivo de texto plano como “base de datos” para un colegio, usando solo grep, awk, sed, sort, cut y herramientas Unix.
+La clave es formato bien definido, un registro por línea y campos separados de forma consistente.">
 </head>
 <body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
   <div class="navbar-brand">
@@ -99,6 +99,90 @@ Below are practical patterns depending on how you want to store and query data �
       <div class="container">
 <div class="content is-medium">
   <p>Las bases de datos son bloat, es mejor usar un archivo texto plano y usar las herramientas de Unix para buscar informacion dentro de ellos.</p>
+<hr>
+<p>Aquí tenés una <strong>guía práctica y realista</strong> para usar <strong>un archivo de texto plano como “base de datos”</strong> para un colegio, usando solo <strong>grep, awk, sed, sort, cut</strong> y herramientas Unix.
+La clave es <strong>formato bien definido</strong>, <strong>un registro por línea</strong> y <strong>campos separados</strong> de forma consistente.</p>
+<hr>
+<h1 id="-1-elegir-un-formato-simple-estable-y-fácil-de-parsear">✅ <strong>1. Elegir un formato simple, estable y fácil de parsear</strong></h1>
+<p>El mejor formato para “base de datos en texto plano” usando Unix es:</p>
+<h3 id="formato-tsv-tab-separated-values-separado-por-tab"><strong>Formato: TSV (tab-separated values, separado por TAB)</strong></h3>
+<p>Razones:</p>
+<ul>
+<li>No choca con comas dentro del texto.</li>
+<li><code>awk -F '\t'</code> lo lee perfecto.</li>
+<li><code>grep</code> funciona igual.</li>
+<li>Fácil de editar en Vim.</li>
+</ul>
+<hr>
+<h1 id="-2-estructura-universal-para-cualquier-tipo-de-registro">✅ <strong>2. Estructura universal para cualquier tipo de registro</strong></h1>
+<p>Usá un <strong>“schema” fijo</strong>:</p>
+<pre tabindex="0"><code>TYPE    ID      DATE        FIELD1      FIELD2     FIELD3     EXTRA
+</code></pre><h3 id="campos-recomendados">Campos recomendados:</h3>
+<ul>
+<li><code>TYPE</code>: el tipo de dato → <code>DOCENTE</code>, <code>ALUMNO</code>, <code>ASISTENCIA</code>, <code>LICENCIA</code>, <code>AMON</code>, <code>TUTOR</code>, etc.</li>
+<li><code>ID</code>: identificador único → DNI, legajo o código.</li>
+<li><code>DATE</code>: formato estándar → <code>2025-03-04</code></li>
+<li><code>FIELD1..FIELDn</code>: depende del tipo.</li>
+<li><code>EXTRA</code>: texto libre opcional.</li>
+</ul>
+<hr>
+<h1 id="-3-ejemplos-reales">✅ <strong>3. Ejemplos reales</strong></h1>
+<h3 id="docentes"><strong>Docentes</strong></h3>
+<pre tabindex="0"><code>DOCENTE  20300300    2025-03-01  ingreso     Juan Perez     Matemática
+DOCENTE  20300300    2025-03-15  licencia    enfermedad     2-dias
+</code></pre><h3 id="alumnos"><strong>Alumnos</strong></h3>
+<pre tabindex="0"><code>ALUMNO   55022110    2025-03-01  ingreso     Lopez Maria    2B
+TUTOR    55022110    2025-03-01  tutor       Carlos Lopez   padre
+</code></pre><h3 id="asistencias"><strong>Asistencias</strong></h3>
+<pre tabindex="0"><code>ASIST    55022110    2025-03-04  presente    2B
+ASIST    55022110    2025-03-05  ausente     2B
+</code></pre><h3 id="amonestaciones"><strong>Amonestaciones</strong></h3>
+<pre tabindex="0"><code>AMON     55022110    2025-03-05  leve        celular        profesorX
+AMON     55022110    2025-03-10  grave       conducta       preceptorY
+</code></pre><hr>
+<h1 id="-4-cómo-consultar-rápido-con-unix">✅ <strong>4. Cómo consultar rápido con Unix</strong></h1>
+<h3 id="-todos-los-registros-de-un-alumno">■ Todos los registros de un alumno:</h3>
+<pre tabindex="0"><code>grep -P &#34;\t55022110\t&#34; base2025.tsv
+</code></pre><h3 id="-solo-asistencias">■ Solo asistencias:</h3>
+<pre tabindex="0"><code>grep &#34;^ASIST&#34; base2025.tsv
+</code></pre><h3 id="-asistencias-de-un-alumno">■ Asistencias de un alumno:</h3>
+<pre tabindex="0"><code>awk -F &#39;\t&#39; &#39;$1==&#34;ASIST&#34; &amp;&amp; $2==&#34;55022110&#34;&#39; base2025.tsv
+</code></pre><h3 id="-cantidad-de-ausencias">■ Cantidad de ausencias:</h3>
+<pre tabindex="0"><code>awk -F &#39;\t&#39; &#39;$1==&#34;ASIST&#34; &amp;&amp; $2==&#34;55022110&#34; &amp;&amp; $4==&#34;ausente&#34; {c++} END {print c}&#39; base2025.tsv
+</code></pre><h3 id="-sanciones-de-un-curso">■ Sanciones de un curso:</h3>
+<pre tabindex="0"><code>awk -F &#39;\t&#39; &#39;$1==&#34;AMON&#34; &amp;&amp; $6==&#34;2B&#34;&#39; base2025.tsv
+</code></pre><hr>
+<h1 id="-5-cómo-agregar-un-registro-desde-bash">✅ <strong>5. Cómo agregar un registro desde Bash</strong></h1>
+<p>Hacete un script:</p>
+<h3 id="addsh"><code>add.sh</code></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/sh
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>echo -e <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;</span> &gt;&gt; base2025.tsv
+</span></span></code></pre></div><p>Uso:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>./add.sh <span style="color:#e6db74">&#34;ASIST\t55022110\t2025-03-06\tpresente\t2B&#34;</span>
+</span></span></code></pre></div><hr>
+<h1 id="-6-cómo-validar-datos">✅ <strong>6. Cómo validar datos</strong></h1>
+<p>Podés agregar checks con awk:</p>
+<pre tabindex="0"><code>awk -F &#39;\t&#39; &#39;NF &lt; 4 { print &#34;Registro inválido:&#34;, $0}&#39; base2025.tsv
+</code></pre><hr>
+<h1 id="-7-organización-por-año">✅ <strong>7. Organización por año</strong></h1>
+<p>Te recomiendo:</p>
+<pre tabindex="0"><code>/datos-colegio/
+    base2025.tsv
+    base2026.tsv
+    base2027.tsv
+</code></pre><p>Un archivo grande por año es perfecto.</p>
+<hr>
+<h1 id="-8-opcional-separar-por-tablas-virtuales">✅ <strong>8. Opcional: separar por “tablas virtuales”</strong></h1>
+<p>Si querés dividir un poco:</p>
+<pre tabindex="0"><code>docentes2025.tsv
+alumnos2025.tsv
+asistencias2025.tsv
+amonestaciones2025.tsv
+tutores2025.tsv
+</code></pre><p>Pero tu idea de <strong>un solo archivo</strong> es totalmente válida — solo necesitás el campo <code>TYPE</code>.</p>
+<hr>
+<h1 id="-querés-que-te-genere-un-schema-completo-y-lista-de-comandos-útiles-para-cada-tipo-de-dato">⚡ ¿Querés que te genere un <em>schema</em> completo y lista de comandos útiles para cada tipo de dato?</h1>
+<p>Puedo armarte un “manual del sistema” con todo predefinido.</p>
 <hr>
 <p>You can absolutely use a <strong>plain text file as a database</strong> in Unix. This is classic Unix philosophy: <em>“Text is the universal interface.”</em>
 Below are <strong>practical patterns</strong> depending on how you want to store and query data — all without jq, without SQLite, without JSON — just text + grep/awk/sed.</p>
