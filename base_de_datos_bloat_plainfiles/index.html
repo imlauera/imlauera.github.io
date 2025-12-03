@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/base_de_datos_bloat_plainfiles/">
+  <meta property="og:site_name" content="Imlauer">
+  <meta property="og:title" content="Base_de_datos_bloat_plainfiles">
+  <meta property="og:description" content="Las bases de datos son bloat, es mejor usar un archivo texto plano y usar las herramientas de Unix para buscar informacion dentro de ellos.
+Nice — you want a practical, file-based “database” using only Unix tools. Below is a focused, pragmatic guide &#43; ready-to-run shell toolkit you can copy-paste and use. It covers data layout choices, common operations (CRUD &#43; queries), performance &amp; safety tips, and a simple script (plaindb.sh) that implements insert/find/update/delete on newline-delimited JSON (NDJSON) and on delimited CSV/TSV. I thought deeper about scale, concurrency, indexing, and schema evolution so you don’t get burned later.">
+  <meta property="og:locale" content="es_es">
+  <meta property="og:type" content="article">
+    <meta property="article:published_time" content="2025-12-03T04:01:56-03:00">
+    <meta property="article:modified_time" content="2025-12-03T04:01:56-03:00">
+    <meta property="article:tag" content="Db">
+
+  
+  <meta itemprop="name" content="Base_de_datos_bloat_plainfiles">
+  <meta itemprop="description" content="Las bases de datos son bloat, es mejor usar un archivo texto plano y usar las herramientas de Unix para buscar informacion dentro de ellos.
+Nice — you want a practical, file-based “database” using only Unix tools. Below is a focused, pragmatic guide &#43; ready-to-run shell toolkit you can copy-paste and use. It covers data layout choices, common operations (CRUD &#43; queries), performance &amp; safety tips, and a simple script (plaindb.sh) that implements insert/find/update/delete on newline-delimited JSON (NDJSON) and on delimited CSV/TSV. I thought deeper about scale, concurrency, indexing, and schema evolution so you don’t get burned later.">
+  <meta itemprop="datePublished" content="2025-12-03T04:01:56-03:00">
+  <meta itemprop="dateModified" content="2025-12-03T04:01:56-03:00">
+  <meta itemprop="wordCount" content="1811">
+  <meta itemprop="keywords" content="Db">
+  
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Base_de_datos_bloat_plainfiles">
+  <meta name="twitter:description" content="Las bases de datos son bloat, es mejor usar un archivo texto plano y usar las herramientas de Unix para buscar informacion dentro de ellos.
+Nice — you want a practical, file-based “database” using only Unix tools. Below is a focused, pragmatic guide &#43; ready-to-run shell toolkit you can copy-paste and use. It covers data layout choices, common operations (CRUD &#43; queries), performance &amp; safety tips, and a simple script (plaindb.sh) that implements insert/find/update/delete on newline-delimited JSON (NDJSON) and on delimited CSV/TSV. I thought deeper about scale, concurrency, indexing, and schema evolution so you don’t get burned later.">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Base_de_datos_bloat_plainfiles
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/base_de_datos_bloat_plainfiles/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="Las bases de datos son bloat, es mejor usar un archivo texto plano y usar las herramientas de Unix para buscar informacion dentro de ellos.
+Nice — you want a practical, file-based “database” using only Unix tools. Below is a focused, pragmatic guide &#43; ready-to-run shell toolkit you can copy-paste and use. It covers data layout choices, common operations (CRUD &#43; queries), performance &amp; safety tips, and a simple script (plaindb.sh) that implements insert/find/update/delete on newline-delimited JSON (NDJSON) and on delimited CSV/TSV. I thought deeper about scale, concurrency, indexing, and schema evolution so you don&rsquo;t get burned later.">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Base_de_datos_bloat_plainfiles
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2025-12-03T04:01:56-03:00'>
+      December 03, 2025
+    </time>
+    
+    <br>
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/db/">Db</a>
+    
+    
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <p>Las bases de datos son bloat, es mejor usar un archivo texto plano y usar las herramientas de Unix para buscar informacion dentro de ellos.</p>
+<p>Nice — you want a <em>practical</em>, file-based “database” using only Unix tools. Below is a focused, pragmatic guide + ready-to-run shell toolkit you can copy-paste and use. It covers data layout choices, common operations (CRUD + queries), performance &amp; safety tips, and a simple script (<code>plaindb.sh</code>) that implements insert/find/update/delete on newline-delimited JSON (NDJSON) and on delimited CSV/TSV. I thought deeper about scale, concurrency, indexing, and schema evolution so you don&rsquo;t get burned later.</p>
+<h1 id="why-plain-files-quick-proscons">Why plain files (quick pros/cons)</h1>
+<p><strong>Pros</strong></p>
+<ul>
+<li>Simple, transparent, easy to version with git.</li>
+<li>No DB server, low dependency surface.</li>
+<li>Fast for many read-heavy workloads using grep/rg/awk/jq.
+<strong>Cons</strong></li>
+<li>No transactions unless you implement locking/atomic writes.</li>
+<li>Harder to scale and do complex joins/queries compared to a DB.</li>
+<li>Requires careful handling for concurrency, schema evolution, and backups.</li>
+</ul>
+<h1 id="recommended-file-formats">Recommended file formats</h1>
+<ol>
+<li>
+<p><strong>NDJSON (newline-delimited JSON)</strong> — each line is a JSON object. Best for structured records, works great with <code>jq</code>.</p>
+<ul>
+<li>Example: <code>users.ndjson</code></li>
+<li><code>{&quot;id&quot;:1,&quot;name&quot;:&quot;A&quot;,&quot;email&quot;:&quot;a@x.com&quot;}</code></li>
+</ul>
+</li>
+<li>
+<p><strong>CSV/TSV</strong> — great for tabular data and fast parsing with <code>awk</code>, <code>cut</code>.</p>
+<ul>
+<li>Use <code>\t</code> (TSV) to avoid comma-escaping headaches.</li>
+</ul>
+</li>
+<li>
+<p><strong>Flat key-value</strong> — <code>key:value</code> per line for tiny lookup tables.</p>
+</li>
+<li>
+<p><strong>Inverted index files</strong> — precomputed index files to support fast full-text lookups.</p>
+</li>
+</ol>
+<h1 id="tools-to-use-short">Tools to use (short)</h1>
+<ul>
+<li><code>grep</code> / <code>rg</code> (ripgrep) — text search</li>
+<li><code>awk</code> — field processing, aggregations, joins-ish</li>
+<li><code>sed</code> — in-place edits / transforms</li>
+<li><code>jq</code> — JSON querying and mutation</li>
+<li><code>cut</code>, <code>sort</code>, <code>uniq</code>, <code>join</code> — selection and joins on sorted files</li>
+<li><code>flock</code> — file locking for safe concurrent writes</li>
+<li><code>mv</code>/<code>cp</code> technique — atomic replace (<code>mv tmp file</code>)</li>
+<li><code>gzip</code>/<code>xz</code> — compress cold data</li>
+<li><code>git</code> — version your files for history &amp; lightweight rollback</li>
+<li><code>fzf</code> — interactive selection</li>
+</ul>
+<hr>
+<h1 id="patterns--examples">Patterns &amp; examples</h1>
+<h2 id="1-ndjson-append-find-update-delete">1) NDJSON: append, find, update, delete</h2>
+<p>File: <code>users.ndjson</code></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>{<span style="color:#f92672">&#34;id&#34;</span>:<span style="color:#ae81ff">1</span>,<span style="color:#f92672">&#34;name&#34;</span>:<span style="color:#e6db74">&#34;Alice&#34;</span>,<span style="color:#f92672">&#34;email&#34;</span>:<span style="color:#e6db74">&#34;alice@example.com&#34;</span>}
+</span></span><span style="display:flex;"><span>{<span style="color:#f92672">&#34;id&#34;</span>:<span style="color:#ae81ff">2</span>,<span style="color:#f92672">&#34;name&#34;</span>:<span style="color:#e6db74">&#34;Bob&#34;</span>,<span style="color:#f92672">&#34;email&#34;</span>:<span style="color:#e6db74">&#34;bob@example.com&#34;</span>}
+</span></span></code></pre></div><h3 id="insert-append-safely">Insert (append safely)</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#75715e"># create a new record and append atomically</span>
+</span></span><span style="display:flex;"><span>record<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;{&#34;id&#34;:3,&#34;name&#34;:&#34;Carol&#34;,&#34;email&#34;:&#34;carol@example.com&#34;}&#39;</span>
+</span></span><span style="display:flex;"><span>printf <span style="color:#e6db74">&#39;%s\n&#39;</span> <span style="color:#e6db74">&#34;</span>$record<span style="color:#e6db74">&#34;</span> &gt;&gt; users.ndjson
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># better: use flock for multi-writer safety (see script below)</span>
+</span></span></code></pre></div><h3 id="find-records">Find records</h3>
+<ul>
+<li>Full-text with grep:</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>grep -i <span style="color:#e6db74">&#39;alice&#39;</span> users.ndjson
+</span></span></code></pre></div><ul>
+<li>Field-level with jq:</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>jq -c <span style="color:#e6db74">&#39;select(.email==&#34;alice@example.com&#34;)&#39;</span> users.ndjson
+</span></span></code></pre></div><h3 id="select-columns-project">Select columns (project)</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>jq -r <span style="color:#e6db74">&#39;.id, .name&#39;</span> users.ndjson    <span style="color:#75715e"># prints each field on a new line (not ideal)</span>
+</span></span><span style="display:flex;"><span>jq -r <span style="color:#e6db74">&#39;. | [.id, .name] | @tsv&#39;</span> users.ndjson  <span style="color:#75715e"># id&lt;TAB&gt;name</span>
+</span></span></code></pre></div><h3 id="update-a-record-idempotent-pattern">Update a record (idempotent pattern)</h3>
+<p>Can&rsquo;t modify in-place reliably — create a new file then move:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>jq <span style="color:#e6db74">&#39;if .id==2 then .email=&#34;bob@new.com&#34; else . end&#39;</span> users.ndjson &gt; users.ndjson.tmp
+</span></span><span style="display:flex;"><span>mv users.ndjson.tmp users.ndjson
+</span></span></code></pre></div><p>If multiple writers exist, use <code>flock</code> to protect the critical section (script later).</p>
+<h3 id="delete">Delete</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>jq <span style="color:#e6db74">&#39;select(.id != 2)&#39;</span> users.ndjson &gt; users.ndjson.tmp <span style="color:#f92672">&amp;&amp;</span> mv users.ndjson.tmp users.ndjson
+</span></span></code></pre></div><h2 id="2-csvtsv-with-awk">2) CSV/TSV with awk</h2>
+<p>File: <code>products.tsv</code> (header: id<!-- raw HTML omitted -->name<!-- raw HTML omitted -->price)</p>
+<pre tabindex="0"><code>id	name	price
+1	Widget	12.50
+2	Gizmo	9.99
+</code></pre><h3 id="find-where-price--10">Find where price &gt; 10</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>awk -F<span style="color:#e6db74">&#39;\t&#39;</span> <span style="color:#e6db74">&#39;NR==1{print; next} $3+0 &gt; 10&#39;</span> products.tsv
+</span></span></code></pre></div><h3 id="group-by-and-count">Group by and count</h3>
+<p>Count products by name prefix:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>awk -F<span style="color:#e6db74">&#39;\t&#39;</span> <span style="color:#e6db74">&#39;NR&gt;1 {prefix=substr($2,1,3); counts[prefix]++} END{for (k in counts) print k, counts[k]}&#39;</span> products.tsv | sort -k2 -n -r
+</span></span></code></pre></div><h3 id="join-two-files-both-sorted-by-key">Join two files (both sorted by key)</h3>
+<p><code>join</code> requires files sorted on join field:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#75715e"># assume customers.tsv and orders.tsv keyed by customer_id in column1</span>
+</span></span><span style="display:flex;"><span>join -t<span style="color:#e6db74">$&#39;\t&#39;</span> -1 <span style="color:#ae81ff">1</span> -2 <span style="color:#ae81ff">1</span> &lt;<span style="color:#f92672">(</span>sort -k1,1 customers.tsv<span style="color:#f92672">)</span> &lt;<span style="color:#f92672">(</span>sort -k1,1 orders.tsv<span style="color:#f92672">)</span>
+</span></span></code></pre></div><h2 id="3-indexing-for-speed-simple-inverted-index">3) Indexing for speed (simple inverted index)</h2>
+<p>If you have lots of text and <code>grep</code> becomes slow / you need targeted search, create an index mapping token → list of record IDs.</p>
+<p>Example pipeline to build a basic inverted index (tokenized lowercased words):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#75715e"># input: docs.ndjson each line {&#34;id&#34;:123, &#34;text&#34;:&#34;...&#34;}</span>
+</span></span><span style="display:flex;"><span>jq -r <span style="color:#e6db74">&#39;. | [.id, .text] | @tsv&#39;</span> docs.ndjson <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  | tr <span style="color:#e6db74">&#39;[:upper:]&#39;</span> <span style="color:#e6db74">&#39;[:lower:]&#39;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  | awk -F<span style="color:#e6db74">&#39;\t&#39;</span> <span style="color:#e6db74">&#39;{id=$1; text=$2; gsub(/[^a-z0-9]+/,&#34; &#34;,text); split(text, a, &#34; &#34;); for(i in a) if(length(a[i])&gt;1) print a[i] &#34;\t&#34; id}&#39;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  | sort -k1,1 -u <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  | awk -F<span style="color:#e6db74">&#39;\t&#39;</span> <span style="color:#e6db74">&#39;{word=$1; id=$2; ids[word]=ids[word]?ids[word] &#34;,&#34; id : id} END{for (w in ids) print w &#34;\t&#34; ids[w]}&#39;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  &gt; index.tsv
+</span></span></code></pre></div><p>Lookup:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>grep -P <span style="color:#e6db74">&#39;^keyword\t&#39;</span> index.tsv
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># parse list of ids and then pull records from ndjson using jq or grep -Ff</span>
+</span></span></code></pre></div><h2 id="4-transactions--concurrency-flock--atomic-move">4) Transactions &amp; concurrency (flock + atomic move)</h2>
+<p>Example pattern for safe writes:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#f92672">(</span>
+</span></span><span style="display:flex;"><span>  flock -x <span style="color:#ae81ff">200</span> <span style="color:#f92672">||</span> exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># make changes in a tmp file</span>
+</span></span><span style="display:flex;"><span>  jq <span style="color:#e6db74">&#39;...update...&#39;</span> users.ndjson &gt; users.ndjson.tmp
+</span></span><span style="display:flex;"><span>  mv users.ndjson.tmp users.ndjson
+</span></span><span style="display:flex;"><span><span style="color:#f92672">)</span> 200&gt;users.ndjson.lock
+</span></span></code></pre></div><ul>
+<li><code>flock -x</code> grabs exclusive lock on file descriptor 200.</li>
+<li>Always write to a <code>.tmp</code> and <code>mv</code> to replace atomically.</li>
+</ul>
+<h2 id="5-backups--snapshots">5) Backups &amp; snapshots</h2>
+<ul>
+<li>Periodic snapshots: <code>cp users.ndjson users.$(date +%Y%m%d%H%M).ndjson</code></li>
+<li>Lightweight: commit changes to git (<code>git add *.ndjson &amp;&amp; git commit -m &quot;snapshot&quot;</code>).</li>
+<li>For big files, use incremental rsync to remote.</li>
+</ul>
+<h2 id="6-validation--schema-evolution">6) Validation &amp; schema evolution</h2>
+<ul>
+<li>Keep a small schema file <code>schema.json</code> that documents required fields and types.</li>
+<li>Validate new records with <code>jq</code> filter before appending:</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>jq -e <span style="color:#e6db74">&#39;(.id|type==&#34;number&#34;) and (.email|test(&#34;@&#34;))&#39;</span> <span style="color:#f92672">&lt;&lt;&lt;</span><span style="color:#e6db74">&#34;</span>$candidate<span style="color:#e6db74">&#34;</span>
+</span></span></code></pre></div><ul>
+<li>For migration: write a one-shot <code>jq</code> or <code>awk</code> migration script that produces a new file, test it, then replace.</li>
+</ul>
+<hr>
+<h1 id="ready-to-use-toolkit-plaindbsh">Ready-to-use toolkit: <code>plaindb.sh</code></h1>
+<p>Copy this script and put it in your <code>$PATH</code> (<code>chmod +x plaindb.sh</code>). It implements simple CRUD on an NDJSON file with locking.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#75715e">#!/usr/bin/env bash
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e"># plaindb.sh - minimal NDJSON &#34;db&#34; operations: insert, find, update, delete, list</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Usage: plaindb.sh &lt;dbfile&gt; &lt;cmd&gt; [args...]</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Requires: jq, flock, mktemp</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>DB<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span>; shift
+</span></span><span style="display:flex;"><span>CMD<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span>; shift
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>LOCK<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>DB<span style="color:#e6db74">}</span><span style="color:#e6db74">.lock&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>usage<span style="color:#f92672">(){</span> cat <span style="color:#e6db74">&lt;&lt;EOF
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Usage: $0 &lt;dbfile&gt; &lt;cmd&gt; [args...]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Commands:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  insert  &lt;json&gt;                 Append a JSON record (string)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  find    &lt;jq-filter&gt;            Print matching records (jq filter)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  list                           Print all records
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  update  &#39;&lt;jq-update&gt;&#39;          Apply jq program to all records (e.g. &#39;if .id==2 then .name=&#34;X&#34; else . end&#39;)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  delete  &#39;&lt;jq-condition&gt;&#39;       Delete records matching condition (jq select; e.g. &#39;.id==2&#39;)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOF</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> -z <span style="color:#e6db74">&#34;</span>$DB<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span> <span style="color:#f92672">||</span> <span style="color:#f92672">[</span> -z <span style="color:#e6db74">&#34;</span>$CMD<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span> usage; exit 1; <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>mkdir -p <span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>dirname <span style="color:#e6db74">&#34;</span>$DB<span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span> 2&gt;/dev/null <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span>: <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>DB:=db.ndjson<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>with_lock<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e"># usage: with_lock &lt;command...&gt;</span>
+</span></span><span style="display:flex;"><span>  exec 200&gt;<span style="color:#e6db74">&#34;</span>$LOCK<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  flock -x <span style="color:#ae81ff">200</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  flock -u <span style="color:#ae81ff">200</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;</span>$CMD<span style="color:#e6db74">&#34;</span> in
+</span></span><span style="display:flex;"><span>  insert<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    json<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> ! echo <span style="color:#e6db74">&#34;</span>$json<span style="color:#e6db74">&#34;</span> | jq -e . &gt;/dev/null 2&gt;&amp;1; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>      echo <span style="color:#e6db74">&#34;invalid json&#34;</span> &gt;&amp;2; exit <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># append under lock</span>
+</span></span><span style="display:flex;"><span>    with_lock bash -c <span style="color:#e6db74">&#34;printf &#39;%s\n&#39; \&#34;</span>$json<span style="color:#e6db74">\&#34; &gt;&gt; &#39;</span>$DB<span style="color:#e6db74">&#39;&#34;</span>
+</span></span><span style="display:flex;"><span>    ;;
+</span></span><span style="display:flex;"><span>  find<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    filter<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> -z <span style="color:#e6db74">&#34;</span>$filter<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span> filter<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;.&#39;</span>; <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># safe read, no write locking necessary</span>
+</span></span><span style="display:flex;"><span>    jq -c <span style="color:#e6db74">&#34;</span>$filter<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;</span>$DB<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    ;;
+</span></span><span style="display:flex;"><span>  list<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    jq -c <span style="color:#e6db74">&#39;.&#39;</span> <span style="color:#e6db74">&#34;</span>$DB<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    ;;
+</span></span><span style="display:flex;"><span>  update<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    prog<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    tmp<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>mktemp <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>DB<span style="color:#e6db74">}</span><span style="color:#e6db74">.tmp.XXXX&#34;</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    with_lock bash -c <span style="color:#e6db74">&#34;jq -c &#39;</span>$prog<span style="color:#e6db74">&#39; &#39;</span>$DB<span style="color:#e6db74">&#39; &gt; &#39;</span>$tmp<span style="color:#e6db74">&#39; &amp;&amp; mv &#39;</span>$tmp<span style="color:#e6db74">&#39; &#39;</span>$DB<span style="color:#e6db74">&#39;&#34;</span>
+</span></span><span style="display:flex;"><span>    ;;
+</span></span><span style="display:flex;"><span>  delete<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    cond<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    tmp<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>mktemp <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>DB<span style="color:#e6db74">}</span><span style="color:#e6db74">.tmp.XXXX&#34;</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    with_lock bash -c <span style="color:#e6db74">&#34;jq -c \&#34;select( ( </span>$cond<span style="color:#e6db74"> ) | not )\&#34; &#39;</span>$DB<span style="color:#e6db74">&#39; &gt; &#39;</span>$tmp<span style="color:#e6db74">&#39; &amp;&amp; mv &#39;</span>$tmp<span style="color:#e6db74">&#39; &#39;</span>$DB<span style="color:#e6db74">&#39;&#34;</span>
+</span></span><span style="display:flex;"><span>    ;;
+</span></span><span style="display:flex;"><span>  *<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    usage; exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">esac</span>
+</span></span></code></pre></div><p>Examples:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#75715e"># insert</span>
+</span></span><span style="display:flex;"><span>./plaindb.sh users.ndjson insert <span style="color:#e6db74">&#39;{&#34;id&#34;:1,&#34;name&#34;:&#34;Alice&#34;}&#39;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># find by id</span>
+</span></span><span style="display:flex;"><span>./plaindb.sh users.ndjson find <span style="color:#e6db74">&#39;select(.id==1)&#39;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># update</span>
+</span></span><span style="display:flex;"><span>./plaindb.sh users.ndjson update <span style="color:#e6db74">&#39;if .id==1 then .email=&#34;a@x.com&#34; else . end&#39;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># delete</span>
+</span></span><span style="display:flex;"><span>./plaindb.sh users.ndjson delete <span style="color:#e6db74">&#39;.id==1&#39;</span>
+</span></span></code></pre></div><hr>
+<h1 id="advanced-tips-thinking-deeper">Advanced tips (thinking deeper)</h1>
+<ul>
+<li><strong>Search performance</strong>: <code>rg</code> (ripgrep) is much faster than <code>grep</code>. For enormous files, split data by sharding keys (year, prefix), or maintain indexes.</li>
+<li><strong>Atomic counters</strong>: maintain a small file <code>next_id</code> and <code>flock</code> it to safely increment IDs.</li>
+<li><strong>Multi-field joins</strong>: sort files on join keys and use <code>join</code>. For complex joins, it&rsquo;s often simpler to load small sets into memory with <code>awk</code> associative arrays.</li>
+<li><strong>Partial reads</strong>: store large blobs separately (e.g., <code>blobs/&lt;id&gt;.dat</code>) and keep metadata in the main NDJSON.</li>
+<li><strong>Full-text search</strong>: if you need advanced text queries (stemming, ranking), either maintain an index or use <code>sqlite FTS</code> (that&rsquo;s a DB—but it&rsquo;s a single file).</li>
+<li><strong>Monitoring &amp; metrics</strong>: keep a <code>metrics.log</code> file with line-oriented events (timestamped) and roll it daily.</li>
+<li><strong>Immutable append-only log</strong>: prefer append-only files and periodic compaction—this makes crash recovery trivial. Compaction script reads file, removes tombstones, writes compacted file, swaps atomically.</li>
+<li><strong>Encryption</strong>: use <code>gpg --encrypt</code> for at-rest, <code>gpg --decrypt</code> when reading; or use <code>age</code>.</li>
+<li><strong>Testing &amp; CI</strong>: add schema tests that <code>jq</code>-validate every new commit to the repo.</li>
+</ul>
+<hr>
+<h1 id="quick-cheatsheet">Quick cheatsheet</h1>
+<ul>
+<li><code>grep -i foo file</code> — fast text search</li>
+<li><code>jq -c 'select(.field==&quot;x&quot;)' file</code> — filter NDJSON</li>
+<li><code>awk -F'\t' '$3&gt;10' file.tsv</code> — numeric filter on column 3</li>
+<li><code>sort -k1,1 file | join -t$'\t' -1 1 -2 1 file2</code> — join on column1</li>
+<li><code>flock -x 200; mv tmp file;</code> — atomic replacement with lock</li>
+<li><code>git add *.ndjson &amp;&amp; git commit -m &quot;snapshot&quot;</code> — snapshot your DB state</li>
+</ul>
+<hr>
+<p>If you want, I can:</p>
+<ul>
+<li>produce a slightly fancier CLI (with <code>getopts</code>, <code>--where</code>, <code>--select</code>) to make ad-hoc queries easier,</li>
+<li>show how to build a tiny inverted index for full-text search and a lookup tool that returns top-N results,</li>
+<li>or tailor the scripts for CSV/TSV only (no jq).</li>
+</ul>
+<p>Which of those should I give you next?</p>
+<hr>
+<p>If you want to use <strong>jq</strong> as your “database engine,” the <strong>best possible format</strong> is:</p>
+<h1 id="-ndjson-newline-delimited-json">✅ NDJSON (Newline-Delimited JSON)</h1>
+<p>One JSON object <strong>per line</strong>:</p>
+<p><code>users.ndjson</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>{<span style="color:#f92672">&#34;id&#34;</span>:<span style="color:#ae81ff">1</span>, <span style="color:#f92672">&#34;name&#34;</span>:<span style="color:#e6db74">&#34;Alice&#34;</span>, <span style="color:#f92672">&#34;email&#34;</span>:<span style="color:#e6db74">&#34;alice@example.com&#34;</span>}
+</span></span><span style="display:flex;"><span>{<span style="color:#f92672">&#34;id&#34;</span>:<span style="color:#ae81ff">2</span>, <span style="color:#f92672">&#34;name&#34;</span>:<span style="color:#e6db74">&#34;Bob&#34;</span>, <span style="color:#f92672">&#34;email&#34;</span>:<span style="color:#e6db74">&#34;bob@example.com&#34;</span>}
+</span></span><span style="display:flex;"><span>{<span style="color:#f92672">&#34;id&#34;</span>:<span style="color:#ae81ff">3</span>, <span style="color:#f92672">&#34;name&#34;</span>:<span style="color:#e6db74">&#34;Carol&#34;</span>, <span style="color:#f92672">&#34;email&#34;</span>:<span style="color:#e6db74">&#34;carol@example.com&#34;</span>}
+</span></span></code></pre></div><p>No commas, no arrays, no brackets — <strong>just one JSON per line</strong>.
+This is the format used by big data tools (Elasticsearch, Firehose, Hadoop, etc.).</p>
+<hr>
+<h1 id="-1-find-query-with-jq">✅ 1. FIND (query with jq)</h1>
+<p>List <em>all</em> records:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>jq -c . users.ndjson
+</span></span></code></pre></div><p>Find by name:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>jq -c <span style="color:#e6db74">&#39;select(.name == &#34;Alice&#34;)&#39;</span> users.ndjson
+</span></span></code></pre></div><p>Case-insensitive:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>jq -c <span style="color:#e6db74">&#39;select(.name | ascii_downcase == &#34;alice&#34;)&#39;</span> users.ndjson
+</span></span></code></pre></div><p>Find by ID:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>jq -c <span style="color:#e6db74">&#39;select(.id == 2)&#39;</span> users.ndjson
+</span></span></code></pre></div><p>Search email ending in <code>.com</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>jq -c <span style="color:#e6db74">&#39;select(.email | endswith(&#34;.com&#34;))&#39;</span> users.ndjson
+</span></span></code></pre></div><hr>
+<h1 id="-2-insert-append">✅ 2. INSERT (append)</h1>
+<p>Append a new object:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>echo <span style="color:#e6db74">&#39;{&#34;id&#34;:4, &#34;name&#34;:&#34;David&#34;, &#34;email&#34;:&#34;david@example.com&#34;}&#39;</span> &gt;&gt; users.ndjson
+</span></span></code></pre></div><hr>
+<h1 id="-3-delete-a-record">✅ 3. DELETE a record</h1>
+<p>Delete ID=3:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>jq -c <span style="color:#e6db74">&#39;select(.id != 3)&#39;</span> users.ndjson <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  &gt; tmp <span style="color:#f92672">&amp;&amp;</span> mv tmp users.ndjson
+</span></span></code></pre></div><p>Delete every Bob:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>jq -c <span style="color:#e6db74">&#39;select(.name != &#34;Bob&#34;)&#39;</span> users.ndjson <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  &gt; tmp <span style="color:#f92672">&amp;&amp;</span> mv tmp users.ndjson
+</span></span></code></pre></div><hr>
+<h1 id="-4-update-a-record">✅ 4. UPDATE a record</h1>
+<p>Example: change Bob’s email:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>jq -c <span style="color:#e6db74">&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  if .id == 2
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  then .email = &#34;bob@newmail.com&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  else .
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  end
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#39;</span> users.ndjson &gt; tmp <span style="color:#f92672">&amp;&amp;</span> mv tmp users.ndjson
+</span></span></code></pre></div><p>Update multiple fields:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>jq -c <span style="color:#e6db74">&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  if .id == 3
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  then .name = &#34;Carolina&#34; | .email = &#34;caro@example.com&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  else .
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  end
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#39;</span> users.ndjson &gt; tmp <span style="color:#f92672">&amp;&amp;</span> mv tmp users.ndjson
+</span></span></code></pre></div><hr>
+<h1 id="-5-sort-the-database">✅ 5. SORT the &ldquo;database&rdquo;</h1>
+<p>Sort by ID:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>jq -c . users.ndjson | sort -n -t: -k2
+</span></span></code></pre></div><p>Better way (jq loads fully, sorts, outputs NDJSON):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>jq -c -s <span style="color:#e6db74">&#39;sort_by(.id)[]&#39;</span> users.ndjson &gt; tmp <span style="color:#f92672">&amp;&amp;</span> mv tmp users.ndjson
+</span></span></code></pre></div><p>(<code>-s</code> = &ldquo;slurp&rdquo; = load entire file)</p>
+<p>Sort by name:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>jq -c -s <span style="color:#e6db74">&#39;sort_by(.name)[]&#39;</span> users.ndjson &gt; tmp <span style="color:#f92672">&amp;&amp;</span> mv tmp users.ndjson
+</span></span></code></pre></div><hr>
+<h1 id="-6-create-a-reusable-cli-tool">✅ 6. CREATE a reusable CLI tool</h1>
+<p><code>jsondb.sh</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/sh
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>DB<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>CMD<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$2<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>shift <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;</span>$CMD<span style="color:#e6db74">&#34;</span> in
+</span></span><span style="display:flex;"><span>  find<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    jq -c <span style="color:#e6db74">&#34;select(</span>$1<span style="color:#e6db74">)&#34;</span> <span style="color:#e6db74">&#34;</span>$DB<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    ;;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  insert<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span> &gt;&gt; <span style="color:#e6db74">&#34;</span>$DB<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    ;;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  delete<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    jq -c <span style="color:#e6db74">&#34;select((</span>$1<span style="color:#e6db74">) | not)&#34;</span> <span style="color:#e6db74">&#34;</span>$DB<span style="color:#e6db74">&#34;</span> &gt; tmp <span style="color:#f92672">&amp;&amp;</span> mv tmp <span style="color:#e6db74">&#34;</span>$DB<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    ;;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  update<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    filter<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span>   <span style="color:#75715e"># e.g. &#39;.id == 2&#39;</span>
+</span></span><span style="display:flex;"><span>    update<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$2<span style="color:#e6db74">&#34;</span>   <span style="color:#75715e"># e.g. &#39;.email = &#34;x@y.com&#34;&#39;</span>
+</span></span><span style="display:flex;"><span>    jq -c <span style="color:#e6db74">&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      if (</span>$filter<span style="color:#e6db74">) then </span>$update<span style="color:#e6db74"> else . end
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    &#34;</span> <span style="color:#e6db74">&#34;</span>$DB<span style="color:#e6db74">&#34;</span> &gt; tmp <span style="color:#f92672">&amp;&amp;</span> mv tmp <span style="color:#e6db74">&#34;</span>$DB<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    ;;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  *<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Commands: find / insert / delete / update&#34;</span>
+</span></span><span style="display:flex;"><span>    ;;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">esac</span>
+</span></span></code></pre></div><p>Example:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>./jsondb.sh users.ndjson find <span style="color:#e6db74">&#39;.id == 1&#39;</span>
+</span></span><span style="display:flex;"><span>./jsondb.sh users.ndjson insert <span style="color:#e6db74">&#39;{&#34;id&#34;:4,&#34;name&#34;:&#34;D&#34;,&#34;email&#34;:&#34;d@mail&#34;}&#39;</span>
+</span></span><span style="display:flex;"><span>./jsondb.sh users.ndjson delete <span style="color:#e6db74">&#39;.id == 2&#39;</span>
+</span></span><span style="display:flex;"><span>./jsondb.sh users.ndjson update <span style="color:#e6db74">&#39;.id == 3&#39;</span> <span style="color:#e6db74">&#39;.name = &#34;Carol X&#34;&#39;</span>
+</span></span></code></pre></div><hr>
+<h1 id="want-more">Want more?</h1>
+<p>I can generate:</p>
+<ul>
+<li>a full <strong>query language</strong> (where, select, limit, order by)</li>
+<li>automatic <strong>primary key indexing</strong></li>
+<li>multi-table JSON structure</li>
+<li>a “transaction log” version</li>
+<li>CLI with subcommands and help text</li>
+</ul>
+<p>Just tell me what you&rsquo;d like to build next.</p>
+
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+</footer>
+
+
+</body>
+</html>
