@@ -23,7 +23,7 @@ ffmpeg -f fbdev -framerate 60 -i /dev/fb0 -f v4l2 -i /dev/video0 -f alsa -i pipe
 ffmpeg -f fbdev -framerate 60 -i /dev/fb0 -f v4l2 -i /dev/video0 -f alsa -i pipewire -filter_complex &#34;[1:v]scale=320:-1[cam];[0:v][cam]overlay=main_w-overlay_w-20:20&#34; -c:v libx264 -preset ultrafast -pix_fmt yuv420p -c:a aac -b:a 128k -async 1 -ar 48000 -latency 100 prueba.mp4 ffmpeg -f alsa -i pipewire -f fbdev -r 60 -i /dev/fb0 mamita.mp4 ffmpeg -f fbdev -framerate 30 -i /dev/fb0 \ -f v4l2 -i /dev/video0 \ -f alsa -i pipewire \ -filter_complex &#34;[1:v]scale=320:-1[cam];[0:v][cam]overlay=main_w-overlay_w-20:20&#34; \ -c:v libx264 -c:a aac output.mp4 Este es el comando que uso para grabar y tiene menos lag.">
   <meta itemprop="datePublished" content="2025-07-18T21:32:33-03:00">
   <meta itemprop="dateModified" content="2025-07-18T21:32:33-03:00">
-  <meta itemprop="wordCount" content="934">
+  <meta itemprop="wordCount" content="1035">
   <meta itemprop="keywords" content="Linux">
   
   <meta name="twitter:card" content="summary">
@@ -149,7 +149,21 @@ Este es el comando que uso para grabar y tiene menos lag.">
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ffmpeg -f alsa -i pipewire -thread_queue_size <span style="color:#ae81ff">1024</span> -f fbdev -framerate <span style="color:#ae81ff">60</span> -i /dev/fb0 -f v4l2 -framerate <span style="color:#ae81ff">60</span> -video_size 320x240 -i /dev/video0 -filter_complex <span style="color:#e6db74">&#34;[2:v]scale=320:240[cam];[1:v][cam]overlay=main_w-overlay_w-10:main_h-overlay_h-10[outv]&#34;</span> -map
 </span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;[outv]&#34;</span> -map 0:a -c:v libx264 -preset ultrafast -tune zerolatency -pix_fmt yuv420p -c:a aac -b:a 128k -f flv -bufsize 1000k rtmp://a.rtmp.youtube.com/live2/stream_key
 </span></span></code></pre></div><h5 id="grabar-video-usando-drm-con-kmscon-lo-uso-para-capturar-un-navegador-o-un-juego">Grabar video usando DRM (con kmscon), lo uso para capturar un navegador o un juego.</h5>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ffmpeg -device /dev/dri/card1 -f kmsgrab -framerate <span style="color:#ae81ff">30</span> -i - -vf <span style="color:#e6db74">&#39;hwdownload,format=bgr0&#39;</span> -c:v libx264 output.mkv
+<p>Para poder grabar kmscon sin sudo y grabar el audio:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo setcap cap_sys_admin+ep /usr/bin/ffmpeg
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>esotericwarfare@arch ~<span style="color:#f92672">]</span>$ getcap /usr/bin/ffmpeg
+</span></span><span style="display:flex;"><span>/usr/bin/ffmpeg cap_sys_admin<span style="color:#f92672">=</span>ep
+</span></span></code></pre></div><p>Y agrega sudo systemctl edit kmscon para arreglar colores de tmux</p>
+<p>Para iniciar kmscon : sudo systemctl start kmscon</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># no deberias usar sudo porque no vas a poder grabar el audio si te putea ejecuta lo que está mas arriba.</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>ffmpeg -f alsa -i pipewire -f kmsgrab -device /dev/dri/card1 -i - -vf <span style="color:#e6db74">&#39;hwdownload,format=bgr0&#39;</span> -c:v libx264 -preset ultrafast out.mkv
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Si queres usar sudo acá tenés.</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>sudo ffmpeg -f kmsgrab -device /dev/dri/card1 -i - -vf <span style="color:#e6db74">&#39;hwdownload,format=bgr0&#39;</span> -c:v libx264 -preset ultrafast out.mkv
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>ffmpeg -device /dev/dri/card1 -f kmsgrab -framerate <span style="color:#ae81ff">30</span> -i - -vf <span style="color:#e6db74">&#39;hwdownload,format=bgr0&#39;</span> -c:v libx264 output.mkv
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>ffmpeg -device /dev/dri/card1 -f kmsgrab -framerate <span style="color:#ae81ff">30</span> -i - -vf <span style="color:#e6db74">&#39;hwmap=derive_device=vaapi,format=nv12,hwdownload,format=bgr0&#39;</span> -c:v libx264 output.mkv
 </span></span><span style="display:flex;"><span>ffmpeg -device /dev/dri/card1 -f kmsgrab -framerate <span style="color:#ae81ff">30</span> -i - -vf <span style="color:#e6db74">&#39;hwmap=derive_device=vaapi,format=nv12,hwdownload,format=bgr0&#39;</span> -c:v libx264 output.mkv
