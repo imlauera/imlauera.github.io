@@ -26,7 +26,7 @@ Strategy for Detecting Viral Moments Since FFmpeg alone can’t “detect” vir
 Use FFmpeg’s scene detection to find interesting transitions/moments Detect audio peaks (loud reactions, excitement) Extract segments and add burned-in subtitles Format for Instagram Reels (9:16 aspect ratio, 15-90 seconds) Step-by-Step FFmpeg Commands 1. Detect Scene Changes &amp; Audio Peaks # Detect scenes with significant changes ffmpeg -i input.mp4 -filter_complex \ &#34;[0:v]select=&#39;gt(scene,0.4)&#39;,metadata=print:file=scenes.txt[out]&#34; \ -map &#34;[out]&#34; -f null - # Detect audio peaks (loud moments) ffmpeg -i input.mp4 -af &#34;volumedetect&#34; -f null - 2&gt;&amp;1 | grep &#34;max_volume&#34; 2. Extract Specific Segment (e.g., 30 seconds starting at 5:23) ffmpeg -ss 00:05:23 -i input.mp4 -t 30 -c copy segment.mp4 3. Generate Subtitles (You’ll need a subtitle file first) For auto-subtitles, you’d need to use Whisper or similar tool first:">
   <meta itemprop="datePublished" content="2025-12-20T02:03:13-03:00">
   <meta itemprop="dateModified" content="2025-12-20T02:03:13-03:00">
-  <meta itemprop="wordCount" content="427">
+  <meta itemprop="wordCount" content="741">
   
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="Instagram Shorts with FFMpeg">
@@ -184,7 +184,80 @@ For auto-subtitles, you&rsquo;d need to use Whisper or similar tool first:">
 <li>✅ faststart flag for quick loading</li>
 </ul>
 <p>Would you like me to create a more advanced version with Python that includes actual ML-based viral moment detection, or help you set up Whisper for automatic subtitle generation?</p>
-
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/bash
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Twitch VOD to Instagram Reel with Viral Moment Detection</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Usage: ./vod_to_reel.sh input.mp4 [start_time] [duration]</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>INPUT<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>START_TIME<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>2<span style="color:#66d9ef">:-</span>00:00:00<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>DURATION<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>3<span style="color:#66d9ef">:-</span>30<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> -z <span style="color:#e6db74">&#34;</span>$INPUT<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Usage: </span>$0<span style="color:#e6db74"> input.mp4 [start_time] [duration]&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Example: </span>$0<span style="color:#e6db74"> stream.mp4 00:15:30 45&#34;</span>
+</span></span><span style="display:flex;"><span>    exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Output filename</span>
+</span></span><span style="display:flex;"><span>OUTPUT<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;reel_</span><span style="color:#66d9ef">$(</span>date +%Y%m%d_%H%M%S<span style="color:#66d9ef">)</span><span style="color:#e6db74">.mp4&#34;</span>
+</span></span><span style="display:flex;"><span>TEMP_SEGMENT<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;temp_segment.mp4&#34;</span>
+</span></span><span style="display:flex;"><span>SRT_FILE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;temp_segment.srt&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;🎬 Processing Twitch VOD to Instagram Reel...&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Step 1: Detect loud moments (potential viral content)</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;📊 Analyzing audio for peak moments...&#34;</span>
+</span></span><span style="display:flex;"><span>ffmpeg -i <span style="color:#e6db74">&#34;</span>$INPUT<span style="color:#e6db74">&#34;</span> -af <span style="color:#e6db74">&#34;volumedetect,silencedetect=noise=-30dB:d=0.5&#34;</span> -f null - 2&gt;&amp;<span style="color:#ae81ff">1</span> | tee audio_analysis.log
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Step 2: Extract segment</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;✂️  Extracting segment from </span>$START_TIME<span style="color:#e6db74"> (</span><span style="color:#e6db74">${</span>DURATION<span style="color:#e6db74">}</span><span style="color:#e6db74">s)...&#34;</span>
+</span></span><span style="display:flex;"><span>ffmpeg -ss <span style="color:#e6db74">&#34;</span>$START_TIME<span style="color:#e6db74">&#34;</span> -i <span style="color:#e6db74">&#34;</span>$INPUT<span style="color:#e6db74">&#34;</span> -t <span style="color:#e6db74">&#34;</span>$DURATION<span style="color:#e6db74">&#34;</span> -c copy <span style="color:#e6db74">&#34;</span>$TEMP_SEGMENT<span style="color:#e6db74">&#34;</span> -y
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Step 3: Generate subtitles (requires whisper)</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;📝 Generating subtitles...&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> command -v whisper &amp;&gt; /dev/null; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    whisper <span style="color:#e6db74">&#34;</span>$TEMP_SEGMENT<span style="color:#e6db74">&#34;</span> --model base --output_format srt --output_dir . 2&gt;/dev/null
+</span></span><span style="display:flex;"><span>    mv temp_segment.srt <span style="color:#e6db74">&#34;</span>$SRT_FILE<span style="color:#e6db74">&#34;</span> 2&gt;/dev/null <span style="color:#f92672">||</span> echo <span style="color:#e6db74">&#34;⚠️  No subtitle file generated&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;⚠️  Whisper not installed. Skipping subtitle generation.&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;   Install: pip install openai-whisper&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Step 4: Convert to 9:16 format with subtitles</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;🎨 Converting to Instagram Reel format (9:16)...&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> -f <span style="color:#e6db74">&#34;</span>$SRT_FILE<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># With subtitles</span>
+</span></span><span style="display:flex;"><span>    ffmpeg -i <span style="color:#e6db74">&#34;</span>$TEMP_SEGMENT<span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        -vf <span style="color:#e6db74">&#34;crop=ih*9/16:ih,scale=1080:1920,subtitles=&#39;</span>$SRT_FILE<span style="color:#e6db74">&#39;:force_style=&#39;Alignment=10,FontName=Arial,FontSize=32,Bold=1,PrimaryColour=&amp;HFFFFFF&amp;,OutlineColour=&amp;H000000&amp;,Outline=4,Shadow=2,MarginV=150&#39;&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        -c:v libx264 -preset medium -crf <span style="color:#ae81ff">23</span> -pix_fmt yuv420p <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        -c:a aac -b:a 128k -ar <span style="color:#ae81ff">48000</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        -movflags +faststart <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        <span style="color:#e6db74">&#34;</span>$OUTPUT<span style="color:#e6db74">&#34;</span> -y
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Without subtitles</span>
+</span></span><span style="display:flex;"><span>    ffmpeg -i <span style="color:#e6db74">&#34;</span>$TEMP_SEGMENT<span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        -vf <span style="color:#e6db74">&#34;crop=ih*9/16:ih,scale=1080:1920&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        -c:v libx264 -preset medium -crf <span style="color:#ae81ff">23</span> -pix_fmt yuv420p <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        -c:a aac -b:a 128k -ar <span style="color:#ae81ff">48000</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        -movflags +faststart <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        <span style="color:#e6db74">&#34;</span>$OUTPUT<span style="color:#e6db74">&#34;</span> -y
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Cleanup</span>
+</span></span><span style="display:flex;"><span>rm -f <span style="color:#e6db74">&#34;</span>$TEMP_SEGMENT<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;</span>$SRT_FILE<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;✅ Done! Output: </span>$OUTPUT<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;📱 Instagram Reel specs:&#34;</span>
+</span></span><span style="display:flex;"><span>ffprobe -v quiet -print_format json -show_format -show_streams <span style="color:#e6db74">&#34;</span>$OUTPUT<span style="color:#e6db74">&#34;</span> | grep -E <span style="color:#e6db74">&#34;(width|height|duration|codec_name)&#34;</span> | head -6
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Optional: Show scene detection results</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;💡 To find viral moments automatically, analyze the audio_analysis.log file&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;   Look for: high volume peaks, silence breaks (reactions), or use the timestamps&#34;</span>
+</span></span></code></pre></div>
 </div>
 
 
