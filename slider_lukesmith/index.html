@@ -22,7 +22,7 @@ Si el audio dura más tiempo entonces tenes que usar el script tal cual está, s
 Si el audio dura más tiempo entonces tenes que usar el script tal cual está, si el audio dura menos tenes que hardcodear el valor de totseconds a 5 o a los segundos que pongas por imágen. TODO (para hacer): Arreglar el script si el audio dura menos que las imágenes porque genera valor negativo. Subir video automáticamente a YouTube y a Archive. Crear un artículo automáticamente basado en imágenes. Crear un audio con espeak que tenga la misma duración que el video (contá cuántas imágenes tenes y multiplicá por cada segundo cada imágen). Enlazá las URLs de archive automáticamente Hacer script para juntar videos (no imagenes) con ffmpeg. Subtitular audios subilos a youtube y descargalos con yt-dlp. Pasar los subtitulos a un llm o a chatgpt para que haga un resumen. Generar un archivo de audio con los subtitulos de chatgpt. Sacá las fotos horizontales, grabá el audio (despues de grabar el audio subi el volumen con ffmpeg 4 veces mas el comando esta en la publicacion interesantes-comandos), disponé de espacio disponible.">
   <meta itemprop="datePublished" content="2025-12-02T02:03:33-03:00">
   <meta itemprop="dateModified" content="2025-12-02T02:03:33-03:00">
-  <meta itemprop="wordCount" content="1975">
+  <meta itemprop="wordCount" content="2699">
   
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="Generate videos cli">
@@ -447,7 +447,155 @@ Sacá las fotos horizontales, grabá el audio (despues de grabar el audio subi e
 </span></span><span style="display:flex;"><span><span style="color:#75715e"># Might also try:</span>
 </span></span><span style="display:flex;"><span><span style="color:#75715e"># -vf &#34;fps=${fps:-24},format=yuv420p&#34; &#34;$outfile&#34;</span>
 </span></span><span style="display:flex;"><span><span style="color:#75715e"># but has given some problems.</span>
-</span></span></code></pre></div>
+</span></span></code></pre></div><hr>
+<p>echo &ldquo;Hola, esto es una prueba. Este es el fin del año 2025. Chau.&rdquo; | wc -c</p>
+<h3 id="espeak-aproximadamente-lee-60-caracteres-cada-5-segundos-para-escribir-el-texto-y-espeak-hace-pausas-con-puntos-y-comas-o-sea-90-caracteres-si-hay-mucha-puntuación-90-caracteres-si-es-texto-continuo">Espeak aproximadamente lee 60 caracteres cada 5 segundos (para escribir el texto). Y espeak hace pausas con puntos y comas. O sea 90 caracteres si hay mucha puntuación 90 caracteres si es texto continuo.</h3>
+<h4 id="89-caracteres-5-segundos-aproximadamente-entonces-cuando-no-llegas-hace-esto">89 caracteres 5 segundos aproximadamente. Entonces cuando no llegas hace esto:</h4>
+<p>time espeak-ng -v es &ldquo;Empecé al día comiendome un asadito que no cociné con lechuga y una ensalada de papas ja&rdquo; - 5370ms</p>
+<p>Usé eso para la regla de 3 simple de la función de vim (más abajo).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>bc -l
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>89-51
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">38</span>
+</span></span><span style="display:flex;"><span>89-55
+</span></span><span style="display:flex;"><span><span style="color:#ae81ff">34</span>
+</span></span></code></pre></div><p>Después tenes que hacer 90 caracteres son 5 segundos. Entonces los 38 caracteres que faltan serían 2,1 segundos por regla de 3 simple es decir 2100 milisegundos, y el otro 34 caracteres serían 1,8 segundos es decir 1800 milisegundos.</p>
+<h4 id="ejemplo">Ejemplo:</h4>
+<p>Empecé al día comiendome un asadito que no cociné con lechuga y una ensalada de papas ja. - 89 caracteres.
+Acá están todos los cubiertos que tuve que limpiar. <!-- raw HTML omitted --> - 51 caracteres.
+Acá se puede apreciar como dejé todo limpio y ordenado. <!-- raw HTML omitted --> - 55 caracteres.</p>
+<h4 id="para-tomar-una-pausa-de-1-minuto-espeak--m--v-mb-us1-speakhello-break-time60s-this-is-a-testspeak">Para tomar una pausa de 1 minuto <code>espeak -m -v mb-us1 &quot;&lt;speak&gt;Hello, &lt;break time='60s'/&gt; this is a test.&lt;/speak&gt;&quot;</code></h4>
+<p>Le pregunte a Claude y me dijo que se puede hacer todo con vim.</p>
+<p>Definimos esta funcion en <code>.vimrc</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>:function! AddBreak<span style="color:#f92672">()</span>
+</span></span><span style="display:flex;"><span>:  let line <span style="color:#f92672">=</span> getline<span style="color:#f92672">(</span><span style="color:#e6db74">&#39;.&#39;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>:  let len <span style="color:#f92672">=</span> strlen<span style="color:#f92672">(</span>line<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>:  <span style="color:#66d9ef">if</span> len &lt; <span style="color:#ae81ff">90</span> <span style="color:#f92672">&amp;&amp;</span> line !~ <span style="color:#e6db74">&#39;&lt;break time=&#39;</span>
+</span></span><span style="display:flex;"><span>:    let missing <span style="color:#f92672">=</span> <span style="color:#ae81ff">90</span> - len
+</span></span><span style="display:flex;"><span>:    let ms <span style="color:#f92672">=</span> <span style="color:#f92672">(</span>missing * 5370<span style="color:#f92672">)</span> / <span style="color:#ae81ff">90</span>
+</span></span><span style="display:flex;"><span>:    call setline<span style="color:#f92672">(</span><span style="color:#e6db74">&#39;.&#39;</span>, line . <span style="color:#e6db74">&#34; &lt;break time=&#39;&#34;</span> . ms . <span style="color:#e6db74">&#34;ms&#39;/&gt;&#34;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>:  endif
+</span></span><span style="display:flex;"><span>:endfunction
+</span></span></code></pre></div><p>Y ahora abrí el archivo del script y llama a esta funciona: <code>:%g/./call AddBreak()</code></p>
+<p>No se puede poner <code>&lt;break time='5000ms'/&gt;</code> solo tenes que agregar una palabra antes, no sé por qué.</p>
+<hr>
+<p>Perfecto, con <strong>Arch + Bash + Vim</strong> se puede hacer algo <em>muy cómodo e interactivo</em> 👍
+La idea correcta no es “medir en vivo” mientras escribes, sino:</p>
+<p>👉 <strong>tener una referencia fija de cuántas palabras ≈ 5 segundos</strong>
+👉 y que <strong>Vim te marque visualmente</strong> hasta dónde llegas.</p>
+<p>Te propongo una solución <strong>realista, rápida y usable en Vim</strong>, sin hacks raros.</p>
+<hr>
+<h1 id="-idea-general">🧠 Idea general</h1>
+<ol>
+<li>
+<p>Fijas velocidad de <code>espeak-ng</code></p>
+</li>
+<li>
+<p>Calculas <strong>palabras ≈ 5 segundos</strong></p>
+</li>
+<li>
+<p>En Vim:</p>
+<ul>
+<li>un comando o mapping</li>
+<li>que <strong>resalte</strong> las palabras que entran en 5 segundos</li>
+<li>y te avise cuando te pasas</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h1 id="1-fija-velocidad-de-espeak">1️⃣ Fija velocidad de eSpeak</h1>
+<p>Ejemplo recomendado:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>espeak-ng -v es -s <span style="color:#ae81ff">160</span>
+</span></span></code></pre></div><p>Haz una prueba larga y calcula:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>time espeak-ng -v es -s <span style="color:#ae81ff">160</span> <span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>cat texto.txt<span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>wc -w texto.txt
+</span></span></code></pre></div><p>Supongamos que obtienes:</p>
+<pre tabindex="0"><code>8 palabras/segundo
+</code></pre><p>➡️ <strong>5 segundos ≈ 40 palabras</strong></p>
+<hr>
+<h1 id="2-script-bash-marcar-límite-de-palabras">2️⃣ Script Bash: marcar límite de palabras</h1>
+<p>Crea este script:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/bash
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e"># ~/bin/espeak_5s.sh</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>MAX<span style="color:#f92672">=</span><span style="color:#ae81ff">40</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># texto hasta el cursor</span>
+</span></span><span style="display:flex;"><span>texto<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>sed <span style="color:#e6db74">&#39;s/\n/ /g&#39;</span><span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>contador<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>salida<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> palabra in $texto; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>  contador<span style="color:#f92672">=</span><span style="color:#66d9ef">$((</span>contador+1<span style="color:#66d9ef">))</span>
+</span></span><span style="display:flex;"><span>  salida<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$salida<span style="color:#e6db74"> </span>$palabra<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> $contador -ge $MAX <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    break
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;</span>$salida<span style="color:#e6db74">&#34;</span>
+</span></span></code></pre></div><p>Hazlo ejecutable:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>chmod +x ~/bin/espeak_5s.sh
+</span></span></code></pre></div><hr>
+<h1 id="3-integración-con-vim-la-parte-importante-">3️⃣ Integración con Vim (la parte importante 🔥)</h1>
+<h3 id="opción-a--comando-visual-recomendado">Opción A — Comando visual (recomendado)</h3>
+<p>En tu <code>~/.vimrc</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-vim" data-lang="vim"><span style="display:flex;"><span><span style="color:#a6e22e">command</span>! <span style="color:#a6e22e">Espeak5s</span> <span style="color:#a6e22e">call</span> <span style="color:#a6e22e">Espeak5s</span>()
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span>! <span style="color:#a6e22e">Espeak5s</span>()
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">l</span>:<span style="color:#a6e22e">words</span> = <span style="color:#ae81ff">40</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">l</span>:<span style="color:#a6e22e">text</span> = <span style="color:#a6e22e">getline</span>(<span style="color:#ae81ff">1</span>, <span style="color:#e6db74">&#39;$&#39;</span>)-&gt;<span style="color:#a6e22e">join</span>(<span style="color:#e6db74">&#39; &#39;</span>)
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">l</span>:<span style="color:#a6e22e">list</span> = <span style="color:#a6e22e">split</span>(<span style="color:#a6e22e">l</span>:<span style="color:#a6e22e">text</span>)
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">l</span>:<span style="color:#a6e22e">limit</span> = <span style="color:#a6e22e">min</span>([<span style="color:#a6e22e">l</span>:<span style="color:#a6e22e">words</span>, <span style="color:#a6e22e">len</span>(<span style="color:#a6e22e">l</span>:<span style="color:#a6e22e">list</span>)])
+</span></span><span style="display:flex;"><span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">  &#34; Limpiar highlight previo</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">silent</span>! <span style="color:#a6e22e">call</span> <span style="color:#a6e22e">matchdelete</span>(<span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">  &#34; Obtener posición del último word</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">l</span>:<span style="color:#a6e22e">pos</span> = <span style="color:#a6e22e">matchstrpos</span>(<span style="color:#a6e22e">l</span>:<span style="color:#a6e22e">text</span>, <span style="color:#a6e22e">join</span>(<span style="color:#a6e22e">l</span>:<span style="color:#a6e22e">list</span>[:<span style="color:#a6e22e">l</span>:<span style="color:#a6e22e">limit</span><span style="color:#ae81ff">-1</span>], <span style="color:#e6db74">&#39; &#39;</span>))[<span style="color:#ae81ff">1</span>]
+</span></span><span style="display:flex;"><span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">  &#34; Resaltar</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">call</span> <span style="color:#a6e22e">matchadd</span>(<span style="color:#e6db74">&#39;Visual&#39;</span>, <span style="color:#e6db74">&#39;\%&#39;</span> . (<span style="color:#a6e22e">l</span>:<span style="color:#a6e22e">pos</span>+<span style="color:#ae81ff">1</span>) . <span style="color:#e6db74">&#39;c.*&#39;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">endfunction</span>
+</span></span></code></pre></div><p>Usas en Vim:</p>
+<pre tabindex="0"><code>:Espeak5s
+</code></pre><p>✔️ Todo lo que <strong>pase de 5s queda resaltado</strong>
+✔️ Tú escribes normalmente
+✔️ Ejecutas cuando quieras</p>
+<hr>
+<h3 id="opción-b--mapping-rápido">Opción B — Mapping rápido</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-vim" data-lang="vim"><span style="display:flex;"><span><span style="color:#a6e22e">nnoremap</span> &lt;<span style="color:#a6e22e">leader</span>&gt;<span style="color:#ae81ff">5</span> :<span style="color:#a6e22e">Espeak5s</span>&lt;<span style="color:#a6e22e">CR</span>&gt;
+</span></span></code></pre></div><p>Ahora solo presionas:</p>
+<pre tabindex="0"><code>\5
+</code></pre><hr>
+<h1 id="4-bonus-aviso-en-tiempo-real-opcional">4️⃣ Bonus: aviso en tiempo real (opcional)</h1>
+<p>Si quieres que <strong>te avise mientras escribes</strong>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-vim" data-lang="vim"><span style="display:flex;"><span><span style="color:#66d9ef">autocmd</span> <span style="color:#a6e22e">TextChanged</span>,<span style="color:#a6e22e">TextChangedI</span> * <span style="color:#a6e22e">call</span> <span style="color:#a6e22e">EspeakWarn</span>()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span>! <span style="color:#a6e22e">EspeakWarn</span>()
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">max</span> = <span style="color:#ae81ff">40</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">count</span> = <span style="color:#a6e22e">len</span>(<span style="color:#a6e22e">split</span>(<span style="color:#a6e22e">join</span>(<span style="color:#a6e22e">getline</span>(<span style="color:#ae81ff">1</span>,<span style="color:#e6db74">&#39;$&#39;</span>))))
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">count</span> &gt; <span style="color:#a6e22e">max</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">echohl</span> <span style="color:#a6e22e">ErrorMsg</span> | <span style="color:#a6e22e">echo</span> <span style="color:#e6db74">&#34;⚠ Excedes 5 segundos de narración&#34;</span> | <span style="color:#a6e22e">echohl</span> <span style="color:#a6e22e">None</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">echo</span> <span style="color:#e6db74">&#34;OK (&#34;</span> . <span style="color:#a6e22e">count</span> . <span style="color:#e6db74">&#34;/&#34;</span> . <span style="color:#a6e22e">max</span> . <span style="color:#e6db74">&#34; palabras)&#34;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">endif</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">endfunction</span>
+</span></span></code></pre></div><hr>
+<h1 id="-resultado-final">🧩 Resultado final</h1>
+<p>✔️ Escribes normal en Vim
+✔️ Sabes cuándo pasas de 5 segundos
+✔️ No dependes de audio en tiempo real
+✔️ Totalmente Bash + Vim + Arch-friendly 🐧</p>
+<hr>
+<p>Si quieres, en el próximo mensaje puedo:</p>
+<ul>
+<li>Ajustar por <strong>frases</strong> en vez de palabras</li>
+<li>Usar <strong>párrafos automáticos</strong></li>
+<li>O hacer un plugin Vim limpio (<code>autoload/</code>, <code>plugin/</code>)</li>
+</ul>
+<p>Dime qué nivel de precisión necesitas 🎯</p>
+
 </div>
 
 
