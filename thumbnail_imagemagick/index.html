@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/thumbnail_imagemagick/">
+  <meta property="og:site_name" content="Imlauer">
+  <meta property="og:title" content="Thumbnail imagemagick">
+  <meta property="og:description" content="¡Excelente idea! Te voy a mostrar cómo crear un thumbnail atractivo para YouTube usando solo herramientas de línea de comandos. Voy a darte ejemplos con **ImageMagick** (convert/magick) que es perfecto para esto. ## Ejemplo 1: Thumbnail con múltiples imágenes y texto impactante ```bash # Crear un collage de 2x2 con tus imágenes magick montage imagen1.jpg imagen2.jpg imagen3.jpg imagen4.jpg \ -tile 2x2 -geometry &#43;5&#43;5 -background black collage.jpg # Añadir texto grande y llamativo magick collage.jpg \ -gravity north -pointsize 80 -font Arial-Bold \ -stroke black -strokewidth 4 -fill yellow \ -annotate &#43;0&#43;50 &#34;¡INCREÍBLE!&#34; \ -gravity south -pointsize 60 -font Arial-Bold \ -stroke white -strokewidth 3 -fill red \ -annotate &#43;0&#43;50 &#34;NO VAS A CREER ESTO&#34; \ thumbnail_final.jpg Ejemplo 2: Thumbnail estilo “reacción” con imagen principal y texto # Redimensionar imagen principal a 1280x720 (tamaño YouTube) magick imagen_principal.jpg -resize 1280x720^ -gravity center -extent 1280x720 base.jpg # Añadir borde/viñeta dramático magick base.jpg -vignette 0x20 base_vignette.jpg # Añadir texto con sombra y efectos magick base_vignette.jpg \ -gravity center -pointsize 100 -font Impact \ -stroke black -strokewidth 8 -fill white \ -annotate &#43;0-150 &#34;¿QUÉ PASÓ?&#34; \ -pointsize 70 \ -stroke navy -strokewidth 5 -fill cyan \ -annotate &#43;0&#43;100 &#34;😱 MIRA HASTA EL FINAL&#34; \ thumbnail_youtube.jpg Ejemplo 3: Thumbnail con imagen de fondo, foto pequeña y texto # Crear fondo degradado magick -size 1280x720 gradient:blue-purple fondo.jpg # Añadir tu foto en una esquina (circular) magick tu_foto.jpg -resize 300x300^ -gravity center -extent 300x300 \ \( &#43;clone -threshold -1 -negate -fill white -draw &#34;circle 150,150 150,0&#34; \) \ -alpha off -compose copy_opacity -composite foto_circular.png # Combinar todo magick fondo.jpg \ foto_circular.png -geometry &#43;950&#43;50 -composite \ -gravity west -pointsize 90 -font Impact \ -stroke black -strokewidth 6 -fill yellow \ -annotate &#43;50&#43;0 &#34;TOP 10\nMOMENTOS&#34; \ thumbnail_completo.jpg Ejemplo 4: Estilo “antes y después” # Combinar dos imágenes lado a lado con flecha magick \( antes.jpg -resize 600x720^ -extent 600x720 \) \ \( despues.jpg -resize 600x720^ -extent 600x720 \) \ &#43;append temporal.jpg # Añadir flecha y textos magick temporal.jpg \ -gravity northwest -pointsize 60 -fill white -stroke black -strokewidth 3 \ -annotate &#43;50&#43;50 &#34;ANTES&#34; \ -gravity northeast -pointsize 60 -fill lime -stroke black -strokewidth 3 \ -annotate &#43;50&#43;50 &#34;DESPUÉS&#34; \ -gravity center -pointsize 120 -fill red \ -annotate &#43;0&#43;0 &#34;➜&#34; \ antes_despues.jpg Consejos para texto llamativo: Fuentes populares para thumbnails:">
+  <meta property="og:locale" content="es_es">
+  <meta property="og:type" content="article">
+    <meta property="article:published_time" content="2025-12-20T03:00:15-03:00">
+    <meta property="article:modified_time" content="2025-12-20T03:00:15-03:00">
+
+  
+  <meta itemprop="name" content="Thumbnail imagemagick">
+  <meta itemprop="description" content="¡Excelente idea! Te voy a mostrar cómo crear un thumbnail atractivo para YouTube usando solo herramientas de línea de comandos. Voy a darte ejemplos con **ImageMagick** (convert/magick) que es perfecto para esto. ## Ejemplo 1: Thumbnail con múltiples imágenes y texto impactante ```bash # Crear un collage de 2x2 con tus imágenes magick montage imagen1.jpg imagen2.jpg imagen3.jpg imagen4.jpg \ -tile 2x2 -geometry &#43;5&#43;5 -background black collage.jpg # Añadir texto grande y llamativo magick collage.jpg \ -gravity north -pointsize 80 -font Arial-Bold \ -stroke black -strokewidth 4 -fill yellow \ -annotate &#43;0&#43;50 &#34;¡INCREÍBLE!&#34; \ -gravity south -pointsize 60 -font Arial-Bold \ -stroke white -strokewidth 3 -fill red \ -annotate &#43;0&#43;50 &#34;NO VAS A CREER ESTO&#34; \ thumbnail_final.jpg Ejemplo 2: Thumbnail estilo “reacción” con imagen principal y texto # Redimensionar imagen principal a 1280x720 (tamaño YouTube) magick imagen_principal.jpg -resize 1280x720^ -gravity center -extent 1280x720 base.jpg # Añadir borde/viñeta dramático magick base.jpg -vignette 0x20 base_vignette.jpg # Añadir texto con sombra y efectos magick base_vignette.jpg \ -gravity center -pointsize 100 -font Impact \ -stroke black -strokewidth 8 -fill white \ -annotate &#43;0-150 &#34;¿QUÉ PASÓ?&#34; \ -pointsize 70 \ -stroke navy -strokewidth 5 -fill cyan \ -annotate &#43;0&#43;100 &#34;😱 MIRA HASTA EL FINAL&#34; \ thumbnail_youtube.jpg Ejemplo 3: Thumbnail con imagen de fondo, foto pequeña y texto # Crear fondo degradado magick -size 1280x720 gradient:blue-purple fondo.jpg # Añadir tu foto en una esquina (circular) magick tu_foto.jpg -resize 300x300^ -gravity center -extent 300x300 \ \( &#43;clone -threshold -1 -negate -fill white -draw &#34;circle 150,150 150,0&#34; \) \ -alpha off -compose copy_opacity -composite foto_circular.png # Combinar todo magick fondo.jpg \ foto_circular.png -geometry &#43;950&#43;50 -composite \ -gravity west -pointsize 90 -font Impact \ -stroke black -strokewidth 6 -fill yellow \ -annotate &#43;50&#43;0 &#34;TOP 10\nMOMENTOS&#34; \ thumbnail_completo.jpg Ejemplo 4: Estilo “antes y después” # Combinar dos imágenes lado a lado con flecha magick \( antes.jpg -resize 600x720^ -extent 600x720 \) \ \( despues.jpg -resize 600x720^ -extent 600x720 \) \ &#43;append temporal.jpg # Añadir flecha y textos magick temporal.jpg \ -gravity northwest -pointsize 60 -fill white -stroke black -strokewidth 3 \ -annotate &#43;50&#43;50 &#34;ANTES&#34; \ -gravity northeast -pointsize 60 -fill lime -stroke black -strokewidth 3 \ -annotate &#43;50&#43;50 &#34;DESPUÉS&#34; \ -gravity center -pointsize 120 -fill red \ -annotate &#43;0&#43;0 &#34;➜&#34; \ antes_despues.jpg Consejos para texto llamativo: Fuentes populares para thumbnails:">
+  <meta itemprop="datePublished" content="2025-12-20T03:00:15-03:00">
+  <meta itemprop="dateModified" content="2025-12-20T03:00:15-03:00">
+  <meta itemprop="wordCount" content="2663">
+  
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Thumbnail imagemagick">
+  <meta name="twitter:description" content="¡Excelente idea! Te voy a mostrar cómo crear un thumbnail atractivo para YouTube usando solo herramientas de línea de comandos. Voy a darte ejemplos con **ImageMagick** (convert/magick) que es perfecto para esto. ## Ejemplo 1: Thumbnail con múltiples imágenes y texto impactante ```bash # Crear un collage de 2x2 con tus imágenes magick montage imagen1.jpg imagen2.jpg imagen3.jpg imagen4.jpg \ -tile 2x2 -geometry &#43;5&#43;5 -background black collage.jpg # Añadir texto grande y llamativo magick collage.jpg \ -gravity north -pointsize 80 -font Arial-Bold \ -stroke black -strokewidth 4 -fill yellow \ -annotate &#43;0&#43;50 &#34;¡INCREÍBLE!&#34; \ -gravity south -pointsize 60 -font Arial-Bold \ -stroke white -strokewidth 3 -fill red \ -annotate &#43;0&#43;50 &#34;NO VAS A CREER ESTO&#34; \ thumbnail_final.jpg Ejemplo 2: Thumbnail estilo “reacción” con imagen principal y texto # Redimensionar imagen principal a 1280x720 (tamaño YouTube) magick imagen_principal.jpg -resize 1280x720^ -gravity center -extent 1280x720 base.jpg # Añadir borde/viñeta dramático magick base.jpg -vignette 0x20 base_vignette.jpg # Añadir texto con sombra y efectos magick base_vignette.jpg \ -gravity center -pointsize 100 -font Impact \ -stroke black -strokewidth 8 -fill white \ -annotate &#43;0-150 &#34;¿QUÉ PASÓ?&#34; \ -pointsize 70 \ -stroke navy -strokewidth 5 -fill cyan \ -annotate &#43;0&#43;100 &#34;😱 MIRA HASTA EL FINAL&#34; \ thumbnail_youtube.jpg Ejemplo 3: Thumbnail con imagen de fondo, foto pequeña y texto # Crear fondo degradado magick -size 1280x720 gradient:blue-purple fondo.jpg # Añadir tu foto en una esquina (circular) magick tu_foto.jpg -resize 300x300^ -gravity center -extent 300x300 \ \( &#43;clone -threshold -1 -negate -fill white -draw &#34;circle 150,150 150,0&#34; \) \ -alpha off -compose copy_opacity -composite foto_circular.png # Combinar todo magick fondo.jpg \ foto_circular.png -geometry &#43;950&#43;50 -composite \ -gravity west -pointsize 90 -font Impact \ -stroke black -strokewidth 6 -fill yellow \ -annotate &#43;50&#43;0 &#34;TOP 10\nMOMENTOS&#34; \ thumbnail_completo.jpg Ejemplo 4: Estilo “antes y después” # Combinar dos imágenes lado a lado con flecha magick \( antes.jpg -resize 600x720^ -extent 600x720 \) \ \( despues.jpg -resize 600x720^ -extent 600x720 \) \ &#43;append temporal.jpg # Añadir flecha y textos magick temporal.jpg \ -gravity northwest -pointsize 60 -fill white -stroke black -strokewidth 3 \ -annotate &#43;50&#43;50 &#34;ANTES&#34; \ -gravity northeast -pointsize 60 -fill lime -stroke black -strokewidth 3 \ -annotate &#43;50&#43;50 &#34;DESPUÉS&#34; \ -gravity center -pointsize 120 -fill red \ -annotate &#43;0&#43;0 &#34;➜&#34; \ antes_despues.jpg Consejos para texto llamativo: Fuentes populares para thumbnails:">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Thumbnail imagemagick
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/thumbnail_imagemagick/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="¡Excelente idea! Te voy a mostrar cómo crear un thumbnail atractivo para YouTube usando solo herramientas de línea de comandos. Voy a darte ejemplos con **ImageMagick** (convert/magick) que es perfecto para esto.
+
+## Ejemplo 1: Thumbnail con múltiples imágenes y texto impactante
+
+```bash
+# Crear un collage de 2x2 con tus imágenes
+magick montage imagen1.jpg imagen2.jpg imagen3.jpg imagen4.jpg \
+  -tile 2x2 -geometry &#43;5&#43;5 -background black collage.jpg
+
+# Añadir texto grande y llamativo
+magick collage.jpg \
+  -gravity north -pointsize 80 -font Arial-Bold \
+  -stroke black -strokewidth 4 -fill yellow \
+  -annotate &#43;0&#43;50 &#34;¡INCREÍBLE!&#34; \
+  -gravity south -pointsize 60 -font Arial-Bold \
+  -stroke white -strokewidth 3 -fill red \
+  -annotate &#43;0&#43;50 &#34;NO VAS A CREER ESTO&#34; \
+  thumbnail_final.jpg
+Ejemplo 2: Thumbnail estilo &ldquo;reacción&rdquo; con imagen principal y texto
+# Redimensionar imagen principal a 1280x720 (tamaño YouTube)
+magick imagen_principal.jpg -resize 1280x720^ -gravity center -extent 1280x720 base.jpg
+
+# Añadir borde/viñeta dramático
+magick base.jpg -vignette 0x20 base_vignette.jpg
+
+# Añadir texto con sombra y efectos
+magick base_vignette.jpg \
+  -gravity center -pointsize 100 -font Impact \
+  -stroke black -strokewidth 8 -fill white \
+  -annotate &#43;0-150 &#34;¿QUÉ PASÓ?&#34; \
+  -pointsize 70 \
+  -stroke navy -strokewidth 5 -fill cyan \
+  -annotate &#43;0&#43;100 &#34;😱 MIRA HASTA EL FINAL&#34; \
+  thumbnail_youtube.jpg
+Ejemplo 3: Thumbnail con imagen de fondo, foto pequeña y texto
+# Crear fondo degradado
+magick -size 1280x720 gradient:blue-purple fondo.jpg
+
+# Añadir tu foto en una esquina (circular)
+magick tu_foto.jpg -resize 300x300^ -gravity center -extent 300x300 \
+  \( &#43;clone -threshold -1 -negate -fill white -draw &#34;circle 150,150 150,0&#34; \) \
+  -alpha off -compose copy_opacity -composite foto_circular.png
+
+# Combinar todo
+magick fondo.jpg \
+  foto_circular.png -geometry &#43;950&#43;50 -composite \
+  -gravity west -pointsize 90 -font Impact \
+  -stroke black -strokewidth 6 -fill yellow \
+  -annotate &#43;50&#43;0 &#34;TOP 10\nMOMENTOS&#34; \
+  thumbnail_completo.jpg
+Ejemplo 4: Estilo &ldquo;antes y después&rdquo;
+# Combinar dos imágenes lado a lado con flecha
+magick \( antes.jpg -resize 600x720^ -extent 600x720 \) \
+  \( despues.jpg -resize 600x720^ -extent 600x720 \) \
+  &#43;append temporal.jpg
+
+# Añadir flecha y textos
+magick temporal.jpg \
+  -gravity northwest -pointsize 60 -fill white -stroke black -strokewidth 3 \
+  -annotate &#43;50&#43;50 &#34;ANTES&#34; \
+  -gravity northeast -pointsize 60 -fill lime -stroke black -strokewidth 3 \
+  -annotate &#43;50&#43;50 &#34;DESPUÉS&#34; \
+  -gravity center -pointsize 120 -fill red \
+  -annotate &#43;0&#43;0 &#34;➜&#34; \
+  antes_despues.jpg
+Consejos para texto llamativo:
+Fuentes populares para thumbnails:">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Thumbnail imagemagick
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2025-12-20T03:00:15-03:00'>
+      December 20, 2025
+    </time>
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>¡Excelente idea! Te voy a mostrar cómo crear un thumbnail atractivo para YouTube usando solo herramientas de línea de comandos. Voy a darte ejemplos con **ImageMagick** <span style="color:#f92672">(</span>convert/magick<span style="color:#f92672">)</span> que es perfecto para esto.
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## Ejemplo 1: Thumbnail con múltiples imágenes y texto impactante</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">```</span>bash
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Crear un collage de 2x2 con tus imágenes</span>
+</span></span><span style="display:flex;"><span>magick montage imagen1.jpg imagen2.jpg imagen3.jpg imagen4.jpg <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -tile 2x2 -geometry +5+5 -background black collage.jpg
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Añadir texto grande y llamativo</span>
+</span></span><span style="display:flex;"><span>magick collage.jpg <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -gravity north -pointsize <span style="color:#ae81ff">80</span> -font Arial-Bold <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -stroke black -strokewidth <span style="color:#ae81ff">4</span> -fill yellow <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -annotate +0+50 <span style="color:#e6db74">&#34;¡INCREÍBLE!&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -gravity south -pointsize <span style="color:#ae81ff">60</span> -font Arial-Bold <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -stroke white -strokewidth <span style="color:#ae81ff">3</span> -fill red <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -annotate +0+50 <span style="color:#e6db74">&#34;NO VAS A CREER ESTO&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  thumbnail_final.jpg
+</span></span></code></pre></div><h2 id="ejemplo-2-thumbnail-estilo-reacción-con-imagen-principal-y-texto">Ejemplo 2: Thumbnail estilo &ldquo;reacción&rdquo; con imagen principal y texto</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Redimensionar imagen principal a 1280x720 (tamaño YouTube)</span>
+</span></span><span style="display:flex;"><span>magick imagen_principal.jpg -resize 1280x720^ -gravity center -extent 1280x720 base.jpg
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Añadir borde/viñeta dramático</span>
+</span></span><span style="display:flex;"><span>magick base.jpg -vignette 0x20 base_vignette.jpg
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Añadir texto con sombra y efectos</span>
+</span></span><span style="display:flex;"><span>magick base_vignette.jpg <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -gravity center -pointsize <span style="color:#ae81ff">100</span> -font Impact <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -stroke black -strokewidth <span style="color:#ae81ff">8</span> -fill white <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -annotate +0-150 <span style="color:#e6db74">&#34;¿QUÉ PASÓ?&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -pointsize <span style="color:#ae81ff">70</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -stroke navy -strokewidth <span style="color:#ae81ff">5</span> -fill cyan <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -annotate +0+100 <span style="color:#e6db74">&#34;😱 MIRA HASTA EL FINAL&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  thumbnail_youtube.jpg
+</span></span></code></pre></div><h2 id="ejemplo-3-thumbnail-con-imagen-de-fondo-foto-pequeña-y-texto">Ejemplo 3: Thumbnail con imagen de fondo, foto pequeña y texto</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Crear fondo degradado</span>
+</span></span><span style="display:flex;"><span>magick -size 1280x720 gradient:blue-purple fondo.jpg
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Añadir tu foto en una esquina (circular)</span>
+</span></span><span style="display:flex;"><span>magick tu_foto.jpg -resize 300x300^ -gravity center -extent 300x300 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  <span style="color:#ae81ff">\(</span> +clone -threshold -1 -negate -fill white -draw <span style="color:#e6db74">&#34;circle 150,150 150,0&#34;</span> <span style="color:#ae81ff">\)</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -alpha off -compose copy_opacity -composite foto_circular.png
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Combinar todo</span>
+</span></span><span style="display:flex;"><span>magick fondo.jpg <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  foto_circular.png -geometry +950+50 -composite <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -gravity west -pointsize <span style="color:#ae81ff">90</span> -font Impact <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -stroke black -strokewidth <span style="color:#ae81ff">6</span> -fill yellow <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -annotate +50+0 <span style="color:#e6db74">&#34;TOP 10\nMOMENTOS&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  thumbnail_completo.jpg
+</span></span></code></pre></div><h2 id="ejemplo-4-estilo-antes-y-después">Ejemplo 4: Estilo &ldquo;antes y después&rdquo;</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Combinar dos imágenes lado a lado con flecha</span>
+</span></span><span style="display:flex;"><span>magick <span style="color:#ae81ff">\(</span> antes.jpg -resize 600x720^ -extent 600x720 <span style="color:#ae81ff">\)</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  <span style="color:#ae81ff">\(</span> despues.jpg -resize 600x720^ -extent 600x720 <span style="color:#ae81ff">\)</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  +append temporal.jpg
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Añadir flecha y textos</span>
+</span></span><span style="display:flex;"><span>magick temporal.jpg <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -gravity northwest -pointsize <span style="color:#ae81ff">60</span> -fill white -stroke black -strokewidth <span style="color:#ae81ff">3</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -annotate +50+50 <span style="color:#e6db74">&#34;ANTES&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -gravity northeast -pointsize <span style="color:#ae81ff">60</span> -fill lime -stroke black -strokewidth <span style="color:#ae81ff">3</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -annotate +50+50 <span style="color:#e6db74">&#34;DESPUÉS&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -gravity center -pointsize <span style="color:#ae81ff">120</span> -fill red <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -annotate +0+0 <span style="color:#e6db74">&#34;➜&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  antes_despues.jpg
+</span></span></code></pre></div><h2 id="consejos-para-texto-llamativo">Consejos para texto llamativo:</h2>
+<p><strong>Fuentes populares para thumbnails:</strong></p>
+<ul>
+<li>Impact (clásica de memes)</li>
+<li>Arial-Bold</li>
+<li>Bebas (si la tienes instalada)</li>
+</ul>
+<p><strong>Efectos de texto que funcionan:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Texto con borde grueso</span>
+</span></span><span style="display:flex;"><span>-stroke black -strokewidth <span style="color:#ae81ff">8</span> -fill white
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Texto con sombra</span>
+</span></span><span style="display:flex;"><span>-shadow 80x3+5+5
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Texto con degradado (requiere más pasos)</span>
+</span></span><span style="display:flex;"><span>magick -size 800x200 gradient:red-yellow -font Impact -pointsize <span style="color:#ae81ff">100</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -gravity center -annotate +0+0 <span style="color:#e6db74">&#34;TEXTO&#34;</span> texto_degradado.png
+</span></span></code></pre></div><h2 id="verificar-las-fuentes-disponibles">Verificar las fuentes disponibles:</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>magick -list font | grep -i <span style="color:#e6db74">&#34;font:&#34;</span>
+</span></span></code></pre></div><h2 id="tamaño-ideal-para-youtube">Tamaño ideal para YouTube:</h2>
+<ul>
+<li><strong>1280x720 píxeles</strong> (16:9)</li>
+<li>Mantén el texto en la zona segura (centro 80%)</li>
+</ul>
+<p>¿Qué tipo de contenido es tu video? Te puedo dar un ejemplo más específico según tu temática (gaming, tutoriales, vlogs, etc.)</p>
+<pre tabindex="0"><code>
+---
+
+```bash
+#!/bin/bash
+
+# Generador de Thumbnails para YouTube
+# Requiere ImageMagick instalado
+
+set -e
+
+# Colores para output
+RED=&#39;\033[0;31m&#39;
+GREEN=&#39;\033[0;32m&#39;
+YELLOW=&#39;\033[1;33m&#39;
+BLUE=&#39;\033[0;34m&#39;
+NC=&#39;\033[0m&#39; # No Color
+
+# Función para mostrar el banner
+show_banner() {
+    echo -e &#34;${BLUE}&#34;
+    echo &#34;╔═══════════════════════════════════════════╗&#34;
+    echo &#34;║   GENERADOR DE THUMBNAILS PARA YOUTUBE   ║&#34;
+    echo &#34;╚═══════════════════════════════════════════╝&#34;
+    echo -e &#34;${NC}&#34;
+}
+
+# Verificar que ImageMagick esté instalado
+check_imagemagick() {
+    if ! command -v magick &amp;&gt; /dev/null &amp;&amp; ! command -v convert &amp;&gt; /dev/null; then
+        echo -e &#34;${RED}Error: ImageMagick no está instalado.${NC}&#34;
+        echo &#34;Instálalo con: sudo pacman -S imagemagick&#34;
+        exit 1
+    fi
+    
+    # Usar &#39;magick&#39; si está disponible, sino &#39;convert&#39;
+    if command -v magick &amp;&gt; /dev/null; then
+        MAGICK=&#34;magick&#34;
+    else
+        MAGICK=&#34;convert&#34;
+    fi
+}
+
+# Detectar fuente disponible para usar
+detect_font() {
+    # Lista de fuentes a probar en orden de preferencia
+    local fonts=(&#34;Impact&#34; &#34;Arial-Bold&#34; &#34;Liberation-Sans-Bold&#34; &#34;DejaVu-Sans-Bold&#34; &#34;Roboto-Bold&#34; &#34;FreeSans-Bold&#34;)
+    
+    for font in &#34;${fonts[@]}&#34;; do
+        if $MAGICK -list font | grep -qi &#34;$font&#34;; then
+            FONT_BOLD=&#34;$font&#34;
+            echo -e &#34;${GREEN}✓ Usando fuente: $FONT_BOLD${NC}&#34;
+            return 0
+        fi
+    done
+    
+    # Si no encuentra ninguna, usar la fuente por defecto
+    echo -e &#34;${YELLOW}⚠ No se encontró ninguna fuente preferida, usando fuente por defecto${NC}&#34;
+    FONT_BOLD=&#34;&#34;
+}
+
+# Función para mostrar menú de estilos
+show_styles() {
+    echo -e &#34;${YELLOW}Selecciona el estilo de thumbnail:${NC}&#34;
+    echo &#34;1) Collage 2x2 con texto grande&#34;
+    echo &#34;2) Imagen principal + texto central impactante&#34;
+    echo &#34;3) Antes y después (2 imágenes lado a lado)&#34;
+    echo &#34;4) Imagen de fondo + foto pequeña + texto&#34;
+    echo &#34;5) Miniaturas múltiples en fila + texto&#34;
+    echo &#34;&#34;
+    echo -e &#34;${RED}═══ ESTILOS CLICKBAIT ═══${NC}&#34;
+    echo &#34;6) 🔴 Círculo rojo + flecha señalando&#34;
+    echo &#34;7) 😱 Cara de shock + texto exagerado&#34;
+    echo &#34;8) ⚡ Comparación dramática con VS&#34;
+    echo &#34;9) 🎯 Múltiples flechas y círculos&#34;
+    echo &#34;10) 💥 Explosión de texto con efectos&#34;
+    echo &#34;&#34;
+    read -p &#34;Opción (1-10): &#34; STYLE
+}
+
+# Función para crear collage 2x2
+style_collage() {
+    if [ ${#IMAGES[@]} -lt 4 ]; then
+        echo -e &#34;${RED}Error: Este estilo necesita al menos 4 imágenes${NC}&#34;
+        exit 1
+    fi
+    
+    echo -e &#34;${GREEN}Creando collage 2x2...${NC}&#34;
+    
+    # Crear collage
+    $MAGICK montage &#34;${IMAGES[0]}&#34; &#34;${IMAGES[1]}&#34; &#34;${IMAGES[2]}&#34; &#34;${IMAGES[3]}&#34; \
+        -tile 2x2 -geometry 640x360+5+5 -background black temp_collage.jpg
+    
+    # Redimensionar a tamaño YouTube
+    $MAGICK temp_collage.jpg -resize 1280x720! temp_base.jpg
+    
+    # Añadir texto
+    $MAGICK temp_base.jpg \
+        -gravity north -pointsize 90 ${FONT_BOLD:+-font &#34;$FONT_BOLD&#34;} \
+        -stroke black -strokewidth 6 -fill &#34;$TEXT_COLOR&#34; \
+        -annotate +0+30 &#34;$TEXT_TOP&#34; \
+        -gravity south -pointsize 70 ${FONT_BOLD:+-font &#34;$FONT_BOLD&#34;} \
+        -stroke black -strokewidth 5 -fill yellow \
+        -annotate +0+30 &#34;$TEXT_BOTTOM&#34; \
+        &#34;$OUTPUT&#34;
+    
+    rm temp_collage.jpg temp_base.jpg
+}
+
+# Función para imagen principal + texto
+style_main_image() {
+    if [ ${#IMAGES[@]} -lt 1 ]; then
+        echo -e &#34;${RED}Error: Este estilo necesita al menos 1 imagen${NC}&#34;
+        exit 1
+    fi
+    
+    echo -e &#34;${GREEN}Creando thumbnail con imagen principal...${NC}&#34;
+    
+    # Preparar imagen base
+    $MAGICK &#34;${IMAGES[0]}&#34; -resize 1280x720^ -gravity center -extent 1280x720 temp_base.jpg
+    
+    # Añadir viñeta
+    $MAGICK temp_base.jpg -vignette 0x20 temp_vignette.jpg
+    
+    # Añadir textos
+    $MAGICK temp_vignette.jpg \
+        -gravity center -pointsize 110 ${FONT_BOLD:+-font &#34;$FONT_BOLD&#34;} \
+        -stroke black -strokewidth 8 -fill &#34;$TEXT_COLOR&#34; \
+        -annotate +0-150 &#34;$TEXT_TOP&#34; \
+        -pointsize 80 -fill yellow -stroke black -strokewidth 6 \
+        -annotate +0+100 &#34;$TEXT_BOTTOM&#34; \
+        &#34;$OUTPUT&#34;
+    
+    rm temp_base.jpg temp_vignette.jpg
+}
+
+# Función para antes y después
+style_before_after() {
+    if [ ${#IMAGES[@]} -lt 2 ]; then
+        echo -e &#34;${RED}Error: Este estilo necesita al menos 2 imágenes${NC}&#34;
+        exit 1
+    fi
+    
+    echo -e &#34;${GREEN}Creando thumbnail antes/después...${NC}&#34;
+    
+    # Preparar imágenes
+    $MAGICK &#34;${IMAGES[0]}&#34; -resize 600x720^ -gravity center -extent 600x720 temp_antes.jpg
+    $MAGICK &#34;${IMAGES[1]}&#34; -resize 600x720^ -gravity center -extent 600x720 temp_despues.jpg
+    
+    # Combinar lado a lado
+    $MAGICK temp_antes.jpg temp_despues.jpg +append temp_combined.jpg
+    
+    # Añadir textos y flecha
+    $MAGICK temp_combined.jpg \
+        -gravity northwest -pointsize 70 ${FONT_BOLD:+-font &#34;$FONT_BOLD&#34;} \
+        -stroke black -strokewidth 4 -fill white \
+        -annotate +30+30 &#34;ANTES&#34; \
+        -gravity northeast -pointsize 70 ${FONT_BOLD:+-font &#34;$FONT_BOLD&#34;} \
+        -stroke black -strokewidth 4 -fill lime \
+        -annotate +30+30 &#34;DESPUÉS&#34; \
+        -gravity center -pointsize 150 -fill red -stroke black -strokewidth 5 \
+        -annotate +0+0 &#34;→&#34; \
+        -gravity north -pointsize 90 -fill yellow -stroke black -strokewidth 6 \
+        -annotate +0+600 &#34;$TEXT_TOP&#34; \
+        &#34;$OUTPUT&#34;
+    
+    rm temp_antes.jpg temp_despues.jpg temp_combined.jpg
+}
+
+# Función para fondo + foto pequeña
+style_background_photo() {
+    if [ ${#IMAGES[@]} -lt 2 ]; then
+        echo -e &#34;${RED}Error: Este estilo necesita al menos 2 imágenes (fondo + foto)${NC}&#34;
+        exit 1
+    fi
+    
+    echo -e &#34;${GREEN}Creando thumbnail con fondo y foto...${NC}&#34;
+    
+    # Preparar fondo
+    $MAGICK &#34;${IMAGES[0]}&#34; -resize 1280x720^ -gravity center -extent 1280x720 temp_fondo.jpg
+    
+    # Oscurecer fondo un poco
+    $MAGICK temp_fondo.jpg -brightness-contrast -20x10 temp_fondo_dark.jpg
+    
+    # Preparar foto circular
+    $MAGICK &#34;${IMAGES[1]}&#34; -resize 350x350^ -gravity center -extent 350x350 temp_foto.jpg
+    $MAGICK temp_foto.jpg \
+        \( +clone -threshold -1 -negate -fill white -draw &#34;circle 175,175 175,0&#34; \) \
+        -alpha off -compose copy_opacity -composite \
+        -bordercolor white -border 8 \
+        temp_foto_circular.png
+    
+    # Combinar todo
+    $MAGICK temp_fondo_dark.jpg \
+        temp_foto_circular.png -geometry +900+50 -composite \
+        -gravity west -pointsize 100 ${FONT_BOLD:+-font &#34;$FONT_BOLD&#34;} \
+        -stroke black -strokewidth 7 -fill &#34;$TEXT_COLOR&#34; \
+        -annotate +40+0 &#34;$TEXT_TOP&#34; \
+        -gravity southwest -pointsize 70 -fill yellow -stroke black -strokewidth 5 \
+        -annotate +40+40 &#34;$TEXT_BOTTOM&#34; \
+        &#34;$OUTPUT&#34;
+    
+    rm temp_fondo.jpg temp_fondo_dark.jpg temp_foto.jpg temp_foto_circular.png
+}
+
+# Función para miniaturas en fila
+style_thumbnails_row() {
+    if [ ${#IMAGES[@]} -lt 3 ]; then
+        echo -e &#34;${RED}Error: Este estilo necesita al menos 3 imágenes${NC}&#34;
+        exit 1
+    fi
+    
+    echo -e &#34;${GREEN}Creando thumbnail con miniaturas en fila...${NC}&#34;
+    
+    # Crear fondo degradado
+    $MAGICK -size 1280x720 gradient:blue-purple temp_fondo.jpg
+    
+    # Preparar miniaturas (máximo 4)
+    NUM_IMAGES=$(( ${#IMAGES[@]} &lt; 4 ? ${#IMAGES[@]} : 4 ))
+    THUMB_WIDTH=$((1200 / NUM_IMAGES))
+    
+    for i in $(seq 0 $(($NUM_IMAGES - 1))); do
+        $MAGICK &#34;${IMAGES[$i]}&#34; -resize ${THUMB_WIDTH}x400^ -gravity center -extent ${THUMB_WIDTH}x400 \
+            -bordercolor white -border 5 temp_thumb_$i.jpg
+    done
+    
+    # Combinar miniaturas horizontalmente
+    $MAGICK temp_thumb_*.jpg +append temp_row.jpg
+    
+    # Combinar con fondo y añadir texto
+    $MAGICK temp_fondo.jpg \
+        temp_row.jpg -geometry +40+250 -composite \
+        -gravity north -pointsize 110 ${FONT_BOLD:+-font &#34;$FONT_BOLD&#34;} \
+        -stroke black -strokewidth 8 -fill &#34;$TEXT_COLOR&#34; \
+        -annotate +0+30 &#34;$TEXT_TOP&#34; \
+        -gravity south -pointsize 70 -fill yellow -stroke black -strokewidth 6 \
+        -annotate +0+30 &#34;$TEXT_BOTTOM&#34; \
+        &#34;$OUTPUT&#34;
+    
+    rm temp_fondo.jpg temp_row.jpg temp_thumb_*.jpg
+}
+
+# ESTILOS CLICKBAIT
+
+# Función para círculo rojo + flecha
+style_red_circle_arrow() {
+    if [ ${#IMAGES[@]} -lt 1 ]; then
+        echo -e &#34;${RED}Error: Este estilo necesita al menos 1 imagen${NC}&#34;
+        exit 1
+    fi
+    
+    echo -e &#34;${GREEN}Creando thumbnail CLICKBAIT con círculo rojo...${NC}&#34;
+    
+    # Preparar imagen base
+    $MAGICK &#34;${IMAGES[0]}&#34; -resize 1280x720^ -gravity center -extent 1280x720 temp_base.jpg
+    
+    # Posición del círculo
+    echo -e &#34;${YELLOW}¿Dónde poner el círculo? (izquierda/derecha/centro) [derecha]:${NC}&#34;
+    read -p &#34;&gt; &#34; CIRCLE_POS
+    CIRCLE_POS=${CIRCLE_POS:-derecha}
+    
+    case ${CIRCLE_POS,,} in
+        izquierda) CIRCLE_X=250; ARROW_START=450; ARROW_END=350 ;;
+        centro) CIRCLE_X=640; ARROW_START=440; ARROW_END=640 ;;
+        *) CIRCLE_X=1000; ARROW_START=800; ARROW_END=950 ;;
+    esac
+    
+    # Añadir círculo rojo grueso + flecha + texto
+    $MAGICK temp_base.jpg \
+        -fill none -stroke red -strokewidth 12 \
+        -draw &#34;circle $CIRCLE_X,360 $((CIRCLE_X+100)),360&#34; \
+        -fill none -stroke yellow -strokewidth 15 \
+        -draw &#34;line $ARROW_START,200 $ARROW_END,320&#34; \
+        -draw &#34;line $ARROW_END,320 $((ARROW_END-30)),280&#34; \
+        -draw &#34;line $ARROW_END,320 $((ARROW_END-30)),360&#34; \
+        -gravity north -pointsize 100 ${FONT_BOLD:+-font &#34;$FONT_BOLD&#34;} \
+        -stroke black -strokewidth 8 -fill red \
+        -annotate +0+30 &#34;$TEXT_TOP&#34; \
+        -gravity south -pointsize 80 -fill yellow -stroke black -strokewidth 6 \
+        -annotate +0+30 &#34;$TEXT_BOTTOM&#34; \
+        -gravity northeast -pointsize 60 -fill white -stroke red -strokewidth 4 \
+        -annotate +20+20 &#34;¡MIRA ESTO!&#34; \
+        &#34;$OUTPUT&#34;
+    
+    rm temp_base.jpg
+}
+
+# Función para cara de shock
+style_shocked_face() {
+    if [ ${#IMAGES[@]} -lt 2 ]; then
+        echo -e &#34;${RED}Error: Este estilo necesita 2 imágenes (fondo + tu cara)${NC}&#34;
+        exit 1
+    fi
+    
+    echo -e &#34;${GREEN}Creando thumbnail con CARA DE SHOCK...${NC}&#34;
+    
+    # Preparar fondo
+    $MAGICK &#34;${IMAGES[0]}&#34; -resize 1280x720^ -gravity center -extent 1280x720 temp_fondo.jpg
+    
+    # Oscurecer y saturar el fondo para más drama
+    $MAGICK temp_fondo.jpg -brightness-contrast -30x20 -modulate 100,150,100 temp_fondo_dramatic.jpg
+    
+    # Preparar foto de cara (grande y circular)
+    $MAGICK &#34;${IMAGES[1]}&#34; -resize 450x450^ -gravity center -extent 450x450 temp_cara.jpg
+    $MAGICK temp_cara.jpg \
+        \( +clone -threshold -1 -negate -fill white -draw &#34;circle 225,225 225,0&#34; \) \
+        -alpha off -compose copy_opacity -composite \
+        -bordercolor yellow -border 10 \
+        temp_cara_circular.png
+    
+    # Añadir cara + texto exagerado + elementos clickbait
+    $MAGICK temp_fondo_dramatic.jpg \
+        temp_cara_circular.png -geometry +50+120 -composite \
+        -gravity northeast -pointsize 120 ${FONT_BOLD:+-font &#34;$FONT_BOLD&#34;} \
+        -stroke black -strokewidth 10 -fill red \
+        -annotate +30+50 &#34;$TEXT_TOP&#34; \
+        -gravity east -pointsize 90 -fill yellow -stroke black -strokewidth 7 \
+        -annotate +30+200 &#34;$TEXT_BOTTOM&#34; \
+        -gravity southeast -pointsize 70 -fill white -stroke red -strokewidth 5 \
+        -annotate +30+30 &#34;😱 NO LO VAS\nA CREER&#34; \
+        -fill none -stroke red -strokewidth 15 \
+        -draw &#34;circle 950,300 1050,300&#34; \
+        &#34;$OUTPUT&#34;
+    
+    rm temp_fondo.jpg temp_fondo_dramatic.jpg temp_cara.jpg temp_cara_circular.png
+}
+
+# Función para VS dramático
+style_dramatic_vs() {
+    if [ ${#IMAGES[@]} -lt 2 ]; then
+        echo -e &#34;${RED}Error: Este estilo necesita 2 imágenes${NC}&#34;
+        exit 1
+    fi
+    
+    echo -e &#34;${GREEN}Creando thumbnail VS DRAMÁTICO...${NC}&#34;
+    
+    # Preparar imágenes con efectos diferentes
+    $MAGICK &#34;${IMAGES[0]}&#34; -resize 580x720^ -gravity center -extent 580x720 \
+        -modulate 100,80,100 temp_lado1.jpg
+    $MAGICK &#34;${IMAGES[1]}&#34; -resize 580x720^ -gravity center -extent 580x720 \
+        -modulate 100,120,100 temp_lado2.jpg
+    
+    # Crear rayo divisor
+    $MAGICK -size 120x720 plasma:fractal temp_lightning.jpg
+    $MAGICK temp_lightning.jpg -colorspace gray -brightness-contrast 30x50 \
+        -fill yellow -tint 100 temp_lightning_yellow.jpg
+    
+    # Combinar con el rayo en medio
+    $MAGICK temp_lado1.jpg temp_lightning_yellow.jpg temp_lado2.jpg +append temp_combined.jpg
+    
+    # Añadir VS gigante y textos
+    $MAGICK temp_combined.jpg \
+        -gravity center -pointsize 200 ${FONT_BOLD:+-font &#34;$FONT_BOLD&#34;} \
+        -stroke black -strokewidth 15 -fill red \
+        -annotate +0+0 &#34;VS&#34; \
+        -gravity northwest -pointsize 80 -fill yellow -stroke black -strokewidth 6 \
+        -annotate +30+30 &#34;ESTO&#34; \
+        -gravity northeast -pointsize 80 -fill cyan -stroke black -strokewidth 6 \
+        -annotate +30+30 &#34;vs ESTO&#34; \
+        -gravity north -pointsize 90 -fill white -stroke red -strokewidth 7 \
+        -annotate +0+600 &#34;$TEXT_TOP&#34; \
+        -gravity south -pointsize 70 -fill lime -stroke black -strokewidth 5 \
+        -annotate +0+30 &#34;¿CUÁL ES MEJOR?&#34; \
+        &#34;$OUTPUT&#34;
+    
+    rm temp_lado1.jpg temp_lado2.jpg temp_lightning.jpg temp_lightning_yellow.jpg temp_combined.jpg
+}
+
+# Función para múltiples flechas y círculos
+style_multiple_arrows() {
+    if [ ${#IMAGES[@]} -lt 1 ]; then
+        echo -e &#34;${RED}Error: Este estilo necesita al menos 1 imagen${NC}&#34;
+        exit 1
+    fi
+    
+    echo -e &#34;${GREEN}Creando thumbnail con MÚLTIPLES INDICADORES...${NC}&#34;
+    
+    # Preparar imagen base
+    $MAGICK &#34;${IMAGES[0]}&#34; -resize 1280x720^ -gravity center -extent 1280x720 temp_base.jpg
+    
+    # Aumentar saturación para más impacto
+    $MAGICK temp_base.jpg -modulate 100,140,100 temp_saturated.jpg
+    
+    # Añadir múltiples círculos rojos, flechas y efectos
+    $MAGICK temp_saturated.jpg \
+        -fill none -stroke red -strokewidth 12 \
+        -draw &#34;circle 300,250 380,250&#34; \
+        -draw &#34;circle 950,400 1030,400&#34; \
+        -draw &#34;circle 640,500 700,500&#34; \
+        -stroke yellow -strokewidth 15 \
+        -draw &#34;line 500,150 350,220&#34; \
+        -draw &#34;line 350,220 380,190&#34; \
+        -draw &#34;line 350,220 380,250&#34; \
+        -draw &#34;line 800,250 920,370&#34; \
+        -draw &#34;line 920,370 890,350&#34; \
+        -draw &#34;line 920,370 900,400&#34; \
+        -gravity north -pointsize 110 ${FONT_BOLD:+-font &#34;$FONT_BOLD&#34;} \
+        -stroke black -strokewidth 10 -fill red \
+        -annotate +0+20 &#34;$TEXT_TOP&#34; \
+        -gravity south -pointsize 80 -fill yellow -stroke black -strokewidth 7 \
+        -annotate +0+30 &#34;$TEXT_BOTTOM&#34; \
+        -gravity northwest -pointsize 50 -fill white -stroke red -strokewidth 3 \
+        -annotate +20+20 &#34;🔥 VIRAL&#34; \
+        -gravity northeast -pointsize 50 -fill lime -stroke black -strokewidth 3 \
+        -annotate +20+20 &#34;¡WOW!&#34; \
+        &#34;$OUTPUT&#34;
+    
+    rm temp_base.jpg temp_saturated.jpg
+}
+
+# Función para explosión de texto
+style_text_explosion() {
+    if [ ${#IMAGES[@]} -lt 1 ]; then
+        echo -e &#34;${RED}Error: Este estilo necesita al menos 1 imagen${NC}&#34;
+        exit 1
+    fi
+    
+    echo -e &#34;${GREEN}Creando thumbnail con EXPLOSIÓN DE TEXTO...${NC}&#34;
+    
+    # Preparar imagen base oscurecida
+    $MAGICK &#34;${IMAGES[0]}&#34; -resize 1280x720^ -gravity center -extent 1280x720 temp_base.jpg
+    $MAGICK temp_base.jpg -brightness-contrast -35x15 temp_dark.jpg
+    
+    # Crear efecto de explosión con formas
+    $MAGICK temp_dark.jpg \
+        -fill &#34;rgba(255,255,0,0.3)&#34; -stroke yellow -strokewidth 5 \
+        -draw &#34;polygon 640,100 680,200 780,220 700,300 720,400 640,350 560,400 580,300 500,220 600,200&#34; \
+        temp_explosion.jpg
+    
+    # Añadir textos en múltiples ángulos para efecto dinámico
+    $MAGICK temp_explosion.jpg \
+        -gravity center -pointsize 130 ${FONT_BOLD:+-font &#34;$FONT_BOLD&#34;} \
+        -stroke black -strokewidth 12 -fill red \
+        -annotate +0-100 &#34;$TEXT_TOP&#34; \
+        -pointsize 90 -fill yellow -stroke black -strokewidth 8 \
+        -annotate +0+100 &#34;$TEXT_BOTTOM&#34; \
+        -gravity northwest -pointsize 60 -fill white -stroke red -strokewidth 4 \
+        -annotate +30+30 &#34;😱&#34; \
+        -gravity northeast -pointsize 60 -fill lime -stroke black -strokewidth 4 \
+        -annotate +30+30 &#34;🔥&#34; \
+        -gravity southwest -pointsize 70 -fill cyan -stroke black -strokewidth 5 \
+        -annotate +30+30 &#34;¡ÉPICO!&#34; \
+        -gravity southeast -pointsize 70 -fill magenta -stroke black -strokewidth 5 \
+        -annotate +30+30 &#34;100% REAL&#34; \
+        -gravity north -pointsize 50 -fill white -stroke red -strokewidth 3 \
+        -annotate +0+20 &#34;⚠️ ADVERTENCIA ⚠️&#34; \
+        &#34;$OUTPUT&#34;
+    
+    rm temp_base.jpg temp_dark.jpg temp_explosion.jpg
+}
+
+# Función principal
+main() {
+    show_banner
+    check_imagemagick
+    detect_font
+    
+    # Solicitar imágenes
+    echo -e &#34;${YELLOW}Ingresa las rutas de las imágenes (separadas por espacio):${NC}&#34;
+    read -p &#34;&gt; &#34; -a IMAGES
+    
+    # Verificar que existan las imágenes
+    for img in &#34;${IMAGES[@]}&#34;; do
+        if [ ! -f &#34;$img&#34; ]; then
+            echo -e &#34;${RED}Error: No se encuentra la imagen: $img${NC}&#34;
+            exit 1
+        fi
+    done
+    
+    echo -e &#34;${GREEN}✓ ${#IMAGES[@]} imagen(es) cargada(s)${NC}&#34;
+    echo &#34;&#34;
+    
+    # Seleccionar estilo
+    show_styles
+    
+    # Solicitar textos
+    echo &#34;&#34;
+    echo -e &#34;${YELLOW}Texto superior (línea principal):${NC}&#34;
+    read -p &#34;&gt; &#34; TEXT_TOP
+    
+    echo -e &#34;${YELLOW}Texto inferior (opcional, presiona Enter para omitir):${NC}&#34;
+    read -p &#34;&gt; &#34; TEXT_BOTTOM
+    
+    # Color del texto principal
+    echo -e &#34;${YELLOW}Color del texto principal (rojo/azul/verde/blanco/amarillo) [blanco]:${NC}&#34;
+    read -p &#34;&gt; &#34; COLOR_INPUT
+    case ${COLOR_INPUT,,} in
+        rojo) TEXT_COLOR=&#34;red&#34; ;;
+        azul) TEXT_COLOR=&#34;blue&#34; ;;
+        verde) TEXT_COLOR=&#34;lime&#34; ;;
+        amarillo) TEXT_COLOR=&#34;yellow&#34; ;;
+        *) TEXT_COLOR=&#34;white&#34; ;;
+    esac
+    
+    # Nombre del archivo de salida
+    echo -e &#34;${YELLOW}Nombre del archivo de salida [thumbnail.jpg]:${NC}&#34;
+    read -p &#34;&gt; &#34; OUTPUT
+    OUTPUT=${OUTPUT:-thumbnail.jpg}
+    
+    echo &#34;&#34;
+    echo -e &#34;${BLUE}Generando thumbnail...${NC}&#34;
+    
+    # Ejecutar el estilo seleccionado
+    case $STYLE in
+        1) style_collage ;;
+        2) style_main_image ;;
+        3) style_before_after ;;
+        4) style_background_photo ;;
+        5) style_thumbnails_row ;;
+        6) style_red_circle_arrow ;;
+        7) style_shocked_face ;;
+        8) style_dramatic_vs ;;
+        9) style_multiple_arrows ;;
+        10) style_text_explosion ;;
+        *) echo -e &#34;${RED}Opción inválida${NC}&#34;; exit 1 ;;
+    esac
+    
+    echo &#34;&#34;
+    echo -e &#34;${GREEN}✓ ¡Thumbnail generado exitosamente!${NC}&#34;
+    echo -e &#34;${BLUE}Archivo: $OUTPUT${NC}&#34;
+    echo -e &#34;${BLUE}Tamaño: 1280x720 (ideal para YouTube)${NC}&#34;
+}
+
+# Ejecutar script
+main
+</code></pre>
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+</footer>
+
+
+</body>
+</html>

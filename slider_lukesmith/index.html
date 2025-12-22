@@ -22,7 +22,7 @@ Si el audio dura más tiempo entonces tenes que usar el script tal cual está, s
 Si el audio dura más tiempo entonces tenes que usar el script tal cual está, si el audio dura menos tenes que hardcodear el valor de totseconds a 5 o a los segundos que pongas por imágen. TODO (para hacer): Arreglar el script si el audio dura menos que las imágenes porque genera valor negativo. Subir video automáticamente a YouTube y a Archive. Crear un artículo automáticamente basado en imágenes. Crear un audio con espeak que tenga la misma duración que el video (contá cuántas imágenes tenes y multiplicá por cada segundo cada imágen). Enlazá las URLs de archive automáticamente Hacer script para juntar videos (no imagenes) con ffmpeg. Subtitular audios subilos a youtube y descargalos con yt-dlp. Pasar los subtitulos a un llm o a chatgpt para que haga un resumen. Generar un archivo de audio con los subtitulos de chatgpt. Sacá las fotos horizontales, grabá el audio (despues de grabar el audio subi el volumen con ffmpeg 4 veces mas el comando esta en la publicacion interesantes-comandos), disponé de espacio disponible.">
   <meta itemprop="datePublished" content="2025-12-02T02:03:33-03:00">
   <meta itemprop="dateModified" content="2025-12-02T02:03:33-03:00">
-  <meta itemprop="wordCount" content="2699">
+  <meta itemprop="wordCount" content="3900">
   
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="Generate videos cli">
@@ -595,7 +595,380 @@ La idea correcta no es “medir en vivo” mientras escribes, sino:</p>
 <li>O hacer un plugin Vim limpio (<code>autoload/</code>, <code>plugin/</code>)</li>
 </ul>
 <p>Dime qué nivel de precisión necesitas 🎯</p>
-
+<hr>
+<h4 id="subí-el-audio-a-youtube-y-descargá-los-subtitulos-para-pegarlos-con-esto">Subí el audio a YouTube y descargá los subtitulos para pegarlos con esto.</h4>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/bash
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e"># Script para añadir subtítulos SRT a un video</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Uso: ./add_subtitles.sh video.mp4 subtitulos.srt [salida.mp4] [estilo]</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>set -e
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Verificar argumentos</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> $# -lt <span style="color:#ae81ff">2</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;========================================&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Añadir Subtítulos a Video&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;========================================&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Uso: </span>$0<span style="color:#e6db74"> &lt;video.mp4&gt; &lt;subtitulos.srt&gt; [salida.mp4] [estilo]&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Estilos disponibles:&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  tiktok    - Estilo TikTok (grande, bold, amarillo)&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  instagram - Estilo Instagram (blanco con sombra)&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  youtube   - Estilo YouTube (blanco con fondo negro)&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  simple    - Estilo simple (blanco básico)&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  custom    - Personalizado (edita el script)&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Ejemplos:&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  # Estilo TikTok (default)&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  </span>$0<span style="color:#e6db74"> mi_video.mp4 subtitulos.srt&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  # Estilo Instagram con nombre personalizado&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  </span>$0<span style="color:#e6db74"> mi_video.mp4 subs.srt video_final.mp4 instagram&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  # Estilo YouTube&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  </span>$0<span style="color:#e6db74"> clip.mp4 subtitulos.srt resultado.mp4 youtube&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>VIDEO<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>SUBTITLES<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$2<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>OUTPUT<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>3<span style="color:#66d9ef">:-</span><span style="color:#e6db74">${</span>VIDEO%.*<span style="color:#e6db74">}</span>_con_subs.mp4<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>STYLE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>4<span style="color:#66d9ef">:-</span>tiktok<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Verificar que los archivos existen</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> ! -f <span style="color:#e6db74">&#34;</span>$VIDEO<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Error: El video &#39;</span>$VIDEO<span style="color:#e6db74">&#39; no existe&#34;</span>
+</span></span><span style="display:flex;"><span>    exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> ! -f <span style="color:#e6db74">&#34;</span>$SUBTITLES<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Error: El archivo de subtítulos &#39;</span>$SUBTITLES<span style="color:#e6db74">&#39; no existe&#34;</span>
+</span></span><span style="display:flex;"><span>    exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Verificar ffmpeg</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> ! command -v ffmpeg &amp;&gt; /dev/null; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Error: ffmpeg no está instalado&#34;</span>
+</span></span><span style="display:flex;"><span>    exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;========================================&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;Añadiendo Subtítulos&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;========================================&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;Video: </span>$VIDEO<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;Subtítulos: </span>$SUBTITLES<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;Estilo: </span>$STYLE<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;Salida: </span>$OUTPUT<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Definir estilos de subtítulos</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;</span>$STYLE<span style="color:#e6db74">&#34;</span> in
+</span></span><span style="display:flex;"><span>    tiktok<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># Estilo TikTok: Grande, bold, amarillo con borde negro grueso</span>
+</span></span><span style="display:flex;"><span>        SUBTITLE_STYLE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;FontName=Arial,FontSize=28,PrimaryColour=&amp;H00FFFF,OutlineColour=&amp;H000000,BackColour=&amp;H80000000,Bold=1,Outline=3,Shadow=0,MarginV=40,Alignment=2&#34;</span>
+</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;Aplicando estilo TikTok (amarillo, bold, grande)&#34;</span>
+</span></span><span style="display:flex;"><span>        ;;
+</span></span><span style="display:flex;"><span>    instagram<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># Estilo Instagram: Blanco con sombra suave</span>
+</span></span><span style="display:flex;"><span>        SUBTITLE_STYLE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;FontName=Arial,FontSize=24,PrimaryColour=&amp;H00FFFFFF,OutlineColour=&amp;H000000,BackColour=&amp;H80000000,Bold=1,Outline=2,Shadow=1,MarginV=50,Alignment=2&#34;</span>
+</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;Aplicando estilo Instagram (blanco con sombra)&#34;</span>
+</span></span><span style="display:flex;"><span>        ;;
+</span></span><span style="display:flex;"><span>    youtube<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># Estilo YouTube: Blanco con fondo negro semi-transparente</span>
+</span></span><span style="display:flex;"><span>        SUBTITLE_STYLE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;FontName=Arial,FontSize=22,PrimaryColour=&amp;H00FFFFFF,OutlineColour=&amp;H000000,BackColour=&amp;HCC000000,Bold=0,Outline=1,Shadow=0,MarginV=30,Alignment=2&#34;</span>
+</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;Aplicando estilo YouTube (blanco con fondo)&#34;</span>
+</span></span><span style="display:flex;"><span>        ;;
+</span></span><span style="display:flex;"><span>    simple<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># Estilo simple: Blanco básico</span>
+</span></span><span style="display:flex;"><span>        SUBTITLE_STYLE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;FontName=Arial,FontSize=20,PrimaryColour=&amp;H00FFFFFF,OutlineColour=&amp;H000000,BackColour=&amp;H80000000,Bold=0,Outline=2,Shadow=0,MarginV=20,Alignment=2&#34;</span>
+</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;Aplicando estilo simple (blanco básico)&#34;</span>
+</span></span><span style="display:flex;"><span>        ;;
+</span></span><span style="display:flex;"><span>    custom<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># Personaliza aquí tu estilo</span>
+</span></span><span style="display:flex;"><span>        SUBTITLE_STYLE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;FontName=Arial,FontSize=26,PrimaryColour=&amp;H0000FF00,OutlineColour=&amp;H000000,BackColour=&amp;H80000000,Bold=1,Outline=3,Shadow=1,MarginV=45,Alignment=2&#34;</span>
+</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;Aplicando estilo personalizado&#34;</span>
+</span></span><span style="display:flex;"><span>        ;;
+</span></span><span style="display:flex;"><span>    *<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;Error: Estilo &#39;</span>$STYLE<span style="color:#e6db74">&#39; no reconocido&#34;</span>
+</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;Usa: tiktok, instagram, youtube, simple, o custom&#34;</span>
+</span></span><span style="display:flex;"><span>        exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>        ;;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">esac</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;Procesando video...&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Escapar la ruta del archivo de subtítulos para ffmpeg</span>
+</span></span><span style="display:flex;"><span>SUBTITLES_ESCAPED<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>SUBTITLES//<span style="color:#ae81ff">\\</span>/<span style="color:#ae81ff">\\\\</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>SUBTITLES_ESCAPED<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>SUBTITLES_ESCAPED//:/<span style="color:#ae81ff">\\</span>:<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Aplicar subtítulos con el estilo seleccionado</span>
+</span></span><span style="display:flex;"><span>ffmpeg -i <span style="color:#e6db74">&#34;</span>$VIDEO<span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    -vf <span style="color:#e6db74">&#34;subtitles=&#39;</span><span style="color:#e6db74">${</span>SUBTITLES_ESCAPED<span style="color:#e6db74">}</span><span style="color:#e6db74">&#39;:force_style=&#39;</span><span style="color:#e6db74">${</span>SUBTITLE_STYLE<span style="color:#e6db74">}</span><span style="color:#e6db74">&#39;&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    -c:v libx264 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    -preset medium <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    -crf <span style="color:#ae81ff">23</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    -c:a copy <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    -y <span style="color:#e6db74">&#34;</span>$OUTPUT<span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    -loglevel error -stats
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> $? -eq <span style="color:#ae81ff">0</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;========================================&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;✓ Subtítulos añadidos exitosamente!&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;========================================&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Archivo de salida: </span>$OUTPUT<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Mostrar tamaño del archivo</span>
+</span></span><span style="display:flex;"><span>    SIZE<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>du -h <span style="color:#e6db74">&#34;</span>$OUTPUT<span style="color:#e6db74">&#34;</span> | cut -f1<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Tamaño: </span>$SIZE<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Mostrar duración</span>
+</span></span><span style="display:flex;"><span>    DURATION<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>ffprobe -v error -show_entries format<span style="color:#f92672">=</span>duration -of default<span style="color:#f92672">=</span>noprint_wrappers<span style="color:#f92672">=</span>1:nokey<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span> <span style="color:#e6db74">&#34;</span>$OUTPUT<span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Duración: </span><span style="color:#66d9ef">$(</span>printf <span style="color:#e6db74">&#34;%.2f&#34;</span> $DURATION<span style="color:#66d9ef">)</span><span style="color:#e6db74"> segundos&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;✗ Error al añadir subtítulos&#34;</span>
+</span></span><span style="display:flex;"><span>    exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;========================================&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;¡Listo para subir a redes sociales!&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;========================================&#34;</span>
+</span></span></code></pre></div><hr>
+<h4 id="pasar-del-archivo-de-espeak-con-breaks-a-srt-y-quemarlo-en-el-video">Pasar del archivo de espeak con breaks a srt y quemarlo en el video.</h4>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/bash
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e"># Script TODO EN UNO: Convierte script a SRT y lo quema en el video</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Uso: ./auto_subs.sh video.mp4 script.txt [estilo] [duracion_base_ms]</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>set -e
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Verificar argumentos</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> $# -lt <span style="color:#ae81ff">2</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;========================================&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Video + Script = Video con Subtítulos&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;========================================&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Uso: </span>$0<span style="color:#e6db74"> &lt;video.mp4&gt; &lt;script.txt&gt; [estilo] [duracion_base_ms]&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Estilos:&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  tiktok    - Amarillo, grande, bold (default)&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  instagram - Blanco con sombra&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  youtube   - Blanco con fondo negro&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  simple    - Blanco básico&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Ejemplos:&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  # Estilo TikTok, 5370ms por línea&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  </span>$0<span style="color:#e6db74"> mi_video.mp4 mi_script.txt&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  # Estilo Instagram, 5370ms por línea&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  </span>$0<span style="color:#e6db74"> mi_video.mp4 mi_script.txt instagram&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  # Estilo TikTok, 4000ms por línea&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  </span>$0<span style="color:#e6db74"> mi_video.mp4 mi_script.txt tiktok 4000&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>VIDEO<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>SCRIPT_FILE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$2<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>STYLE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>3<span style="color:#66d9ef">:-</span>tiktok<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>BASE_DURATION<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>4<span style="color:#66d9ef">:-</span>5370<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Verificar archivos</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> ! -f <span style="color:#e6db74">&#34;</span>$VIDEO<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Error: El video &#39;</span>$VIDEO<span style="color:#e6db74">&#39; no existe&#34;</span>
+</span></span><span style="display:flex;"><span>    exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> ! -f <span style="color:#e6db74">&#34;</span>$SCRIPT_FILE<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Error: El script &#39;</span>$SCRIPT_FILE<span style="color:#e6db74">&#39; no existe&#34;</span>
+</span></span><span style="display:flex;"><span>    exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Verificar ffmpeg</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> ! command -v ffmpeg &amp;&gt; /dev/null; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Error: ffmpeg no está instalado&#34;</span>
+</span></span><span style="display:flex;"><span>    exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Nombres de archivos temporales y finales</span>
+</span></span><span style="display:flex;"><span>TEMP_SRT<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;temp_subtitles.srt&#34;</span>
+</span></span><span style="display:flex;"><span>OUTPUT_VIDEO<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>VIDEO%.*<span style="color:#e6db74">}</span><span style="color:#e6db74">_con_subs.mp4&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;========================================&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;🎬 Proceso Automático&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;========================================&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;Video: </span>$VIDEO<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;Script: </span>$SCRIPT_FILE<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;Estilo: </span>$STYLE<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;Duración base: </span><span style="color:#e6db74">${</span>BASE_DURATION<span style="color:#e6db74">}</span><span style="color:#e6db74">ms&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;Salida: </span>$OUTPUT_VIDEO<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># PASO 1: Generar SRT desde el script</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;========================================&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;PASO 1: Generando subtítulos SRT...&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;========================================&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Limpiar archivo SRT</span>
+</span></span><span style="display:flex;"><span>&gt; <span style="color:#e6db74">&#34;</span>$TEMP_SRT<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>LINE_NUM<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>CURRENT_TIME_MS<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Función para convertir milisegundos a formato SRT</span>
+</span></span><span style="display:flex;"><span>ms_to_srt_time<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    local total_ms<span style="color:#f92672">=</span>$1
+</span></span><span style="display:flex;"><span>    local hours<span style="color:#f92672">=</span><span style="color:#66d9ef">$((</span>total_ms <span style="color:#f92672">/</span> <span style="color:#ae81ff">3600000</span><span style="color:#66d9ef">))</span>
+</span></span><span style="display:flex;"><span>    local minutes<span style="color:#f92672">=</span><span style="color:#66d9ef">$((</span><span style="color:#f92672">(</span>total_ms <span style="color:#f92672">%</span> <span style="color:#ae81ff">3600000</span><span style="color:#f92672">)</span> <span style="color:#f92672">/</span> <span style="color:#ae81ff">60000</span><span style="color:#66d9ef">))</span>
+</span></span><span style="display:flex;"><span>    local seconds<span style="color:#f92672">=</span><span style="color:#66d9ef">$((</span><span style="color:#f92672">(</span>total_ms <span style="color:#f92672">%</span> <span style="color:#ae81ff">60000</span><span style="color:#f92672">)</span> <span style="color:#f92672">/</span> <span style="color:#ae81ff">1000</span><span style="color:#66d9ef">))</span>
+</span></span><span style="display:flex;"><span>    local milliseconds<span style="color:#f92672">=</span><span style="color:#66d9ef">$((</span>total_ms <span style="color:#f92672">%</span> <span style="color:#ae81ff">1000</span><span style="color:#66d9ef">))</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    printf <span style="color:#e6db74">&#34;%02d:%02d:%02d,%03d&#34;</span> $hours $minutes $seconds $milliseconds
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Procesar cada línea del script</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">while</span> IFS<span style="color:#f92672">=</span> read -r line <span style="color:#f92672">||</span> <span style="color:#f92672">[</span> -n <span style="color:#e6db74">&#34;</span>$line<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Ignorar líneas vacías</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> -z <span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>echo <span style="color:#e6db74">&#34;</span>$line<span style="color:#e6db74">&#34;</span> | tr -d <span style="color:#e6db74">&#39;[:space:]&#39;</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">continue</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    LINE_NUM<span style="color:#f92672">=</span><span style="color:#66d9ef">$((</span>LINE_NUM <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span><span style="color:#66d9ef">))</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Extraer el tiempo del break si existe</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span>$line<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">=</span>~ <span style="color:#ae81ff">\&lt;</span>break<span style="color:#ae81ff">\ </span>time<span style="color:#f92672">=</span><span style="color:#ae81ff">\&#39;</span><span style="color:#f92672">([</span>0-9<span style="color:#f92672">]</span>+<span style="color:#f92672">)</span>ms<span style="color:#ae81ff">\&#39;</span>/<span style="color:#ae81ff">\&gt;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        BREAK_TIME<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>BASH_REMATCH[1]<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># Remover el tag de break del texto</span>
+</span></span><span style="display:flex;"><span>        TEXT<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>echo <span style="color:#e6db74">&#34;</span>$line<span style="color:#e6db74">&#34;</span> | sed <span style="color:#e6db74">&#34;s/&lt;break time=&#39;[0-9]*ms&#39;\/&gt;.*//g&#34;</span> | sed <span style="color:#e6db74">&#39;s/[[:space:]]*$//&#39;</span><span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>        BREAK_TIME<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$BASE_DURATION<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>        TEXT<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$line<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Calcular tiempos</span>
+</span></span><span style="display:flex;"><span>    START_TIME_MS<span style="color:#f92672">=</span>$CURRENT_TIME_MS
+</span></span><span style="display:flex;"><span>    END_TIME_MS<span style="color:#f92672">=</span><span style="color:#66d9ef">$((</span>CURRENT_TIME_MS <span style="color:#f92672">+</span> BASE_DURATION<span style="color:#66d9ef">))</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Convertir a formato SRT</span>
+</span></span><span style="display:flex;"><span>    START_SRT<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>ms_to_srt_time $START_TIME_MS<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>    END_SRT<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>ms_to_srt_time $END_TIME_MS<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Escribir al SRT</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;</span>$LINE_NUM<span style="color:#e6db74">&#34;</span> &gt;&gt; <span style="color:#e6db74">&#34;</span>$TEMP_SRT<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;</span>$START_SRT<span style="color:#e6db74"> --&gt; </span>$END_SRT<span style="color:#e6db74">&#34;</span> &gt;&gt; <span style="color:#e6db74">&#34;</span>$TEMP_SRT<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;</span>$TEXT<span style="color:#e6db74">&#34;</span> &gt;&gt; <span style="color:#e6db74">&#34;</span>$TEMP_SRT<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;&#34;</span> &gt;&gt; <span style="color:#e6db74">&#34;</span>$TEMP_SRT<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  ✓ Línea </span>$LINE_NUM<span style="color:#e6db74">: </span>$TEXT<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Actualizar tiempo</span>
+</span></span><span style="display:flex;"><span>    CURRENT_TIME_MS<span style="color:#f92672">=</span><span style="color:#66d9ef">$((</span>END_TIME_MS <span style="color:#f92672">+</span> BREAK_TIME<span style="color:#66d9ef">))</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">done</span> &lt; <span style="color:#e6db74">&#34;</span>$SCRIPT_FILE<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>TOTAL_DURATION_MS<span style="color:#f92672">=</span>$CURRENT_TIME_MS
+</span></span><span style="display:flex;"><span>TOTAL_DURATION_S<span style="color:#f92672">=</span><span style="color:#66d9ef">$((</span>TOTAL_DURATION_MS <span style="color:#f92672">/</span> <span style="color:#ae81ff">1000</span><span style="color:#66d9ef">))</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;✓ SRT generado: </span>$LINE_NUM<span style="color:#e6db74"> subtítulos, </span><span style="color:#e6db74">${</span>TOTAL_DURATION_S<span style="color:#e6db74">}</span><span style="color:#e6db74">s totales&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># PASO 2: Definir estilo de subtítulos</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;========================================&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;PASO 2: Configurando estilo &#39;</span>$STYLE<span style="color:#e6db74">&#39;...&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;========================================&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;</span>$STYLE<span style="color:#e6db74">&#34;</span> in
+</span></span><span style="display:flex;"><span>    tiktok<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        SUBTITLE_STYLE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;FontName=Arial,FontSize=28,PrimaryColour=&amp;H00FFFF,OutlineColour=&amp;H000000,BackColour=&amp;H80000000,Bold=1,Outline=3,Shadow=0,MarginV=40,Alignment=2&#34;</span>
+</span></span><span style="display:flex;"><span>        ;;
+</span></span><span style="display:flex;"><span>    instagram<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        SUBTITLE_STYLE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;FontName=Arial,FontSize=24,PrimaryColour=&amp;H00FFFFFF,OutlineColour=&amp;H000000,BackColour=&amp;H80000000,Bold=1,Outline=2,Shadow=1,MarginV=50,Alignment=2&#34;</span>
+</span></span><span style="display:flex;"><span>        ;;
+</span></span><span style="display:flex;"><span>    youtube<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        SUBTITLE_STYLE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;FontName=Arial,FontSize=22,PrimaryColour=&amp;H00FFFFFF,OutlineColour=&amp;H000000,BackColour=&amp;HCC000000,Bold=0,Outline=1,Shadow=0,MarginV=30,Alignment=2&#34;</span>
+</span></span><span style="display:flex;"><span>        ;;
+</span></span><span style="display:flex;"><span>    simple<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        SUBTITLE_STYLE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;FontName=Arial,FontSize=20,PrimaryColour=&amp;H00FFFFFF,OutlineColour=&amp;H000000,BackColour=&amp;H80000000,Bold=0,Outline=2,Shadow=0,MarginV=20,Alignment=2&#34;</span>
+</span></span><span style="display:flex;"><span>        ;;
+</span></span><span style="display:flex;"><span>    *<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;Error: Estilo &#39;</span>$STYLE<span style="color:#e6db74">&#39; no reconocido&#34;</span>
+</span></span><span style="display:flex;"><span>        rm -f <span style="color:#e6db74">&#34;</span>$TEMP_SRT<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>        exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>        ;;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">esac</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;✓ Estilo configurado&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># PASO 3: Quemar subtítulos en el video</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;========================================&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;PASO 3: Quemando subtítulos en video...&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;========================================&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;Esto puede tardar varios minutos...&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Escapar ruta del SRT</span>
+</span></span><span style="display:flex;"><span>TEMP_SRT_ESCAPED<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>TEMP_SRT//<span style="color:#ae81ff">\\</span>/<span style="color:#ae81ff">\\\\</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>TEMP_SRT_ESCAPED<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>TEMP_SRT_ESCAPED//:/<span style="color:#ae81ff">\\</span>:<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Aplicar subtítulos</span>
+</span></span><span style="display:flex;"><span>ffmpeg -i <span style="color:#e6db74">&#34;</span>$VIDEO<span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    -vf <span style="color:#e6db74">&#34;subtitles=&#39;</span><span style="color:#e6db74">${</span>TEMP_SRT_ESCAPED<span style="color:#e6db74">}</span><span style="color:#e6db74">&#39;:force_style=&#39;</span><span style="color:#e6db74">${</span>SUBTITLE_STYLE<span style="color:#e6db74">}</span><span style="color:#e6db74">&#39;&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    -c:v libx264 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    -preset medium <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    -crf <span style="color:#ae81ff">23</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    -c:a copy <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    -y <span style="color:#e6db74">&#34;</span>$OUTPUT_VIDEO<span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>    -loglevel error -stats
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> $? -eq <span style="color:#ae81ff">0</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;========================================&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;✓ ¡VIDEO COMPLETADO!&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;========================================&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;📹 Video final: </span>$OUTPUT_VIDEO<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Información del archivo</span>
+</span></span><span style="display:flex;"><span>    SIZE<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>du -h <span style="color:#e6db74">&#34;</span>$OUTPUT_VIDEO<span style="color:#e6db74">&#34;</span> | cut -f1<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>    DURATION<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>ffprobe -v error -show_entries format<span style="color:#f92672">=</span>duration -of default<span style="color:#f92672">=</span>noprint_wrappers<span style="color:#f92672">=</span>1:nokey<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span> <span style="color:#e6db74">&#34;</span>$OUTPUT_VIDEO<span style="color:#e6db74">&#34;</span> 2&gt;/dev/null<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;📊 Tamaño: </span>$SIZE<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> -n <span style="color:#e6db74">&#34;</span>$DURATION<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        MINUTES<span style="color:#f92672">=</span><span style="color:#66d9ef">$((</span><span style="color:#e6db74">${</span>DURATION%.*<span style="color:#e6db74">}</span> <span style="color:#f92672">/</span> <span style="color:#ae81ff">60</span><span style="color:#66d9ef">))</span>
+</span></span><span style="display:flex;"><span>        SECONDS<span style="color:#f92672">=</span><span style="color:#66d9ef">$((</span><span style="color:#e6db74">${</span>DURATION%.*<span style="color:#e6db74">}</span> <span style="color:#f92672">%</span> <span style="color:#ae81ff">60</span><span style="color:#66d9ef">))</span>
+</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;⏱️  Duración: </span><span style="color:#e6db74">${</span>MINUTES<span style="color:#e6db74">}</span><span style="color:#e6db74">m </span><span style="color:#e6db74">${</span>SECONDS<span style="color:#e6db74">}</span><span style="color:#e6db74">s&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Preguntar si eliminar SRT temporal</span>
+</span></span><span style="display:flex;"><span>    read -p <span style="color:#e6db74">&#34;¿Eliminar archivo SRT temporal? (s/n): &#34;</span> -n <span style="color:#ae81ff">1</span> -r
+</span></span><span style="display:flex;"><span>    echo
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> $REPLY <span style="color:#f92672">=</span>~ ^<span style="color:#f92672">[</span>SsYy<span style="color:#f92672">]</span>$ <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        rm -f <span style="color:#e6db74">&#34;</span>$TEMP_SRT<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;✓ SRT temporal eliminado&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;📝 SRT guardado como: </span>$TEMP_SRT<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;========================================&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;🎉 ¡Listo para subir a redes sociales!&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;========================================&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;✗ Error al quemar subtítulos&#34;</span>
+</span></span><span style="display:flex;"><span>    rm -f <span style="color:#e6db74">&#34;</span>$TEMP_SRT<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span></code></pre></div>
 </div>
 
 
