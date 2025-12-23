@@ -180,13 +180,13 @@ Abrir servidor web en Arduino (crear)</p>
 <p>Probablemente no necesito usar todas esas librerías pero eso es lo que usé.</p>
 <p><strong>Todo este código lo cargás en el ESP32 o FanIOT y levantará un servidor web en donde tendrás que ingresar el mismo usuario que ingresás en la app de reactjs, y ahí podrás leer los datos, aparte es mejor que cambies la base de datos de firebase por una tuya</strong></p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;WiFiManager.h&gt; // https://github.com/tzapu/WiFiManager</span><span style="color:#75715e">
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">//
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e">// A simple server implementation showing how to:
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e">//  * serve static messages
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e">//  * read GET and POST parameters
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e">//  * handle missing pages / 404s
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e">//
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;Arduino.h&gt;</span><span style="color:#75715e">
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;ArduinoJson.h&gt;</span><span style="color:#75715e">
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;OneWire.h&gt;</span><span style="color:#75715e">
@@ -199,24 +199,24 @@ Abrir servidor web en Arduino (crear)</p>
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;Firebase_ESP_Client.h&gt;</span><span style="color:#75715e">
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&#34;time.h&#34;</span><span style="color:#75715e">
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;FastLED.h&gt;//https://github.com/FastLED/FastLED</span><span style="color:#75715e">
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span><span style="color:#75715e">#define LED_PIN  27
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define NUM_LEDS 4
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define BRIGHTNESS 75
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define LED_TYPE WS2812B
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define COLOR_ORDER GRB</span><span style="color:#75715e">//RGB
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>CRGB leds[NUM_LEDS];
+</span></span></span><span style="display:flex;"><span>CRGB leds[NUM_LEDS];
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span><span style="color:#75715e">#define SCREEN_WIDTH 128 </span><span style="color:#75715e">// OLED display width, in pixels
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e">#define SCREEN_HEIGHT 32 </span><span style="color:#75715e">// OLED display height, in pixels
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define SCREEN_HEIGHT 32 </span><span style="color:#75715e">// OLED display height, in pixels
+</span></span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span><span style="color:#75715e">// Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>Adafruit_SSD1306 <span style="color:#a6e22e">display</span>(SCREEN_WIDTH, SCREEN_HEIGHT, <span style="color:#f92672">&amp;</span>Wire, <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>);
+</span></span></span><span style="display:flex;"><span>Adafruit_SSD1306 <span style="color:#a6e22e">display</span>(SCREEN_WIDTH, SCREEN_HEIGHT, <span style="color:#f92672">&amp;</span>Wire, <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>);
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span><span style="color:#75715e">#define Pagina_Login R&#34;====(&lt;meta content=&#34;width=device-width,initial-scale=1&#34;name=viewport&gt;&lt;style&gt;body{font-family:Arial,Helvetica,sans-serif}form{border:3px solid #f1f1f1}input[type=password],input[type=text]{width:100%;padding:12px 20px;margin:8px 0;display:inline-block;border:1px solid #ccc;box-sizing:border-box}button{background-color:#04AA6D;color:#fff;padding:14px 20px;margin:8px 0;border:none;cursor:pointer;width:100%}button:hover{opacity:.8}.cancelbtn{width:auto;padding:10px 18px;background-color:#f44336}.imgcontainer{text-align:center;margin:24px 0 12px 0}img.avatar{width:40%;border-radius:50%}.container{padding:16px}span.psw{float:right;padding-top:16px}@media screen and (max-width:300px){span.psw{display:block;float:none}.cancelbtn{width:100%}}&lt;/style&gt;&lt;h2&gt;Login Form&lt;/h2&gt;&lt;form action=/_login&gt;&lt;div class=container&gt;&lt;label for=uname&gt;&lt;b&gt;Username&lt;/b&gt;&lt;/label&gt;&lt;input name=uname placeholder=&#34;Enter Username&#34;required&gt;&lt;label for=psw&gt;&lt;b&gt;Password&lt;/b&gt;&lt;/label&gt;&lt;input name=psw placeholder=&#34;Enter Password&#34;required type=password&gt; &lt;button type=submit&gt;Login&lt;/button&gt;&lt;label&gt;&lt;input name=remember type=checkbox checked&gt; Remember me&lt;/label&gt;&lt;/div&gt;&lt;div class=container style=background-color:#f1f1f1&gt;&lt;button type=button class=cancelbtn&gt;Cancel&lt;/button&gt; &lt;span class=psw&gt;Forgot &lt;a href=#&gt;password?&lt;/a&gt;&lt;/span&gt;&lt;/div&gt;&lt;/form&gt;)====&#34;
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>Pagina <span style="color:#f92672">=</span> R<span style="color:#e6db74">&#34;====(&lt;title&gt;Panel&lt;/title&gt;&lt;meta charset=utf-8&gt;&lt;meta name=viewport content=&#34;</span>width<span style="color:#f92672">=</span>device<span style="color:#f92672">-</span>width,initial<span style="color:#f92672">-</span>scale<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span><span style="color:#e6db74">&#34;&gt;&lt;style&gt;body{font-family:monospace}.cards{margin:auto;max-width:800px;display:flex;flex-wrap:wrap;align-items:center}.card{flex:1 0 200px;text-align:center}.card .text{padding:0 20px 20px}.title{text-align:center}.hide{display:none}.green{background:green}.red{background:red}@-webkit-keyframes spin{0%{-webkit-transform:rotate(0)}100%{-webkit-transform:rotate(360deg)}}@keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}.alert{padding:20px;background-color:#f44336;color:#fff;opacity:1;transition:opacity .6s;margin-bottom:15px}.alert.success{background-color:#04aa6d}.alert.info{background-color:#2196f3}.alert.warning{background-color:#ff9800}.closebtn{margin-left:15px;color:#fff;font-weight:700;float:right;font-size:22px;line-height:20px;cursor:pointer;transition:.3s}.center{text-align:center;max-width:900px}.closebtn:hover{color:#000}&lt;/style&gt;&lt;div id=loading style=height:100%;width:99%;position:absolute;background-color:#fff;text-align:center&gt;&lt;h3 class=loader&gt;Cargando...&lt;/h3&gt;&lt;/div&gt;&lt;div id=alerts style=position:fixed;text-align:center&gt;&lt;/div&gt;&lt;h3 class=title&gt;Panel&lt;/h3&gt;&lt;hr&gt;&lt;span class=center&gt;&lt;p&gt;&lt;b&gt;Guardando cada 3 minutos valores de los sensores en el usuario: &lt;/b&gt;&lt;span id=user&gt;&lt;/span&gt;&lt;p&gt;Reloj Arduino (&lt;a href=https://www.worlddata.info/timezones/gmt-greenwich-mean-time.php&gt;GMT&lt;/a&gt;): &lt;span id=localtime&gt;&lt;/span&gt;&lt;p id=refreshing&gt;&lt;/span&gt;&lt;main class=&#34;</span>cards hide<span style="color:#e6db74">&#34; id=inicio&gt;&lt;article class=card&gt;&lt;div class=text&gt;&lt;h5&gt;Sensor Temperatura&lt;/h5&gt;&lt;span id=celsius&gt;&lt;/span&gt;&lt;br&gt;&lt;span id=fahrenheit&gt;&lt;/span&gt;&lt;/div&gt;&lt;/article&gt;&lt;article class=card&gt;&lt;div class=text&gt;&lt;h5&gt;Sensor LDR&lt;/h5&gt;Intensidad de Luz: &lt;span id=ldr&gt;&lt;/span&gt;&lt;/div&gt;&lt;/article&gt;&lt;article class=card&gt;&lt;div class=text&gt;&lt;h5&gt;Sensor TILT&lt;/h5&gt;&lt;span id=tilt&gt;&lt;/span&gt;&lt;/div&gt;&lt;/article&gt;&lt;article class=card&gt;&lt;div class=text&gt;&lt;h5&gt;Buzzer&lt;/h5&gt;&lt;button class=green onclick=enviar_sonido()&gt;Enviar Sonido&lt;/button&gt;&lt;/div&gt;&lt;/article&gt;&lt;article class=card&gt;&lt;div class=text&gt;&lt;h5&gt;LED 1&lt;/h5&gt;&lt;button class=green onclick=&#34;</span><span style="color:#a6e22e">accion_led</span>(<span style="color:#ae81ff">1</span>,<span style="color:#960050;background-color:#1e0010">&#39;</span>encender<span style="color:#960050;background-color:#1e0010">&#39;</span>)<span style="color:#e6db74">&#34;&gt;Encender&lt;/button&gt;</span>
+</span></span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>Pagina <span style="color:#f92672">=</span> R<span style="color:#e6db74">&#34;====(&lt;title&gt;Panel&lt;/title&gt;&lt;meta charset=utf-8&gt;&lt;meta name=viewport content=&#34;</span>width<span style="color:#f92672">=</span>device<span style="color:#f92672">-</span>width,initial<span style="color:#f92672">-</span>scale<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span><span style="color:#e6db74">&#34;&gt;&lt;style&gt;body{font-family:monospace}.cards{margin:auto;max-width:800px;display:flex;flex-wrap:wrap;align-items:center}.card{flex:1 0 200px;text-align:center}.card .text{padding:0 20px 20px}.title{text-align:center}.hide{display:none}.green{background:green}.red{background:red}@-webkit-keyframes spin{0%{-webkit-transform:rotate(0)}100%{-webkit-transform:rotate(360deg)}}@keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}.alert{padding:20px;background-color:#f44336;color:#fff;opacity:1;transition:opacity .6s;margin-bottom:15px}.alert.success{background-color:#04aa6d}.alert.info{background-color:#2196f3}.alert.warning{background-color:#ff9800}.closebtn{margin-left:15px;color:#fff;font-weight:700;float:right;font-size:22px;line-height:20px;cursor:pointer;transition:.3s}.center{text-align:center;max-width:900px}.closebtn:hover{color:#000}&lt;/style&gt;&lt;div id=loading style=height:100%;width:99%;position:absolute;background-color:#fff;text-align:center&gt;&lt;h3 class=loader&gt;Cargando...&lt;/h3&gt;&lt;/div&gt;&lt;div id=alerts style=position:fixed;text-align:center&gt;&lt;/div&gt;&lt;h3 class=title&gt;Panel&lt;/h3&gt;&lt;hr&gt;&lt;span class=center&gt;&lt;p&gt;&lt;b&gt;Guardando cada 3 minutos valores de los sensores en el usuario: &lt;/b&gt;&lt;span id=user&gt;&lt;/span&gt;&lt;p&gt;Reloj Arduino (&lt;a href=https://www.worlddata.info/timezones/gmt-greenwich-mean-time.php&gt;GMT&lt;/a&gt;): &lt;span id=localtime&gt;&lt;/span&gt;&lt;p id=refreshing&gt;&lt;/span&gt;&lt;main class=&#34;</span>cards hide<span style="color:#e6db74">&#34; id=inicio&gt;&lt;article class=card&gt;&lt;div class=text&gt;&lt;h5&gt;Sensor Temperatura&lt;/h5&gt;&lt;span id=celsius&gt;&lt;/span&gt;&lt;br&gt;&lt;span id=fahrenheit&gt;&lt;/span&gt;&lt;/div&gt;&lt;/article&gt;&lt;article class=card&gt;&lt;div class=text&gt;&lt;h5&gt;Sensor LDR&lt;/h5&gt;Intensidad de Luz: &lt;span id=ldr&gt;&lt;/span&gt;&lt;/div&gt;&lt;/article&gt;&lt;article class=card&gt;&lt;div class=text&gt;&lt;h5&gt;Sensor TILT&lt;/h5&gt;&lt;span id=tilt&gt;&lt;/span&gt;&lt;/div&gt;&lt;/article&gt;&lt;article class=card&gt;&lt;div class=text&gt;&lt;h5&gt;Buzzer&lt;/h5&gt;&lt;button class=green onclick=enviar_sonido()&gt;Enviar Sonido&lt;/button&gt;&lt;/div&gt;&lt;/article&gt;&lt;article class=card&gt;&lt;div class=text&gt;&lt;h5&gt;LED 1&lt;/h5&gt;&lt;button class=green onclick=&#34;</span><span style="color:#a6e22e">accion_led</span>(<span style="color:#ae81ff">1</span>,<span style="color:#960050;background-color:#1e0010">&#39;</span>encender<span style="color:#960050;background-color:#1e0010">&#39;</span>)<span style="color:#e6db74">&#34;&gt;Encender&lt;/button&gt;</span>
 </span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;</span>button class<span style="color:#f92672">=</span>red onclick<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;accion_led(1,&#39;apagar&#39;)&#34;</span> value<span style="color:#f92672">=</span>Apagar<span style="color:#f92672">&gt;</span>Apagar<span style="color:#f92672">&lt;/</span>button<span style="color:#f92672">&gt;&lt;/</span>div<span style="color:#f92672">&gt;&lt;/</span>article<span style="color:#f92672">&gt;&lt;</span>article class<span style="color:#f92672">=</span>card<span style="color:#f92672">&gt;&lt;</span>div class<span style="color:#f92672">=</span>text<span style="color:#f92672">&gt;&lt;</span>h5<span style="color:#f92672">&gt;</span>LED <span style="color:#ae81ff">2</span><span style="color:#f92672">&lt;/</span>h5<span style="color:#f92672">&gt;&lt;</span>button class<span style="color:#f92672">=</span>green onclick<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;accion_led(2,&#39;encender&#39;)&#34;</span><span style="color:#f92672">&gt;</span>Encender<span style="color:#f92672">&lt;/</span>button<span style="color:#f92672">&gt;</span>
 </span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;</span>button class<span style="color:#f92672">=</span>red onclick<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;accion_led(2,&#39;apagar&#39;)&#34;</span> value<span style="color:#f92672">=</span>Apagar<span style="color:#f92672">&gt;</span>Apagar<span style="color:#f92672">&lt;/</span>button<span style="color:#f92672">&gt;&lt;/</span>div<span style="color:#f92672">&gt;&lt;/</span>article<span style="color:#f92672">&gt;&lt;</span>article class<span style="color:#f92672">=</span>card<span style="color:#f92672">&gt;&lt;</span>div class<span style="color:#f92672">=</span>text<span style="color:#f92672">&gt;&lt;</span>h5<span style="color:#f92672">&gt;</span>LED <span style="color:#ae81ff">3</span><span style="color:#f92672">&lt;/</span>h5<span style="color:#f92672">&gt;&lt;</span>button class<span style="color:#f92672">=</span>green onclick<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;accion_led(3,&#39;encender&#39;)&#34;</span><span style="color:#f92672">&gt;</span>Encender<span style="color:#f92672">&lt;/</span>button<span style="color:#f92672">&gt;</span>
 </span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;</span>button class<span style="color:#f92672">=</span>red onclick<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;accion_led(3,&#39;apagar&#39;)&#34;</span> value<span style="color:#f92672">=</span>Apagar<span style="color:#f92672">&gt;</span>Apagar<span style="color:#f92672">&lt;/</span>button<span style="color:#f92672">&gt;&lt;/</span>div<span style="color:#f92672">&gt;&lt;/</span>article<span style="color:#f92672">&gt;&lt;</span>article class<span style="color:#f92672">=</span>card<span style="color:#f92672">&gt;&lt;</span>div class<span style="color:#f92672">=</span>text<span style="color:#f92672">&gt;&lt;</span>h5<span style="color:#f92672">&gt;</span>LEDs Inteligentes WS2812b<span style="color:#f92672">&lt;/</span>h5<span style="color:#f92672">&gt;&lt;</span>button class<span style="color:#f92672">=</span>green onclick<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;accion_led(4,&#39;encender&#39;)&#34;</span><span style="color:#f92672">&gt;</span>Encender<span style="color:#f92672">&lt;/</span>button<span style="color:#f92672">&gt;</span>
@@ -243,26 +243,26 @@ Abrir servidor web en Arduino (crear)</p>
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span><span style="color:#75715e">// Provide the token generation process info.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;addons/TokenHelper.h&gt;</span><span style="color:#75715e">
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;addons/TokenHelper.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span><span style="color:#75715e">// Provide the RTDB payload printing info and other helper functions.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;addons/RTDBHelper.h&gt;</span><span style="color:#75715e">
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;addons/RTDBHelper.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span><span style="color:#75715e">#define API_KEY &#34;AIzaSyAXZzTwC_Nqh-ZCepllSi8XKTnOcd6UtY4&#34;
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span><span style="color:#75715e">/* 3. If work with RTDB, define the RTDB URL */</span>
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span><span style="color:#75715e">//#define DATABASE_URL &#34;http://35.201.97.85/&#34; 
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e">#define DATABASE_URL &#34;http:</span><span style="color:#75715e">//esp32-bd971-default-rtdb.firebaseio.com/&#34; 
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define DATABASE_URL &#34;http:</span><span style="color:#75715e">//esp32-bd971-default-rtdb.firebaseio.com/&#34; 
+</span></span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span><span style="color:#75715e">// GPIO where the DS18B20 is connected to
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#66d9ef">int</span> oneWireBus <span style="color:#f92672">=</span> <span style="color:#ae81ff">19</span>;     
+</span></span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#66d9ef">int</span> oneWireBus <span style="color:#f92672">=</span> <span style="color:#ae81ff">19</span>;     
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span><span style="color:#75715e">// Setup a oneWire instance to communicate with any OneWire devices
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>OneWire <span style="color:#a6e22e">oneWire</span>(oneWireBus);
+</span></span></span><span style="display:flex;"><span>OneWire <span style="color:#a6e22e">oneWire</span>(oneWireBus);
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span><span style="color:#75715e">// Pass our oneWire reference to Dallas Temperature sensor 
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>DallasTemperature <span style="color:#a6e22e">sensors</span>(<span style="color:#f92672">&amp;</span>oneWire);
+</span></span></span><span style="display:flex;"><span>DallasTemperature <span style="color:#a6e22e">sensors</span>(<span style="color:#f92672">&amp;</span>oneWire);
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span><span style="color:#66d9ef">bool</span> logged <span style="color:#f92672">=</span> false;
@@ -304,13 +304,13 @@ Abrir servidor web en Arduino (crear)</p>
 </span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> three_light_pin <span style="color:#f92672">=</span> <span style="color:#ae81ff">25</span>;
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span><span style="color:#75715e">// Variable to save USER UID
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>String uid;
+</span></span></span><span style="display:flex;"><span>String uid;
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span><span style="color:#75715e">// Database main path (to be updated in setup with the user UID)
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>String databasePath;
+</span></span></span><span style="display:flex;"><span>String databasePath;
 </span></span><span style="display:flex;"><span>String databasePath_write;
 </span></span><span style="display:flex;"><span><span style="color:#75715e">// Database child nodes
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>tempPath_c <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;/temperature_c&#34;</span>;
+</span></span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>tempPath_c <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;/temperature_c&#34;</span>;
 </span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>tempPath_f <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;/temperature_f&#34;</span>;
 </span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>ldrPath <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;/ldr&#34;</span>;
 </span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>timePath <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;/timestamp&#34;</span>;
@@ -319,9 +319,9 @@ Abrir servidor web en Arduino (crear)</p>
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span><span style="color:#75715e">// Parent Node (to be updated in every loop)
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e">//char parentPath[100];
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span><span style="color:#75715e">#define BUZZER_PIN  14 </span><span style="color:#75715e">// ESP32 pin GIOP18 connected to piezo buzzer
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> timestamp;
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span><span style="color:#f92672">*</span> ntpServer <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;pool.ntp.org&#34;</span>;
@@ -330,23 +330,23 @@ Abrir servidor web en Arduino (crear)</p>
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span><span style="color:#75715e">// Timer variables (send new readings every three minutes)
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> sendDataPrevMillis <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span></span><span style="display:flex;"><span><span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> sendDataPrevMillis <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
 </span></span><span style="display:flex;"><span><span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> timerDelay <span style="color:#f92672">=</span> <span style="color:#ae81ff">1800000</span>;
 </span></span><span style="display:flex;"><span><span style="color:#75715e">// 180000
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span><span style="color:#75715e">//unsigned long timerDelay = 3600;
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> sensorPinTILT <span style="color:#f92672">=</span> <span style="color:#ae81ff">26</span>;
 </span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> sensorPinLDR <span style="color:#f92672">=</span> <span style="color:#ae81ff">39</span>; <span style="color:#75715e">// select the input pin for LDR 
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">int</span> sensorValue <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; <span style="color:#75715e">// variable to store the value coming from the sensor
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> sensorValue <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; <span style="color:#75715e">// variable to store the value coming from the sensor
+</span></span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span><span style="color:#75715e">// Function that gets current epoch time
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> <span style="color:#a6e22e">getTime</span>() {
+</span></span></span><span style="display:flex;"><span><span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> <span style="color:#a6e22e">getTime</span>() {
 </span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">time_t</span> now;
 </span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">struct</span> tm timeinfo;
 </span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">getLocalTime</span>(<span style="color:#f92672">&amp;</span>timeinfo)) {
 </span></span><span style="display:flex;"><span>    <span style="color:#75715e">//Serial.println(&#34;Failed to obtain time&#34;);
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">return</span>(<span style="color:#ae81ff">0</span>);
+</span></span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span>(<span style="color:#ae81ff">0</span>);
 </span></span><span style="display:flex;"><span>  }
 </span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">time</span>(<span style="color:#f92672">&amp;</span>now);
 </span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> now;
@@ -365,13 +365,13 @@ Abrir servidor web en Arduino (crear)</p>
 </span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> timeStringBuff; 
 </span></span><span style="display:flex;"><span>  }
 </span></span><span style="display:flex;"><span>  <span style="color:#75715e">//char timeStringBuff[50]; //50 chars should be enough
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#75715e">//strftime(timeStringBuff, sizeof(timeStringBuff), &#34;%A, %B %d %Y %H:%M:%S&#34;, &amp;timeinfo);
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">strftime</span>(timeStringBuff, <span style="color:#ae81ff">50</span>, <span style="color:#e6db74">&#34;%A, %B %d %Y %H:%M:%S&#34;</span>, <span style="color:#f92672">&amp;</span>timeinfo);
+</span></span></span><span style="display:flex;"><span>  <span style="color:#75715e">//strftime(timeStringBuff, sizeof(timeStringBuff), &#34;%A, %B %d %Y %H:%M:%S&#34;, &amp;timeinfo);
+</span></span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">strftime</span>(timeStringBuff, <span style="color:#ae81ff">50</span>, <span style="color:#e6db74">&#34;%A, %B %d %Y %H:%M:%S&#34;</span>, <span style="color:#f92672">&amp;</span>timeinfo);
 </span></span><span style="display:flex;"><span>  <span style="color:#75715e">//print like &#34;const char*&#34;
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  Serial.<span style="color:#a6e22e">println</span>(timeStringBuff);
+</span></span></span><span style="display:flex;"><span>  Serial.<span style="color:#a6e22e">println</span>(timeStringBuff);
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>  <span style="color:#75715e">//Optional: Construct String object 
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">return</span> timeStringBuff;
+</span></span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> timeStringBuff;
 </span></span><span style="display:flex;"><span>}
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>
@@ -391,7 +391,7 @@ Abrir servidor web en Arduino (crear)</p>
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span><span style="color:#75715e">// ...
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">RGB_color</span>(<span style="color:#66d9ef">int</span> red_light_value, <span style="color:#66d9ef">int</span> green_light_value, <span style="color:#66d9ef">int</span> blue_light_value)
 </span></span><span style="display:flex;"><span> {
 </span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">analogWrite</span>(one_light_pin, red_light_value);
@@ -401,18 +401,18 @@ Abrir servidor web en Arduino (crear)</p>
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">setup</span>() {
 </span></span><span style="display:flex;"><span>    <span style="color:#75715e">// put your setup code here, to run once:
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    Serial.<span style="color:#a6e22e">begin</span>(<span style="color:#ae81ff">115200</span>);
+</span></span></span><span style="display:flex;"><span>    Serial.<span style="color:#a6e22e">begin</span>(<span style="color:#ae81ff">115200</span>);
 </span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">configTime</span>(<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span><span style="color:#f92672">*</span><span style="color:#ae81ff">3600</span><span style="color:#f92672">*</span><span style="color:#ae81ff">3</span>, <span style="color:#ae81ff">0</span>, ntpServer);
 </span></span><span style="display:flex;"><span>    WiFi.<span style="color:#a6e22e">mode</span>(WIFI_STA); <span style="color:#75715e">// explicitly set mode, esp defaults to STA+AP
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">// it is a good practice to make sure your code sets wifi mode how you want it.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span></span><span style="display:flex;"><span>    <span style="color:#75715e">// it is a good practice to make sure your code sets wifi mode how you want it.
+</span></span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>    FastLED.addLeds<span style="color:#f92672">&lt;</span>LED_TYPE, LED_PIN, COLOR_ORDER<span style="color:#f92672">&gt;</span>(leds, NUM_LEDS);
 </span></span><span style="display:flex;"><span>    FastLED.<span style="color:#a6e22e">setBrightness</span>(BRIGHTNESS);
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span>(<span style="color:#f92672">!</span>display.<span style="color:#a6e22e">begin</span>(SSD1306_SWITCHCAPVCC, <span style="color:#ae81ff">0x3C</span>)) { <span style="color:#75715e">// Address 0x3D for 128x64
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      Serial.<span style="color:#a6e22e">println</span>(<span style="color:#a6e22e">F</span>(<span style="color:#e6db74">&#34;SSD1306 allocation failed&#34;</span>));
+</span></span></span><span style="display:flex;"><span>      Serial.<span style="color:#a6e22e">println</span>(<span style="color:#a6e22e">F</span>(<span style="color:#e6db74">&#34;SSD1306 allocation failed&#34;</span>));
 </span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">for</span>(;;);
 </span></span><span style="display:flex;"><span>    }
 </span></span><span style="display:flex;"><span>
@@ -423,7 +423,7 @@ Abrir servidor web en Arduino (crear)</p>
 </span></span><span style="display:flex;"><span>    display.<span style="color:#a6e22e">setTextColor</span>(WHITE);
 </span></span><span style="display:flex;"><span>    display.<span style="color:#a6e22e">setCursor</span>(<span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>);
 </span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Display static text
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    display.<span style="color:#a6e22e">println</span>(<span style="color:#e6db74">&#34;Ingrese con su cuenta de Firebase.&#34;</span>);
+</span></span></span><span style="display:flex;"><span>    display.<span style="color:#a6e22e">println</span>(<span style="color:#e6db74">&#34;Ingrese con su cuenta de Firebase.&#34;</span>);
 </span></span><span style="display:flex;"><span>    display.<span style="color:#a6e22e">display</span>(); 
 </span></span><span style="display:flex;"><span>    display.<span style="color:#a6e22e">startscrollleft</span>(<span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x0F</span>);
 </span></span><span style="display:flex;"><span>
@@ -440,32 +440,32 @@ Abrir servidor web en Arduino (crear)</p>
 </span></span><span style="display:flex;"><span> 
 </span></span><span style="display:flex;"><span>    
 </span></span><span style="display:flex;"><span>    <span style="color:#75715e">//WiFiManager, Local intialization. Once its business is done, there is no need to keep it around
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    WiFiManager wm;
+</span></span></span><span style="display:flex;"><span>    WiFiManager wm;
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>    <span style="color:#75715e">// settings - wipe stored credentials for testing
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">// these are stored by the esp library
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span></span><span style="display:flex;"><span>    <span style="color:#75715e">// these are stored by the esp library
+</span></span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>    
 </span></span><span style="display:flex;"><span>    <span style="color:#75715e">//wm.resetSettings();
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Automatically connect using saved credentials,
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">// if connection fails, it starts an access point with the specified name ( &#34;AutoConnectAP&#34;),
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">// if empty will auto generate SSID, if password is blank it will be anonymous AP (wm.autoConnect())
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">// then goes into a blocking loop awaiting configuration and will return success result
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span></span><span style="display:flex;"><span>    <span style="color:#75715e">// if connection fails, it starts an access point with the specified name ( &#34;AutoConnectAP&#34;),
+</span></span></span><span style="display:flex;"><span>    <span style="color:#75715e">// if empty will auto generate SSID, if password is blank it will be anonymous AP (wm.autoConnect())
+</span></span></span><span style="display:flex;"><span>    <span style="color:#75715e">// then goes into a blocking loop awaiting configuration and will return success result
+</span></span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">bool</span> res;
 </span></span><span style="display:flex;"><span>    <span style="color:#75715e">// res = wm.autoConnect(); // auto generated AP name from chipid
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">// res = wm.autoConnect(&#34;AutoConnectAP&#34;); // anonymous ap
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    res <span style="color:#f92672">=</span> wm.<span style="color:#a6e22e">autoConnect</span>(<span style="color:#e6db74">&#34;AutoConnectAP&#34;</span>,<span style="color:#e6db74">&#34;password&#34;</span>); <span style="color:#75715e">// password protected ap
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span></span><span style="display:flex;"><span>    <span style="color:#75715e">// res = wm.autoConnect(&#34;AutoConnectAP&#34;); // anonymous ap
+</span></span></span><span style="display:flex;"><span>    res <span style="color:#f92672">=</span> wm.<span style="color:#a6e22e">autoConnect</span>(<span style="color:#e6db74">&#34;AutoConnectAP&#34;</span>,<span style="color:#e6db74">&#34;password&#34;</span>); <span style="color:#75715e">// password protected ap
+</span></span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span>(<span style="color:#f92672">!</span>res) {
 </span></span><span style="display:flex;"><span>        Serial.<span style="color:#a6e22e">println</span>(<span style="color:#e6db74">&#34;Failed to connect&#34;</span>);
 </span></span><span style="display:flex;"><span>        <span style="color:#75715e">//return;
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        ESP.<span style="color:#a6e22e">restart</span>();
+</span></span></span><span style="display:flex;"><span>        ESP.<span style="color:#a6e22e">restart</span>();
 </span></span><span style="display:flex;"><span>    } 
 </span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span> {
 </span></span><span style="display:flex;"><span>        <span style="color:#75715e">//if you get here you have connected to the WiFi    
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        Serial.<span style="color:#a6e22e">println</span>(<span style="color:#e6db74">&#34;connected...yeey :)&#34;</span>);
+</span></span></span><span style="display:flex;"><span>        Serial.<span style="color:#a6e22e">println</span>(<span style="color:#e6db74">&#34;connected...yeey :)&#34;</span>);
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span> 
 </span></span><span style="display:flex;"><span>            
@@ -487,10 +487,10 @@ Abrir servidor web en Arduino (crear)</p>
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>        <span style="color:#75715e">// If the signupError.message showed &#34;ADMIN_ONLY_OPERATION&#34;, you need to enable Anonymous provider in project&#39;s Authentication.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>        <span style="color:#75715e">/* Assign the callback function for the long running token generation task */</span>
 </span></span><span style="display:flex;"><span>        config.token_status_callback <span style="color:#f92672">=</span> tokenStatusCallback; <span style="color:#75715e">// see addons/TokenHelper.h
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>        <span style="color:#75715e">/** The id token (C++ string) will be available from config.signer.tokens.id_token
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e">         * if the sig-up was successful.
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e">         *
@@ -500,8 +500,8 @@ Abrir servidor web en Arduino (crear)</p>
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e">         * the internal authentication credentials are not created.
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e">         */</span>
 </span></span><span style="display:flex;"><span>        <span style="color:#75715e">//config.max_token_generation_retry = 5;
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#75715e">//Firebase.begin(&amp;config, &amp;auth);
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span></span><span style="display:flex;"><span>        <span style="color:#75715e">//Firebase.begin(&amp;config, &amp;auth);
+</span></span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>      
 </span></span><span style="display:flex;"><span>
@@ -511,7 +511,7 @@ Abrir servidor web en Arduino (crear)</p>
 </span></span><span style="display:flex;"><span>        display.<span style="color:#a6e22e">setTextColor</span>(WHITE);
 </span></span><span style="display:flex;"><span>        display.<span style="color:#a6e22e">setCursor</span>(<span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>);
 </span></span><span style="display:flex;"><span>        <span style="color:#75715e">// Display static text
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        display.<span style="color:#a6e22e">println</span>(WiFi.<span style="color:#a6e22e">localIP</span>().<span style="color:#a6e22e">toString</span>());
+</span></span></span><span style="display:flex;"><span>        display.<span style="color:#a6e22e">println</span>(WiFi.<span style="color:#a6e22e">localIP</span>().<span style="color:#a6e22e">toString</span>());
 </span></span><span style="display:flex;"><span>        display.<span style="color:#a6e22e">startscrollleft</span>(<span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x0F</span>);
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>
@@ -557,7 +557,7 @@ Abrir servidor web en Arduino (crear)</p>
 </span></span><span style="display:flex;"><span>              display.<span style="color:#a6e22e">setTextColor</span>(WHITE);
 </span></span><span style="display:flex;"><span>              display.<span style="color:#a6e22e">setCursor</span>(<span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>);
 </span></span><span style="display:flex;"><span>              <span style="color:#75715e">// Display static text
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>              display.<span style="color:#a6e22e">println</span>(<span style="color:#e6db74">&#34;OK.&#34;</span>);
+</span></span></span><span style="display:flex;"><span>              display.<span style="color:#a6e22e">println</span>(<span style="color:#e6db74">&#34;OK.&#34;</span>);
 </span></span><span style="display:flex;"><span>              display.<span style="color:#a6e22e">display</span>(); 
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>              json[<span style="color:#e6db74">&#34;status&#34;</span>] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;ok&#34;</span>;
@@ -586,7 +586,7 @@ Abrir servidor web en Arduino (crear)</p>
 </span></span><span style="display:flex;"><span>              <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (led.<span style="color:#a6e22e">compareTo</span>(<span style="color:#e6db74">&#34;2&#34;</span>) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) <span style="color:#a6e22e">analogWrite</span>(two_light_pin, <span style="color:#ae81ff">0</span>);
 </span></span><span style="display:flex;"><span>              <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (led.<span style="color:#a6e22e">compareTo</span>(<span style="color:#e6db74">&#34;3&#34;</span>) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) <span style="color:#a6e22e">analogWrite</span>(three_light_pin, <span style="color:#ae81ff">0</span>);
 </span></span><span style="display:flex;"><span>              <span style="color:#75715e">//else if (led.compareTo(&#34;4&#34;) == 0) {FastLED.clear();FastLED.show();}
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>          } <span style="color:#66d9ef">else</span> {
+</span></span></span><span style="display:flex;"><span>          } <span style="color:#66d9ef">else</span> {
 </span></span><span style="display:flex;"><span>              error <span style="color:#f92672">=</span> true;
 </span></span><span style="display:flex;"><span>          }
 </span></span><span style="display:flex;"><span>          
@@ -637,7 +637,7 @@ Abrir servidor web en Arduino (crear)</p>
 </span></span><span style="display:flex;"><span>              display.<span style="color:#a6e22e">setTextColor</span>(WHITE);
 </span></span><span style="display:flex;"><span>              display.<span style="color:#a6e22e">setCursor</span>(<span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>);
 </span></span><span style="display:flex;"><span>              <span style="color:#75715e">// Display static text
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>              display.<span style="color:#a6e22e">println</span>(text);
+</span></span></span><span style="display:flex;"><span>              display.<span style="color:#a6e22e">println</span>(text);
 </span></span><span style="display:flex;"><span>              display.<span style="color:#a6e22e">display</span>(); 
 </span></span><span style="display:flex;"><span>              display.<span style="color:#a6e22e">startscrollleft</span>(<span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x0F</span>);
 </span></span><span style="display:flex;"><span>          } <span style="color:#66d9ef">else</span> {
@@ -656,12 +656,12 @@ Abrir servidor web en Arduino (crear)</p>
 </span></span><span style="display:flex;"><span>        
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>        <span style="color:#75715e">// Send a GET request to &lt;IP&gt;/get?message=&lt;message&gt;
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        server.<span style="color:#a6e22e">on</span>(<span style="color:#e6db74">&#34;/api/sensors&#34;</span>, HTTP_GET, [] (AsyncWebServerRequest <span style="color:#f92672">*</span>request) {
+</span></span></span><span style="display:flex;"><span>        server.<span style="color:#a6e22e">on</span>(<span style="color:#e6db74">&#34;/api/sensors&#34;</span>, HTTP_GET, [] (AsyncWebServerRequest <span style="color:#f92672">*</span>request) {
 </span></span><span style="display:flex;"><span>          AsyncResponseStream <span style="color:#f92672">*</span>response <span style="color:#f92672">=</span> request<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">beginResponseStream</span>(<span style="color:#e6db74">&#34;application/json&#34;</span>);
 </span></span><span style="display:flex;"><span>          DynamicJsonDocument <span style="color:#a6e22e">json</span>(<span style="color:#ae81ff">1024</span>);
 </span></span><span style="display:flex;"><span>          
 </span></span><span style="display:flex;"><span>          <span style="color:#75715e">//json[&#34;localtime&#34;] = String(printLocalTime());
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>          json[<span style="color:#e6db74">&#34;localtime&#34;</span>] <span style="color:#f92672">=</span> <span style="color:#a6e22e">printLocalTime</span>();
+</span></span></span><span style="display:flex;"><span>          json[<span style="color:#e6db74">&#34;localtime&#34;</span>] <span style="color:#f92672">=</span> <span style="color:#a6e22e">printLocalTime</span>();
 </span></span><span style="display:flex;"><span>          json[<span style="color:#e6db74">&#34;temp_celsius&#34;</span>] <span style="color:#f92672">=</span> sensors.<span style="color:#a6e22e">getTempCByIndex</span>(<span style="color:#ae81ff">0</span>);
 </span></span><span style="display:flex;"><span>          json[<span style="color:#e6db74">&#34;temp_fahrenheit&#34;</span>] <span style="color:#f92672">=</span> sensors.<span style="color:#a6e22e">getTempFByIndex</span>(<span style="color:#ae81ff">0</span>);
 </span></span><span style="display:flex;"><span>          json[<span style="color:#e6db74">&#34;tilt&#34;</span>] <span style="color:#f92672">=</span> <span style="color:#a6e22e">digitalRead</span>(sensorPinTILT);
@@ -679,7 +679,7 @@ Abrir servidor web en Arduino (crear)</p>
 </span></span><span style="display:flex;"><span>        sensors.<span style="color:#a6e22e">begin</span>();
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>        <span style="color:#75715e">// Getting the user UID might take a few seconds
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        Serial.<span style="color:#a6e22e">println</span>(<span style="color:#e6db74">&#34;Getting User UID&#34;</span>);
+</span></span></span><span style="display:flex;"><span>        Serial.<span style="color:#a6e22e">println</span>(<span style="color:#e6db74">&#34;Getting User UID&#34;</span>);
 </span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">while</span> ((auth.token.uid) <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;&#34;</span>) {
 </span></span><span style="display:flex;"><span>          Serial.<span style="color:#a6e22e">print</span>(<span style="color:#e6db74">&#39;.&#39;</span>);
 </span></span><span style="display:flex;"><span>          <span style="color:#a6e22e">delay</span>(<span style="color:#ae81ff">1000</span>);
@@ -687,36 +687,36 @@ Abrir servidor web en Arduino (crear)</p>
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>        <span style="color:#75715e">// Print user UID
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        uid <span style="color:#f92672">=</span> auth.token.uid.<span style="color:#a6e22e">c_str</span>();
+</span></span></span><span style="display:flex;"><span>        uid <span style="color:#f92672">=</span> auth.token.uid.<span style="color:#a6e22e">c_str</span>();
 </span></span><span style="display:flex;"><span>        <span style="color:#75715e">//sprintf(uid, &#34;%s&#34;, auth.token.uid);
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        Serial.<span style="color:#a6e22e">print</span>(<span style="color:#e6db74">&#34;User UID: &#34;</span>);
+</span></span></span><span style="display:flex;"><span>        Serial.<span style="color:#a6e22e">print</span>(<span style="color:#e6db74">&#34;User UID: &#34;</span>);
 </span></span><span style="display:flex;"><span>        Serial.<span style="color:#a6e22e">println</span>(uid);
 </span></span><span style="display:flex;"><span>      
 </span></span><span style="display:flex;"><span>        <span style="color:#75715e">// Update database path
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        databasePath <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;/UsersData/&#34;</span> <span style="color:#f92672">+</span> uid <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;/readings&#34;</span>;
+</span></span></span><span style="display:flex;"><span>        databasePath <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;/UsersData/&#34;</span> <span style="color:#f92672">+</span> uid <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;/readings&#34;</span>;
 </span></span><span style="display:flex;"><span>        <span style="color:#75715e">//sprintf(databasePath, &#34;/UsersData/%s/readings&#34;, uid);
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        databasePath_write <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;/UsersData/&#34;</span> <span style="color:#f92672">+</span> uid <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;/writtings/tempLogger&#34;</span>;
+</span></span></span><span style="display:flex;"><span>        databasePath_write <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;/UsersData/&#34;</span> <span style="color:#f92672">+</span> uid <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;/writtings/tempLogger&#34;</span>;
 </span></span><span style="display:flex;"><span>        <span style="color:#75715e">//sprintf(databasePath_write, &#34;/UsersData/%s/writtings/tempLogger&#34;, uid);
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    }
+</span></span></span><span style="display:flex;"><span>    }
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>}
 </span></span><span style="display:flex;"><span><span style="color:#75715e">//         String path = auth.token.uid.c_str(); //&lt;- user uid
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">loop</span>() {
 </span></span><span style="display:flex;"><span>  
 </span></span><span style="display:flex;"><span>  <span style="color:#75715e">// Send new readings to database
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#66d9ef">if</span> (Firebase.<span style="color:#a6e22e">ready</span>() <span style="color:#f92672">&amp;&amp;</span> logged <span style="color:#f92672">&amp;&amp;</span> (<span style="color:#a6e22e">millis</span>() <span style="color:#f92672">-</span> sendDataPrevMillis <span style="color:#f92672">&gt;</span> timerDelay <span style="color:#f92672">||</span> sendDataPrevMillis <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>)){
+</span></span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (Firebase.<span style="color:#a6e22e">ready</span>() <span style="color:#f92672">&amp;&amp;</span> logged <span style="color:#f92672">&amp;&amp;</span> (<span style="color:#a6e22e">millis</span>() <span style="color:#f92672">-</span> sendDataPrevMillis <span style="color:#f92672">&gt;</span> timerDelay <span style="color:#f92672">||</span> sendDataPrevMillis <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>)){
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>    sendDataPrevMillis <span style="color:#f92672">=</span> <span style="color:#a6e22e">millis</span>();
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>    <span style="color:#75715e">//Get current timestamp
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">//timestamp = getTime();
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span></span><span style="display:flex;"><span>    <span style="color:#75715e">//timestamp = getTime();
+</span></span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">time_t</span> now;
 </span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">struct</span> tm timeinfo;
 </span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span><span style="color:#a6e22e">getLocalTime</span>(<span style="color:#f92672">&amp;</span>timeinfo)) {
 </span></span><span style="display:flex;"><span>      <span style="color:#75715e">//Serial.println(&#34;Failed to obtain time&#34;);
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      timestamp <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span></span><span style="display:flex;"><span>      timestamp <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
 </span></span><span style="display:flex;"><span>    }
 </span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">time</span>(<span style="color:#f92672">&amp;</span>now);
 </span></span><span style="display:flex;"><span>    timestamp <span style="color:#f92672">=</span> now;
@@ -725,12 +725,12 @@ Abrir servidor web en Arduino (crear)</p>
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>    
 </span></span><span style="display:flex;"><span>    <span style="color:#75715e">//timestamp = 1234;
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    Serial.<span style="color:#a6e22e">print</span> (<span style="color:#e6db74">&#34;time: &#34;</span>);
+</span></span></span><span style="display:flex;"><span>    Serial.<span style="color:#a6e22e">print</span> (<span style="color:#e6db74">&#34;time: &#34;</span>);
 </span></span><span style="display:flex;"><span>    Serial.<span style="color:#a6e22e">println</span> (timestamp);
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>    <span style="color:#75715e">//String parentPath;
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">//parentPath = databasePath.c_str() + &#34;/&#34; + String(timestamp);
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">char</span> parentPath[<span style="color:#ae81ff">100</span>];
+</span></span></span><span style="display:flex;"><span>    <span style="color:#75715e">//parentPath = databasePath.c_str() + &#34;/&#34; + String(timestamp);
+</span></span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> parentPath[<span style="color:#ae81ff">100</span>];
 </span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">sprintf</span>(parentPath,<span style="color:#e6db74">&#34;%s/%d&#34;</span>,databasePath.<span style="color:#a6e22e">c_str</span>(),timestamp); 
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>    sensors.<span style="color:#a6e22e">requestTemperatures</span>(); 
@@ -771,7 +771,7 @@ Abrir servidor web en Arduino (crear)</p>
 </span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">sprintf</span>(aux,<span style="color:#e6db74">&#34;%s/led_verde&#34;</span>,databasePath_write.<span style="color:#a6e22e">c_str</span>()); 
 </span></span><span style="display:flex;"><span>    Serial.<span style="color:#a6e22e">println</span>(aux);
 </span></span><span style="display:flex;"><span>    <span style="color:#75715e">//Serial.println(&#39;led verde:&#39;);
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    Serial.<span style="color:#a6e22e">println</span>(led_verde);
+</span></span></span><span style="display:flex;"><span>    Serial.<span style="color:#a6e22e">println</span>(led_verde);
 </span></span><span style="display:flex;"><span>    Firebase.RTDB.<span style="color:#a6e22e">getInt</span>(<span style="color:#f92672">&amp;</span>fbdo, aux, <span style="color:#f92672">&amp;</span>led_verde);
 </span></span><span style="display:flex;"><span>    
 </span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">sprintf</span>(aux,<span style="color:#e6db74">&#34;%s/buzzer&#34;</span>,databasePath_write.<span style="color:#a6e22e">c_str</span>()); 
@@ -783,7 +783,7 @@ Abrir servidor web en Arduino (crear)</p>
 </span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">int</span> i<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>; i<span style="color:#f92672">&lt;</span><span style="color:#ae81ff">5</span>; i<span style="color:#f92672">++</span>){
 </span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">sprintf</span>(aux,<span style="color:#e6db74">&#34;%s/WS2812b%d&#34;</span>,databasePath_write.<span style="color:#a6e22e">c_str</span>(),i);
 </span></span><span style="display:flex;"><span>        <span style="color:#75715e">//Serial.println(&#39;working?&#39;);
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        Serial.<span style="color:#a6e22e">println</span>(aux);
+</span></span></span><span style="display:flex;"><span>        Serial.<span style="color:#a6e22e">println</span>(aux);
 </span></span><span style="display:flex;"><span>        Firebase.RTDB.<span style="color:#a6e22e">getArray</span>(<span style="color:#f92672">&amp;</span>fbdo, aux, <span style="color:#f92672">&amp;</span>WS2812b_);
 </span></span><span style="display:flex;"><span>        WS2812b_.<span style="color:#a6e22e">get</span>(result,<span style="color:#ae81ff">0</span>);
 </span></span><span style="display:flex;"><span>        String colorString <span style="color:#f92672">=</span> result.to<span style="color:#f92672">&lt;</span>String<span style="color:#f92672">&gt;</span>();
@@ -793,7 +793,7 @@ Abrir servidor web en Arduino (crear)</p>
 </span></span><span style="display:flex;"><span>        WS2812b_.<span style="color:#a6e22e">get</span>(result,<span style="color:#ae81ff">1</span>);
 </span></span><span style="display:flex;"><span>        on_off <span style="color:#f92672">=</span> result.to<span style="color:#f92672">&lt;</span><span style="color:#66d9ef">int</span><span style="color:#f92672">&gt;</span>();
 </span></span><span style="display:flex;"><span>        <span style="color:#75715e">//Serial.println(&#39;reckful&#39;);
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        Serial.<span style="color:#a6e22e">println</span>(on_off);
+</span></span></span><span style="display:flex;"><span>        Serial.<span style="color:#a6e22e">println</span>(on_off);
 </span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span>(on_off) FastLED.<span style="color:#a6e22e">show</span>();
 </span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">else</span>{ leds[i<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>] <span style="color:#f92672">=</span> <span style="color:#a6e22e">strtol</span>(<span style="color:#e6db74">&#34;0x000000&#34;</span>, NULL,<span style="color:#ae81ff">16</span>) ;FastLED.<span style="color:#a6e22e">show</span>(); }
 </span></span><span style="display:flex;"><span>    }
@@ -836,7 +836,7 @@ Abrir servidor web en Arduino (crear)</p>
 </span></span><span style="display:flex;"><span>      display.<span style="color:#a6e22e">setTextColor</span>(WHITE);
 </span></span><span style="display:flex;"><span>      display.<span style="color:#a6e22e">setCursor</span>(<span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>);
 </span></span><span style="display:flex;"><span>      <span style="color:#75715e">// Display static text
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      display.<span style="color:#a6e22e">println</span>(_oled);
+</span></span></span><span style="display:flex;"><span>      display.<span style="color:#a6e22e">println</span>(_oled);
 </span></span><span style="display:flex;"><span>      display.<span style="color:#a6e22e">display</span>(); 
 </span></span><span style="display:flex;"><span>      display.<span style="color:#a6e22e">startscrollleft</span>(<span style="color:#ae81ff">0x00</span>, <span style="color:#ae81ff">0x0F</span>);
 </span></span><span style="display:flex;"><span>    }

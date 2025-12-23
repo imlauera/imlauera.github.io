@@ -127,37 +127,37 @@ Los literales de cadena se almacenan en la sección de solo lectura de la memori
 <p>Los literales de cadena se almacenan en la sección de solo lectura de la memoria. Es por eso que el siguiente programa puede fallar (da un error de segmentación) porque la línea *(str+1) = &rsquo;n&rsquo; intenta escribir una memoria de solo lectura.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">// Programa de C para demostrar error de segmento (segmentation fault)
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e">// modificando una cadena de sólo lectura
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>()
 </span></span><span style="display:flex;"><span>{
 </span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">char</span><span style="color:#f92672">*</span> str;
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Se almacena en la parte de solo lectura del segmento de datos
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	str <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;GfG&#34;</span>;
+</span></span></span><span style="display:flex;"><span>	str <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;GfG&#34;</span>;
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Problema: intentando modificar memoria de sólo lectura
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#f92672">*</span>(str <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>) <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;n&#39;</span>;
+</span></span></span><span style="display:flex;"><span>	<span style="color:#f92672">*</span>(str <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>) <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;n&#39;</span>;
 </span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
 </span></span><span style="display:flex;"><span>}
 </span></span></code></pre></div><h3 id="2-acceder-a-una-dirección-liberada">2. Acceder a una dirección liberada</h3>
 <p>Aquí, en el siguiente código, se elimina la referencia al puntero p después de liberar el bloque de memoria, lo cual no está permitido por el compilador. Estos punteros se denominan punteros colgantes y producen fallos de segmento o terminaciones anormales del programa en tiempo de ejecución.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">// Programa C para demostrar el error de segmentación
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e">// Accediendo a una dirección que está liberada
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e">#incluir &lt;stdio.h&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#incluir &lt;stdio.h&gt;
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e">#incluir &lt;stdlib.h&gt;
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>(<span style="color:#66d9ef">void</span>)
 </span></span><span style="display:flex;"><span>{
 </span></span><span style="display:flex;"><span>	<span style="color:#75715e">// asignando memoria a p
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#66d9ef">int</span><span style="color:#f92672">*</span> p <span style="color:#f92672">=</span> (<span style="color:#66d9ef">int</span><span style="color:#f92672">*</span>)<span style="color:#a6e22e">malloc</span>(<span style="color:#ae81ff">8</span>);
+</span></span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">int</span><span style="color:#f92672">*</span> p <span style="color:#f92672">=</span> (<span style="color:#66d9ef">int</span><span style="color:#f92672">*</span>)<span style="color:#a6e22e">malloc</span>(<span style="color:#ae81ff">8</span>);
 </span></span><span style="display:flex;"><span>	<span style="color:#f92672">*</span>p <span style="color:#f92672">=</span> <span style="color:#ae81ff">100</span>;
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>	<span style="color:#75715e">// se libera el espacio asignado a p
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">free</span>(p);
+</span></span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">free</span>(p);
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>	<span style="color:#75715e">// core dump/segmentation fault
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#f92672">*</span>p <span style="color:#f92672">=</span> <span style="color:#ae81ff">110</span>;
+</span></span></span><span style="display:flex;"><span>	<span style="color:#f92672">*</span>p <span style="color:#f92672">=</span> <span style="color:#ae81ff">110</span>;
 </span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;%d&#34;</span>, <span style="color:#f92672">*</span>p);
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
@@ -166,14 +166,14 @@ Los literales de cadena se almacenan en la sección de solo lectura de la memori
 <p>En C y C++, acceder a un índice de matriz fuera de límites puede provocar un error de segmentación u otro comportamiento indefinido. No hay verificación de límites para matrices en C y C++. Aunque en C++, el uso de contenedores, como con el método std::vector::at() o con una declaración if(), puede evitar errores fuera de límite.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">// programa C para demostrar la segmentación
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e">// falla cuando se accede a la matriz fuera de límite.
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e">#incluir &lt;stdio.h&gt;
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#incluir &lt;stdio.h&gt;
+</span></span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>(<span style="color:#66d9ef">void</span>)
 </span></span><span style="display:flex;"><span>{
 </span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">int</span> arr[<span style="color:#ae81ff">2</span>];
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>	<span style="color:#75715e">// Accediendo fuera de límites
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	arr[<span style="color:#ae81ff">3</span>] <span style="color:#f92672">=</span> <span style="color:#ae81ff">10</span>;
+</span></span></span><span style="display:flex;"><span>	arr[<span style="color:#ae81ff">3</span>] <span style="color:#f92672">=</span> <span style="color:#ae81ff">10</span>;
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> (<span style="color:#ae81ff">0</span>);
 </span></span><span style="display:flex;"><span>}
@@ -181,8 +181,8 @@ Los literales de cadena se almacenan en la sección de solo lectura de la memori
 <p>La función scanf() espera la dirección de una variable como entrada. Aquí, en este programa, n toma un valor de 2 y asume que su dirección es 1000. Si pasamos n a scanf(), la entrada obtenida de STDIN se coloca en la memoria 2 no válida, que debería ser 1000. Esto provoca daños en la memoria y provoca un error de segmentación.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">// Programa C para demostrar la segmentación
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e">// error cuando se pasa valor a scanf
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e">#incluir &lt;stdio.h&gt;
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#incluir &lt;stdio.h&gt;
+</span></span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>()
 </span></span><span style="display:flex;"><span>{
 </span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">int</span> n <span style="color:#f92672">=</span> <span style="color:#ae81ff">2</span>;
@@ -194,8 +194,8 @@ Los literales de cadena se almacenan en la sección de solo lectura de la memori
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">// Programa en C para ilustrar el
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e">// error de segmentación debido a
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e">// desbordamiento de pila
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e">#incluir &lt;stdio.h&gt;
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#incluir &lt;stdio.h&gt;
+</span></span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>()
 </span></span><span style="display:flex;"><span>{
 </span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">int</span> arr[<span style="color:#ae81ff">2000000000</span>];
@@ -206,8 +206,8 @@ Los literales de cadena se almacenan en la sección de solo lectura de la memori
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">// Programa en C para ilustrar el
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e">// fallo de segmentación debido a
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e">// desbordamiento del buffer
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e">#incluir &lt;stdio.h&gt;
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#incluir &lt;stdio.h&gt;
+</span></span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>()
 </span></span><span style="display:flex;"><span>{
 </span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">char</span> ref[<span style="color:#ae81ff">20</span>] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;Esta es una cadena larga&#34;</span>;
@@ -221,8 +221,8 @@ Los literales de cadena se almacenan en la sección de solo lectura de la memori
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">// Programa C para demostrar la segmentación
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e">// error cuando el puntero no está inicializado
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e">// se accede
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e">#incluir &lt;stdio.h&gt;
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#incluir &lt;stdio.h&gt;
+</span></span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>()
 </span></span><span style="display:flex;"><span>{
 </span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">int</span><span style="color:#f92672">*</span> ptr;

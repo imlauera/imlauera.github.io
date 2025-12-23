@@ -129,8 +129,8 @@ For auto-subtitles, you&rsquo;d need to use Whisper or similar tool first:">
 <h3 id="1-detect-scene-changes--audio-peaks">1. Detect Scene Changes &amp; Audio Peaks</h3>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Detect scenes with significant changes</span>
 </span></span><span style="display:flex;"><span>ffmpeg -i input.mp4 -filter_complex <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span><span style="color:#e6db74">&#34;[0:v]select=&#39;gt(scene,0.4)&#39;,metadata=print:file=scenes.txt[out]&#34;</span> <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>-map <span style="color:#e6db74">&#34;[out]&#34;</span> -f null -
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;[0:v]select=&#39;gt(scene,0.4)&#39;,metadata=print:file=scenes.txt[out]&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>-map <span style="color:#e6db74">&#34;[out]&#34;</span> -f null -
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span><span style="color:#75715e"># Detect audio peaks (loud moments)</span>
 </span></span><span style="display:flex;"><span>ffmpeg -i input.mp4 -af <span style="color:#e6db74">&#34;volumedetect&#34;</span> -f null - 2&gt;&amp;<span style="color:#ae81ff">1</span> | grep <span style="color:#e6db74">&#34;max_volume&#34;</span>
@@ -142,14 +142,14 @@ For auto-subtitles, you&rsquo;d need to use Whisper or similar tool first:">
 </span></span><span style="display:flex;"><span>whisper segment.mp4 --model base --output_format srt
 </span></span></code></pre></div><h3 id="4-crop-to-916-instagram-reel-format--burn-subtitles">4. Crop to 9:16 (Instagram Reel format) + Burn Subtitles</h3>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ffmpeg -i segment.mp4 -vf <span style="color:#e6db74">&#34;crop=ih*9/16:ih,scale=1080:1920,subtitles=segment.srt:force_style=&#39;Alignment=10,FontSize=24,MarginV=100,Bold=1,OutlineColour=&amp;H000000&amp;,Outline=2&#39;&#34;</span> <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>-c:v libx264 -preset medium -crf <span style="color:#ae81ff">23</span> -c:a aac -b:a 128k reel_output.mp4
+</span></span></span><span style="display:flex;"><span>-c:v libx264 -preset medium -crf <span style="color:#ae81ff">23</span> -c:a aac -b:a 128k reel_output.mp4
 </span></span></code></pre></div><h3 id="5-all-in-one-command-with-timestamp">5. All-in-One Command (with timestamp)</h3>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ffmpeg -ss 00:05:23 -i input.mp4 -t <span style="color:#ae81ff">30</span> <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>-vf <span style="color:#e6db74">&#34;crop=ih*9/16:ih,scale=1080:1920,subtitles=segment.srt:force_style=&#39;Alignment=10,FontSize=28,MarginV=120,Bold=1,PrimaryColour=&amp;HFFFFFF&amp;,OutlineColour=&amp;H000000&amp;,Outline=3,Shadow=2&#39;&#34;</span> <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>-c:v libx264 -preset medium -crf <span style="color:#ae81ff">23</span> -pix_fmt yuv420p <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>-c:a aac -b:a 128k -ar <span style="color:#ae81ff">48000</span> <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>-movflags +faststart <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>reel_final.mp4
+</span></span></span><span style="display:flex;"><span>-vf <span style="color:#e6db74">&#34;crop=ih*9/16:ih,scale=1080:1920,subtitles=segment.srt:force_style=&#39;Alignment=10,FontSize=28,MarginV=120,Bold=1,PrimaryColour=&amp;HFFFFFF&amp;,OutlineColour=&amp;H000000&amp;,Outline=3,Shadow=2&#39;&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>-c:v libx264 -preset medium -crf <span style="color:#ae81ff">23</span> -pix_fmt yuv420p <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>-c:a aac -b:a 128k -ar <span style="color:#ae81ff">48000</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>-movflags +faststart <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>reel_final.mp4
 </span></span></code></pre></div><h2 id="advanced-automated-viral-moment-detection-script">Advanced: Automated Viral Moment Detection Script</h2>
 <p>Let me create a bash script that combines these techniques:## Key Features Explained</p>
 <p><strong>Subtitle Styling Options:</strong></p>
@@ -185,7 +185,7 @@ For auto-subtitles, you&rsquo;d need to use Whisper or similar tool first:">
 </ul>
 <p>Would you like me to create a more advanced version with Python that includes actual ML-based viral moment detection, or help you set up Whisper for automatic subtitle generation?</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/bash
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span><span style="color:#75715e"># Twitch VOD to Instagram Reel with Viral Moment Detection</span>
 </span></span><span style="display:flex;"><span><span style="color:#75715e"># Usage: ./vod_to_reel.sh input.mp4 [start_time] [duration]</span>
 </span></span><span style="display:flex;"><span>
@@ -230,19 +230,19 @@ For auto-subtitles, you&rsquo;d need to use Whisper or similar tool first:">
 </span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> -f <span style="color:#e6db74">&#34;</span>$SRT_FILE<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
 </span></span><span style="display:flex;"><span>    <span style="color:#75715e"># With subtitles</span>
 </span></span><span style="display:flex;"><span>    ffmpeg -i <span style="color:#e6db74">&#34;</span>$TEMP_SEGMENT<span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        -vf <span style="color:#e6db74">&#34;crop=ih*9/16:ih,scale=1080:1920,subtitles=&#39;</span>$SRT_FILE<span style="color:#e6db74">&#39;:force_style=&#39;Alignment=10,FontName=Arial,FontSize=32,Bold=1,PrimaryColour=&amp;HFFFFFF&amp;,OutlineColour=&amp;H000000&amp;,Outline=4,Shadow=2,MarginV=150&#39;&#34;</span> <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        -c:v libx264 -preset medium -crf <span style="color:#ae81ff">23</span> -pix_fmt yuv420p <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        -c:a aac -b:a 128k -ar <span style="color:#ae81ff">48000</span> <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        -movflags +faststart <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        <span style="color:#e6db74">&#34;</span>$OUTPUT<span style="color:#e6db74">&#34;</span> -y
+</span></span></span><span style="display:flex;"><span>        -vf <span style="color:#e6db74">&#34;crop=ih*9/16:ih,scale=1080:1920,subtitles=&#39;</span>$SRT_FILE<span style="color:#e6db74">&#39;:force_style=&#39;Alignment=10,FontName=Arial,FontSize=32,Bold=1,PrimaryColour=&amp;HFFFFFF&amp;,OutlineColour=&amp;H000000&amp;,Outline=4,Shadow=2,MarginV=150&#39;&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>        -c:v libx264 -preset medium -crf <span style="color:#ae81ff">23</span> -pix_fmt yuv420p <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>        -c:a aac -b:a 128k -ar <span style="color:#ae81ff">48000</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>        -movflags +faststart <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;</span>$OUTPUT<span style="color:#e6db74">&#34;</span> -y
 </span></span><span style="display:flex;"><span><span style="color:#66d9ef">else</span>
 </span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Without subtitles</span>
 </span></span><span style="display:flex;"><span>    ffmpeg -i <span style="color:#e6db74">&#34;</span>$TEMP_SEGMENT<span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        -vf <span style="color:#e6db74">&#34;crop=ih*9/16:ih,scale=1080:1920&#34;</span> <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        -c:v libx264 -preset medium -crf <span style="color:#ae81ff">23</span> -pix_fmt yuv420p <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        -c:a aac -b:a 128k -ar <span style="color:#ae81ff">48000</span> <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        -movflags +faststart <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>        <span style="color:#e6db74">&#34;</span>$OUTPUT<span style="color:#e6db74">&#34;</span> -y
+</span></span></span><span style="display:flex;"><span>        -vf <span style="color:#e6db74">&#34;crop=ih*9/16:ih,scale=1080:1920&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>        -c:v libx264 -preset medium -crf <span style="color:#ae81ff">23</span> -pix_fmt yuv420p <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>        -c:a aac -b:a 128k -ar <span style="color:#ae81ff">48000</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>        -movflags +faststart <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;</span>$OUTPUT<span style="color:#e6db74">&#34;</span> -y
 </span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span><span style="color:#75715e"># Cleanup</span>
@@ -265,16 +265,16 @@ For auto-subtitles, you&rsquo;d need to use Whisper or similar tool first:">
 </span></span><span style="display:flex;"><span>**Option 1: Change to MP4 <span style="color:#f92672">(</span>recommended <span style="color:#66d9ef">for</span> H.264<span style="color:#f92672">)</span>**
 </span></span><span style="display:flex;"><span><span style="color:#e6db74">```</span>bash
 </span></span><span style="display:flex;"><span>ffmpeg -ss 00:05:23 -i <span style="color:#e6db74">&#34;winning.webm&#34;</span> -t <span style="color:#ae81ff">30</span> <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -vf <span style="color:#e6db74">&#34;crop=ih*9/16:ih,scale=1080:1920,subtitles=sub.srt:force_style=&#39;Alignment=10,FontSize=28,MarginV=120,Bold=1,PrimaryColour=&amp;HFFFFFF&amp;,OutlineColour=&amp;H000000&amp;,Outline=3,Shadow=2&#39;&#34;</span> <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -c:v libx264 -preset medium -crf <span style="color:#ae81ff">23</span> -pix_fmt yuv420p <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -c:a aac -b:a 128k -ar <span style="color:#ae81ff">48000</span> <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -movflags +faststart reel_final.mp4
+</span></span></span><span style="display:flex;"><span>  -vf <span style="color:#e6db74">&#34;crop=ih*9/16:ih,scale=1080:1920,subtitles=sub.srt:force_style=&#39;Alignment=10,FontSize=28,MarginV=120,Bold=1,PrimaryColour=&amp;HFFFFFF&amp;,OutlineColour=&amp;H000000&amp;,Outline=3,Shadow=2&#39;&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -c:v libx264 -preset medium -crf <span style="color:#ae81ff">23</span> -pix_fmt yuv420p <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -c:a aac -b:a 128k -ar <span style="color:#ae81ff">48000</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -movflags +faststart reel_final.mp4
 </span></span></code></pre></div><p><strong>Option 2: Keep WebM format with VP9 codec</strong></p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ffmpeg -ss 00:05:23 -i <span style="color:#e6db74">&#34;winning.webm&#34;</span> -t <span style="color:#ae81ff">30</span> <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -vf <span style="color:#e6db74">&#34;crop=ih*9/16:ih,scale=1080:1920,subtitles=sub.srt:force_style=&#39;Alignment=10,FontSize=28,MarginV=120,Bold=1,PrimaryColour=&amp;HFFFFFF&amp;,OutlineColour=&amp;H000000&amp;,Outline=3,Shadow=2&#39;&#34;</span> <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -c:v libvpx-vp9 -b:v 2M -crf <span style="color:#ae81ff">30</span> -pix_fmt yuv420p <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -c:a libopus -b:a 128k -ar <span style="color:#ae81ff">48000</span> <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  reel_final.webm
+</span></span></span><span style="display:flex;"><span>  -vf <span style="color:#e6db74">&#34;crop=ih*9/16:ih,scale=1080:1920,subtitles=sub.srt:force_style=&#39;Alignment=10,FontSize=28,MarginV=120,Bold=1,PrimaryColour=&amp;HFFFFFF&amp;,OutlineColour=&amp;H000000&amp;,Outline=3,Shadow=2&#39;&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -c:v libvpx-vp9 -b:v 2M -crf <span style="color:#ae81ff">30</span> -pix_fmt yuv420p <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -c:a libopus -b:a 128k -ar <span style="color:#ae81ff">48000</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  reel_final.webm
 </span></span></code></pre></div><p><strong>Key changes for WebM:</strong></p>
 <ul>
 <li>Video codec: <code>libvpx-vp9</code> instead of <code>libx264</code></li>

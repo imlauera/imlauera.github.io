@@ -156,7 +156,7 @@ AMON     55022110    2025-03-10  grave       conducta       preceptorY
 <p>Hacete un script:</p>
 <h3 id="addsh"><code>add.sh</code></h3>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/sh
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>echo -e <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;</span> &gt;&gt; base2025.tsv
+</span></span></span><span style="display:flex;"><span>echo -e <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;</span> &gt;&gt; base2025.tsv
 </span></span></code></pre></div><p>Uso:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>./add.sh <span style="color:#e6db74">&#34;ASIST\t55022110\t2025-03-06\tpresente\t2B&#34;</span>
 </span></span></code></pre></div><hr>
@@ -230,7 +230,7 @@ id=2 name=&#34;Alice&#34; age=25
 <h1 id="-6-example-flat-file-database-implementation">🔥 6. Example Flat-File Database Implementation</h1>
 <h3 id="dbsh"><strong>db.sh</strong></h3>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/sh
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>DB<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;db.txt&#34;</span>
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>add<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
@@ -384,11 +384,11 @@ id=2 name=&#34;Alice&#34; age=25
 <p>Example pipeline to build a basic inverted index (tokenized lowercased words):</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#75715e"># input: docs.ndjson each line {&#34;id&#34;:123, &#34;text&#34;:&#34;...&#34;}</span>
 </span></span><span style="display:flex;"><span>jq -r <span style="color:#e6db74">&#39;. | [.id, .text] | @tsv&#39;</span> docs.ndjson <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  | tr <span style="color:#e6db74">&#39;[:upper:]&#39;</span> <span style="color:#e6db74">&#39;[:lower:]&#39;</span> <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  | awk -F<span style="color:#e6db74">&#39;\t&#39;</span> <span style="color:#e6db74">&#39;{id=$1; text=$2; gsub(/[^a-z0-9]+/,&#34; &#34;,text); split(text, a, &#34; &#34;); for(i in a) if(length(a[i])&gt;1) print a[i] &#34;\t&#34; id}&#39;</span> <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  | sort -k1,1 -u <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  | awk -F<span style="color:#e6db74">&#39;\t&#39;</span> <span style="color:#e6db74">&#39;{word=$1; id=$2; ids[word]=ids[word]?ids[word] &#34;,&#34; id : id} END{for (w in ids) print w &#34;\t&#34; ids[w]}&#39;</span> <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  &gt; index.tsv
+</span></span></span><span style="display:flex;"><span>  | tr <span style="color:#e6db74">&#39;[:upper:]&#39;</span> <span style="color:#e6db74">&#39;[:lower:]&#39;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  | awk -F<span style="color:#e6db74">&#39;\t&#39;</span> <span style="color:#e6db74">&#39;{id=$1; text=$2; gsub(/[^a-z0-9]+/,&#34; &#34;,text); split(text, a, &#34; &#34;); for(i in a) if(length(a[i])&gt;1) print a[i] &#34;\t&#34; id}&#39;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  | sort -k1,1 -u <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  | awk -F<span style="color:#e6db74">&#39;\t&#39;</span> <span style="color:#e6db74">&#39;{word=$1; id=$2; ids[word]=ids[word]?ids[word] &#34;,&#34; id : id} END{for (w in ids) print w &#34;\t&#34; ids[w]}&#39;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  &gt; index.tsv
 </span></span></code></pre></div><p>Lookup:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>grep -P <span style="color:#e6db74">&#39;^keyword\t&#39;</span> index.tsv
 </span></span><span style="display:flex;"><span><span style="color:#75715e"># parse list of ids and then pull records from ndjson using jq or grep -Ff</span>
@@ -423,7 +423,7 @@ id=2 name=&#34;Alice&#34; age=25
 <h1 id="ready-to-use-toolkit-plaindbsh">Ready-to-use toolkit: <code>plaindb.sh</code></h1>
 <p>Copy this script and put it in your <code>$PATH</code> (<code>chmod +x plaindb.sh</code>). It implements simple CRUD on an NDJSON file with locking.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#75715e">#!/usr/bin/env bash
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#75715e"># plaindb.sh - minimal NDJSON &#34;db&#34; operations: insert, find, update, delete, list</span>
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"># plaindb.sh - minimal NDJSON &#34;db&#34; operations: insert, find, update, delete, list</span>
 </span></span><span style="display:flex;"><span><span style="color:#75715e"># Usage: plaindb.sh &lt;dbfile&gt; &lt;cmd&gt; [args...]</span>
 </span></span><span style="display:flex;"><span><span style="color:#75715e"># Requires: jq, flock, mktemp</span>
 </span></span><span style="display:flex;"><span>
@@ -556,10 +556,10 @@ This is the format used by big data tools (Elasticsearch, Firehose, Hadoop, etc.
 <h1 id="-3-delete-a-record">✅ 3. DELETE a record</h1>
 <p>Delete ID=3:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>jq -c <span style="color:#e6db74">&#39;select(.id != 3)&#39;</span> users.ndjson <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  &gt; tmp <span style="color:#f92672">&amp;&amp;</span> mv tmp users.ndjson
+</span></span></span><span style="display:flex;"><span>  &gt; tmp <span style="color:#f92672">&amp;&amp;</span> mv tmp users.ndjson
 </span></span></code></pre></div><p>Delete every Bob:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>jq -c <span style="color:#e6db74">&#39;select(.name != &#34;Bob&#34;)&#39;</span> users.ndjson <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  &gt; tmp <span style="color:#f92672">&amp;&amp;</span> mv tmp users.ndjson
+</span></span></span><span style="display:flex;"><span>  &gt; tmp <span style="color:#f92672">&amp;&amp;</span> mv tmp users.ndjson
 </span></span></code></pre></div><hr>
 <h1 id="-4-update-a-record-1">✅ 4. UPDATE a record</h1>
 <p>Example: change Bob’s email:</p>
@@ -589,7 +589,7 @@ This is the format used by big data tools (Elasticsearch, Firehose, Hadoop, etc.
 <h1 id="-6-create-a-reusable-cli-tool">✅ 6. CREATE a reusable CLI tool</h1>
 <p><code>jsondb.sh</code>:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/sh
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>DB<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span>
+</span></span></span><span style="display:flex;"><span>DB<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span>
 </span></span><span style="display:flex;"><span>CMD<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$2<span style="color:#e6db74">&#34;</span>
 </span></span><span style="display:flex;"><span>shift <span style="color:#ae81ff">2</span>
 </span></span><span style="display:flex;"><span>
