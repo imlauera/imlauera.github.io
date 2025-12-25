@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/guix/">
+  <meta property="og:site_name" content="Imlauer">
+  <meta property="og:title" content="Guix">
+  <meta property="og:description" content="Basándome en tu instalación de Arch, acá te dejo los pasos para instalar Guix System con una configuración similar:
+1. Preparación inicial (desde el USB de Guix) # Cargar teclado español loadkeys es # Conectar WiFi rfkill unblock all nmcli device wifi list nmcli device wifi connect &#34;tu-ssid&#34; password &#34;tu-password&#34; 2. Particionado (igual que en Arch con GPT/UEFI) cfdisk /dev/sda # Crear: # - /dev/sda1: 512M (EFI System) # - /dev/sda2: 4G (Linux swap) # - /dev/sda3: resto (Linux filesystem) # Formatear mkfs.fat -F32 /dev/sda1 mkswap /dev/sda2 mkfs.ext4 /dev/sda3 # Montar mount /dev/sda3 /mnt mkdir -p /mnt/boot/efi mount /dev/sda1 /mnt/boot/efi swapon /dev/sda2 3. Crear configuración base de Guix # Generar configuración inicial herd start cow-store /mnt guix system init /mnt/etc/config.scm /mnt Pero antes necesitás crear el archivo /mnt/etc/config.scm. Acá va el equivalente a tu setup de Arch:">
+  <meta property="og:locale" content="es_es">
+  <meta property="og:type" content="article">
+    <meta property="article:published_time" content="2025-12-24T20:53:39-03:00">
+    <meta property="article:modified_time" content="2025-12-24T20:53:39-03:00">
+
+  
+  <meta itemprop="name" content="Guix">
+  <meta itemprop="description" content="Basándome en tu instalación de Arch, acá te dejo los pasos para instalar Guix System con una configuración similar:
+1. Preparación inicial (desde el USB de Guix) # Cargar teclado español loadkeys es # Conectar WiFi rfkill unblock all nmcli device wifi list nmcli device wifi connect &#34;tu-ssid&#34; password &#34;tu-password&#34; 2. Particionado (igual que en Arch con GPT/UEFI) cfdisk /dev/sda # Crear: # - /dev/sda1: 512M (EFI System) # - /dev/sda2: 4G (Linux swap) # - /dev/sda3: resto (Linux filesystem) # Formatear mkfs.fat -F32 /dev/sda1 mkswap /dev/sda2 mkfs.ext4 /dev/sda3 # Montar mount /dev/sda3 /mnt mkdir -p /mnt/boot/efi mount /dev/sda1 /mnt/boot/efi swapon /dev/sda2 3. Crear configuración base de Guix # Generar configuración inicial herd start cow-store /mnt guix system init /mnt/etc/config.scm /mnt Pero antes necesitás crear el archivo /mnt/etc/config.scm. Acá va el equivalente a tu setup de Arch:">
+  <meta itemprop="datePublished" content="2025-12-24T20:53:39-03:00">
+  <meta itemprop="dateModified" content="2025-12-24T20:53:39-03:00">
+  <meta itemprop="wordCount" content="1308">
+  
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Guix">
+  <meta name="twitter:description" content="Basándome en tu instalación de Arch, acá te dejo los pasos para instalar Guix System con una configuración similar:
+1. Preparación inicial (desde el USB de Guix) # Cargar teclado español loadkeys es # Conectar WiFi rfkill unblock all nmcli device wifi list nmcli device wifi connect &#34;tu-ssid&#34; password &#34;tu-password&#34; 2. Particionado (igual que en Arch con GPT/UEFI) cfdisk /dev/sda # Crear: # - /dev/sda1: 512M (EFI System) # - /dev/sda2: 4G (Linux swap) # - /dev/sda3: resto (Linux filesystem) # Formatear mkfs.fat -F32 /dev/sda1 mkswap /dev/sda2 mkfs.ext4 /dev/sda3 # Montar mount /dev/sda3 /mnt mkdir -p /mnt/boot/efi mount /dev/sda1 /mnt/boot/efi swapon /dev/sda2 3. Crear configuración base de Guix # Generar configuración inicial herd start cow-store /mnt guix system init /mnt/etc/config.scm /mnt Pero antes necesitás crear el archivo /mnt/etc/config.scm. Acá va el equivalente a tu setup de Arch:">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Guix
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/guix/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="Basándome en tu instalación de Arch, acá te dejo los pasos para instalar Guix System con una configuración similar:
+1. Preparación inicial (desde el USB de Guix)
+# Cargar teclado español
+loadkeys es
+
+# Conectar WiFi
+rfkill unblock all
+nmcli device wifi list
+nmcli device wifi connect &#34;tu-ssid&#34; password &#34;tu-password&#34;
+2. Particionado (igual que en Arch con GPT/UEFI)
+cfdisk /dev/sda
+# Crear:
+# - /dev/sda1: 512M (EFI System)
+# - /dev/sda2: 4G (Linux swap)
+# - /dev/sda3: resto (Linux filesystem)
+
+# Formatear
+mkfs.fat -F32 /dev/sda1
+mkswap /dev/sda2
+mkfs.ext4 /dev/sda3
+
+# Montar
+mount /dev/sda3 /mnt
+mkdir -p /mnt/boot/efi
+mount /dev/sda1 /mnt/boot/efi
+swapon /dev/sda2
+3. Crear configuración base de Guix
+# Generar configuración inicial
+herd start cow-store /mnt
+guix system init /mnt/etc/config.scm /mnt
+Pero antes necesitás crear el archivo /mnt/etc/config.scm. Acá va el equivalente a tu setup de Arch:">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Guix
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2025-12-24T20:53:39-03:00'>
+      December 24, 2025
+    </time>
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <p>Basándome en tu instalación de Arch, acá te dejo los pasos para instalar Guix System con una configuración similar:</p>
+<h2 id="1-preparación-inicial-desde-el-usb-de-guix">1. Preparación inicial (desde el USB de Guix)</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Cargar teclado español</span>
+</span></span><span style="display:flex;"><span>loadkeys es
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Conectar WiFi</span>
+</span></span><span style="display:flex;"><span>rfkill unblock all
+</span></span><span style="display:flex;"><span>nmcli device wifi list
+</span></span><span style="display:flex;"><span>nmcli device wifi connect <span style="color:#e6db74">&#34;tu-ssid&#34;</span> password <span style="color:#e6db74">&#34;tu-password&#34;</span>
+</span></span></code></pre></div><h2 id="2-particionado-igual-que-en-arch-con-gptuefi">2. Particionado (igual que en Arch con GPT/UEFI)</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cfdisk /dev/sda
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Crear:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># - /dev/sda1: 512M (EFI System)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># - /dev/sda2: 4G (Linux swap)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># - /dev/sda3: resto (Linux filesystem)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Formatear</span>
+</span></span><span style="display:flex;"><span>mkfs.fat -F32 /dev/sda1
+</span></span><span style="display:flex;"><span>mkswap /dev/sda2
+</span></span><span style="display:flex;"><span>mkfs.ext4 /dev/sda3
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Montar</span>
+</span></span><span style="display:flex;"><span>mount /dev/sda3 /mnt
+</span></span><span style="display:flex;"><span>mkdir -p /mnt/boot/efi
+</span></span><span style="display:flex;"><span>mount /dev/sda1 /mnt/boot/efi
+</span></span><span style="display:flex;"><span>swapon /dev/sda2
+</span></span></code></pre></div><h2 id="3-crear-configuración-base-de-guix">3. Crear configuración base de Guix</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Generar configuración inicial</span>
+</span></span><span style="display:flex;"><span>herd start cow-store /mnt
+</span></span><span style="display:flex;"><span>guix system init /mnt/etc/config.scm /mnt
+</span></span></code></pre></div><p>Pero antes necesitás crear el archivo <code>/mnt/etc/config.scm</code>. Acá va el equivalente a tu setup de Arch:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-scheme" data-lang="scheme"><span style="display:flex;"><span>(<span style="color:#a6e22e">use-modules</span> (<span style="color:#a6e22e">gnu</span>)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages bash)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages linux)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages admin)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages vim)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages wm)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages terminals)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages web-browsers)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages video)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages image)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages irc)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages mail)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages tmux)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages version-control)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> services networking)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> services desktop)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> services ssh)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> services base))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#a6e22e">use-service-modules</span> desktop networking ssh)
+</span></span><span style="display:flex;"><span>(<span style="color:#a6e22e">use-package-modules</span> bootloaders certs suckless wm xorg)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#a6e22e">operating-system</span>
+</span></span><span style="display:flex;"><span>  (<span style="color:#a6e22e">locale</span> <span style="color:#e6db74">&#34;en_US.utf8&#34;</span>)
+</span></span><span style="display:flex;"><span>  (<span style="color:#a6e22e">timezone</span> <span style="color:#e6db74">&#34;America/Argentina/Buenos_Aires&#34;</span>)
+</span></span><span style="display:flex;"><span>  (<span style="color:#a6e22e">keyboard-layout</span> (<span style="color:#a6e22e">keyboard-layout</span> <span style="color:#e6db74">&#34;es&#34;</span>))
+</span></span><span style="display:flex;"><span>  (<span style="color:#a6e22e">host-name</span> <span style="color:#e6db74">&#34;guix&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  (<span style="color:#a6e22e">bootloader</span> (<span style="color:#a6e22e">bootloader-configuration</span>
+</span></span><span style="display:flex;"><span>                (<span style="color:#a6e22e">bootloader</span> grub-efi-bootloader)
+</span></span><span style="display:flex;"><span>                (<span style="color:#a6e22e">targets</span> <span style="color:#f92672">&#39;</span>(<span style="color:#e6db74">&#34;/boot/efi&#34;</span>))
+</span></span><span style="display:flex;"><span>                (<span style="color:#a6e22e">keyboard-layout</span> keyboard-layout)))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  (<span style="color:#a6e22e">file-systems</span> (<span style="color:#a6e22e">cons*</span> (<span style="color:#a6e22e">file-system</span>
+</span></span><span style="display:flex;"><span>                         (<span style="color:#a6e22e">mount-point</span> <span style="color:#e6db74">&#34;/boot/efi&#34;</span>)
+</span></span><span style="display:flex;"><span>                         (<span style="color:#a6e22e">device</span> (<span style="color:#a6e22e">uuid</span> <span style="color:#e6db74">&#34;TU-UUID-EFI&#34;</span> <span style="color:#e6db74">&#39;fat32</span>))
+</span></span><span style="display:flex;"><span>                         (<span style="color:#a6e22e">type</span> <span style="color:#e6db74">&#34;vfat&#34;</span>))
+</span></span><span style="display:flex;"><span>                       (<span style="color:#a6e22e">file-system</span>
+</span></span><span style="display:flex;"><span>                         (<span style="color:#a6e22e">mount-point</span> <span style="color:#e6db74">&#34;/&#34;</span>)
+</span></span><span style="display:flex;"><span>                         (<span style="color:#a6e22e">device</span> (<span style="color:#a6e22e">uuid</span> <span style="color:#e6db74">&#34;TU-UUID-ROOT&#34;</span>))
+</span></span><span style="display:flex;"><span>                         (<span style="color:#a6e22e">type</span> <span style="color:#e6db74">&#34;ext4&#34;</span>))
+</span></span><span style="display:flex;"><span>                       %base-file-systems))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  (<span style="color:#a6e22e">swap-devices</span> (list (<span style="color:#a6e22e">swap-space</span>
+</span></span><span style="display:flex;"><span>                        (<span style="color:#a6e22e">target</span> (<span style="color:#a6e22e">uuid</span> <span style="color:#e6db74">&#34;TU-UUID-SWAP&#34;</span>)))))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">;; Usuario</span>
+</span></span><span style="display:flex;"><span>  (<span style="color:#a6e22e">users</span> (<span style="color:#a6e22e">cons*</span> (<span style="color:#a6e22e">user-account</span>
+</span></span><span style="display:flex;"><span>                  (<span style="color:#a6e22e">name</span> <span style="color:#e6db74">&#34;esotericwarfare&#34;</span>)
+</span></span><span style="display:flex;"><span>                  (<span style="color:#a6e22e">comment</span> <span style="color:#e6db74">&#34;Usuario&#34;</span>)
+</span></span><span style="display:flex;"><span>                  (<span style="color:#a6e22e">group</span> <span style="color:#e6db74">&#34;users&#34;</span>)
+</span></span><span style="display:flex;"><span>                  (<span style="color:#a6e22e">home-directory</span> <span style="color:#e6db74">&#34;/home/esotericwarfare&#34;</span>)
+</span></span><span style="display:flex;"><span>                  (<span style="color:#a6e22e">supplementary-groups</span> <span style="color:#f92672">&#39;</span>(<span style="color:#e6db74">&#34;wheel&#34;</span> <span style="color:#e6db74">&#34;netdev&#34;</span> <span style="color:#e6db74">&#34;audio&#34;</span> <span style="color:#e6db74">&#34;video&#34;</span>)))
+</span></span><span style="display:flex;"><span>                %base-user-accounts))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">;; Paquetes del sistema</span>
+</span></span><span style="display:flex;"><span>  (<span style="color:#a6e22e">packages</span> (append (list 
+</span></span><span style="display:flex;"><span>                     vim
+</span></span><span style="display:flex;"><span>                     git
+</span></span><span style="display:flex;"><span>                     tmux
+</span></span><span style="display:flex;"><span>                     fish
+</span></span><span style="display:flex;"><span>                     w3m
+</span></span><span style="display:flex;"><span>                     lynx
+</span></span><span style="display:flex;"><span>                     mpv
+</span></span><span style="display:flex;"><span>                     imagemagick
+</span></span><span style="display:flex;"><span>                     irssi
+</span></span><span style="display:flex;"><span>                     neomutt
+</span></span><span style="display:flex;"><span>                     wget
+</span></span><span style="display:flex;"><span>                     rsync
+</span></span><span style="display:flex;"><span>                     tree
+</span></span><span style="display:flex;"><span>                     htop
+</span></span><span style="display:flex;"><span>                     unzip
+</span></span><span style="display:flex;"><span>                     nss-certs) <span style="color:#75715e">; Certificados SSL importantes</span>
+</span></span><span style="display:flex;"><span>                    %base-packages))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">;; Servicios</span>
+</span></span><span style="display:flex;"><span>  (<span style="color:#a6e22e">services</span> (append (<span style="color:#a6e22e">list</span>
+</span></span><span style="display:flex;"><span>                     (<span style="color:#a6e22e">service</span> network-manager-service-type)
+</span></span><span style="display:flex;"><span>                     (<span style="color:#a6e22e">service</span> wpa-supplicant-service-type)
+</span></span><span style="display:flex;"><span>                     (<span style="color:#a6e22e">service</span> openssh-service-type))
+</span></span><span style="display:flex;"><span>                    %base-services)))
+</span></span></code></pre></div><h2 id="4-obtener-los-uuids">4. Obtener los UUIDs</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Antes de crear el config.scm, obtené los UUIDs:</span>
+</span></span><span style="display:flex;"><span>blkid /dev/sda1  <span style="color:#75715e"># EFI</span>
+</span></span><span style="display:flex;"><span>blkid /dev/sda2  <span style="color:#75715e"># SWAP</span>
+</span></span><span style="display:flex;"><span>blkid /dev/sda3  <span style="color:#75715e"># ROOT</span>
+</span></span></code></pre></div><h2 id="5-instalación">5. Instalación</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Copiar el config.scm a /mnt/etc/</span>
+</span></span><span style="display:flex;"><span>mkdir -p /mnt/etc
+</span></span><span style="display:flex;"><span>vim /mnt/etc/config.scm
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Pegá la configuración de arriba con tus UUIDs</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Instalar</span>
+</span></span><span style="display:flex;"><span>guix system init /mnt/etc/config.scm /mnt
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Esto va a tardar bastante, compilando todo desde fuentes</span>
+</span></span></code></pre></div><h2 id="6-configuración-post-instalación">6. Configuración post-instalación</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Después del primer boot</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Cambiar contraseña de root</span>
+</span></span><span style="display:flex;"><span>sudo passwd
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Agregar contraseña a tu usuario</span>
+</span></span><span style="display:flex;"><span>sudo passwd esotericwarfare
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Cambiar shell</span>
+</span></span><span style="display:flex;"><span>chsh -s /run/current-system/profile/bin/fish
+</span></span></code></pre></div><h2 id="7-para-software-no-libre-nonguix">7. Para software no libre (Nonguix)</h2>
+<p>Si necesitás drivers propietarios o software no libre:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Agregar el canal Nonguix</span>
+</span></span><span style="display:flex;"><span>mkdir -p ~/.config/guix
+</span></span><span style="display:flex;"><span>vim ~/.config/guix/channels.scm
+</span></span></code></pre></div><p>Contenido:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-scheme" data-lang="scheme"><span style="display:flex;"><span>(<span style="color:#a6e22e">cons*</span> (<span style="color:#a6e22e">channel</span>
+</span></span><span style="display:flex;"><span>        (<span style="color:#a6e22e">name</span> <span style="color:#e6db74">&#39;nonguix</span>)
+</span></span><span style="display:flex;"><span>        (<span style="color:#a6e22e">url</span> <span style="color:#e6db74">&#34;https://gitlab.com/nonguix/nonguix&#34;</span>)
+</span></span><span style="display:flex;"><span>        (<span style="color:#a6e22e">branch</span> <span style="color:#e6db74">&#34;master&#34;</span>)
+</span></span><span style="display:flex;"><span>        (<span style="color:#a6e22e">introduction</span>
+</span></span><span style="display:flex;"><span>          (<span style="color:#a6e22e">make-channel-introduction</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;897c1a470da759236cc11798f4e0a5f7d4d59fbc&#34;</span>
+</span></span><span style="display:flex;"><span>            (<span style="color:#a6e22e">openpgp-fingerprint</span>
+</span></span><span style="display:flex;"><span>              <span style="color:#e6db74">&#34;2A39 3FFF 68F4 EF7A 3D29  12AF 6F51 20A0 22FB B2D0&#34;</span>))))
+</span></span><span style="display:flex;"><span>       %default-channels)
+</span></span></code></pre></div><p>Luego:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>guix pull
+</span></span><span style="display:flex;"><span>sudo guix system reconfigure /etc/config.scm
+</span></span></code></pre></div><h2 id="8-instalar-paquetes-adicionales">8. Instalar paquetes adicionales</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Paquetes de usuario (no del sistema)</span>
+</span></span><span style="display:flex;"><span>guix install firefox chromium qbittorrent gimp obs tor yt-dlp
+</span></span></code></pre></div><h2 id="diferencias-clave-con-arch">Diferencias clave con Arch:</h2>
+<ol>
+<li><strong>Todo es declarativo</strong>: Tu <code>/etc/config.scm</code> define TODO el sistema</li>
+<li><strong>Sin pacman/yay</strong>: Usás <code>guix install</code>, <code>guix remove</code>, <code>guix search</code></li>
+<li><strong>Rollbacks</strong>: <code>sudo guix system roll-back</code> para volver atrás</li>
+<li><strong>Generaciones</strong>: El sistema guarda cada versión de tu config</li>
+<li><strong>Más lento</strong>: Guix compila mucho desde source</li>
+<li><strong>Software no libre</strong>: Requiere Nonguix y más configuración manual</li>
+</ol>
+<p>En Guix <strong>tenés binarios precompilados</strong> para la mayoría de paquetes populares (llamados &ldquo;substitutes&rdquo;). Solo compilás desde source si:</p>
+<ul>
+<li>No hay substitute disponible en los servidores</li>
+<li>Modificás algo en la configuración del paquete</li>
+<li>Usás hardware muy específico</li>
+</ul>
+<p>Para Firefox y otros programas grandes, casi siempre hay binarios.</p>
+<h2 id="configuración-100-reproducible">Configuración 100% reproducible</h2>
+<p>Tenés razón, <strong>TODO debe ir en el <code>config.scm</code></strong> para que sea reproducible. Acá te dejo una configuración completa basada en tus paquetes de Arch:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-scheme" data-lang="scheme"><span style="display:flex;"><span><span style="color:#75715e">;; /etc/config.scm - Configuración completa del sistema</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#a6e22e">use-modules</span> (<span style="color:#a6e22e">gnu</span>)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> system)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> system nss)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages admin)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages audio)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages base)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages bash)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages bittorrent)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages compression)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages curl)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages disk)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages emacs)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages file-systems)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages fonts)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages freedesktop)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages games)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages gcc)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages gdb)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages gnome)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages gnuzilla)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages image)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages image-viewers)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages irc)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages kde-frameworks)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages less)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages libusb)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages linux)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages mail)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages man)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages music)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages ncurses)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages networking)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages package-management)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages pdf)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages pulseaudio)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages python)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages rsync)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages samba)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages screen)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages ssh)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages terminals)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages tex)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages text-editors)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages tor)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages version-control)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages video)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages vim)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages virtualization)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages web)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages web-browsers)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages wm)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages xdisorg)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">gnu</span> packages xorg)
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">nongnu</span> packages linux)      <span style="color:#75715e">; Para kernel no libre si lo necesitás</span>
+</span></span><span style="display:flex;"><span>             (<span style="color:#a6e22e">nongnu</span> system linux-initrd)) <span style="color:#75715e">; Para firmware propietario</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#a6e22e">use-service-modules</span> desktop networking ssh xorg)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>(<span style="color:#a6e22e">operating-system</span>
+</span></span><span style="display:flex;"><span>  (<span style="color:#a6e22e">locale</span> <span style="color:#e6db74">&#34;en_US.utf8&#34;</span>)
+</span></span><span style="display:flex;"><span>  (<span style="color:#a6e22e">timezone</span> <span style="color:#e6db74">&#34;America/Argentina/Buenos_Aires&#34;</span>)
+</span></span><span style="display:flex;"><span>  (<span style="color:#a6e22e">keyboard-layout</span> (<span style="color:#a6e22e">keyboard-layout</span> <span style="color:#e6db74">&#34;es&#34;</span> <span style="color:#f92672">#</span>:options <span style="color:#f92672">&#39;</span>(<span style="color:#e6db74">&#34;ctrl:nocaps&#34;</span>)))
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  (<span style="color:#a6e22e">host-name</span> <span style="color:#e6db74">&#34;guix&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">;; Kernel (comentá estas 2 líneas si querés solo software libre)</span>
+</span></span><span style="display:flex;"><span>  (<span style="color:#a6e22e">kernel</span> linux)
+</span></span><span style="display:flex;"><span>  (<span style="color:#a6e22e">initrd</span> microcode-initrd)
+</span></span><span style="display:flex;"><span>  (<span style="color:#a6e22e">firmware</span> (list linux-firmware))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  (<span style="color:#a6e22e">bootloader</span> (<span style="color:#a6e22e">bootloader-configuration</span>
+</span></span><span style="display:flex;"><span>                (<span style="color:#a6e22e">bootloader</span> grub-efi-bootloader)
+</span></span><span style="display:flex;"><span>                (<span style="color:#a6e22e">targets</span> <span style="color:#f92672">&#39;</span>(<span style="color:#e6db74">&#34;/boot/efi&#34;</span>))
+</span></span><span style="display:flex;"><span>                (<span style="color:#a6e22e">keyboard-layout</span> keyboard-layout)))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  (<span style="color:#a6e22e">file-systems</span> (<span style="color:#a6e22e">cons*</span> (<span style="color:#a6e22e">file-system</span>
+</span></span><span style="display:flex;"><span>                         (<span style="color:#a6e22e">mount-point</span> <span style="color:#e6db74">&#34;/boot/efi&#34;</span>)
+</span></span><span style="display:flex;"><span>                         (<span style="color:#a6e22e">device</span> (<span style="color:#a6e22e">uuid</span> <span style="color:#e6db74">&#34;XXXX-XXXX&#34;</span> <span style="color:#e6db74">&#39;fat32</span>)) <span style="color:#75715e">; Reemplazá con tu UUID</span>
+</span></span><span style="display:flex;"><span>                         (<span style="color:#a6e22e">type</span> <span style="color:#e6db74">&#34;vfat&#34;</span>))
+</span></span><span style="display:flex;"><span>                       (<span style="color:#a6e22e">file-system</span>
+</span></span><span style="display:flex;"><span>                         (<span style="color:#a6e22e">mount-point</span> <span style="color:#e6db74">&#34;/&#34;</span>)
+</span></span><span style="display:flex;"><span>                         (<span style="color:#a6e22e">device</span> (<span style="color:#a6e22e">uuid</span> <span style="color:#e6db74">&#34;xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx&#34;</span>)) <span style="color:#75715e">; Tu UUID</span>
+</span></span><span style="display:flex;"><span>                         (<span style="color:#a6e22e">type</span> <span style="color:#e6db74">&#34;ext4&#34;</span>))
+</span></span><span style="display:flex;"><span>                       %base-file-systems))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  (<span style="color:#a6e22e">swap-devices</span> (list (<span style="color:#a6e22e">swap-space</span>
+</span></span><span style="display:flex;"><span>                        (<span style="color:#a6e22e">target</span> (<span style="color:#a6e22e">uuid</span> <span style="color:#e6db74">&#34;xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx&#34;</span>))))) <span style="color:#75715e">; Tu UUID</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">;; Usuarios</span>
+</span></span><span style="display:flex;"><span>  (<span style="color:#a6e22e">users</span> (<span style="color:#a6e22e">cons*</span> (<span style="color:#a6e22e">user-account</span>
+</span></span><span style="display:flex;"><span>                  (<span style="color:#a6e22e">name</span> <span style="color:#e6db74">&#34;esotericwarfare&#34;</span>)
+</span></span><span style="display:flex;"><span>                  (<span style="color:#a6e22e">comment</span> <span style="color:#e6db74">&#34;&#34;</span>)
+</span></span><span style="display:flex;"><span>                  (<span style="color:#a6e22e">group</span> <span style="color:#e6db74">&#34;users&#34;</span>)
+</span></span><span style="display:flex;"><span>                  (<span style="color:#a6e22e">home-directory</span> <span style="color:#e6db74">&#34;/home/esotericwarfare&#34;</span>)
+</span></span><span style="display:flex;"><span>                  (<span style="color:#a6e22e">supplementary-groups</span> <span style="color:#f92672">&#39;</span>(<span style="color:#e6db74">&#34;wheel&#34;</span> <span style="color:#e6db74">&#34;netdev&#34;</span> <span style="color:#e6db74">&#34;audio&#34;</span> <span style="color:#e6db74">&#34;video&#34;</span> 
+</span></span><span style="display:flex;"><span>                                         <span style="color:#e6db74">&#34;lp&#34;</span> <span style="color:#e6db74">&#34;kvm&#34;</span> <span style="color:#e6db74">&#34;libvirt&#34;</span>)))
+</span></span><span style="display:flex;"><span>                %base-user-accounts))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">;; Sudoers</span>
+</span></span><span style="display:flex;"><span>  (<span style="color:#a6e22e">sudoers-file</span> (<span style="color:#a6e22e">plain-file</span> <span style="color:#e6db74">&#34;sudoers&#34;</span> <span style="color:#e6db74">&#34;\
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">root ALL=(ALL) ALL
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">%wheel ALL=(ALL) ALL
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;</span>))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">;; PAQUETES DEL SISTEMA - TODO acá para que sea reproducible</span>
+</span></span><span style="display:flex;"><span>  (<span style="color:#a6e22e">packages</span> (append (<span style="color:#a6e22e">list</span>
+</span></span><span style="display:flex;"><span>                     <span style="color:#75715e">;; Base</span>
+</span></span><span style="display:flex;"><span>                     vim
+</span></span><span style="display:flex;"><span>                     git
+</span></span><span style="display:flex;"><span>                     tmux
+</span></span><span style="display:flex;"><span>                     fish-shell
+</span></span><span style="display:flex;"><span>                     wget
+</span></span><span style="display:flex;"><span>                     curl
+</span></span><span style="display:flex;"><span>                     rsync
+</span></span><span style="display:flex;"><span>                     tree
+</span></span><span style="display:flex;"><span>                     htop
+</span></span><span style="display:flex;"><span>                     btop
+</span></span><span style="display:flex;"><span>                     unzip
+</span></span><span style="display:flex;"><span>                     unrar
+</span></span><span style="display:flex;"><span>                     bash-completion
+</span></span><span style="display:flex;"><span>                     man-db
+</span></span><span style="display:flex;"><span>                     man-pages
+</span></span><span style="display:flex;"><span>                     plocate
+</span></span><span style="display:flex;"><span>                     fzf
+</span></span><span style="display:flex;"><span>                     bc
+</span></span><span style="display:flex;"><span>                     jq
+</span></span><span style="display:flex;"><span>                     
+</span></span><span style="display:flex;"><span>                     <span style="color:#75715e">;; Network</span>
+</span></span><span style="display:flex;"><span>                     whois
+</span></span><span style="display:flex;"><span>                     inetutils
+</span></span><span style="display:flex;"><span>                     openssh
+</span></span><span style="display:flex;"><span>                     tor
+</span></span><span style="display:flex;"><span>                     torsocks
+</span></span><span style="display:flex;"><span>                     
+</span></span><span style="display:flex;"><span>                     <span style="color:#75715e">;; Browsers y web</span>
+</span></span><span style="display:flex;"><span>                     icecat              <span style="color:#75715e">; Firefox de GNU</span>
+</span></span><span style="display:flex;"><span>                     ungoogled-chromium  <span style="color:#75715e">; Chromium sin Google</span>
+</span></span><span style="display:flex;"><span>                     w3m
+</span></span><span style="display:flex;"><span>                     lynx
+</span></span><span style="display:flex;"><span>                     falkon
+</span></span><span style="display:flex;"><span>                     
+</span></span><span style="display:flex;"><span>                     <span style="color:#75715e">;; Terminal apps</span>
+</span></span><span style="display:flex;"><span>                     irssi
+</span></span><span style="display:flex;"><span>                     neomutt
+</span></span><span style="display:flex;"><span>                     isync
+</span></span><span style="display:flex;"><span>                     msmtp
+</span></span><span style="display:flex;"><span>                     notmuch
+</span></span><span style="display:flex;"><span>                     newsboat
+</span></span><span style="display:flex;"><span>                     
+</span></span><span style="display:flex;"><span>                     <span style="color:#75715e">;; Multimedia</span>
+</span></span><span style="display:flex;"><span>                     mpv
+</span></span><span style="display:flex;"><span>                     yt-dlp
+</span></span><span style="display:flex;"><span>                     imagemagick
+</span></span><span style="display:flex;"><span>                     gimp
+</span></span><span style="display:flex;"><span>                     obs
+</span></span><span style="display:flex;"><span>                     ffmpeg
+</span></span><span style="display:flex;"><span>                     
+</span></span><span style="display:flex;"><span>                     <span style="color:#75715e">;; Audio</span>
+</span></span><span style="display:flex;"><span>                     pipewire
+</span></span><span style="display:flex;"><span>                     pulseaudio  <span style="color:#75715e">; o pipewire según prefieras</span>
+</span></span><span style="display:flex;"><span>                     alsa-utils
+</span></span><span style="display:flex;"><span>                     
+</span></span><span style="display:flex;"><span>                     <span style="color:#75715e">;; Documents</span>
+</span></span><span style="display:flex;"><span>                     libreoffice
+</span></span><span style="display:flex;"><span>                     evince
+</span></span><span style="display:flex;"><span>                     texlive
+</span></span><span style="display:flex;"><span>                     
+</span></span><span style="display:flex;"><span>                     <span style="color:#75715e">;; Desarrollo</span>
+</span></span><span style="display:flex;"><span>                     python
+</span></span><span style="display:flex;"><span>                     python-pip
+</span></span><span style="display:flex;"><span>                     
+</span></span><span style="display:flex;"><span>                     <span style="color:#75715e">;; Sway/Wayland</span>
+</span></span><span style="display:flex;"><span>                     sway
+</span></span><span style="display:flex;"><span>                     waybar
+</span></span><span style="display:flex;"><span>                     wofi        <span style="color:#75715e">; equivalente a dmenu para wayland</span>
+</span></span><span style="display:flex;"><span>                     foot        <span style="color:#75715e">; terminal</span>
+</span></span><span style="display:flex;"><span>                     grim        <span style="color:#75715e">; screenshots</span>
+</span></span><span style="display:flex;"><span>                     wl-clipboard
+</span></span><span style="display:flex;"><span>                     xdg-desktop-portal
+</span></span><span style="display:flex;"><span>                     xdg-desktop-portal-wlr
+</span></span><span style="display:flex;"><span>                     
+</span></span><span style="display:flex;"><span>                     <span style="color:#75715e">;; Fonts</span>
+</span></span><span style="display:flex;"><span>                     font-terminus
+</span></span><span style="display:flex;"><span>                     font-google-noto
+</span></span><span style="display:flex;"><span>                     font-google-noto-emoji
+</span></span><span style="display:flex;"><span>                     font-google-noto-sans-cjk
+</span></span><span style="display:flex;"><span>                     
+</span></span><span style="display:flex;"><span>                     <span style="color:#75715e">;; Virtualización</span>
+</span></span><span style="display:flex;"><span>                     qemu
+</span></span><span style="display:flex;"><span>                     virt-manager
+</span></span><span style="display:flex;"><span>                     
+</span></span><span style="display:flex;"><span>                     <span style="color:#75715e">;; Torrents</span>
+</span></span><span style="display:flex;"><span>                     qbittorrent
+</span></span><span style="display:flex;"><span>                     
+</span></span><span style="display:flex;"><span>                     <span style="color:#75715e">;; Otros</span>
+</span></span><span style="display:flex;"><span>                     translate-shell
+</span></span><span style="display:flex;"><span>                     hugo
+</span></span><span style="display:flex;"><span>                     telegram-desktop
+</span></span><span style="display:flex;"><span>                     
+</span></span><span style="display:flex;"><span>                     <span style="color:#75715e">;; Certificados SSL (IMPORTANTE)</span>
+</span></span><span style="display:flex;"><span>                     nss-certs
+</span></span><span style="display:flex;"><span>                     le-certs)
+</span></span><span style="display:flex;"><span>                    %base-packages))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">;; SERVICIOS</span>
+</span></span><span style="display:flex;"><span>  (<span style="color:#a6e22e">services</span>
+</span></span><span style="display:flex;"><span>   (append (<span style="color:#a6e22e">list</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">;; Network</span>
+</span></span><span style="display:flex;"><span>            (<span style="color:#a6e22e">service</span> network-manager-service-type)
+</span></span><span style="display:flex;"><span>            (<span style="color:#a6e22e">service</span> wpa-supplicant-service-type)
+</span></span><span style="display:flex;"><span>            
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">;; SSH</span>
+</span></span><span style="display:flex;"><span>            (<span style="color:#a6e22e">service</span> openssh-service-type
+</span></span><span style="display:flex;"><span>                     (<span style="color:#a6e22e">openssh-configuration</span>
+</span></span><span style="display:flex;"><span>                      (<span style="color:#a6e22e">permit-root-login</span> <span style="color:#66d9ef">#f</span>)
+</span></span><span style="display:flex;"><span>                      (<span style="color:#a6e22e">password-authentication?</span> <span style="color:#66d9ef">#t</span>)))
+</span></span><span style="display:flex;"><span>            
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">;; Tor</span>
+</span></span><span style="display:flex;"><span>            (<span style="color:#a6e22e">service</span> tor-service-type)
+</span></span><span style="display:flex;"><span>            
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">;; Desktop/Wayland</span>
+</span></span><span style="display:flex;"><span>            (<span style="color:#a6e22e">service</span> seatd-service-type)
+</span></span><span style="display:flex;"><span>            (<span style="color:#a6e22e">service</span> greetd-service-type
+</span></span><span style="display:flex;"><span>                     (<span style="color:#a6e22e">greetd-configuration</span>
+</span></span><span style="display:flex;"><span>                      (<span style="color:#a6e22e">terminals</span>
+</span></span><span style="display:flex;"><span>                       (<span style="color:#a6e22e">list</span>
+</span></span><span style="display:flex;"><span>                        (<span style="color:#a6e22e">greetd-terminal-configuration</span>
+</span></span><span style="display:flex;"><span>                         (<span style="color:#a6e22e">terminal-vt</span> <span style="color:#e6db74">&#34;1&#34;</span>)
+</span></span><span style="display:flex;"><span>                         (<span style="color:#a6e22e">terminal-switch</span> <span style="color:#66d9ef">#t</span>))))))
+</span></span><span style="display:flex;"><span>            
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">;; Audio</span>
+</span></span><span style="display:flex;"><span>            (<span style="color:#a6e22e">service</span> pipewire-service-type)
+</span></span><span style="display:flex;"><span>            
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">;; Samba</span>
+</span></span><span style="display:flex;"><span>            (<span style="color:#a6e22e">service</span> samba-service-type
+</span></span><span style="display:flex;"><span>                     (<span style="color:#a6e22e">samba-configuration</span>
+</span></span><span style="display:flex;"><span>                      (<span style="color:#a6e22e">config-file</span> (<span style="color:#a6e22e">plain-file</span> <span style="color:#e6db74">&#34;smb.conf&#34;</span> <span style="color:#e6db74">&#34;\
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">[global]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">workgroup = WORKGROUP
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">security = user
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;</span>))))
+</span></span><span style="display:flex;"><span>            
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">;; Virtualization</span>
+</span></span><span style="display:flex;"><span>            (<span style="color:#a6e22e">service</span> libvirt-service-type
+</span></span><span style="display:flex;"><span>                     (<span style="color:#a6e22e">libvirt-configuration</span>
+</span></span><span style="display:flex;"><span>                      (<span style="color:#a6e22e">unix-sock-group</span> <span style="color:#e6db74">&#34;libvirt&#34;</span>)))
+</span></span><span style="display:flex;"><span>            (<span style="color:#a6e22e">service</span> virtlog-service-type)
+</span></span><span style="display:flex;"><span>            
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">;; Cron</span>
+</span></span><span style="display:flex;"><span>            (<span style="color:#a6e22e">service</span> mcron-service-type))
+</span></span><span style="display:flex;"><span>           
+</span></span><span style="display:flex;"><span>           <span style="color:#75715e">;; Servicios base</span>
+</span></span><span style="display:flex;"><span>           %base-services))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">;; Name service switch (para resolver nombres)</span>
+</span></span><span style="display:flex;"><span>  (<span style="color:#a6e22e">name-service-switch</span> %mdns-host-lookup-nss))
+</span></span></code></pre></div><h2 id="archivo-de-canales-configguixchannelsscm">Archivo de canales (<code>~/.config/guix/channels.scm</code>)</h2>
+<p>Para tener Nonguix (software no libre):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-scheme" data-lang="scheme"><span style="display:flex;"><span>(list (<span style="color:#a6e22e">channel</span>
+</span></span><span style="display:flex;"><span>        (<span style="color:#a6e22e">name</span> <span style="color:#e6db74">&#39;nonguix</span>)
+</span></span><span style="display:flex;"><span>        (<span style="color:#a6e22e">url</span> <span style="color:#e6db74">&#34;https://gitlab.com/nonguix/nonguix&#34;</span>)
+</span></span><span style="display:flex;"><span>        (<span style="color:#a6e22e">branch</span> <span style="color:#e6db74">&#34;master&#34;</span>)
+</span></span><span style="display:flex;"><span>        (<span style="color:#a6e22e">introduction</span>
+</span></span><span style="display:flex;"><span>          (<span style="color:#a6e22e">make-channel-introduction</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;897c1a470da759236cc11798f4e0a5f7d4d59fbc&#34;</span>
+</span></span><span style="display:flex;"><span>            (<span style="color:#a6e22e">openpgp-fingerprint</span>
+</span></span><span style="display:flex;"><span>              <span style="color:#e6db74">&#34;2A39 3FFF 68F4 EF7A 3D29  12AF 6F51 20A0 22FB B2D0&#34;</span>))))
+</span></span><span style="display:flex;"><span>      (<span style="color:#a6e22e">channel</span>
+</span></span><span style="display:flex;"><span>        (<span style="color:#a6e22e">name</span> <span style="color:#e6db74">&#39;guix</span>)
+</span></span><span style="display:flex;"><span>        (<span style="color:#a6e22e">url</span> <span style="color:#e6db74">&#34;https://git.savannah.gnu.org/git/guix.git&#34;</span>)
+</span></span><span style="display:flex;"><span>        (<span style="color:#a6e22e">branch</span> <span style="color:#e6db74">&#34;master&#34;</span>)
+</span></span><span style="display:flex;"><span>        (<span style="color:#a6e22e">introduction</span>
+</span></span><span style="display:flex;"><span>          (<span style="color:#a6e22e">make-channel-introduction</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;9edb3f66fd807b096b48283debdcddccfea34bad&#34;</span>
+</span></span><span style="display:flex;"><span>            (<span style="color:#a6e22e">openpgp-fingerprint</span>
+</span></span><span style="display:flex;"><span>              <span style="color:#e6db74">&#34;BBB0 2DDF 2CEA F6A8 0D1D  E643 A2A0 6DF2 A33A 54FA&#34;</span>)))))
+</span></span></code></pre></div><h2 id="workflow-de-uso">Workflow de uso:</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># 1. Editar config.scm</span>
+</span></span><span style="display:flex;"><span>sudo vim /etc/config.scm
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 2. Actualizar canales (equivalente a pacman -Sy)</span>
+</span></span><span style="display:flex;"><span>guix pull
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 3. Reconstruir sistema (aplica cambios)</span>
+</span></span><span style="display:flex;"><span>sudo guix system reconfigure /etc/config.scm
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 4. Ver generaciones disponibles</span>
+</span></span><span style="display:flex;"><span>guix system list-generations
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 5. Rollback si algo falla</span>
+</span></span><span style="display:flex;"><span>sudo guix system roll-back
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 6. Buscar paquetes</span>
+</span></span><span style="display:flex;"><span>guix search firefox
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 7. Ver qué hay instalado</span>
+</span></span><span style="display:flex;"><span>guix package --list-installed
+</span></span></code></pre></div><h2 id="para-hacer-backup-de-tu-configuración">Para hacer backup de tu configuración:</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Todo lo que necesitás es:</span>
+</span></span><span style="display:flex;"><span>/etc/config.scm
+</span></span><span style="display:flex;"><span>~/.config/guix/channels.scm
+</span></span></code></pre></div><p>Con esos 2 archivos podés reproducir tu sistema <strong>exactamente</strong> en otra máquina.</p>
+<p><strong>Nota importante sobre binarios</strong>: Cuando hagas <code>guix pull</code> la primera vez, va a descargar MUCHOS substitutes (binarios). Para Firefox, Chromium, LibreOffice, etc., siempre hay binarios disponibles. Solo compilás si instalás algo muy obscuro o modificás las opciones de compilación.</p>
+
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+</footer>
+
+
+</body>
+</html>

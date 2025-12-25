@@ -34,7 +34,7 @@ Explicación de por qué gpt:
 To boot MBR under UEFI, you need CSM. Intel pushed for its removal years ago, so it’s unlikely to find it in anything modern. Es recomendable para UEFI con hdd mayores a 2teras, dos también funciona con UEFI pero para bootear un disco duro con MBR(dos) desde UEFI se usa CSM que es algo viejo deprecado por intel). En MBR(DOS) no podés tener una partición de 3 teras. GPT es el futuro. UEFI Firware necesita GPT.">
   <meta itemprop="datePublished" content="2023-11-22T02:05:50-03:00">
   <meta itemprop="dateModified" content="2023-11-22T02:05:50-03:00">
-  <meta itemprop="wordCount" content="5780">
+  <meta itemprop="wordCount" content="5982">
   <meta itemprop="keywords" content="Archlinux,Full,Installation">
   
   <meta name="twitter:card" content="summary">
@@ -214,6 +214,7 @@ Es recomendable para UEFI con hdd mayores a 2teras, dos también funciona con UE
 <h6 id="cambia-las-dns-porque-las-de-claro-personal-movistar-bloquean-páginas-yo-uso-las-de-quad9---está-bloqueado-por-quad9--así-que-ahora-uso-las-dns-de-google">Cambia las DNS porque las de Claro, Personal, Movistar bloquean páginas, yo uso las de Quad9 ( <a href="https://digdeeper.love">https://digdeeper.love</a> está bloqueado por Quad9 ) así que ahora uso las DNS de Google.</h6>
 <p>DNS de Quad9 <a href="https://en.wikipedia.org/wiki/Quad9">https://en.wikipedia.org/wiki/Quad9</a></p>
 <p>sudo vim <code>/etc/resolv.conf</code></p>
+<p>Cambiar las dns con networkmanager explico a lo ultimo. Asi no se cambia porque te la vuelve a pisar.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nameserver 9.9.9.11
 </span></span><span style="display:flex;"><span>nameserver 149.112.112.11
 </span></span></code></pre></div><hr>
@@ -1314,7 +1315,43 @@ More information: &lt;<a href="https://man.archlinux.org/man/pacman.8">https://m
 </span></span><span style="display:flex;"><span>yay-debug
 </span></span><span style="display:flex;"><span>yt-dlp
 </span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>esotericwarfare@arch post<span style="color:#f92672">]</span>$ 
-</span></span></code></pre></div>
+</span></span></code></pre></div><h4 id="cambiar-dns-con-networkmanager">Cambiar DNS con networkmanager</h4>
+<p>The issue you&rsquo;re experiencing is that NetworkManager is overwriting <code>/etc/resolv.conf</code>. Here&rsquo;s how to properly set DNS with NetworkManager:</p>
+<h2 id="quick-solution">Quick Solution</h2>
+<p>Edit your connection with <code>nmcli</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># List your connections</span>
+</span></span><span style="display:flex;"><span>nmcli connection show
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Set DNS for your connection (replace &#34;Your-Connection-Name&#34;)</span>
+</span></span><span style="display:flex;"><span>sudo nmcli connection modify <span style="color:#e6db74">&#34;Your-Connection-Name&#34;</span> ipv4.dns <span style="color:#e6db74">&#34;8.8.8.8 8.8.4.4&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Ignore auto DNS from DHCP</span>
+</span></span><span style="display:flex;"><span>sudo nmcli connection modify <span style="color:#e6db74">&#34;Your-Connection-Name&#34;</span> ipv4.ignore-auto-dns yes
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Restart the connection</span>
+</span></span><span style="display:flex;"><span>sudo nmcli connection down <span style="color:#e6db74">&#34;Your-Connection-Name&#34;</span>
+</span></span><span style="display:flex;"><span>sudo nmcli connection up <span style="color:#e6db74">&#34;Your-Connection-Name&#34;</span>
+</span></span></code></pre></div><h2 id="alternative-using-nmtui">Alternative: Using nmtui</h2>
+<p>If you prefer a text UI:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo nmtui
+</span></span></code></pre></div><p>Navigate to &ldquo;Edit a connection&rdquo; → select your connection → scroll to IPv4 configuration → set DNS servers manually.</p>
+<h2 id="why-etcresolvconf-gets-overwritten">Why /etc/resolv.conf gets overwritten</h2>
+<p>NetworkManager manages <code>/etc/resolv.conf</code> automatically. On Arch, it&rsquo;s often a symlink to <code>/run/systemd/resolve/stub-resolv.conf</code> or similar. NetworkManager regenerates it based on your connection settings.</p>
+<h2 id="global-dns-configuration">Global DNS Configuration</h2>
+<p>If you want to set DNS globally for all NetworkManager connections, edit <code>/etc/NetworkManager/NetworkManager.conf</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-ini" data-lang="ini"><span style="display:flex;"><span><span style="color:#66d9ef">[main]</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">dns</span><span style="color:#f92672">=</span><span style="color:#e6db74">default</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">[global-dns]</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">searches</span><span style="color:#f92672">=</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">options</span><span style="color:#f92672">=</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">[global-dns-domain-*]</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">servers</span><span style="color:#f92672">=</span><span style="color:#e6db74">8.8.8.8,8.8.4.4</span>
+</span></span></code></pre></div><p>Then restart NetworkManager:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo systemctl restart NetworkManager
+</span></span></code></pre></div><p>The <code>nmcli</code> method is generally the cleanest approach since it stores the settings in the connection profile itself.</p>
+
 </div>
 
 

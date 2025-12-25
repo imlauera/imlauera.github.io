@@ -22,7 +22,7 @@ Si el audio dura más tiempo entonces tenes que usar el script tal cual está, s
 Si el audio dura más tiempo entonces tenes que usar el script tal cual está, si el audio dura menos tenes que hardcodear el valor de totseconds a 5 o a los segundos que pongas por imágen. TODO (para hacer): Arreglar el script si el audio dura menos que las imágenes porque genera valor negativo. Subir video automáticamente a YouTube y a Archive. Crear un artículo automáticamente basado en imágenes. Crear un audio con espeak que tenga la misma duración que el video (contá cuántas imágenes tenes y multiplicá por cada segundo cada imágen). Enlazá las URLs de archive automáticamente Hacer script para juntar videos (no imagenes) con ffmpeg. Subtitular audios subilos a youtube y descargalos con yt-dlp. Pasar los subtitulos a un llm o a chatgpt para que haga un resumen. Generar un archivo de audio con los subtitulos de chatgpt. Sacá las fotos horizontales, grabá el audio (despues de grabar el audio subi el volumen con ffmpeg 4 veces mas el comando esta en la publicacion interesantes-comandos), disponé de espacio disponible.">
   <meta itemprop="datePublished" content="2025-12-02T02:03:33-03:00">
   <meta itemprop="dateModified" content="2025-12-02T02:03:33-03:00">
-  <meta itemprop="wordCount" content="3900">
+  <meta itemprop="wordCount" content="4720">
   
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="Generate videos cli">
@@ -467,6 +467,8 @@ Acá se puede apreciar como dejé todo limpio y ordenado. <!-- raw HTML omitted 
 <h4 id="para-tomar-una-pausa-de-1-minuto-espeak--m--v-mb-us1-speakhello-break-time60s-this-is-a-testspeak">Para tomar una pausa de 1 minuto <code>espeak -m -v mb-us1 &quot;&lt;speak&gt;Hello, &lt;break time='60s'/&gt; this is a test.&lt;/speak&gt;&quot;</code></h4>
 <p>Le pregunte a Claude y me dijo que se puede hacer todo con vim.</p>
 <p>Definimos esta funcion en <code>.vimrc</code>.</p>
+<h1 id="ahora-deje-de-usar-esto-estyo-usando-generar_videosh-de-nobloatnews">Ahora deje de usar esto estyo usando <code>generar_video.sh</code> de nobloatnews.</h1>
+<h4 id="esta-es-la-que-estoy-usando-ahora-y-funciona-muy-bien-muy-sincronizado-mejor-que-el-de-abajo">Esta es la que estoy usando ahora Y FUNCIONA MUY BIEN MUY SINCRONIZADO MEJOR QUE EL DE ABAJO.</h4>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>:function! AddBreak<span style="color:#f92672">()</span>
 </span></span><span style="display:flex;"><span>:  let line <span style="color:#f92672">=</span> getline<span style="color:#f92672">(</span><span style="color:#e6db74">&#39;.&#39;</span><span style="color:#f92672">)</span>
 </span></span><span style="display:flex;"><span>:  let len <span style="color:#f92672">=</span> strlen<span style="color:#f92672">(</span>line<span style="color:#f92672">)</span>
@@ -476,7 +478,24 @@ Acá se puede apreciar como dejé todo limpio y ordenado. <!-- raw HTML omitted 
 </span></span><span style="display:flex;"><span>:    call setline<span style="color:#f92672">(</span><span style="color:#e6db74">&#39;.&#39;</span>, line . <span style="color:#e6db74">&#34; &lt;break time=&#39;&#34;</span> . ms . <span style="color:#e6db74">&#34;ms&#39;/&gt;&#34;</span><span style="color:#f92672">)</span>
 </span></span><span style="display:flex;"><span>:  endif
 </span></span><span style="display:flex;"><span>:endfunction
-</span></span></code></pre></div><p>Y ahora abrí el archivo del script y llama a esta funciona: <code>:%g/./call AddBreak()</code></p>
+</span></span></code></pre></div><hr>
+<p>Y uso los scripts que están en el repo de nobloatnews.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>:function! AddBreak<span style="color:#f92672">()</span>
+</span></span><span style="display:flex;"><span>:  let line <span style="color:#f92672">=</span> getline<span style="color:#f92672">(</span><span style="color:#e6db74">&#39;.&#39;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>:  let len <span style="color:#f92672">=</span> strlen<span style="color:#f92672">(</span>line<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>:  <span style="color:#66d9ef">if</span> line !~ <span style="color:#e6db74">&#39;&lt;break time=&#39;</span>
+</span></span><span style="display:flex;"><span>:    <span style="color:#e6db74">&#34; Calcular tiempo de habla (60ms por carácter)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">:    let speech_time = len * 60
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">:    &#34;</span> El break debe completar 5000ms
+</span></span><span style="display:flex;"><span>:    let break_time <span style="color:#f92672">=</span> <span style="color:#ae81ff">5000</span> - speech_time
+</span></span><span style="display:flex;"><span>:    <span style="color:#e6db74">&#34; Asegurar que el break no sea negativo
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">:    if break_time &lt; 500
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">:      let break_time = 500
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">:    endif
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">:    call setline(&#39;.&#39;, line . &#34;</span> &lt;break time<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;&#34; . break_time . &#34;ms&#39;</span>/&gt;<span style="color:#e6db74">&#34;)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">:  endif
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">:endfunction
+</span></span></span></code></pre></div><p>Y ahora abrí el archivo del script y llama a esta funciona: <code>:%g/./call AddBreak()</code></p>
 <p>No se puede poner <code>&lt;break time='5000ms'/&gt;</code> solo tenes que agregar una palabra antes, no sé por qué.</p>
 <hr>
 <p>Perfecto, con <strong>Arch + Bash + Vim</strong> se puede hacer algo <em>muy cómodo e interactivo</em> 👍
@@ -968,6 +987,149 @@ La idea correcta no es “medir en vivo” mientras escribes, sino:</p>
 </span></span><span style="display:flex;"><span>    rm -f <span style="color:#e6db74">&#34;</span>$TEMP_SRT<span style="color:#e6db74">&#34;</span>
 </span></span><span style="display:flex;"><span>    exit <span style="color:#ae81ff">1</span>
 </span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span></code></pre></div><h3 id="nueva-version-de-slider-para-que-maneje-bien-la-sincronizacion-entre-las-imagenes-en-diferentes-reproductores">Nueva version de slider para que maneje bien la sincronizacion entre las imagenes en diferentes reproductores</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/sh
+</span></span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Give a file with images and timecodes and creates a video slideshow of them.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Timecodes must be in format 00:00:00.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Imagemagick and ffmpeg required.</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Application cache if not stated elsewhere.</span>
+</span></span><span style="display:flex;"><span>cache<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>XDG_CACHE_HOME<span style="color:#66d9ef">:-</span>$HOME/.cache<span style="color:#e6db74">}</span><span style="color:#e6db74">/slider&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">while</span> getopts <span style="color:#e6db74">&#34;hvrpi:c:a:o:d:f:t:e:x:s:&#34;</span> o; <span style="color:#66d9ef">do</span> <span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>o<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> in
+</span></span><span style="display:flex;"><span>	c<span style="color:#f92672">)</span> bgc<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$OPTARG<span style="color:#e6db74">&#34;</span> ;;
+</span></span><span style="display:flex;"><span>	t<span style="color:#f92672">)</span> fgc<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$OPTARG<span style="color:#e6db74">&#34;</span> ;;
+</span></span><span style="display:flex;"><span>	f<span style="color:#f92672">)</span> font<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$OPTARG<span style="color:#e6db74">&#34;</span> ;;
+</span></span><span style="display:flex;"><span>	i<span style="color:#f92672">)</span> file<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$OPTARG<span style="color:#e6db74">&#34;</span> ;;
+</span></span><span style="display:flex;"><span>	a<span style="color:#f92672">)</span> audio<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$OPTARG<span style="color:#e6db74">&#34;</span> ;;
+</span></span><span style="display:flex;"><span>	o<span style="color:#f92672">)</span> outfile<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$OPTARG<span style="color:#e6db74">&#34;</span> ;;
+</span></span><span style="display:flex;"><span>	d<span style="color:#f92672">)</span> prepdir<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$OPTARG<span style="color:#e6db74">&#34;</span> ;;
+</span></span><span style="display:flex;"><span>	r<span style="color:#f92672">)</span> redo<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$OPTARG<span style="color:#e6db74">&#34;</span> ;;
+</span></span><span style="display:flex;"><span>	s<span style="color:#f92672">)</span> ppt<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$OPTARG<span style="color:#e6db74">&#34;</span> ;;
+</span></span><span style="display:flex;"><span>	e<span style="color:#f92672">)</span> endtime<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$OPTARG<span style="color:#e6db74">&#34;</span> ;;
+</span></span><span style="display:flex;"><span>	x<span style="color:#f92672">)</span> res<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$OPTARG<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>		echo <span style="color:#e6db74">&#34;</span>$res<span style="color:#e6db74">&#34;</span> | grep -qv <span style="color:#e6db74">&#34;^[0-9]\+x[0-9]\+</span>$<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">&amp;&amp;</span>
+</span></span><span style="display:flex;"><span>			echo <span style="color:#e6db74">&#34;Resolution must be dimensions separated by a &#39;x&#39;: 1280x720, etc.&#34;</span> <span style="color:#f92672">&amp;&amp;</span>
+</span></span><span style="display:flex;"><span>			exit <span style="color:#ae81ff">1</span> ;;
+</span></span><span style="display:flex;"><span>	p<span style="color:#f92672">)</span> echo <span style="color:#e6db74">&#34;Purge old build files in </span>$cache<span style="color:#e6db74">? [y/N]&#34;</span>
+</span></span><span style="display:flex;"><span>		read -r confirm
+</span></span><span style="display:flex;"><span>		echo <span style="color:#e6db74">&#34;</span>$confirm<span style="color:#e6db74">&#34;</span> | grep -iq <span style="color:#e6db74">&#34;^y</span>$<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">&amp;&amp;</span> rm -rf <span style="color:#e6db74">&#34;</span>$cache<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">&amp;&amp;</span> echo <span style="color:#e6db74">&#34;Done.&#34;</span>
+</span></span><span style="display:flex;"><span>		exit ;;
+</span></span><span style="display:flex;"><span>	v<span style="color:#f92672">)</span> verbose<span style="color:#f92672">=</span>True ;;
+</span></span><span style="display:flex;"><span>	*<span style="color:#f92672">)</span> echo <span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>basename <span style="color:#e6db74">&#34;</span>$0<span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">)</span><span style="color:#e6db74"> usage:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  -i  input timecode list (required)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  -a  audio file
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  -c  color of background (use html names, black is default)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  -t  text color for text slides (white is default)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  -s  text font size for text slides (150 is default)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  -f  text font for text slides (sans serif is default)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  -o  output video file
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  -e  if no audio given, the time in seconds that the last slide will be shown (5 is default)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  -x  resolution (1920x1080 is default)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  -d  tmp directory
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  -r  rerun imagemagick commands even if done previously (in case files or background has changed)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  -p  purge old build files instead of running
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  -v  be verbose&#34;</span> <span style="color:#f92672">&amp;&amp;</span> exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">esac</span> <span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Check that the input file looks like it should.</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">{</span> head -n <span style="color:#ae81ff">1</span> <span style="color:#e6db74">&#34;</span>$file<span style="color:#e6db74">&#34;</span> 2&gt;/dev/null | grep -q <span style="color:#e6db74">&#34;^00:00:00	&#34;</span> ;<span style="color:#f92672">}</span> <span style="color:#f92672">||</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>	echo <span style="color:#e6db74">&#34;Give an input file with -i.&#34;</span> <span style="color:#f92672">&amp;&amp;</span>
+</span></span><span style="display:flex;"><span>	echo <span style="color:#e6db74">&#34;The file should look as this example:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">00:00:00	first_image.jpg
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">00:00:03	otherdirectory/next_image.jpg
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">00:00:09	this_image_starts_at_9_seconds.jpg
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">etc...
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Timecodes and filenames must be separated by Tabs.&#34;</span> <span style="color:#f92672">&amp;&amp;</span>
+</span></span><span style="display:flex;"><span>	exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> -n <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>audio+x<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e"># Check that the audio file looks like an actual audio file.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>file --dereference --brief --mime-type -- <span style="color:#e6db74">&#34;</span>$audio<span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span> in
+</span></span><span style="display:flex;"><span>		audio/*<span style="color:#f92672">)</span> ;;
+</span></span><span style="display:flex;"><span>		*<span style="color:#f92672">)</span> echo <span style="color:#e6db74">&#34;That doesn&#39;t look like an audio file.&#34;</span>; exit <span style="color:#ae81ff">1</span> ;;
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">esac</span>
+</span></span><span style="display:flex;"><span>	totseconds<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>date <span style="color:#e6db74">&#39;+%s&#39;</span> -d <span style="color:#66d9ef">$(</span>ffmpeg -i <span style="color:#e6db74">&#34;</span>$audio<span style="color:#e6db74">&#34;</span> 2&gt;&amp;<span style="color:#ae81ff">1</span> | awk <span style="color:#e6db74">&#39;/Duration/ {print $2}&#39;</span> | sed s/,//<span style="color:#66d9ef">))</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>prepdir<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>prepdir<span style="color:#66d9ef">:-</span>$cache/$file<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>outfile<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>outfile<span style="color:#66d9ef">:-</span>$file.mp4<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>prepfile<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$prepdir<span style="color:#e6db74">/</span>$file<span style="color:#e6db74">.prep&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span> -n <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>verbose+x<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span> <span style="color:#f92672">&amp;&amp;</span> echo <span style="color:#e6db74">&#34;Preparing images... May take a while depending on the number of files.&#34;</span>
+</span></span><span style="display:flex;"><span>mkdir -p <span style="color:#e6db74">&#34;</span>$prepdir<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">while</span> read -r x;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e"># Get the time from the first column.</span>
+</span></span><span style="display:flex;"><span>	time<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>x%%	*<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>	seconds<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>date <span style="color:#e6db74">&#39;+%s&#39;</span> -d <span style="color:#e6db74">&#34;</span>$time<span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e"># Duration is not used on the first looped item.</span>
+</span></span><span style="display:flex;"><span>	duration<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$((</span>seconds <span style="color:#f92672">-</span> prevseconds<span style="color:#66d9ef">))</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e"># Get the filename/text content from the rest.</span>
+</span></span><span style="display:flex;"><span>	content<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>x#*	<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>	base<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>basename <span style="color:#e6db74">&#34;</span>$content<span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>	base<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>base%.*<span style="color:#e6db74">}</span><span style="color:#e6db74">.jpg&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> -f <span style="color:#e6db74">&#34;</span>$content<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e"># If images have already been made in a previous run, do not recreate</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e"># them unless -r was given.</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#f92672">{</span> <span style="color:#f92672">[</span> ! -f <span style="color:#e6db74">&#34;</span>$prepdir<span style="color:#e6db74">/</span>$base<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span> <span style="color:#f92672">||</span> <span style="color:#f92672">[</span> -n <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>redo+x<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span> ;<span style="color:#f92672">}</span> <span style="color:#f92672">&amp;&amp;</span>
+</span></span><span style="display:flex;"><span>			magick -size <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>res<span style="color:#66d9ef">:-</span>1920x1080<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> canvas:<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>bgc<span style="color:#66d9ef">:-</span>black<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> -gravity center <span style="color:#e6db74">&#34;</span>$content<span style="color:#e6db74">&#34;</span> -resize 1920x1080 -composite <span style="color:#e6db74">&#34;</span>$prepdir<span style="color:#e6db74">/</span>$base<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#f92672">{</span> <span style="color:#f92672">[</span> ! -f <span style="color:#e6db74">&#34;</span>$prepdir<span style="color:#e6db74">/</span>$base<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span> <span style="color:#f92672">||</span> <span style="color:#f92672">[</span> -n <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>redo+x<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span> ;<span style="color:#f92672">}</span> <span style="color:#f92672">&amp;&amp;</span>
+</span></span><span style="display:flex;"><span>			magick -size <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>res<span style="color:#66d9ef">:-</span>1920x1080<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> -background <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>bgc<span style="color:#66d9ef">:-</span>black<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> -fill <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>fgc<span style="color:#66d9ef">:-</span>white<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> -font <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>font<span style="color:#66d9ef">:-</span>Sans<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> -pointsize <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>ppt<span style="color:#66d9ef">:-</span>150<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> -gravity center label:<span style="color:#e6db74">&#34;</span>$content<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;</span>$prepdir<span style="color:#e6db74">/</span>$base<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e"># If the first line, do not write yet.</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span>$time<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;00:00:00&#34;</span> <span style="color:#f92672">]</span> <span style="color:#f92672">||</span> echo <span style="color:#e6db74">&#34;file &#39;</span>$prevbase<span style="color:#e6db74">&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">duration </span>$duration<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e"># Keep the information required for the next file.</span>
+</span></span><span style="display:flex;"><span>	prevbase<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$base<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>	prevtime<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$time<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>	prevseconds<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>date <span style="color:#e6db74">&#39;+%s&#39;</span> -d <span style="color:#e6db74">&#34;</span>$prevtime<span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">done</span> &lt; <span style="color:#e6db74">&#34;</span>$file<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Do last file which must be given twice as follows</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Si el audio dura menos el tiempo que el video el endtime deberia ser 3.</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>longitud_audio_float<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>ffprobe -v error -show_entries format<span style="color:#f92672">=</span>duration -of default<span style="color:#f92672">=</span>noprint_wrappers<span style="color:#f92672">=</span>1:nokey<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span> $audio<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>longitud_audio<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>printf <span style="color:#e6db74">&#34;%.0f&#34;</span> $longitud_audio_float<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>cantidad_imagenes<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>cat $file | wc -l<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## 3 segundos cada imagen</span>
+</span></span><span style="display:flex;"><span>longitud_video<span style="color:#f92672">=</span><span style="color:#66d9ef">$((</span>cantidad_imagenes*2<span style="color:#66d9ef">))</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>endtime<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">((</span>longitud_audio &gt;<span style="color:#f92672">=</span> longitud_video<span style="color:#f92672">))</span> <span style="color:#f92672">&amp;&amp;</span> endtime<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$((</span>totseconds-seconds<span style="color:#66d9ef">))</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">((</span>longitud_video &gt; longitud_audio<span style="color:#f92672">))</span> <span style="color:#f92672">&amp;&amp;</span> endtime<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;2&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;file &#39;</span>$base<span style="color:#e6db74">&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">duration </span><span style="color:#e6db74">${</span>endtime<span style="color:#66d9ef">:-</span>2<span style="color:#e6db74">}</span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">file &#39;</span>$base<span style="color:#e6db74">&#39;&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span> &gt; <span style="color:#e6db74">&#34;</span>$prepfile<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> -n <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>audio+x<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>	ffmpeg -hide_banner -y -f concat -safe <span style="color:#ae81ff">0</span> -i <span style="color:#e6db74">&#34;</span>$prepfile<span style="color:#e6db74">&#34;</span> -i <span style="color:#e6db74">&#34;</span>$audio<span style="color:#e6db74">&#34;</span> -c:a aac -r <span style="color:#ae81ff">30</span> -vsync cfr -c:v libx264 -pix_fmt yuv420p <span style="color:#e6db74">&#34;</span>$outfile<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>	ffmpeg -hide_banner -y -f concat -safe <span style="color:#ae81ff">0</span> -i <span style="color:#e6db74">&#34;</span>$prepfile<span style="color:#e6db74">&#34;</span> -r <span style="color:#ae81ff">30</span> -vsync cfr -c:v libx264 -pix_fmt yuv420p <span style="color:#e6db74">&#34;</span>$outfile<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Might also try:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># -vf &#34;fps=${fps:-24},format=yuv420p&#34; &#34;$outfile&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># but has given some problems.</span>
 </span></span></code></pre></div>
 </div>
 
