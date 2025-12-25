@@ -22,7 +22,7 @@
 1. Preparación inicial (desde el USB de Guix) # Cargar teclado español loadkeys es # Conectar WiFi rfkill unblock all nmcli device wifi list nmcli device wifi connect &#34;tu-ssid&#34; password &#34;tu-password&#34; 2. Particionado (igual que en Arch con GPT/UEFI) cfdisk /dev/sda # Crear: # - /dev/sda1: 512M (EFI System) # - /dev/sda2: 4G (Linux swap) # - /dev/sda3: resto (Linux filesystem) # Formatear mkfs.fat -F32 /dev/sda1 mkswap /dev/sda2 mkfs.ext4 /dev/sda3 # Montar mount /dev/sda3 /mnt mkdir -p /mnt/boot/efi mount /dev/sda1 /mnt/boot/efi swapon /dev/sda2 3. Crear configuración base de Guix # Generar configuración inicial herd start cow-store /mnt guix system init /mnt/etc/config.scm /mnt Pero antes necesitás crear el archivo /mnt/etc/config.scm. Acá va el equivalente a tu setup de Arch:">
   <meta itemprop="datePublished" content="2025-12-24T20:53:39-03:00">
   <meta itemprop="dateModified" content="2025-12-24T20:53:39-03:00">
-  <meta itemprop="wordCount" content="1308">
+  <meta itemprop="wordCount" content="1990">
   
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="Guix">
@@ -598,6 +598,288 @@ Pero antes necesitás crear el archivo /mnt/etc/config.scm. Acá va el equivalen
 </span></span><span style="display:flex;"><span>~/.config/guix/channels.scm
 </span></span></code></pre></div><p>Con esos 2 archivos podés reproducir tu sistema <strong>exactamente</strong> en otra máquina.</p>
 <p><strong>Nota importante sobre binarios</strong>: Cuando hagas <code>guix pull</code> la primera vez, va a descargar MUCHOS substitutes (binarios). Para Firefox, Chromium, LibreOffice, etc., siempre hay binarios disponibles. Solo compilás si instalás algo muy obscuro o modificás las opciones de compilación.</p>
+<hr>
+<h1 id="chatgpt">ChatGPT</h1>
+<p>Below is a <strong>clean, Arch-mindset, step-by-step guide to install GNU Guix System</strong>, explicitly mapped from how <em>you</em> already install Arch.</p>
+<p>I’ll <strong>reuse your mental model</strong> (UEFI+GPT, manual partitioning, Wi-Fi, keymap ES, nonfree firmware) but <strong>translate it to Guix terms</strong>.</p>
+<p>This is <strong>not Guix “easy mode”</strong> — it’s the <em>right</em> way for someone coming from Arch.</p>
+<hr>
+<h1 id="0-important-conceptual-differences-arch--guix">0. Important conceptual differences (Arch → Guix)</h1>
+<p>Before commands, this matters:</p>
+<table>
+  <thead>
+      <tr>
+          <th>Arch</th>
+          <th>Guix</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>pacman</td>
+          <td>guix package / guix system</td>
+      </tr>
+      <tr>
+          <td>mutable system</td>
+          <td><strong>immutable system</strong> (declarative)</td>
+      </tr>
+      <tr>
+          <td>edit files directly</td>
+          <td>edit <strong>/etc/config.scm</strong></td>
+      </tr>
+      <tr>
+          <td>reinstall to rollback</td>
+          <td><strong>guix roll-back</strong></td>
+      </tr>
+      <tr>
+          <td>AUR</td>
+          <td><strong>Guix channels</strong></td>
+      </tr>
+      <tr>
+          <td>systemd</td>
+          <td><strong>shepherd</strong></td>
+      </tr>
+  </tbody>
+</table>
+<p>You <strong>do not chroot</strong> in Guix.
+You <strong>declare the system</strong>, then Guix builds it.</p>
+<hr>
+<h1 id="1-boot-the-guix-installer-iso">1. Boot the Guix installer ISO</h1>
+<p>Download <strong>nonfree ISO</strong> (you explicitly asked for nonfree drivers):</p>
+<p>👉 <strong>Use this one</strong>
+<a href="https://guix.gnu.org/download/">https://guix.gnu.org/download/</a></p>
+<p>Choose:</p>
+<pre tabindex="0"><code>guix-system-install-1.4.x.x86_64-linux.iso (with firmware)
+</code></pre><p>Write it with <code>dd</code> (from Arch):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo dd <span style="color:#66d9ef">if</span><span style="color:#f92672">=</span>guix-system-install-*.iso of<span style="color:#f92672">=</span>/dev/sdX bs<span style="color:#f92672">=</span>4M status<span style="color:#f92672">=</span>progress oflag<span style="color:#f92672">=</span>sync
+</span></span></code></pre></div><p>Boot <strong>UEFI mode</strong>.</p>
+<hr>
+<h1 id="2-keyboard-locale-time-arch-equivalent">2. Keyboard, locale, time (Arch equivalent)</h1>
+<p>Same mindset as your Arch install:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>loadkeys es
+</span></span></code></pre></div><p>Time sync:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>herd start ntpd
+</span></span></code></pre></div><p>(Check time)</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>date
+</span></span></code></pre></div><hr>
+<h1 id="3-wi-fi-equivalent-to-iwctl">3. Wi-Fi (equivalent to iwctl)</h1>
+<p>Guix uses <strong>wpa_supplicant</strong>, not iwd.</p>
+<h3 id="list-interfaces">List interfaces</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ip link
+</span></span></code></pre></div><p>Assume <code>wlan0</code>.</p>
+<h3 id="scan--connect">Scan &amp; connect</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>wpa_cli
+</span></span></code></pre></div><p>Inside prompt:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>scan
+</span></span><span style="display:flex;"><span>scan_results
+</span></span><span style="display:flex;"><span>add_network
+</span></span><span style="display:flex;"><span>set_network 0 ssid &#34;TU_WIFI&#34;
+</span></span><span style="display:flex;"><span>set_network 0 psk &#34;TU_PASSWORD&#34;
+</span></span><span style="display:flex;"><span>enable_network 0
+</span></span><span style="display:flex;"><span>quit
+</span></span></code></pre></div><p>Test:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ping -c <span style="color:#ae81ff">3</span> dgg.gg
+</span></span></code></pre></div><hr>
+<h1 id="4-disk-partitioning-same-logic-as-your-arch-guide">4. Disk partitioning (same logic as your Arch guide)</h1>
+<p>You already understand <strong>UEFI + GPT</strong>, so we reuse it.</p>
+<h3 id="example-disk-devsda">Example disk: <code>/dev/sda</code></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cfdisk /dev/sda
+</span></span></code></pre></div><p>Choose <strong>GPT</strong>.</p>
+<p>Create:</p>
+<table>
+  <thead>
+      <tr>
+          <th>Partition</th>
+          <th>Size</th>
+          <th>Type</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>EFI</td>
+          <td>300–512M</td>
+          <td>EFI System</td>
+      </tr>
+      <tr>
+          <td>Swap</td>
+          <td>4G</td>
+          <td>Linux swap</td>
+      </tr>
+      <tr>
+          <td>Root</td>
+          <td>rest</td>
+          <td>Linux filesystem</td>
+      </tr>
+  </tbody>
+</table>
+<hr>
+<h1 id="5-format-partitions">5. Format partitions</h1>
+<p>Assume:</p>
+<ul>
+<li>EFI → <code>/dev/sda1</code></li>
+<li>swap → <code>/dev/sda2</code></li>
+<li>root → <code>/dev/sda3</code></li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mkfs.fat -F32 /dev/sda1
+</span></span><span style="display:flex;"><span>mkswap /dev/sda2
+</span></span><span style="display:flex;"><span>mkfs.ext4 /dev/sda3
+</span></span></code></pre></div><p>Mount:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mount /dev/sda3 /mnt
+</span></span><span style="display:flex;"><span>mkdir -p /mnt/boot/efi
+</span></span><span style="display:flex;"><span>mount /dev/sda1 /mnt/boot/efi
+</span></span><span style="display:flex;"><span>swapon /dev/sda2
+</span></span></code></pre></div><hr>
+<h1 id="6-generate-initial-guix-system-config">6. Generate initial Guix system config</h1>
+<p>This replaces <strong>pacstrap + genfstab + arch-chroot</strong>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>guix system init /mnt
+</span></span></code></pre></div><p>This creates:</p>
+<pre tabindex="0"><code>/mnt/etc/config.scm
+</code></pre><p>THIS FILE IS YOUR SYSTEM.</p>
+<hr>
+<h1 id="7-edit-the-system-configuration-very-important">7. Edit the system configuration (VERY IMPORTANT)</h1>
+<p>Open it:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nano /mnt/etc/config.scm
+</span></span></code></pre></div><h3 id="71-keyboard-locale-timezone">7.1 Keyboard, locale, timezone</h3>
+<p>Find and edit:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-scheme" data-lang="scheme"><span style="display:flex;"><span>(<span style="color:#a6e22e">locale</span> <span style="color:#e6db74">&#34;en_US.utf8&#34;</span>)
+</span></span><span style="display:flex;"><span>(<span style="color:#a6e22e">timezone</span> <span style="color:#e6db74">&#34;America/Argentina/Buenos_Aires&#34;</span>)
+</span></span><span style="display:flex;"><span>(<span style="color:#a6e22e">keyboard-layout</span> (<span style="color:#a6e22e">keyboard-layout</span> <span style="color:#e6db74">&#34;es&#34;</span>))
+</span></span></code></pre></div><hr>
+<h3 id="72-enable-nonfree-firmware-critical">7.2 Enable nonfree firmware (critical)</h3>
+<p>Add <strong>near the top</strong>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-scheme" data-lang="scheme"><span style="display:flex;"><span>(<span style="color:#a6e22e">use-modules</span> (<span style="color:#a6e22e">gnu</span>) (<span style="color:#a6e22e">nongnu</span> packages linux))
+</span></span></code></pre></div><p>Then replace kernel section with:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-scheme" data-lang="scheme"><span style="display:flex;"><span>(<span style="color:#a6e22e">kernel</span> linux)
+</span></span><span style="display:flex;"><span>(<span style="color:#a6e22e">firmware</span> (list linux-firmware))
+</span></span></code></pre></div><p>This is the <strong>equivalent of <code>linux-firmware</code> in Arch</strong>.</p>
+<hr>
+<h3 id="73-bootloader-uefi-grub">7.3 Bootloader (UEFI, GRUB)</h3>
+<p>Replace bootloader section with:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-scheme" data-lang="scheme"><span style="display:flex;"><span>(<span style="color:#a6e22e">bootloader</span>
+</span></span><span style="display:flex;"><span> (<span style="color:#a6e22e">bootloader-configuration</span>
+</span></span><span style="display:flex;"><span>  (<span style="color:#a6e22e">bootloader</span> grub-efi-bootloader)
+</span></span><span style="display:flex;"><span>  (<span style="color:#a6e22e">targets</span> <span style="color:#f92672">&#39;</span>(<span style="color:#e6db74">&#34;/boot/efi&#34;</span>))
+</span></span><span style="display:flex;"><span>  (<span style="color:#a6e22e">keyboard-layout</span> keyboard-layout)))
+</span></span></code></pre></div><hr>
+<h3 id="74-filesystems-fstab-equivalent">7.4 Filesystems (fstab equivalent)</h3>
+<p>Replace file-systems section with:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-scheme" data-lang="scheme"><span style="display:flex;"><span>(<span style="color:#a6e22e">file-systems</span>
+</span></span><span style="display:flex;"><span> (<span style="color:#a6e22e">cons*</span>
+</span></span><span style="display:flex;"><span>  (<span style="color:#a6e22e">file-system</span>
+</span></span><span style="display:flex;"><span>   (<span style="color:#a6e22e">mount-point</span> <span style="color:#e6db74">&#34;/boot/efi&#34;</span>)
+</span></span><span style="display:flex;"><span>   (<span style="color:#a6e22e">device</span> <span style="color:#e6db74">&#34;/dev/sda1&#34;</span>)
+</span></span><span style="display:flex;"><span>   (<span style="color:#a6e22e">type</span> <span style="color:#e6db74">&#34;vfat&#34;</span>))
+</span></span><span style="display:flex;"><span>  (<span style="color:#a6e22e">file-system</span>
+</span></span><span style="display:flex;"><span>   (<span style="color:#a6e22e">mount-point</span> <span style="color:#e6db74">&#34;/&#34;</span>)
+</span></span><span style="display:flex;"><span>   (<span style="color:#a6e22e">device</span> <span style="color:#e6db74">&#34;/dev/sda3&#34;</span>)
+</span></span><span style="display:flex;"><span>   (<span style="color:#a6e22e">type</span> <span style="color:#e6db74">&#34;ext4&#34;</span>))
+</span></span><span style="display:flex;"><span>  %base-file-systems))
+</span></span></code></pre></div><p>Swap:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-scheme" data-lang="scheme"><span style="display:flex;"><span>(<span style="color:#a6e22e">swap-devices</span>
+</span></span><span style="display:flex;"><span> (list (<span style="color:#a6e22e">swap-space</span> (<span style="color:#a6e22e">target</span> <span style="color:#e6db74">&#34;/dev/sda2&#34;</span>))))
+</span></span></code></pre></div><hr>
+<h3 id="75-networking-networkmanager-equivalent">7.5 Networking (NetworkManager equivalent)</h3>
+<p>Add:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-scheme" data-lang="scheme"><span style="display:flex;"><span>(<span style="color:#a6e22e">service</span> network-manager-service-type)
+</span></span></code></pre></div><p>Guix does NOT enable it by default.</p>
+<hr>
+<h3 id="76-users-equivalent-to-useradd--sudo">7.6 Users (equivalent to useradd + sudo)</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-scheme" data-lang="scheme"><span style="display:flex;"><span>(<span style="color:#a6e22e">users</span>
+</span></span><span style="display:flex;"><span> (<span style="color:#a6e22e">cons</span>
+</span></span><span style="display:flex;"><span>  (<span style="color:#a6e22e">user-account</span>
+</span></span><span style="display:flex;"><span>   (<span style="color:#a6e22e">name</span> <span style="color:#e6db74">&#34;esotericwarfare&#34;</span>)
+</span></span><span style="display:flex;"><span>   (<span style="color:#a6e22e">comment</span> <span style="color:#e6db74">&#34;Main user&#34;</span>)
+</span></span><span style="display:flex;"><span>   (<span style="color:#a6e22e">group</span> <span style="color:#e6db74">&#34;users&#34;</span>)
+</span></span><span style="display:flex;"><span>   (<span style="color:#a6e22e">supplementary-groups</span> <span style="color:#f92672">&#39;</span>(<span style="color:#e6db74">&#34;wheel&#34;</span> <span style="color:#e6db74">&#34;audio&#34;</span> <span style="color:#e6db74">&#34;video&#34;</span> <span style="color:#e6db74">&#34;netdev&#34;</span>)))
+</span></span><span style="display:flex;"><span>  %base-user-accounts))
+</span></span></code></pre></div><p>Enable sudo:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-scheme" data-lang="scheme"><span style="display:flex;"><span>(<span style="color:#a6e22e">service</span> sudo-service-type)
+</span></span></code></pre></div><hr>
+<h1 id="8-install-the-system-this-is-the-makepkg--pacstrap-moment">8. Install the system (this is the “makepkg + pacstrap” moment)</h1>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>guix system init /mnt/etc/config.scm /mnt
+</span></span></code></pre></div><p>⚠️ This takes time.
+Guix builds everything <strong>from source or substitutes</strong>.</p>
+<hr>
+<h1 id="9-set-root-password">9. Set root password</h1>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>passwd
+</span></span></code></pre></div><hr>
+<h1 id="10-reboot">10. Reboot</h1>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>reboot
+</span></span></code></pre></div><p>Remove USB.</p>
+<hr>
+<h1 id="11-first-boot-tasks">11. First boot tasks</h1>
+<p>Login as <strong>root</strong>.</p>
+<h3 id="enable-networkmanager">Enable NetworkManager</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>herd start network-manager
+</span></span></code></pre></div><h3 id="set-user-password">Set user password</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>passwd esotericwarfare
+</span></span></code></pre></div><hr>
+<h1 id="12-package-management-arch--guix-translation">12. Package management (Arch → Guix translation)</h1>
+<table>
+  <thead>
+      <tr>
+          <th>Arch</th>
+          <th>Guix</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>pacman -S</td>
+          <td>guix install</td>
+      </tr>
+      <tr>
+          <td>pacman -R</td>
+          <td>guix remove</td>
+      </tr>
+      <tr>
+          <td>pacman -Q</td>
+          <td>guix package -I</td>
+      </tr>
+      <tr>
+          <td>system packages</td>
+          <td><strong>config.scm</strong></td>
+      </tr>
+      <tr>
+          <td>user packages</td>
+          <td><code>guix install</code></td>
+      </tr>
+  </tbody>
+</table>
+<p>Example:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>guix install vim tmux git mpv neomutt w3m
+</span></span></code></pre></div><hr>
+<h1 id="13-system-updates-no-partial-upgrades">13. System updates (NO partial upgrades)</h1>
+<p>Equivalent to <code>pacman -Syu</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>guix pull
+</span></span><span style="display:flex;"><span>sudo guix system reconfigure /etc/config.scm
+</span></span></code></pre></div><p>Rollback if broken:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo guix system roll-back
+</span></span></code></pre></div><hr>
+<h1 id="14-desktop--wayland--xorg">14. Desktop / Wayland / Xorg</h1>
+<p>Guix supports <strong>sway, dwm, xfce, etc</strong>, but installed declaratively.</p>
+<p>Example sway:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-scheme" data-lang="scheme"><span style="display:flex;"><span>(<span style="color:#a6e22e">service</span> sway-service-type)
+</span></span></code></pre></div><p>Or Xorg + dwm (manual like you prefer).</p>
+<hr>
+<h1 id="15-mental-model-shift-important">15. Mental model shift (important)</h1>
+<p>Think of Guix as:</p>
+<blockquote>
+<p><strong>Git + Nix + Arch philosophy without bullshit</strong></p>
+</blockquote>
+<ul>
+<li>Your OS is a <strong>single Scheme file</strong></li>
+<li>You can diff it</li>
+<li>You can roll back kernels</li>
+<li>You can reproduce it on another machine exactly</li>
+</ul>
+<hr>
+<h2 id="if-you-want-next">If you want next:</h2>
+<ul>
+<li>🧱 <strong>Full disk encryption (LUKS) in Guix</strong></li>
+<li>🪟 <strong>dwm setup declaratively</strong></li>
+<li>📦 <strong>Arch package → Guix equivalent list</strong></li>
+<li>🔧 <strong>Nonfree Wi-Fi edge cases (Intel / Realtek)</strong></li>
+</ul>
+<p>Tell me what you want next and I’ll go deep, no hand-holding.</p>
 
 </div>
 
