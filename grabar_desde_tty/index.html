@@ -25,7 +25,7 @@ amixer set ‘Internal Mic Boost’ 50%-
 ffmpeg -f fbdev -framerate 60 -i /dev/fb0 -f v4l2 -i /dev/video0 -f alsa -i pipewire -filter_complex &#34;[1:v]scale=320:-1[cam];[0:v][cam]overlay=main_w-overlay_w-20:20&#34; -c:v libx264 -preset ultrafast -pix_fmt yuv420p -c:a aac -b:a 128k -async 1 -ar 48000 -latency 100 prueba.mp4 ffmpeg -f alsa -i pipewire -f fbdev -r 60 -i /dev/fb0 mamita.mkv ffmpeg -f alsa -i pipewire -f fbdev -r 60 -i /dev/fb0 mamita.mp4 ffmpeg -f fbdev -framerate 30 -i /dev/fb0 \ -f v4l2 -i /dev/video0 \ -f alsa -i pipewire \ -filter_complex &#34;[1:v]scale=320:-1[cam];[0:v][cam]overlay=main_w-overlay_w-20:20&#34; \ -c:v libx264 -c:a aac output.mkv Claude Code ffmpeg -f alsa -i pipewire \ -f fbdev -framerate 30 -i /dev/fb0 \ -c:v libx264 -preset ultrafast -tune zerolatency -crf 23 \ -threads 2 \ -c:a aac -b:a 128k \ -pix_fmt yuv420p \ output.mkv Con Webcam ffmpeg -f fbdev -framerate 30 -i /dev/fb0 \ -f v4l2 -framerate 15 -video_size 640x480 -i /dev/video0 \ -f alsa -i pipewire \ -filter_complex &#34;[1:v]scale=240:-1[cam];[0:v][cam]overlay=main_w-overlay_w-10:10&#34; \ -c:v libx264 -preset ultrafast -tune zerolatency -crf 25 \ -threads 2 \ -c:a aac -b:a 128k \ -pix_fmt yuv420p \ output.mkv Este es el que uso funciona de maravilla. (Claude AI). ffmpeg -f alsa -i pipewire \ -f fbdev -framerate 15 -i /dev/fb0 \ -c:v libx264 -preset ultrafast -crf 28 \ -threads 2 \ -c:a aac -b:a 96k \ -s 1024x576 \ output.mkv -s no sirve ffmpeg -f alsa -i pipewire \ -f fbdev -framerate 15 -i /dev/fb0 \ -filter_complex &#34;[1:v]scale=1024:576[scaled]&#34; \ -map 0:a -map &#34;[scaled]&#34; \ -c:v libx264 -preset ultrafast -crf 28 \ -threads 2 \ -c:a aac -b:a 96k \ output.mkv ffprobe ffprobe output.mkv 2&gt;&amp;1 | grep -E &#34;Stream|Video:&#34; If CPU hits 100% constantly, the recording will stutter. Drop framerate to 20 or 15 if needed. Your hardware is pretty limited - expect some trade-offs between quality and smoothness. Start with 30fps, and if it lags, drop to 20 or 15fps.">
   <meta itemprop="datePublished" content="2025-07-18T21:32:33-03:00">
   <meta itemprop="dateModified" content="2025-07-18T21:32:33-03:00">
-  <meta itemprop="wordCount" content="1456">
+  <meta itemprop="wordCount" content="1458">
   <meta itemprop="keywords" content="Linux">
   
   <meta name="twitter:card" content="summary">
@@ -294,7 +294,7 @@ Your hardware is pretty limited - expect some trade-offs between quality and smo
 </span></span><span style="display:flex;"><span>-c:v libx264 -preset veryfast -b:v 4500k -c:a aac -b:a 128k -f flv <span style="color:#ae81ff">\
 </span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;rtmp://a.rtmp.youtube.com/live2/YOUR_STREAM_KEY&#34;</span>
 </span></span></code></pre></div><h6 id="cuando-arranco-stream-siempre-tengo-que-bajar-el-internal-mic-desde-alsamixer-porque-sino-el-micrófono-se-satura">Cuando arranco stream siempre tengo que bajar el Internal Mic desde alsamixer porque sino el micrófono se satura.</h6>
-<h4 id="este-es-el-script-que-uso-para-streamear-desde-la-tty">Este es el script que uso para streamear desde la TTY.</h4>
+<h4 id="este-es-el-script-que-uso-para-streamear-desde-la-tty-streamsh">Este es el script que uso para streamear desde la TTY stream.sh</h4>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/bash
 </span></span></span><span style="display:flex;"><span>sudo chmod <span style="color:#ae81ff">666</span> /dev/input/event*
 </span></span><span style="display:flex;"><span>amixer set <span style="color:#e6db74">&#39;Internal Mic Boost&#39;</span> 50%-
@@ -303,7 +303,7 @@ Your hardware is pretty limited - expect some trade-offs between quality and smo
 </span></span><span style="display:flex;"><span>falkon <span style="color:#e6db74">&#34;https://www.youtube.com/live_dashboard&#34;</span>
 </span></span><span style="display:flex;"><span><span style="color:#75715e">### Solo tty</span>
 </span></span><span style="display:flex;"><span>ffmpeg -f alsa -i pipewire -thread_queue_size <span style="color:#ae81ff">1024</span> -f fbdev -framerate <span style="color:#ae81ff">60</span> -i /dev/fb0 -c:v libx264 -preset ultrafast -tune zerolatency -pix_fmt yuv420p -c:a aac -b:a 128k -f flv -bufsize 1000k rtmp://a.rtmp.youtube.com/live2/STREAM_KEY 2&gt; /dev/null
-</span></span></code></pre></div><h4 id="este-es-el-script-que-uso">Este es el script que uso:</h4>
+</span></span></code></pre></div><h4 id="este-es-el-script-que-uso-streamsh">Este es el script que uso stream.sh</h4>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/bash
 </span></span></span><span style="display:flex;"><span>sudo chmod <span style="color:#ae81ff">666</span> /dev/input/event*
 </span></span><span style="display:flex;"><span>amixer set <span style="color:#e6db74">&#39;Internal Mic Boost&#39;</span> 50%-
