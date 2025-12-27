@@ -36,7 +36,7 @@ To boot MBR under UEFI, you need CSM. Intel pushed for its removal years ago, so
 Es recomendable para UEFI con hdd mayores a 2teras, dos también funciona con UEFI pero para bootear un disco duro con MBR(dos) desde UEFI se usa CSM que es algo viejo deprecado por intel). En MBR(DOS) no podés tener una partición de 3 teras. GPT es el futuro. UEFI Firware necesita GPT.">
   <meta itemprop="datePublished" content="2023-11-22T02:05:50-03:00">
   <meta itemprop="dateModified" content="2023-11-22T02:05:50-03:00">
-  <meta itemprop="wordCount" content="6004">
+  <meta itemprop="wordCount" content="6084">
   <meta itemprop="keywords" content="Archlinux,Full,Installation">
   
   <meta name="twitter:card" content="summary">
@@ -289,9 +289,11 @@ git config &ndash;global user.name &ldquo;Your Name&rdquo;</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo pacman -S xdg-desktop-portal xdg-desktop-portal-wlr  xorg-server-xwayland   
 </span></span><span style="display:flex;"><span>Tenés que modificar el /etc/sway/config <span style="color:#f92672">(</span>buscá en mis publicaciones sway<span style="color:#f92672">)</span>   
 </span></span><span style="display:flex;"><span>discord --enable-features<span style="color:#f92672">=</span>UseOzonePlatform --ozone-platform<span style="color:#f92672">=</span>wayland   
-</span></span></code></pre></div><p>systemctl enable NetworkManager<br>
-systemctl enable gpm</p>
-<p>pacman -S wpa_supplicant wireless_tools netctl  # no necesario, con networkmanager te basta. Opcional</p>
+</span></span></code></pre></div><hr>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>systemctl enable NetworkManager   
+</span></span><span style="display:flex;"><span>systemctl enable smb   
+</span></span><span style="display:flex;"><span>systemctl enable gpm   
+</span></span></code></pre></div><p>pacman -S wpa_supplicant wireless_tools netctl  # no necesario, con networkmanager te basta. Opcional</p>
 <pre tabindex="0"><code>```bash   
 pacman -S dosfstools mtools # particiones fat   
    
@@ -326,20 +328,58 @@ Tenés que ubicar el efi y ejecutarlo</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-console" data-lang="console"><span style="display:flex;"><span># nmtui <span style="color:#f92672">(</span>para conectarse wifi<span style="color:#f92672">)</span>   
 </span></span><span style="display:flex;"><span># useradd -m -g users -G video,audio,wheel nombre_usuario   
 </span></span><span style="display:flex;"><span># passwd nombre_usuario <span style="color:#75715e">## agregar password   </span>
-</span></span><span style="display:flex;"><span># vim /etc/sudoers y agregá tu usuario copiando la linea de root y sustituyendo root por tu nombre de usuario   
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span>Copiá el .bashrc de la publicación https://imlauera.github.io/fish y ponelo en abajo hay un .bashrc pero está incompleto. y copiá la configuración de vim de 
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span>Algunas de estas publicaciones creo que la mejor es mi_configuracion_vim.
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span>fix_dvtm_colors.md, post/mi_configuracion_vim.md, y agregá el corrector ortográfico post/corrector_vim_ortografico.md, post/2021-01-02-como-uso-vim-un-resumen-de-sus-funciones-principales.md, tinywl_foot_tmux_w3m_falkon.md,
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span>su esotericwarfare
+</span></span><span style="display:flex;"><span>vim .bashrc
+</span></span><span style="display:flex;"><span>sudo smbpasswd -a esotericwarfare
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span># vim /etc/sudoers y agregá tu usuario copiando la linea de root y sustituyendo root por tu nombre de usuario   
 </span></span><span style="display:flex;"><span># pacman -S pipewire pipewire-pulse <span style="color:#75715e"># servidor de audio   </span>
 </span></span><span style="display:flex;"><span># pacman -S pavucontrol <span style="color:#f92672">(</span>opcional para controlar y setear otras placas de audio<span style="color:#f92672">)</span>   
 </span></span><span style="display:flex;"><span>#<span style="color:#75715e">## Agregá esto a .xinitrc si es que no usas un login manager (aunque para mi no fue necesario)   </span>
-</span></span><span style="display:flex;"><span># pipewire &amp;   
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span># Esto no hace falta si no lo usas funciona igual el audio.
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span># pipewire &amp;   
 </span></span><span style="display:flex;"><span># pipewire-pulse &amp;   
 </span></span><span style="display:flex;"><span># pipewire-media-session &amp;   
 </span></span><span style="display:flex;"><span>#<span style="color:#75715e">### Esto yo no lo volvería a instalar, solo xorg y xorg-xinit porque uso dwm, o ahora estoy usando sólo la TTY.   </span>
-</span></span><span style="display:flex;"><span># pacman -Syu xorg xfce4 xfce4-goodies    
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span># Yo dejé de usar xorg ahora solo uso tty y eglfs.
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span># pacman -Syu xorg xfce4 xfce4-goodies    
 </span></span><span style="display:flex;"><span># pacman -S fish    
 </span></span><span style="display:flex;"><span>#<span style="color:#75715e">## La configuración de fish está en .fish/config/config.fish, uso fish por el autosuggestions.   </span>
 </span></span><span style="display:flex;"><span># chsh para cambiar la shell del usuario actual   
 </span></span></code></pre></div><p>Ingresá desde tu usuario y creá un archivo .xinitrc adentro poné</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>exec xfce4-session   
+</span></span></code></pre></div><h1 id="configuracion-que-uso-en-etcmpvmpvconf-y-etcyt-dlpconf">Configuracion que uso en /etc/mpv/mpv.conf y /etc/yt-dlp.conf</h1>
+<h6 id="etcmpvmpvconf">/etc/mpv/mpv.conf</h6>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>--profile<span style="color:#f92672">=</span>fast   
+</span></span><span style="display:flex;"><span>--sub-auto<span style="color:#f92672">=</span>all   
+</span></span><span style="display:flex;"><span>--ytdl-raw-options<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;format=bestvideo[height&lt;=?360]+bestaudio/best[height&lt;=?360]/bestvideo[height&lt;=?480]+bestaudio/best[height&lt;=?480],write-auto-sub=,sub-lang=[es,en,ru],write-sub=&#34;</span>   
+</span></span><span style="display:flex;"><span>--volume-max<span style="color:#f92672">=</span><span style="color:#ae81ff">600</span>   
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#--save-position-on-quit   </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#--untimed   </span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#--profile=low-latency   </span>
+</span></span><span style="display:flex;"><span>--mute<span style="color:#f92672">=</span>yes   
+</span></span></code></pre></div><p>Abro mpv sin video se puede abrir el video usando <code>_</code> (guión bajo).</p>
+<h5 id="yt-dlpconf">yt-dlp.conf</h5>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#f92672">[</span>esotericwarfare@arch mpv<span style="color:#f92672">]</span>$ cat /etc/yt-dlp.conf   
+</span></span><span style="display:flex;"><span>--format<span style="color:#f92672">=</span><span style="color:#ae81ff">18</span>   
+</span></span><span style="display:flex;"><span>--write-auto-sub   
+</span></span><span style="display:flex;"><span>--write-sub   
+</span></span><span style="display:flex;"><span>--sub-lang<span style="color:#f92672">=</span>en,ru   
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>esotericwarfare@arch mpv<span style="color:#f92672">]</span>$   
 </span></span></code></pre></div><h3 id="agregar-keymap-keyboard-y-touchpad-synaptics">agregar keymap keyboard y touchpad synaptics</h3>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-console" data-lang="console"><span style="display:flex;"><span># /etc/X11/xorg.conf.d/00-keyboard.conf   
 </span></span><span style="display:flex;"><span>Section &#34;InputClass&#34;   
@@ -521,25 +561,7 @@ Tenés que ubicar el efi y ejecutarlo</p>
 </span></span><span style="display:flex;"><span>done   
 </span></span></code></pre></div><h4 id="atencion-tuve-problemas-con-el-startdwm">ATENCION: TUVE PROBLEMAS CON EL STARTDWM</h4>
 <p>Tuve problemas usando startdwm directamente escribí exec dwm porque crasheaba el mpv cuando apretaba J y pipewire no lo necesité escribir en .xinitrc directamente lo instalé y funcionaba sin necesidad de escribirlo.</p>
-<p>Configuracion que uso en /etc/mpv/mpv.conf y /etc/yt-dlp.conf</p>
-<h6 id="etcmpvmpvconf">/etc/mpv/mpv.conf</h6>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>--profile<span style="color:#f92672">=</span>fast   
-</span></span><span style="display:flex;"><span>--sub-auto<span style="color:#f92672">=</span>all   
-</span></span><span style="display:flex;"><span>--ytdl-raw-options<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;format=bestvideo[height&lt;=?360]+bestaudio/best[height&lt;=?360]/bestvideo[height&lt;=?480]+bestaudio/best[height&lt;=?480],write-auto-sub=,sub-lang=[es,en,ru],write-sub=&#34;</span>   
-</span></span><span style="display:flex;"><span>--volume-max<span style="color:#f92672">=</span><span style="color:#ae81ff">600</span>   
-</span></span><span style="display:flex;"><span><span style="color:#75715e">#--save-position-on-quit   </span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e">#--untimed   </span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e">#--profile=low-latency   </span>
-</span></span><span style="display:flex;"><span>--mute<span style="color:#f92672">=</span>yes   
-</span></span></code></pre></div><p>Abro mpv sin video se puede abrir el video usando <code>_</code> (guión bajo).</p>
-<h5 id="yt-dlpconf">yt-dlp.conf</h5>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#f92672">[</span>esotericwarfare@arch mpv<span style="color:#f92672">]</span>$ cat /etc/yt-dlp.conf   
-</span></span><span style="display:flex;"><span>--format<span style="color:#f92672">=</span><span style="color:#ae81ff">18</span>   
-</span></span><span style="display:flex;"><span>--write-auto-sub   
-</span></span><span style="display:flex;"><span>--write-sub   
-</span></span><span style="display:flex;"><span>--sub-lang<span style="color:#f92672">=</span>en,ru   
-</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>esotericwarfare@arch mpv<span style="color:#f92672">]</span>$   
-</span></span></code></pre></div><h1 id="pacman--qm-estos-paquetes-tenes-que-instalar-para-terminar-la-instalación">pacman -Qm: Estos paquetes tenes que instalar para terminar la instalación</h1>
+<h1 id="pacman--qm-estos-paquetes-tenes-que-instalar-para-terminar-la-instalación">pacman -Qm: Estos paquetes tenes que instalar para terminar la instalación</h1>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#f92672">[</span>esotericwarfare@arch ~<span style="color:#f92672">]</span>$ pacman -Qm   
 </span></span><span style="display:flex;"><span>cstrike-appimage 1.6-1   
 </span></span><span style="display:flex;"><span>dmenu-git 5.3.r0.7be720c-1   
