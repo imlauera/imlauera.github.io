@@ -36,7 +36,7 @@ To boot MBR under UEFI, you need CSM. Intel pushed for its removal years ago, so
 Es recomendable para UEFI con hdd mayores a 2teras, dos también funciona con UEFI pero para bootear un disco duro con MBR(dos) desde UEFI se usa CSM que es algo viejo deprecado por intel). En MBR(DOS) no podés tener una partición de 3 teras. GPT es el futuro. UEFI Firware necesita GPT.">
   <meta itemprop="datePublished" content="2023-11-22T02:05:50-03:00">
   <meta itemprop="dateModified" content="2023-11-22T02:05:50-03:00">
-  <meta itemprop="wordCount" content="6085">
+  <meta itemprop="wordCount" content="6143">
   <meta itemprop="keywords" content="Archlinux,Full,Installation">
   
   <meta name="twitter:card" content="summary">
@@ -209,7 +209,24 @@ Es recomendable para UEFI con hdd mayores a 2teras, dos también funciona con UE
 </span></span><span style="display:flex;"><span><span style="color:#75715e">### Mirá en el directorio /usr/share/kbd/consolefonts/ para ver tus letras disponibles   </span>
 </span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;FONT=latarcyrheb-sun32&#34;</span> &gt;&gt; /etc/vconsole.conf   
 </span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;arch&#34;</span> &gt; /etc/hostname   
-</span></span></code></pre></div><p>O podes usar sudo iso02-12x22.psfu.gz o LatArCyrHeb-08.psfu.gz</p>
+</span></span></code></pre></div><hr>
+<h4 id="para-que-funcione-el-signo-mayor-y-menor">Para que funcione el signo mayor y menor:</h4>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ sudo loadkeys es
+</span></span><span style="display:flex;"><span>$ sudo dumpkeys | tee mi_mapa.kmap
+</span></span><span style="display:flex;"><span>$ vim mi_mapa.kmap
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Agregá después del keycode <span style="color:#ae81ff">119</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>keycode 120 <span style="color:#f92672">=</span> period greater
+</span></span><span style="display:flex;"><span>    altgr keycode 51 <span style="color:#f92672">=</span> less
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>keycode 121 <span style="color:#f92672">=</span> comma less
+</span></span><span style="display:flex;"><span>    altgr keycode 52 <span style="color:#f92672">=</span> greater
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>$ mv mi_mapa.kmap /usr/share/kbd/keymaps/i386/qwerty/
+</span></span><span style="display:flex;"><span>$ sudo loadkeys mi_mapa
+</span></span></code></pre></div><hr>
+<p>O podes usar sudo iso02-12x22.psfu.gz o LatArCyrHeb-08.psfu.gz</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>vim /etc/hosts   
 </span></span><span style="display:flex;"><span>127.0.0.1       localhost   
 </span></span><span style="display:flex;"><span>::1 localhost   
@@ -226,6 +243,7 @@ Es recomendable para UEFI con hdd mayores a 2teras, dos también funciona con UE
 </span></span><span style="display:flex;"><span>passwd <span style="color:#75715e"># cambiar la clave del root   </span>
 </span></span><span style="display:flex;"><span>pacman -S grub networkmanager alsa-utils    
 </span></span></code></pre></div><h5 id="fonts">Fonts</h5>
+<p>Para el programa thumbnailg</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo pacman -S noto-fonts noto-fonts-cjk noto-fonts-emoji noto-fonts-extra terminus-font   
 </span></span></code></pre></div><p>Y en el <code>.config/foot/foot.ini</code> agregá:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>font<span style="color:#f92672">=</span>Terminus:size<span style="color:#f92672">=</span><span style="color:#ae81ff">12</span>   
@@ -1384,6 +1402,7 @@ More information: &lt;<a href="https://man.archlinux.org/man/pacman.8">https://m
 </span></span></code></pre></div><p>Then restart NetworkManager:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo systemctl restart NetworkManager   
 </span></span></code></pre></div><p>The <code>nmcli</code> method is generally the cleanest approach since it stores the settings in the connection profile itself.</p>
+<p><img src="https://ia600709.us.archive.org/17/items/2025-12-27-netbsd_archlinux_pasto-images/IMG_20251227_094755525.jpg" alt=""></p>
 
 </div>
 
