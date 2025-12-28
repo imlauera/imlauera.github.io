@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/instagram_clip/">
+  <meta property="og:site_name" content="Imlauer">
+  <meta property="og:title" content="Make Instagram clip">
+  <meta property="og:description" content="#!/bin/bash # Script para editar videos de streaming al estilo Instagram/TikTok # Uso: ./edit_video.sh input.mp4 [inicio] [duracion] # Colores para output RED=&#39;\033[0;31m&#39; GREEN=&#39;\033[0;32m&#39; YELLOW=&#39;\033[1;33m&#39; NC=&#39;\033[0m&#39; # No Color # Verificar que ffmpeg esté instalado if ! command -v ffmpeg &amp;&gt; /dev/null; then echo -e &#34;${RED}Error: ffmpeg no está instalado${NC}&#34; echo &#34;Instala con: sudo pacman -S ffmpeg&#34; exit 1 fi # Función de ayuda show_help() { echo &#34;Uso: $0 &lt;input.mp4&gt; [inicio] [duracion] [opciones]&#34; echo &#34;&#34; echo &#34;Argumentos posicionales:&#34; echo &#34; input.mp4 Video de entrada&#34; echo &#34; inicio Tiempo de inicio (formato: 00:05:30 o 330)&#34; echo &#34; duracion Duración del clip (formato: 00:00:30 o 30)&#34; echo &#34;&#34; echo &#34;Opciones:&#34; echo &#34; -o, --output &lt;nombre&gt; Nombre del archivo de salida&#34; echo &#34; -r, --ratio &lt;aspect&gt; Aspect ratio: 9:16 (vertical), 1:1 (cuadrado), 16:9 (horizontal)&#34; echo &#34; -s, --speed &lt;velocidad&gt; Velocidad: 0.5 (lento), 1.0 (normal), 2.0 (rápido)&#34; echo &#34; -z, --zoom &lt;factor&gt; Factor de zoom: 1.0-2.0&#34; echo &#34; -b, --blur Añadir blur en los bordes (letterbox)&#34; echo &#34; -t, --text &lt;texto&gt; Añadir texto/subtítulo&#34; echo &#34; -f, --fade Añadir fade in/out&#34; echo &#34; -q, --quality &lt;preset&gt; Preset de calidad: ultrafast, fast, medium, slow&#34; echo &#34; -c, --compress Comprimir para redes sociales&#34; echo &#34; --vertical Formato vertical (9:16) - shortcut&#34; echo &#34; --square Formato cuadrado (1:1) - shortcut&#34; echo &#34; -h, --help Mostrar esta ayuda&#34; echo &#34;&#34; echo &#34;Ejemplos:&#34; echo &#34; $0 stream.mp4 00:05:30 30 --vertical&#34; echo &#34; $0 stream.mp4 330 30 -r 9:16 -s 1.5 -z 1.2 -f&#34; echo &#34; $0 stream.mp4 0 60 --square -t \&#34;Mi clip\&#34; -b&#34; } # Valores por defecto INPUT=&#34;&#34; START_TIME=&#34;0&#34; DURATION=&#34;&#34; OUTPUT=&#34;&#34; ASPECT_RATIO=&#34;9:16&#34; SPEED=&#34;1.0&#34; ZOOM=&#34;1.0&#34; ADD_BLUR=false TEXT=&#34;&#34; ADD_FADE=false QUALITY=&#34;medium&#34; COMPRESS=false # Parsear argumentos POSITIONAL_ARGS=() while [[ $# -gt 0 ]]; do case $1 in -h|--help) show_help exit 0 ;; -o|--output) OUTPUT=&#34;$2&#34; shift 2 ;; -r|--ratio) ASPECT_RATIO=&#34;$2&#34; shift 2 ;; -s|--speed) SPEED=&#34;$2&#34; shift 2 ;; -z|--zoom) ZOOM=&#34;$2&#34; shift 2 ;; -b|--blur) ADD_BLUR=true shift ;; -t|--text) TEXT=&#34;$2&#34; shift 2 ;; -f|--fade) ADD_FADE=true shift ;; -q|--quality) QUALITY=&#34;$2&#34; shift 2 ;; -c|--compress) COMPRESS=true shift ;; --vertical) ASPECT_RATIO=&#34;9:16&#34; shift ;; --square) ASPECT_RATIO=&#34;1:1&#34; shift ;; *) POSITIONAL_ARGS&#43;=(&#34;$1&#34;) shift ;; esac done # Restaurar argumentos posicionales set -- &#34;${POSITIONAL_ARGS[@]}&#34; # Validar argumentos requeridos if [ $# -lt 1 ]; then echo -e &#34;${RED}Error: Se requiere al menos el archivo de entrada${NC}&#34; show_help exit 1 fi INPUT=&#34;$1&#34; [ $# -ge 2 ] &amp;&amp; START_TIME=&#34;$2&#34; [ $# -ge 3 ] &amp;&amp; DURATION=&#34;$3&#34; # Validar que el archivo existe if [ ! -f &#34;$INPUT&#34; ]; then echo -e &#34;${RED}Error: El archivo &#39;$INPUT&#39; no existe${NC}&#34; exit 1 fi # Generar nombre de salida si no se especificó if [ -z &#34;$OUTPUT&#34; ]; then BASENAME=$(basename &#34;$INPUT&#34; | sed &#39;s/\.[^.]*$//&#39;) OUTPUT=&#34;${BASENAME}_edited_$(date &#43;%Y%m%d_%H%M%S).mp4&#34; fi echo -e &#34;${GREEN}=== Editor de Video FFmpeg ===${NC}&#34; echo &#34;Input: $INPUT&#34; echo &#34;Inicio: $START_TIME&#34; echo &#34;Duración: ${DURATION:-&#34;hasta el final&#34;}&#34; echo &#34;Output: $OUTPUT&#34; echo &#34;Aspect Ratio: $ASPECT_RATIO&#34; echo &#34;Velocidad: ${SPEED}x&#34; echo &#34;Zoom: ${ZOOM}x&#34; echo &#34;&#34; # Calcular dimensiones según aspect ratio case $ASPECT_RATIO in 9:16|vertical) WIDTH=1080 HEIGHT=1920 ;; 1:1|square) WIDTH=1080 HEIGHT=1080 ;; 16:9|horizontal) WIDTH=1920 HEIGHT=1080 ;; *) echo -e &#34;${YELLOW}Advertencia: Aspect ratio no reconocido, usando 9:16${NC}&#34; WIDTH=1080 HEIGHT=1920 ;; esac # Construir filtros de video FILTERS=&#34;&#34; # 1. Ajustar velocidad si es necesario if [ &#34;$SPEED&#34; != &#34;1.0&#34; ]; then FILTERS=&#34;${FILTERS}setpts=PTS/${SPEED},&#34; fi # 2. Aplicar zoom si es necesario if [ &#34;$ZOOM&#34; != &#34;1.0&#34; ]; then FILTERS=&#34;${FILTERS}scale=iw*${ZOOM}:ih*${ZOOM},crop=iw/${ZOOM}:ih/${ZOOM},&#34; fi # 3. Blur en los bordes (efecto letterbox popular en Instagram) if [ &#34;$ADD_BLUR&#34; = true ]; then FILTERS=&#34;${FILTERS}split[main][blur];[blur]scale=${WIDTH}:${HEIGHT}:force_original_aspect_ratio=increase,crop=${WIDTH}:${HEIGHT},boxblur=20:5[blurred];[blurred][main]overlay=(W-w)/2:(H-h)/2,&#34; else # Solo escalar y hacer crop FILTERS=&#34;${FILTERS}scale=${WIDTH}:${HEIGHT}:force_original_aspect_ratio=increase,crop=${WIDTH}:${HEIGHT},&#34; fi # 4. Añadir fade in/out if [ &#34;$ADD_FADE&#34; = true ]; then FADE_DURATION=1 if [ -n &#34;$DURATION&#34; ]; then # Calcular duración en segundos si está en formato HH:MM:SS if [[ $DURATION =~ : ]]; then DUR_SEC=$(echo &#34;$DURATION&#34; | awk -F: &#39;{ print ($1 * 3600) &#43; ($2 * 60) &#43; $3 }&#39;) else DUR_SEC=$DURATION fi FILTERS=&#34;${FILTERS}fade=t=in:st=0:d=${FADE_DURATION},fade=t=out:st=$((DUR_SEC - FADE_DURATION)):d=${FADE_DURATION},&#34; else FILTERS=&#34;${FILTERS}fade=t=in:st=0:d=${FADE_DURATION},&#34; fi fi # 5. Añadir texto si se especificó if [ -n &#34;$TEXT&#34; ]; then # Escapar caracteres especiales TEXT_ESCAPED=$(echo &#34;$TEXT&#34; | sed &#34;s/:/\\\\:/g&#34; | sed &#34;s/&#39;/\\\\&#39;/g&#34;) FILTERS=&#34;${FILTERS}drawtext=fontfile=/usr/share/fonts/TTF/DejaVuSans-Bold.ttf:text=&#39;${TEXT_ESCAPED}&#39;:fontcolor=white:fontsize=48:box=1:boxcolor=black@0.5:boxborderw=5:x=(w-text_w)/2:y=h-th-50,&#34; fi # Remover la última coma FILTERS=&#34;${FILTERS%,}&#34; # Construir comando ffmpeg FFMPEG_CMD=&#34;ffmpeg -i \&#34;$INPUT\&#34;&#34; # Añadir tiempo de inicio if [ &#34;$START_TIME&#34; != &#34;0&#34; ]; then FFMPEG_CMD=&#34;$FFMPEG_CMD -ss $START_TIME&#34; fi # Añadir duración if [ -n &#34;$DURATION&#34; ]; then FFMPEG_CMD=&#34;$FFMPEG_CMD -t $DURATION&#34; fi # Añadir filtros de video if [ -n &#34;$FILTERS&#34; ]; then FFMPEG_CMD=&#34;$FFMPEG_CMD -vf \&#34;$FILTERS\&#34;&#34; fi # Ajustar audio a la velocidad if [ &#34;$SPEED&#34; != &#34;1.0&#34; ]; then FFMPEG_CMD=&#34;$FFMPEG_CMD -af \&#34;atempo=$SPEED\&#34;&#34; fi # Configuración de encoding if [ &#34;$COMPRESS&#34; = true ]; then # Optimizado para redes sociales FFMPEG_CMD=&#34;$FFMPEG_CMD -c:v libx264 -preset $QUALITY -crf 23 -c:a aac -b:a 128k -movflags &#43;faststart&#34; else # Calidad alta FFMPEG_CMD=&#34;$FFMPEG_CMD -c:v libx264 -preset $QUALITY -crf 18 -c:a aac -b:a 192k -movflags &#43;faststart&#34; fi # Forzar framerate FFMPEG_CMD=&#34;$FFMPEG_CMD -r 30&#34; # Output FFMPEG_CMD=&#34;$FFMPEG_CMD \&#34;$OUTPUT\&#34;&#34; # Mostrar comando echo -e &#34;${YELLOW}Ejecutando:${NC}&#34; echo &#34;$FFMPEG_CMD&#34; | sed &#39;s/ -/\n -/g&#39; echo &#34;&#34; # Ejecutar eval $FFMPEG_CMD # Verificar resultado if [ $? -eq 0 ]; then FILE_SIZE=$(du -h &#34;$OUTPUT&#34; | cut -f1) echo &#34;&#34; echo -e &#34;${GREEN}✓ Video editado exitosamente!${NC}&#34; echo &#34;Archivo: $OUTPUT&#34; echo &#34;Tamaño: $FILE_SIZE&#34; echo &#34;&#34; echo &#34;Para ver el resultado:&#34; echo &#34; mpv \&#34;$OUTPUT\&#34;&#34; else echo -e &#34;${RED}✗ Error al procesar el video${NC}&#34; exit 1 fi">
+  <meta property="og:locale" content="es_es">
+  <meta property="og:type" content="article">
+    <meta property="article:published_time" content="2025-12-28T01:45:04-03:00">
+    <meta property="article:modified_time" content="2025-12-28T01:45:04-03:00">
+
+  
+  <meta itemprop="name" content="Make Instagram clip">
+  <meta itemprop="description" content="#!/bin/bash # Script para editar videos de streaming al estilo Instagram/TikTok # Uso: ./edit_video.sh input.mp4 [inicio] [duracion] # Colores para output RED=&#39;\033[0;31m&#39; GREEN=&#39;\033[0;32m&#39; YELLOW=&#39;\033[1;33m&#39; NC=&#39;\033[0m&#39; # No Color # Verificar que ffmpeg esté instalado if ! command -v ffmpeg &amp;&gt; /dev/null; then echo -e &#34;${RED}Error: ffmpeg no está instalado${NC}&#34; echo &#34;Instala con: sudo pacman -S ffmpeg&#34; exit 1 fi # Función de ayuda show_help() { echo &#34;Uso: $0 &lt;input.mp4&gt; [inicio] [duracion] [opciones]&#34; echo &#34;&#34; echo &#34;Argumentos posicionales:&#34; echo &#34; input.mp4 Video de entrada&#34; echo &#34; inicio Tiempo de inicio (formato: 00:05:30 o 330)&#34; echo &#34; duracion Duración del clip (formato: 00:00:30 o 30)&#34; echo &#34;&#34; echo &#34;Opciones:&#34; echo &#34; -o, --output &lt;nombre&gt; Nombre del archivo de salida&#34; echo &#34; -r, --ratio &lt;aspect&gt; Aspect ratio: 9:16 (vertical), 1:1 (cuadrado), 16:9 (horizontal)&#34; echo &#34; -s, --speed &lt;velocidad&gt; Velocidad: 0.5 (lento), 1.0 (normal), 2.0 (rápido)&#34; echo &#34; -z, --zoom &lt;factor&gt; Factor de zoom: 1.0-2.0&#34; echo &#34; -b, --blur Añadir blur en los bordes (letterbox)&#34; echo &#34; -t, --text &lt;texto&gt; Añadir texto/subtítulo&#34; echo &#34; -f, --fade Añadir fade in/out&#34; echo &#34; -q, --quality &lt;preset&gt; Preset de calidad: ultrafast, fast, medium, slow&#34; echo &#34; -c, --compress Comprimir para redes sociales&#34; echo &#34; --vertical Formato vertical (9:16) - shortcut&#34; echo &#34; --square Formato cuadrado (1:1) - shortcut&#34; echo &#34; -h, --help Mostrar esta ayuda&#34; echo &#34;&#34; echo &#34;Ejemplos:&#34; echo &#34; $0 stream.mp4 00:05:30 30 --vertical&#34; echo &#34; $0 stream.mp4 330 30 -r 9:16 -s 1.5 -z 1.2 -f&#34; echo &#34; $0 stream.mp4 0 60 --square -t \&#34;Mi clip\&#34; -b&#34; } # Valores por defecto INPUT=&#34;&#34; START_TIME=&#34;0&#34; DURATION=&#34;&#34; OUTPUT=&#34;&#34; ASPECT_RATIO=&#34;9:16&#34; SPEED=&#34;1.0&#34; ZOOM=&#34;1.0&#34; ADD_BLUR=false TEXT=&#34;&#34; ADD_FADE=false QUALITY=&#34;medium&#34; COMPRESS=false # Parsear argumentos POSITIONAL_ARGS=() while [[ $# -gt 0 ]]; do case $1 in -h|--help) show_help exit 0 ;; -o|--output) OUTPUT=&#34;$2&#34; shift 2 ;; -r|--ratio) ASPECT_RATIO=&#34;$2&#34; shift 2 ;; -s|--speed) SPEED=&#34;$2&#34; shift 2 ;; -z|--zoom) ZOOM=&#34;$2&#34; shift 2 ;; -b|--blur) ADD_BLUR=true shift ;; -t|--text) TEXT=&#34;$2&#34; shift 2 ;; -f|--fade) ADD_FADE=true shift ;; -q|--quality) QUALITY=&#34;$2&#34; shift 2 ;; -c|--compress) COMPRESS=true shift ;; --vertical) ASPECT_RATIO=&#34;9:16&#34; shift ;; --square) ASPECT_RATIO=&#34;1:1&#34; shift ;; *) POSITIONAL_ARGS&#43;=(&#34;$1&#34;) shift ;; esac done # Restaurar argumentos posicionales set -- &#34;${POSITIONAL_ARGS[@]}&#34; # Validar argumentos requeridos if [ $# -lt 1 ]; then echo -e &#34;${RED}Error: Se requiere al menos el archivo de entrada${NC}&#34; show_help exit 1 fi INPUT=&#34;$1&#34; [ $# -ge 2 ] &amp;&amp; START_TIME=&#34;$2&#34; [ $# -ge 3 ] &amp;&amp; DURATION=&#34;$3&#34; # Validar que el archivo existe if [ ! -f &#34;$INPUT&#34; ]; then echo -e &#34;${RED}Error: El archivo &#39;$INPUT&#39; no existe${NC}&#34; exit 1 fi # Generar nombre de salida si no se especificó if [ -z &#34;$OUTPUT&#34; ]; then BASENAME=$(basename &#34;$INPUT&#34; | sed &#39;s/\.[^.]*$//&#39;) OUTPUT=&#34;${BASENAME}_edited_$(date &#43;%Y%m%d_%H%M%S).mp4&#34; fi echo -e &#34;${GREEN}=== Editor de Video FFmpeg ===${NC}&#34; echo &#34;Input: $INPUT&#34; echo &#34;Inicio: $START_TIME&#34; echo &#34;Duración: ${DURATION:-&#34;hasta el final&#34;}&#34; echo &#34;Output: $OUTPUT&#34; echo &#34;Aspect Ratio: $ASPECT_RATIO&#34; echo &#34;Velocidad: ${SPEED}x&#34; echo &#34;Zoom: ${ZOOM}x&#34; echo &#34;&#34; # Calcular dimensiones según aspect ratio case $ASPECT_RATIO in 9:16|vertical) WIDTH=1080 HEIGHT=1920 ;; 1:1|square) WIDTH=1080 HEIGHT=1080 ;; 16:9|horizontal) WIDTH=1920 HEIGHT=1080 ;; *) echo -e &#34;${YELLOW}Advertencia: Aspect ratio no reconocido, usando 9:16${NC}&#34; WIDTH=1080 HEIGHT=1920 ;; esac # Construir filtros de video FILTERS=&#34;&#34; # 1. Ajustar velocidad si es necesario if [ &#34;$SPEED&#34; != &#34;1.0&#34; ]; then FILTERS=&#34;${FILTERS}setpts=PTS/${SPEED},&#34; fi # 2. Aplicar zoom si es necesario if [ &#34;$ZOOM&#34; != &#34;1.0&#34; ]; then FILTERS=&#34;${FILTERS}scale=iw*${ZOOM}:ih*${ZOOM},crop=iw/${ZOOM}:ih/${ZOOM},&#34; fi # 3. Blur en los bordes (efecto letterbox popular en Instagram) if [ &#34;$ADD_BLUR&#34; = true ]; then FILTERS=&#34;${FILTERS}split[main][blur];[blur]scale=${WIDTH}:${HEIGHT}:force_original_aspect_ratio=increase,crop=${WIDTH}:${HEIGHT},boxblur=20:5[blurred];[blurred][main]overlay=(W-w)/2:(H-h)/2,&#34; else # Solo escalar y hacer crop FILTERS=&#34;${FILTERS}scale=${WIDTH}:${HEIGHT}:force_original_aspect_ratio=increase,crop=${WIDTH}:${HEIGHT},&#34; fi # 4. Añadir fade in/out if [ &#34;$ADD_FADE&#34; = true ]; then FADE_DURATION=1 if [ -n &#34;$DURATION&#34; ]; then # Calcular duración en segundos si está en formato HH:MM:SS if [[ $DURATION =~ : ]]; then DUR_SEC=$(echo &#34;$DURATION&#34; | awk -F: &#39;{ print ($1 * 3600) &#43; ($2 * 60) &#43; $3 }&#39;) else DUR_SEC=$DURATION fi FILTERS=&#34;${FILTERS}fade=t=in:st=0:d=${FADE_DURATION},fade=t=out:st=$((DUR_SEC - FADE_DURATION)):d=${FADE_DURATION},&#34; else FILTERS=&#34;${FILTERS}fade=t=in:st=0:d=${FADE_DURATION},&#34; fi fi # 5. Añadir texto si se especificó if [ -n &#34;$TEXT&#34; ]; then # Escapar caracteres especiales TEXT_ESCAPED=$(echo &#34;$TEXT&#34; | sed &#34;s/:/\\\\:/g&#34; | sed &#34;s/&#39;/\\\\&#39;/g&#34;) FILTERS=&#34;${FILTERS}drawtext=fontfile=/usr/share/fonts/TTF/DejaVuSans-Bold.ttf:text=&#39;${TEXT_ESCAPED}&#39;:fontcolor=white:fontsize=48:box=1:boxcolor=black@0.5:boxborderw=5:x=(w-text_w)/2:y=h-th-50,&#34; fi # Remover la última coma FILTERS=&#34;${FILTERS%,}&#34; # Construir comando ffmpeg FFMPEG_CMD=&#34;ffmpeg -i \&#34;$INPUT\&#34;&#34; # Añadir tiempo de inicio if [ &#34;$START_TIME&#34; != &#34;0&#34; ]; then FFMPEG_CMD=&#34;$FFMPEG_CMD -ss $START_TIME&#34; fi # Añadir duración if [ -n &#34;$DURATION&#34; ]; then FFMPEG_CMD=&#34;$FFMPEG_CMD -t $DURATION&#34; fi # Añadir filtros de video if [ -n &#34;$FILTERS&#34; ]; then FFMPEG_CMD=&#34;$FFMPEG_CMD -vf \&#34;$FILTERS\&#34;&#34; fi # Ajustar audio a la velocidad if [ &#34;$SPEED&#34; != &#34;1.0&#34; ]; then FFMPEG_CMD=&#34;$FFMPEG_CMD -af \&#34;atempo=$SPEED\&#34;&#34; fi # Configuración de encoding if [ &#34;$COMPRESS&#34; = true ]; then # Optimizado para redes sociales FFMPEG_CMD=&#34;$FFMPEG_CMD -c:v libx264 -preset $QUALITY -crf 23 -c:a aac -b:a 128k -movflags &#43;faststart&#34; else # Calidad alta FFMPEG_CMD=&#34;$FFMPEG_CMD -c:v libx264 -preset $QUALITY -crf 18 -c:a aac -b:a 192k -movflags &#43;faststart&#34; fi # Forzar framerate FFMPEG_CMD=&#34;$FFMPEG_CMD -r 30&#34; # Output FFMPEG_CMD=&#34;$FFMPEG_CMD \&#34;$OUTPUT\&#34;&#34; # Mostrar comando echo -e &#34;${YELLOW}Ejecutando:${NC}&#34; echo &#34;$FFMPEG_CMD&#34; | sed &#39;s/ -/\n -/g&#39; echo &#34;&#34; # Ejecutar eval $FFMPEG_CMD # Verificar resultado if [ $? -eq 0 ]; then FILE_SIZE=$(du -h &#34;$OUTPUT&#34; | cut -f1) echo &#34;&#34; echo -e &#34;${GREEN}✓ Video editado exitosamente!${NC}&#34; echo &#34;Archivo: $OUTPUT&#34; echo &#34;Tamaño: $FILE_SIZE&#34; echo &#34;&#34; echo &#34;Para ver el resultado:&#34; echo &#34; mpv \&#34;$OUTPUT\&#34;&#34; else echo -e &#34;${RED}✗ Error al procesar el video${NC}&#34; exit 1 fi">
+  <meta itemprop="datePublished" content="2025-12-28T01:45:04-03:00">
+  <meta itemprop="dateModified" content="2025-12-28T01:45:04-03:00">
+  <meta itemprop="wordCount" content="868">
+  
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Make Instagram clip">
+  <meta name="twitter:description" content="#!/bin/bash # Script para editar videos de streaming al estilo Instagram/TikTok # Uso: ./edit_video.sh input.mp4 [inicio] [duracion] # Colores para output RED=&#39;\033[0;31m&#39; GREEN=&#39;\033[0;32m&#39; YELLOW=&#39;\033[1;33m&#39; NC=&#39;\033[0m&#39; # No Color # Verificar que ffmpeg esté instalado if ! command -v ffmpeg &amp;&gt; /dev/null; then echo -e &#34;${RED}Error: ffmpeg no está instalado${NC}&#34; echo &#34;Instala con: sudo pacman -S ffmpeg&#34; exit 1 fi # Función de ayuda show_help() { echo &#34;Uso: $0 &lt;input.mp4&gt; [inicio] [duracion] [opciones]&#34; echo &#34;&#34; echo &#34;Argumentos posicionales:&#34; echo &#34; input.mp4 Video de entrada&#34; echo &#34; inicio Tiempo de inicio (formato: 00:05:30 o 330)&#34; echo &#34; duracion Duración del clip (formato: 00:00:30 o 30)&#34; echo &#34;&#34; echo &#34;Opciones:&#34; echo &#34; -o, --output &lt;nombre&gt; Nombre del archivo de salida&#34; echo &#34; -r, --ratio &lt;aspect&gt; Aspect ratio: 9:16 (vertical), 1:1 (cuadrado), 16:9 (horizontal)&#34; echo &#34; -s, --speed &lt;velocidad&gt; Velocidad: 0.5 (lento), 1.0 (normal), 2.0 (rápido)&#34; echo &#34; -z, --zoom &lt;factor&gt; Factor de zoom: 1.0-2.0&#34; echo &#34; -b, --blur Añadir blur en los bordes (letterbox)&#34; echo &#34; -t, --text &lt;texto&gt; Añadir texto/subtítulo&#34; echo &#34; -f, --fade Añadir fade in/out&#34; echo &#34; -q, --quality &lt;preset&gt; Preset de calidad: ultrafast, fast, medium, slow&#34; echo &#34; -c, --compress Comprimir para redes sociales&#34; echo &#34; --vertical Formato vertical (9:16) - shortcut&#34; echo &#34; --square Formato cuadrado (1:1) - shortcut&#34; echo &#34; -h, --help Mostrar esta ayuda&#34; echo &#34;&#34; echo &#34;Ejemplos:&#34; echo &#34; $0 stream.mp4 00:05:30 30 --vertical&#34; echo &#34; $0 stream.mp4 330 30 -r 9:16 -s 1.5 -z 1.2 -f&#34; echo &#34; $0 stream.mp4 0 60 --square -t \&#34;Mi clip\&#34; -b&#34; } # Valores por defecto INPUT=&#34;&#34; START_TIME=&#34;0&#34; DURATION=&#34;&#34; OUTPUT=&#34;&#34; ASPECT_RATIO=&#34;9:16&#34; SPEED=&#34;1.0&#34; ZOOM=&#34;1.0&#34; ADD_BLUR=false TEXT=&#34;&#34; ADD_FADE=false QUALITY=&#34;medium&#34; COMPRESS=false # Parsear argumentos POSITIONAL_ARGS=() while [[ $# -gt 0 ]]; do case $1 in -h|--help) show_help exit 0 ;; -o|--output) OUTPUT=&#34;$2&#34; shift 2 ;; -r|--ratio) ASPECT_RATIO=&#34;$2&#34; shift 2 ;; -s|--speed) SPEED=&#34;$2&#34; shift 2 ;; -z|--zoom) ZOOM=&#34;$2&#34; shift 2 ;; -b|--blur) ADD_BLUR=true shift ;; -t|--text) TEXT=&#34;$2&#34; shift 2 ;; -f|--fade) ADD_FADE=true shift ;; -q|--quality) QUALITY=&#34;$2&#34; shift 2 ;; -c|--compress) COMPRESS=true shift ;; --vertical) ASPECT_RATIO=&#34;9:16&#34; shift ;; --square) ASPECT_RATIO=&#34;1:1&#34; shift ;; *) POSITIONAL_ARGS&#43;=(&#34;$1&#34;) shift ;; esac done # Restaurar argumentos posicionales set -- &#34;${POSITIONAL_ARGS[@]}&#34; # Validar argumentos requeridos if [ $# -lt 1 ]; then echo -e &#34;${RED}Error: Se requiere al menos el archivo de entrada${NC}&#34; show_help exit 1 fi INPUT=&#34;$1&#34; [ $# -ge 2 ] &amp;&amp; START_TIME=&#34;$2&#34; [ $# -ge 3 ] &amp;&amp; DURATION=&#34;$3&#34; # Validar que el archivo existe if [ ! -f &#34;$INPUT&#34; ]; then echo -e &#34;${RED}Error: El archivo &#39;$INPUT&#39; no existe${NC}&#34; exit 1 fi # Generar nombre de salida si no se especificó if [ -z &#34;$OUTPUT&#34; ]; then BASENAME=$(basename &#34;$INPUT&#34; | sed &#39;s/\.[^.]*$//&#39;) OUTPUT=&#34;${BASENAME}_edited_$(date &#43;%Y%m%d_%H%M%S).mp4&#34; fi echo -e &#34;${GREEN}=== Editor de Video FFmpeg ===${NC}&#34; echo &#34;Input: $INPUT&#34; echo &#34;Inicio: $START_TIME&#34; echo &#34;Duración: ${DURATION:-&#34;hasta el final&#34;}&#34; echo &#34;Output: $OUTPUT&#34; echo &#34;Aspect Ratio: $ASPECT_RATIO&#34; echo &#34;Velocidad: ${SPEED}x&#34; echo &#34;Zoom: ${ZOOM}x&#34; echo &#34;&#34; # Calcular dimensiones según aspect ratio case $ASPECT_RATIO in 9:16|vertical) WIDTH=1080 HEIGHT=1920 ;; 1:1|square) WIDTH=1080 HEIGHT=1080 ;; 16:9|horizontal) WIDTH=1920 HEIGHT=1080 ;; *) echo -e &#34;${YELLOW}Advertencia: Aspect ratio no reconocido, usando 9:16${NC}&#34; WIDTH=1080 HEIGHT=1920 ;; esac # Construir filtros de video FILTERS=&#34;&#34; # 1. Ajustar velocidad si es necesario if [ &#34;$SPEED&#34; != &#34;1.0&#34; ]; then FILTERS=&#34;${FILTERS}setpts=PTS/${SPEED},&#34; fi # 2. Aplicar zoom si es necesario if [ &#34;$ZOOM&#34; != &#34;1.0&#34; ]; then FILTERS=&#34;${FILTERS}scale=iw*${ZOOM}:ih*${ZOOM},crop=iw/${ZOOM}:ih/${ZOOM},&#34; fi # 3. Blur en los bordes (efecto letterbox popular en Instagram) if [ &#34;$ADD_BLUR&#34; = true ]; then FILTERS=&#34;${FILTERS}split[main][blur];[blur]scale=${WIDTH}:${HEIGHT}:force_original_aspect_ratio=increase,crop=${WIDTH}:${HEIGHT},boxblur=20:5[blurred];[blurred][main]overlay=(W-w)/2:(H-h)/2,&#34; else # Solo escalar y hacer crop FILTERS=&#34;${FILTERS}scale=${WIDTH}:${HEIGHT}:force_original_aspect_ratio=increase,crop=${WIDTH}:${HEIGHT},&#34; fi # 4. Añadir fade in/out if [ &#34;$ADD_FADE&#34; = true ]; then FADE_DURATION=1 if [ -n &#34;$DURATION&#34; ]; then # Calcular duración en segundos si está en formato HH:MM:SS if [[ $DURATION =~ : ]]; then DUR_SEC=$(echo &#34;$DURATION&#34; | awk -F: &#39;{ print ($1 * 3600) &#43; ($2 * 60) &#43; $3 }&#39;) else DUR_SEC=$DURATION fi FILTERS=&#34;${FILTERS}fade=t=in:st=0:d=${FADE_DURATION},fade=t=out:st=$((DUR_SEC - FADE_DURATION)):d=${FADE_DURATION},&#34; else FILTERS=&#34;${FILTERS}fade=t=in:st=0:d=${FADE_DURATION},&#34; fi fi # 5. Añadir texto si se especificó if [ -n &#34;$TEXT&#34; ]; then # Escapar caracteres especiales TEXT_ESCAPED=$(echo &#34;$TEXT&#34; | sed &#34;s/:/\\\\:/g&#34; | sed &#34;s/&#39;/\\\\&#39;/g&#34;) FILTERS=&#34;${FILTERS}drawtext=fontfile=/usr/share/fonts/TTF/DejaVuSans-Bold.ttf:text=&#39;${TEXT_ESCAPED}&#39;:fontcolor=white:fontsize=48:box=1:boxcolor=black@0.5:boxborderw=5:x=(w-text_w)/2:y=h-th-50,&#34; fi # Remover la última coma FILTERS=&#34;${FILTERS%,}&#34; # Construir comando ffmpeg FFMPEG_CMD=&#34;ffmpeg -i \&#34;$INPUT\&#34;&#34; # Añadir tiempo de inicio if [ &#34;$START_TIME&#34; != &#34;0&#34; ]; then FFMPEG_CMD=&#34;$FFMPEG_CMD -ss $START_TIME&#34; fi # Añadir duración if [ -n &#34;$DURATION&#34; ]; then FFMPEG_CMD=&#34;$FFMPEG_CMD -t $DURATION&#34; fi # Añadir filtros de video if [ -n &#34;$FILTERS&#34; ]; then FFMPEG_CMD=&#34;$FFMPEG_CMD -vf \&#34;$FILTERS\&#34;&#34; fi # Ajustar audio a la velocidad if [ &#34;$SPEED&#34; != &#34;1.0&#34; ]; then FFMPEG_CMD=&#34;$FFMPEG_CMD -af \&#34;atempo=$SPEED\&#34;&#34; fi # Configuración de encoding if [ &#34;$COMPRESS&#34; = true ]; then # Optimizado para redes sociales FFMPEG_CMD=&#34;$FFMPEG_CMD -c:v libx264 -preset $QUALITY -crf 23 -c:a aac -b:a 128k -movflags &#43;faststart&#34; else # Calidad alta FFMPEG_CMD=&#34;$FFMPEG_CMD -c:v libx264 -preset $QUALITY -crf 18 -c:a aac -b:a 192k -movflags &#43;faststart&#34; fi # Forzar framerate FFMPEG_CMD=&#34;$FFMPEG_CMD -r 30&#34; # Output FFMPEG_CMD=&#34;$FFMPEG_CMD \&#34;$OUTPUT\&#34;&#34; # Mostrar comando echo -e &#34;${YELLOW}Ejecutando:${NC}&#34; echo &#34;$FFMPEG_CMD&#34; | sed &#39;s/ -/\n -/g&#39; echo &#34;&#34; # Ejecutar eval $FFMPEG_CMD # Verificar resultado if [ $? -eq 0 ]; then FILE_SIZE=$(du -h &#34;$OUTPUT&#34; | cut -f1) echo &#34;&#34; echo -e &#34;${GREEN}✓ Video editado exitosamente!${NC}&#34; echo &#34;Archivo: $OUTPUT&#34; echo &#34;Tamaño: $FILE_SIZE&#34; echo &#34;&#34; echo &#34;Para ver el resultado:&#34; echo &#34; mpv \&#34;$OUTPUT\&#34;&#34; else echo -e &#34;${RED}✗ Error al procesar el video${NC}&#34; exit 1 fi">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Make Instagram clip
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/instagram_clip/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="#!/bin/bash
+
+# Script para editar videos de streaming al estilo Instagram/TikTok
+# Uso: ./edit_video.sh input.mp4 [inicio] [duracion]
+
+# Colores para output
+RED=&#39;\033[0;31m&#39;
+GREEN=&#39;\033[0;32m&#39;
+YELLOW=&#39;\033[1;33m&#39;
+NC=&#39;\033[0m&#39; # No Color
+
+# Verificar que ffmpeg esté instalado
+if ! command -v ffmpeg &amp;&gt; /dev/null; then
+    echo -e &#34;${RED}Error: ffmpeg no está instalado${NC}&#34;
+    echo &#34;Instala con: sudo pacman -S ffmpeg&#34;
+    exit 1
+fi
+
+# Función de ayuda
+show_help() {
+    echo &#34;Uso: $0 &lt;input.mp4&gt; [inicio] [duracion] [opciones]&#34;
+    echo &#34;&#34;
+    echo &#34;Argumentos posicionales:&#34;
+    echo &#34;  input.mp4    Video de entrada&#34;
+    echo &#34;  inicio       Tiempo de inicio (formato: 00:05:30 o 330)&#34;
+    echo &#34;  duracion     Duración del clip (formato: 00:00:30 o 30)&#34;
+    echo &#34;&#34;
+    echo &#34;Opciones:&#34;
+    echo &#34;  -o, --output &lt;nombre&gt;     Nombre del archivo de salida&#34;
+    echo &#34;  -r, --ratio &lt;aspect&gt;      Aspect ratio: 9:16 (vertical), 1:1 (cuadrado), 16:9 (horizontal)&#34;
+    echo &#34;  -s, --speed &lt;velocidad&gt;   Velocidad: 0.5 (lento), 1.0 (normal), 2.0 (rápido)&#34;
+    echo &#34;  -z, --zoom &lt;factor&gt;       Factor de zoom: 1.0-2.0&#34;
+    echo &#34;  -b, --blur                Añadir blur en los bordes (letterbox)&#34;
+    echo &#34;  -t, --text &lt;texto&gt;        Añadir texto/subtítulo&#34;
+    echo &#34;  -f, --fade                Añadir fade in/out&#34;
+    echo &#34;  -q, --quality &lt;preset&gt;    Preset de calidad: ultrafast, fast, medium, slow&#34;
+    echo &#34;  -c, --compress            Comprimir para redes sociales&#34;
+    echo &#34;  --vertical                Formato vertical (9:16) - shortcut&#34;
+    echo &#34;  --square                  Formato cuadrado (1:1) - shortcut&#34;
+    echo &#34;  -h, --help                Mostrar esta ayuda&#34;
+    echo &#34;&#34;
+    echo &#34;Ejemplos:&#34;
+    echo &#34;  $0 stream.mp4 00:05:30 30 --vertical&#34;
+    echo &#34;  $0 stream.mp4 330 30 -r 9:16 -s 1.5 -z 1.2 -f&#34;
+    echo &#34;  $0 stream.mp4 0 60 --square -t \&#34;Mi clip\&#34; -b&#34;
+}
+
+# Valores por defecto
+INPUT=&#34;&#34;
+START_TIME=&#34;0&#34;
+DURATION=&#34;&#34;
+OUTPUT=&#34;&#34;
+ASPECT_RATIO=&#34;9:16&#34;
+SPEED=&#34;1.0&#34;
+ZOOM=&#34;1.0&#34;
+ADD_BLUR=false
+TEXT=&#34;&#34;
+ADD_FADE=false
+QUALITY=&#34;medium&#34;
+COMPRESS=false
+
+# Parsear argumentos
+POSITIONAL_ARGS=()
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -h|--help)
+            show_help
+            exit 0
+            ;;
+        -o|--output)
+            OUTPUT=&#34;$2&#34;
+            shift 2
+            ;;
+        -r|--ratio)
+            ASPECT_RATIO=&#34;$2&#34;
+            shift 2
+            ;;
+        -s|--speed)
+            SPEED=&#34;$2&#34;
+            shift 2
+            ;;
+        -z|--zoom)
+            ZOOM=&#34;$2&#34;
+            shift 2
+            ;;
+        -b|--blur)
+            ADD_BLUR=true
+            shift
+            ;;
+        -t|--text)
+            TEXT=&#34;$2&#34;
+            shift 2
+            ;;
+        -f|--fade)
+            ADD_FADE=true
+            shift
+            ;;
+        -q|--quality)
+            QUALITY=&#34;$2&#34;
+            shift 2
+            ;;
+        -c|--compress)
+            COMPRESS=true
+            shift
+            ;;
+        --vertical)
+            ASPECT_RATIO=&#34;9:16&#34;
+            shift
+            ;;
+        --square)
+            ASPECT_RATIO=&#34;1:1&#34;
+            shift
+            ;;
+        *)
+            POSITIONAL_ARGS&#43;=(&#34;$1&#34;)
+            shift
+            ;;
+    esac
+done
+
+# Restaurar argumentos posicionales
+set -- &#34;${POSITIONAL_ARGS[@]}&#34;
+
+# Validar argumentos requeridos
+if [ $# -lt 1 ]; then
+    echo -e &#34;${RED}Error: Se requiere al menos el archivo de entrada${NC}&#34;
+    show_help
+    exit 1
+fi
+
+INPUT=&#34;$1&#34;
+[ $# -ge 2 ] &amp;&amp; START_TIME=&#34;$2&#34;
+[ $# -ge 3 ] &amp;&amp; DURATION=&#34;$3&#34;
+
+# Validar que el archivo existe
+if [ ! -f &#34;$INPUT&#34; ]; then
+    echo -e &#34;${RED}Error: El archivo &#39;$INPUT&#39; no existe${NC}&#34;
+    exit 1
+fi
+
+# Generar nombre de salida si no se especificó
+if [ -z &#34;$OUTPUT&#34; ]; then
+    BASENAME=$(basename &#34;$INPUT&#34; | sed &#39;s/\.[^.]*$//&#39;)
+    OUTPUT=&#34;${BASENAME}_edited_$(date &#43;%Y%m%d_%H%M%S).mp4&#34;
+fi
+
+echo -e &#34;${GREEN}=== Editor de Video FFmpeg ===${NC}&#34;
+echo &#34;Input: $INPUT&#34;
+echo &#34;Inicio: $START_TIME&#34;
+echo &#34;Duración: ${DURATION:-&#34;hasta el final&#34;}&#34;
+echo &#34;Output: $OUTPUT&#34;
+echo &#34;Aspect Ratio: $ASPECT_RATIO&#34;
+echo &#34;Velocidad: ${SPEED}x&#34;
+echo &#34;Zoom: ${ZOOM}x&#34;
+echo &#34;&#34;
+
+# Calcular dimensiones según aspect ratio
+case $ASPECT_RATIO in
+    9:16|vertical)
+        WIDTH=1080
+        HEIGHT=1920
+        ;;
+    1:1|square)
+        WIDTH=1080
+        HEIGHT=1080
+        ;;
+    16:9|horizontal)
+        WIDTH=1920
+        HEIGHT=1080
+        ;;
+    *)
+        echo -e &#34;${YELLOW}Advertencia: Aspect ratio no reconocido, usando 9:16${NC}&#34;
+        WIDTH=1080
+        HEIGHT=1920
+        ;;
+esac
+
+# Construir filtros de video
+FILTERS=&#34;&#34;
+
+# 1. Ajustar velocidad si es necesario
+if [ &#34;$SPEED&#34; != &#34;1.0&#34; ]; then
+    FILTERS=&#34;${FILTERS}setpts=PTS/${SPEED},&#34;
+fi
+
+# 2. Aplicar zoom si es necesario
+if [ &#34;$ZOOM&#34; != &#34;1.0&#34; ]; then
+    FILTERS=&#34;${FILTERS}scale=iw*${ZOOM}:ih*${ZOOM},crop=iw/${ZOOM}:ih/${ZOOM},&#34;
+fi
+
+# 3. Blur en los bordes (efecto letterbox popular en Instagram)
+if [ &#34;$ADD_BLUR&#34; = true ]; then
+    FILTERS=&#34;${FILTERS}split[main][blur];[blur]scale=${WIDTH}:${HEIGHT}:force_original_aspect_ratio=increase,crop=${WIDTH}:${HEIGHT},boxblur=20:5[blurred];[blurred][main]overlay=(W-w)/2:(H-h)/2,&#34;
+else
+    # Solo escalar y hacer crop
+    FILTERS=&#34;${FILTERS}scale=${WIDTH}:${HEIGHT}:force_original_aspect_ratio=increase,crop=${WIDTH}:${HEIGHT},&#34;
+fi
+
+# 4. Añadir fade in/out
+if [ &#34;$ADD_FADE&#34; = true ]; then
+    FADE_DURATION=1
+    if [ -n &#34;$DURATION&#34; ]; then
+        # Calcular duración en segundos si está en formato HH:MM:SS
+        if [[ $DURATION =~ : ]]; then
+            DUR_SEC=$(echo &#34;$DURATION&#34; | awk -F: &#39;{ print ($1 * 3600) &#43; ($2 * 60) &#43; $3 }&#39;)
+        else
+            DUR_SEC=$DURATION
+        fi
+        FILTERS=&#34;${FILTERS}fade=t=in:st=0:d=${FADE_DURATION},fade=t=out:st=$((DUR_SEC - FADE_DURATION)):d=${FADE_DURATION},&#34;
+    else
+        FILTERS=&#34;${FILTERS}fade=t=in:st=0:d=${FADE_DURATION},&#34;
+    fi
+fi
+
+# 5. Añadir texto si se especificó
+if [ -n &#34;$TEXT&#34; ]; then
+    # Escapar caracteres especiales
+    TEXT_ESCAPED=$(echo &#34;$TEXT&#34; | sed &#34;s/:/\\\\:/g&#34; | sed &#34;s/&#39;/\\\\&#39;/g&#34;)
+    FILTERS=&#34;${FILTERS}drawtext=fontfile=/usr/share/fonts/TTF/DejaVuSans-Bold.ttf:text=&#39;${TEXT_ESCAPED}&#39;:fontcolor=white:fontsize=48:box=1:boxcolor=black@0.5:boxborderw=5:x=(w-text_w)/2:y=h-th-50,&#34;
+fi
+
+# Remover la última coma
+FILTERS=&#34;${FILTERS%,}&#34;
+
+# Construir comando ffmpeg
+FFMPEG_CMD=&#34;ffmpeg -i \&#34;$INPUT\&#34;&#34;
+
+# Añadir tiempo de inicio
+if [ &#34;$START_TIME&#34; != &#34;0&#34; ]; then
+    FFMPEG_CMD=&#34;$FFMPEG_CMD -ss $START_TIME&#34;
+fi
+
+# Añadir duración
+if [ -n &#34;$DURATION&#34; ]; then
+    FFMPEG_CMD=&#34;$FFMPEG_CMD -t $DURATION&#34;
+fi
+
+# Añadir filtros de video
+if [ -n &#34;$FILTERS&#34; ]; then
+    FFMPEG_CMD=&#34;$FFMPEG_CMD -vf \&#34;$FILTERS\&#34;&#34;
+fi
+
+# Ajustar audio a la velocidad
+if [ &#34;$SPEED&#34; != &#34;1.0&#34; ]; then
+    FFMPEG_CMD=&#34;$FFMPEG_CMD -af \&#34;atempo=$SPEED\&#34;&#34;
+fi
+
+# Configuración de encoding
+if [ &#34;$COMPRESS&#34; = true ]; then
+    # Optimizado para redes sociales
+    FFMPEG_CMD=&#34;$FFMPEG_CMD -c:v libx264 -preset $QUALITY -crf 23 -c:a aac -b:a 128k -movflags &#43;faststart&#34;
+else
+    # Calidad alta
+    FFMPEG_CMD=&#34;$FFMPEG_CMD -c:v libx264 -preset $QUALITY -crf 18 -c:a aac -b:a 192k -movflags &#43;faststart&#34;
+fi
+
+# Forzar framerate
+FFMPEG_CMD=&#34;$FFMPEG_CMD -r 30&#34;
+
+# Output
+FFMPEG_CMD=&#34;$FFMPEG_CMD \&#34;$OUTPUT\&#34;&#34;
+
+# Mostrar comando
+echo -e &#34;${YELLOW}Ejecutando:${NC}&#34;
+echo &#34;$FFMPEG_CMD&#34; | sed &#39;s/ -/\n  -/g&#39;
+echo &#34;&#34;
+
+# Ejecutar
+eval $FFMPEG_CMD
+
+# Verificar resultado
+if [ $? -eq 0 ]; then
+    FILE_SIZE=$(du -h &#34;$OUTPUT&#34; | cut -f1)
+    echo &#34;&#34;
+    echo -e &#34;${GREEN}✓ Video editado exitosamente!${NC}&#34;
+    echo &#34;Archivo: $OUTPUT&#34;
+    echo &#34;Tamaño: $FILE_SIZE&#34;
+    echo &#34;&#34;
+    echo &#34;Para ver el resultado:&#34;
+    echo &#34;  mpv \&#34;$OUTPUT\&#34;&#34;
+else
+    echo -e &#34;${RED}✗ Error al procesar el video${NC}&#34;
+    exit 1
+fi
+">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Make Instagram clip
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2025-12-28T01:45:04-03:00'>
+      December 28, 2025
+    </time>
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/bash
+</span></span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Script para editar videos de streaming al estilo Instagram/TikTok</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Uso: ./edit_video.sh input.mp4 [inicio] [duracion]</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Colores para output</span>
+</span></span><span style="display:flex;"><span>RED<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;\033[0;31m&#39;</span>
+</span></span><span style="display:flex;"><span>GREEN<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;\033[0;32m&#39;</span>
+</span></span><span style="display:flex;"><span>YELLOW<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;\033[1;33m&#39;</span>
+</span></span><span style="display:flex;"><span>NC<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;\033[0m&#39;</span> <span style="color:#75715e"># No Color</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Verificar que ffmpeg esté instalado</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> ! command -v ffmpeg &amp;&gt; /dev/null; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>RED<span style="color:#e6db74">}</span><span style="color:#e6db74">Error: ffmpeg no está instalado</span><span style="color:#e6db74">${</span>NC<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Instala con: sudo pacman -S ffmpeg&#34;</span>
+</span></span><span style="display:flex;"><span>    exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Función de ayuda</span>
+</span></span><span style="display:flex;"><span>show_help<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Uso: </span>$0<span style="color:#e6db74"> &lt;input.mp4&gt; [inicio] [duracion] [opciones]&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Argumentos posicionales:&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  input.mp4    Video de entrada&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  inicio       Tiempo de inicio (formato: 00:05:30 o 330)&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  duracion     Duración del clip (formato: 00:00:30 o 30)&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Opciones:&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  -o, --output &lt;nombre&gt;     Nombre del archivo de salida&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  -r, --ratio &lt;aspect&gt;      Aspect ratio: 9:16 (vertical), 1:1 (cuadrado), 16:9 (horizontal)&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  -s, --speed &lt;velocidad&gt;   Velocidad: 0.5 (lento), 1.0 (normal), 2.0 (rápido)&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  -z, --zoom &lt;factor&gt;       Factor de zoom: 1.0-2.0&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  -b, --blur                Añadir blur en los bordes (letterbox)&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  -t, --text &lt;texto&gt;        Añadir texto/subtítulo&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  -f, --fade                Añadir fade in/out&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  -q, --quality &lt;preset&gt;    Preset de calidad: ultrafast, fast, medium, slow&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  -c, --compress            Comprimir para redes sociales&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  --vertical                Formato vertical (9:16) - shortcut&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  --square                  Formato cuadrado (1:1) - shortcut&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  -h, --help                Mostrar esta ayuda&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Ejemplos:&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  </span>$0<span style="color:#e6db74"> stream.mp4 00:05:30 30 --vertical&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  </span>$0<span style="color:#e6db74"> stream.mp4 330 30 -r 9:16 -s 1.5 -z 1.2 -f&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  </span>$0<span style="color:#e6db74"> stream.mp4 0 60 --square -t \&#34;Mi clip\&#34; -b&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Valores por defecto</span>
+</span></span><span style="display:flex;"><span>INPUT<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>START_TIME<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;0&#34;</span>
+</span></span><span style="display:flex;"><span>DURATION<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>OUTPUT<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>ASPECT_RATIO<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;9:16&#34;</span>
+</span></span><span style="display:flex;"><span>SPEED<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;1.0&#34;</span>
+</span></span><span style="display:flex;"><span>ZOOM<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;1.0&#34;</span>
+</span></span><span style="display:flex;"><span>ADD_BLUR<span style="color:#f92672">=</span>false
+</span></span><span style="display:flex;"><span>TEXT<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>ADD_FADE<span style="color:#f92672">=</span>false
+</span></span><span style="display:flex;"><span>QUALITY<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;medium&#34;</span>
+</span></span><span style="display:flex;"><span>COMPRESS<span style="color:#f92672">=</span>false
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Parsear argumentos</span>
+</span></span><span style="display:flex;"><span>POSITIONAL_ARGS<span style="color:#f92672">=()</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">while</span> <span style="color:#f92672">[[</span> $# -gt <span style="color:#ae81ff">0</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">case</span> $1 in
+</span></span><span style="display:flex;"><span>        -h|--help<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>            show_help
+</span></span><span style="display:flex;"><span>            exit <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>            ;;
+</span></span><span style="display:flex;"><span>        -o|--output<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>            OUTPUT<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$2<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>            shift <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>            ;;
+</span></span><span style="display:flex;"><span>        -r|--ratio<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>            ASPECT_RATIO<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$2<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>            shift <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>            ;;
+</span></span><span style="display:flex;"><span>        -s|--speed<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>            SPEED<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$2<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>            shift <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>            ;;
+</span></span><span style="display:flex;"><span>        -z|--zoom<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>            ZOOM<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$2<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>            shift <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>            ;;
+</span></span><span style="display:flex;"><span>        -b|--blur<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>            ADD_BLUR<span style="color:#f92672">=</span>true
+</span></span><span style="display:flex;"><span>            shift
+</span></span><span style="display:flex;"><span>            ;;
+</span></span><span style="display:flex;"><span>        -t|--text<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>            TEXT<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$2<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>            shift <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>            ;;
+</span></span><span style="display:flex;"><span>        -f|--fade<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>            ADD_FADE<span style="color:#f92672">=</span>true
+</span></span><span style="display:flex;"><span>            shift
+</span></span><span style="display:flex;"><span>            ;;
+</span></span><span style="display:flex;"><span>        -q|--quality<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>            QUALITY<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$2<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>            shift <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>            ;;
+</span></span><span style="display:flex;"><span>        -c|--compress<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>            COMPRESS<span style="color:#f92672">=</span>true
+</span></span><span style="display:flex;"><span>            shift
+</span></span><span style="display:flex;"><span>            ;;
+</span></span><span style="display:flex;"><span>        --vertical<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>            ASPECT_RATIO<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;9:16&#34;</span>
+</span></span><span style="display:flex;"><span>            shift
+</span></span><span style="display:flex;"><span>            ;;
+</span></span><span style="display:flex;"><span>        --square<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>            ASPECT_RATIO<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;1:1&#34;</span>
+</span></span><span style="display:flex;"><span>            shift
+</span></span><span style="display:flex;"><span>            ;;
+</span></span><span style="display:flex;"><span>        *<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>            POSITIONAL_ARGS<span style="color:#f92672">+=(</span><span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>            shift
+</span></span><span style="display:flex;"><span>            ;;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">esac</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Restaurar argumentos posicionales</span>
+</span></span><span style="display:flex;"><span>set -- <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>POSITIONAL_ARGS[@]<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Validar argumentos requeridos</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> $# -lt <span style="color:#ae81ff">1</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>RED<span style="color:#e6db74">}</span><span style="color:#e6db74">Error: Se requiere al menos el archivo de entrada</span><span style="color:#e6db74">${</span>NC<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    show_help
+</span></span><span style="display:flex;"><span>    exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>INPUT<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span> $# -ge <span style="color:#ae81ff">2</span> <span style="color:#f92672">]</span> <span style="color:#f92672">&amp;&amp;</span> START_TIME<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$2<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span> $# -ge <span style="color:#ae81ff">3</span> <span style="color:#f92672">]</span> <span style="color:#f92672">&amp;&amp;</span> DURATION<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$3<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Validar que el archivo existe</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> ! -f <span style="color:#e6db74">&#34;</span>$INPUT<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>RED<span style="color:#e6db74">}</span><span style="color:#e6db74">Error: El archivo &#39;</span>$INPUT<span style="color:#e6db74">&#39; no existe</span><span style="color:#e6db74">${</span>NC<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Generar nombre de salida si no se especificó</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> -z <span style="color:#e6db74">&#34;</span>$OUTPUT<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    BASENAME<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>basename <span style="color:#e6db74">&#34;</span>$INPUT<span style="color:#e6db74">&#34;</span> | sed <span style="color:#e6db74">&#39;s/\.[^.]*$//&#39;</span><span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>    OUTPUT<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>BASENAME<span style="color:#e6db74">}</span><span style="color:#e6db74">_edited_</span><span style="color:#66d9ef">$(</span>date +%Y%m%d_%H%M%S<span style="color:#66d9ef">)</span><span style="color:#e6db74">.mp4&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>GREEN<span style="color:#e6db74">}</span><span style="color:#e6db74">=== Editor de Video FFmpeg ===</span><span style="color:#e6db74">${</span>NC<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;Input: </span>$INPUT<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;Inicio: </span>$START_TIME<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;Duración: </span><span style="color:#e6db74">${</span>DURATION<span style="color:#66d9ef">:-</span><span style="color:#e6db74">&#34;hasta el final&#34;</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;Output: </span>$OUTPUT<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;Aspect Ratio: </span>$ASPECT_RATIO<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;Velocidad: </span><span style="color:#e6db74">${</span>SPEED<span style="color:#e6db74">}</span><span style="color:#e6db74">x&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;Zoom: </span><span style="color:#e6db74">${</span>ZOOM<span style="color:#e6db74">}</span><span style="color:#e6db74">x&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Calcular dimensiones según aspect ratio</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">case</span> $ASPECT_RATIO in
+</span></span><span style="display:flex;"><span>    9:16|vertical<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        WIDTH<span style="color:#f92672">=</span><span style="color:#ae81ff">1080</span>
+</span></span><span style="display:flex;"><span>        HEIGHT<span style="color:#f92672">=</span><span style="color:#ae81ff">1920</span>
+</span></span><span style="display:flex;"><span>        ;;
+</span></span><span style="display:flex;"><span>    1:1|square<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        WIDTH<span style="color:#f92672">=</span><span style="color:#ae81ff">1080</span>
+</span></span><span style="display:flex;"><span>        HEIGHT<span style="color:#f92672">=</span><span style="color:#ae81ff">1080</span>
+</span></span><span style="display:flex;"><span>        ;;
+</span></span><span style="display:flex;"><span>    16:9|horizontal<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        WIDTH<span style="color:#f92672">=</span><span style="color:#ae81ff">1920</span>
+</span></span><span style="display:flex;"><span>        HEIGHT<span style="color:#f92672">=</span><span style="color:#ae81ff">1080</span>
+</span></span><span style="display:flex;"><span>        ;;
+</span></span><span style="display:flex;"><span>    *<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>YELLOW<span style="color:#e6db74">}</span><span style="color:#e6db74">Advertencia: Aspect ratio no reconocido, usando 9:16</span><span style="color:#e6db74">${</span>NC<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>        WIDTH<span style="color:#f92672">=</span><span style="color:#ae81ff">1080</span>
+</span></span><span style="display:flex;"><span>        HEIGHT<span style="color:#f92672">=</span><span style="color:#ae81ff">1920</span>
+</span></span><span style="display:flex;"><span>        ;;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">esac</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Construir filtros de video</span>
+</span></span><span style="display:flex;"><span>FILTERS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 1. Ajustar velocidad si es necesario</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span>$SPEED<span style="color:#e6db74">&#34;</span> !<span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;1.0&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    FILTERS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>FILTERS<span style="color:#e6db74">}</span><span style="color:#e6db74">setpts=PTS/</span><span style="color:#e6db74">${</span>SPEED<span style="color:#e6db74">}</span><span style="color:#e6db74">,&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 2. Aplicar zoom si es necesario</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span>$ZOOM<span style="color:#e6db74">&#34;</span> !<span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;1.0&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    FILTERS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>FILTERS<span style="color:#e6db74">}</span><span style="color:#e6db74">scale=iw*</span><span style="color:#e6db74">${</span>ZOOM<span style="color:#e6db74">}</span><span style="color:#e6db74">:ih*</span><span style="color:#e6db74">${</span>ZOOM<span style="color:#e6db74">}</span><span style="color:#e6db74">,crop=iw/</span><span style="color:#e6db74">${</span>ZOOM<span style="color:#e6db74">}</span><span style="color:#e6db74">:ih/</span><span style="color:#e6db74">${</span>ZOOM<span style="color:#e6db74">}</span><span style="color:#e6db74">,&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 3. Blur en los bordes (efecto letterbox popular en Instagram)</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span>$ADD_BLUR<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">=</span> true <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    FILTERS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>FILTERS<span style="color:#e6db74">}</span><span style="color:#e6db74">split[main][blur];[blur]scale=</span><span style="color:#e6db74">${</span>WIDTH<span style="color:#e6db74">}</span><span style="color:#e6db74">:</span><span style="color:#e6db74">${</span>HEIGHT<span style="color:#e6db74">}</span><span style="color:#e6db74">:force_original_aspect_ratio=increase,crop=</span><span style="color:#e6db74">${</span>WIDTH<span style="color:#e6db74">}</span><span style="color:#e6db74">:</span><span style="color:#e6db74">${</span>HEIGHT<span style="color:#e6db74">}</span><span style="color:#e6db74">,boxblur=20:5[blurred];[blurred][main]overlay=(W-w)/2:(H-h)/2,&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Solo escalar y hacer crop</span>
+</span></span><span style="display:flex;"><span>    FILTERS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>FILTERS<span style="color:#e6db74">}</span><span style="color:#e6db74">scale=</span><span style="color:#e6db74">${</span>WIDTH<span style="color:#e6db74">}</span><span style="color:#e6db74">:</span><span style="color:#e6db74">${</span>HEIGHT<span style="color:#e6db74">}</span><span style="color:#e6db74">:force_original_aspect_ratio=increase,crop=</span><span style="color:#e6db74">${</span>WIDTH<span style="color:#e6db74">}</span><span style="color:#e6db74">:</span><span style="color:#e6db74">${</span>HEIGHT<span style="color:#e6db74">}</span><span style="color:#e6db74">,&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 4. Añadir fade in/out</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span>$ADD_FADE<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">=</span> true <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    FADE_DURATION<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> -n <span style="color:#e6db74">&#34;</span>$DURATION<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># Calcular duración en segundos si está en formato HH:MM:SS</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> $DURATION <span style="color:#f92672">=</span>~ : <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>            DUR_SEC<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>echo <span style="color:#e6db74">&#34;</span>$DURATION<span style="color:#e6db74">&#34;</span> | awk -F: <span style="color:#e6db74">&#39;{ print ($1 * 3600) + ($2 * 60) + $3 }&#39;</span><span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>            DUR_SEC<span style="color:#f92672">=</span>$DURATION
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>        FILTERS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>FILTERS<span style="color:#e6db74">}</span><span style="color:#e6db74">fade=t=in:st=0:d=</span><span style="color:#e6db74">${</span>FADE_DURATION<span style="color:#e6db74">}</span><span style="color:#e6db74">,fade=t=out:st=</span><span style="color:#66d9ef">$((</span>DUR_SEC <span style="color:#f92672">-</span> FADE_DURATION<span style="color:#66d9ef">))</span><span style="color:#e6db74">:d=</span><span style="color:#e6db74">${</span>FADE_DURATION<span style="color:#e6db74">}</span><span style="color:#e6db74">,&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>        FILTERS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>FILTERS<span style="color:#e6db74">}</span><span style="color:#e6db74">fade=t=in:st=0:d=</span><span style="color:#e6db74">${</span>FADE_DURATION<span style="color:#e6db74">}</span><span style="color:#e6db74">,&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 5. Añadir texto si se especificó</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> -n <span style="color:#e6db74">&#34;</span>$TEXT<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Escapar caracteres especiales</span>
+</span></span><span style="display:flex;"><span>    TEXT_ESCAPED<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>echo <span style="color:#e6db74">&#34;</span>$TEXT<span style="color:#e6db74">&#34;</span> | sed <span style="color:#e6db74">&#34;s/:/\\\\:/g&#34;</span> | sed <span style="color:#e6db74">&#34;s/&#39;/\\\\&#39;/g&#34;</span><span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>    FILTERS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>FILTERS<span style="color:#e6db74">}</span><span style="color:#e6db74">drawtext=fontfile=/usr/share/fonts/TTF/DejaVuSans-Bold.ttf:text=&#39;</span><span style="color:#e6db74">${</span>TEXT_ESCAPED<span style="color:#e6db74">}</span><span style="color:#e6db74">&#39;:fontcolor=white:fontsize=48:box=1:boxcolor=black@0.5:boxborderw=5:x=(w-text_w)/2:y=h-th-50,&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Remover la última coma</span>
+</span></span><span style="display:flex;"><span>FILTERS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>FILTERS%,<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Construir comando ffmpeg</span>
+</span></span><span style="display:flex;"><span>FFMPEG_CMD<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;ffmpeg -i \&#34;</span>$INPUT<span style="color:#e6db74">\&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Añadir tiempo de inicio</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span>$START_TIME<span style="color:#e6db74">&#34;</span> !<span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;0&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    FFMPEG_CMD<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$FFMPEG_CMD<span style="color:#e6db74"> -ss </span>$START_TIME<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Añadir duración</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> -n <span style="color:#e6db74">&#34;</span>$DURATION<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    FFMPEG_CMD<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$FFMPEG_CMD<span style="color:#e6db74"> -t </span>$DURATION<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Añadir filtros de video</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> -n <span style="color:#e6db74">&#34;</span>$FILTERS<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    FFMPEG_CMD<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$FFMPEG_CMD<span style="color:#e6db74"> -vf \&#34;</span>$FILTERS<span style="color:#e6db74">\&#34;&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Ajustar audio a la velocidad</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span>$SPEED<span style="color:#e6db74">&#34;</span> !<span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;1.0&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    FFMPEG_CMD<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$FFMPEG_CMD<span style="color:#e6db74"> -af \&#34;atempo=</span>$SPEED<span style="color:#e6db74">\&#34;&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Configuración de encoding</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span>$COMPRESS<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">=</span> true <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Optimizado para redes sociales</span>
+</span></span><span style="display:flex;"><span>    FFMPEG_CMD<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$FFMPEG_CMD<span style="color:#e6db74"> -c:v libx264 -preset </span>$QUALITY<span style="color:#e6db74"> -crf 23 -c:a aac -b:a 128k -movflags +faststart&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Calidad alta</span>
+</span></span><span style="display:flex;"><span>    FFMPEG_CMD<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$FFMPEG_CMD<span style="color:#e6db74"> -c:v libx264 -preset </span>$QUALITY<span style="color:#e6db74"> -crf 18 -c:a aac -b:a 192k -movflags +faststart&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Forzar framerate</span>
+</span></span><span style="display:flex;"><span>FFMPEG_CMD<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$FFMPEG_CMD<span style="color:#e6db74"> -r 30&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Output</span>
+</span></span><span style="display:flex;"><span>FFMPEG_CMD<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$FFMPEG_CMD<span style="color:#e6db74"> \&#34;</span>$OUTPUT<span style="color:#e6db74">\&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Mostrar comando</span>
+</span></span><span style="display:flex;"><span>echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>YELLOW<span style="color:#e6db74">}</span><span style="color:#e6db74">Ejecutando:</span><span style="color:#e6db74">${</span>NC<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;</span>$FFMPEG_CMD<span style="color:#e6db74">&#34;</span> | sed <span style="color:#e6db74">&#39;s/ -/\n  -/g&#39;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Ejecutar</span>
+</span></span><span style="display:flex;"><span>eval $FFMPEG_CMD
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Verificar resultado</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> $? -eq <span style="color:#ae81ff">0</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    FILE_SIZE<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>du -h <span style="color:#e6db74">&#34;</span>$OUTPUT<span style="color:#e6db74">&#34;</span> | cut -f1<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>GREEN<span style="color:#e6db74">}</span><span style="color:#e6db74">✓ Video editado exitosamente!</span><span style="color:#e6db74">${</span>NC<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Archivo: </span>$OUTPUT<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Tamaño: </span>$FILE_SIZE<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Para ver el resultado:&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  mpv \&#34;</span>$OUTPUT<span style="color:#e6db74">\&#34;&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>    echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>RED<span style="color:#e6db74">}</span><span style="color:#e6db74">✗ Error al procesar el video</span><span style="color:#e6db74">${</span>NC<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span></code></pre></div>
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+</footer>
+
+
+</body>
+</html>

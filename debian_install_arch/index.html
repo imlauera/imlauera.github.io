@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/debian_install_arch/">
+  <meta property="og:site_name" content="Imlauer">
+  <meta property="og:title" content="Instalar Debian como ArchLinux con debootstrap">
+  <meta property="og:description" content="Todavia tengo que revisar esto. Le pedi a Claude AI que me lo genere a partir de mi instalacion de archlinux.
+Instalación Manual de Debian (siguiendo tu configuración de Arch) Voy a adaptarte la instalación para Debian siguiendo la estructura de tu instalación de Arch.
+Preparación Inicial # Configurar teclado español loadkeys es # Configurar WiFi (Debian usa diferentes herramientas) ip link set wlan0 up wpa_passphrase &#34;nombre_red&#34; &#34;contraseña&#34; &gt; /etc/wpa_supplicant.conf wpa_supplicant -B -i wlan0 -c /etc/wpa_supplicant.conf dhclient wlan0 # Probar conexión ping -c 3 debian.org Particionado (igual que en Arch) # Listar particiones fdisk -l # Particionar cfdisk /dev/sda # Seleccionar GPT y crear: # - Partición EFI: 300MB (tipo: EFI System) # - Partición Swap: 4GB (tipo: Linux swap) # - Partición Root: resto (tipo: Linux filesystem) Formateo y Montaje # Formatear particiones mkfs.ext4 /dev/sda3 # root mkswap /dev/sda2 # swap mkfs.fat -F32 /dev/sda1 # EFI # Montar mount /dev/sda3 /mnt mkdir -p /mnt/boot/efi mount /dev/sda1 /mnt/boot/efi swapon /dev/sda2 Instalación Base # Instalar sistema base (debootstrap viene en el instalador de Debian) debootstrap --arch amd64 bookworm /mnt http://deb.debian.org/debian # Generar fstab genfstab -U /mnt &gt;&gt; /mnt/etc/fstab # Si no tienes genfstab, hazlo manual: echo &#34;UUID=$(blkid -s UUID -o value /dev/sda3) / ext4 defaults 0 1&#34; &gt;&gt; /mnt/etc/fstab echo &#34;UUID=$(blkid -s UUID -o value /dev/sda1) /boot/efi vfat defaults 0 2&#34; &gt;&gt; /mnt/etc/fstab echo &#34;UUID=$(blkid -s UUID -o value /dev/sda2) none swap sw 0 0&#34; &gt;&gt; /mnt/etc/fstab # Chroot mount --bind /dev /mnt/dev mount --bind /proc /mnt/proc mount --bind /sys /mnt/sys chroot /mnt /bin/bash Configuración del Sistema # Zona horaria ln -sf /usr/share/zoneinfo/America/Argentina/Buenos_Aires /etc/localtime hwclock --systohc # Locales apt install locales dpkg-reconfigure locales # Seleccionar: en_US.UTF-8 UTF-8 y es_AR.UTF-8 UTF-8 # Teclado en consola echo &#34;KEYMAP=es&#34; &gt; /etc/vconsole.conf echo &#34;FONT=Lat2-Terminus16&#34; &gt;&gt; /etc/vconsole.conf # Hostname echo &#34;debian&#34; &gt; /etc/hostname # Hosts cat &gt; /etc/hosts &lt;&lt; EOF 127.0.0.1 localhost ::1 localhost 127.0.1.1 debian.localdomain debian EOF # DNS (Quad9 o Google) cat &gt; /etc/resolv.conf &lt;&lt; EOF nameserver 9.9.9.11 nameserver 149.112.112.11 EOF chattr &#43;i /etc/resolv.conf # Contraseña root passwd Instalación de Paquetes Base # Actualizar repositorios apt update # Paquetes esenciales apt install -y \ linux-image-amd64 linux-headers-amd64 firmware-linux \ grub-efi-amd64 efibootmgr \ network-manager wireless-tools wpasupplicant \ alsa-utils pulseaudio \ vim git tmux fish \ sudo build-essential \ firmware-iwlwifi firmware-realtek # Fuentes apt install -y \ fonts-noto fonts-noto-cjk fonts-noto-color-emoji \ xfonts-terminus console-setup Configuración de GRUB # Instalar GRUB (UEFI) grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=debian --recheck # Si tienes problemas con UEFI, usa --removable: # grub-install --target=x86_64-efi --efi-directory=/boot/efi --removable # Detectar otros sistemas operativos apt install os-prober echo &#34;GRUB_DISABLE_OS_PROBER=false&#34; &gt;&gt; /etc/default/grub # Generar configuración update-grub Crear Usuario # Crear usuario useradd -m -G sudo,audio,video,netdev tu_usuario passwd tu_usuario # Configurar sudo (ya viene instalado) # El grupo &#39;sudo&#39; ya tiene permisos Servicios # Habilitar NetworkManager systemctl enable NetworkManager # Habilitar SSH (opcional) apt install openssh-server systemctl enable ssh Salir y Reiniciar exit # salir del chroot umount -R /mnt reboot Post-Instalación Después de reiniciar e iniciar sesión:">
+  <meta property="og:locale" content="es_es">
+  <meta property="og:type" content="article">
+    <meta property="article:published_time" content="2025-12-28T01:24:27-03:00">
+    <meta property="article:modified_time" content="2025-12-28T01:24:27-03:00">
+
+  
+  <meta itemprop="name" content="Instalar Debian como ArchLinux con debootstrap">
+  <meta itemprop="description" content="Todavia tengo que revisar esto. Le pedi a Claude AI que me lo genere a partir de mi instalacion de archlinux.
+Instalación Manual de Debian (siguiendo tu configuración de Arch) Voy a adaptarte la instalación para Debian siguiendo la estructura de tu instalación de Arch.
+Preparación Inicial # Configurar teclado español loadkeys es # Configurar WiFi (Debian usa diferentes herramientas) ip link set wlan0 up wpa_passphrase &#34;nombre_red&#34; &#34;contraseña&#34; &gt; /etc/wpa_supplicant.conf wpa_supplicant -B -i wlan0 -c /etc/wpa_supplicant.conf dhclient wlan0 # Probar conexión ping -c 3 debian.org Particionado (igual que en Arch) # Listar particiones fdisk -l # Particionar cfdisk /dev/sda # Seleccionar GPT y crear: # - Partición EFI: 300MB (tipo: EFI System) # - Partición Swap: 4GB (tipo: Linux swap) # - Partición Root: resto (tipo: Linux filesystem) Formateo y Montaje # Formatear particiones mkfs.ext4 /dev/sda3 # root mkswap /dev/sda2 # swap mkfs.fat -F32 /dev/sda1 # EFI # Montar mount /dev/sda3 /mnt mkdir -p /mnt/boot/efi mount /dev/sda1 /mnt/boot/efi swapon /dev/sda2 Instalación Base # Instalar sistema base (debootstrap viene en el instalador de Debian) debootstrap --arch amd64 bookworm /mnt http://deb.debian.org/debian # Generar fstab genfstab -U /mnt &gt;&gt; /mnt/etc/fstab # Si no tienes genfstab, hazlo manual: echo &#34;UUID=$(blkid -s UUID -o value /dev/sda3) / ext4 defaults 0 1&#34; &gt;&gt; /mnt/etc/fstab echo &#34;UUID=$(blkid -s UUID -o value /dev/sda1) /boot/efi vfat defaults 0 2&#34; &gt;&gt; /mnt/etc/fstab echo &#34;UUID=$(blkid -s UUID -o value /dev/sda2) none swap sw 0 0&#34; &gt;&gt; /mnt/etc/fstab # Chroot mount --bind /dev /mnt/dev mount --bind /proc /mnt/proc mount --bind /sys /mnt/sys chroot /mnt /bin/bash Configuración del Sistema # Zona horaria ln -sf /usr/share/zoneinfo/America/Argentina/Buenos_Aires /etc/localtime hwclock --systohc # Locales apt install locales dpkg-reconfigure locales # Seleccionar: en_US.UTF-8 UTF-8 y es_AR.UTF-8 UTF-8 # Teclado en consola echo &#34;KEYMAP=es&#34; &gt; /etc/vconsole.conf echo &#34;FONT=Lat2-Terminus16&#34; &gt;&gt; /etc/vconsole.conf # Hostname echo &#34;debian&#34; &gt; /etc/hostname # Hosts cat &gt; /etc/hosts &lt;&lt; EOF 127.0.0.1 localhost ::1 localhost 127.0.1.1 debian.localdomain debian EOF # DNS (Quad9 o Google) cat &gt; /etc/resolv.conf &lt;&lt; EOF nameserver 9.9.9.11 nameserver 149.112.112.11 EOF chattr &#43;i /etc/resolv.conf # Contraseña root passwd Instalación de Paquetes Base # Actualizar repositorios apt update # Paquetes esenciales apt install -y \ linux-image-amd64 linux-headers-amd64 firmware-linux \ grub-efi-amd64 efibootmgr \ network-manager wireless-tools wpasupplicant \ alsa-utils pulseaudio \ vim git tmux fish \ sudo build-essential \ firmware-iwlwifi firmware-realtek # Fuentes apt install -y \ fonts-noto fonts-noto-cjk fonts-noto-color-emoji \ xfonts-terminus console-setup Configuración de GRUB # Instalar GRUB (UEFI) grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=debian --recheck # Si tienes problemas con UEFI, usa --removable: # grub-install --target=x86_64-efi --efi-directory=/boot/efi --removable # Detectar otros sistemas operativos apt install os-prober echo &#34;GRUB_DISABLE_OS_PROBER=false&#34; &gt;&gt; /etc/default/grub # Generar configuración update-grub Crear Usuario # Crear usuario useradd -m -G sudo,audio,video,netdev tu_usuario passwd tu_usuario # Configurar sudo (ya viene instalado) # El grupo &#39;sudo&#39; ya tiene permisos Servicios # Habilitar NetworkManager systemctl enable NetworkManager # Habilitar SSH (opcional) apt install openssh-server systemctl enable ssh Salir y Reiniciar exit # salir del chroot umount -R /mnt reboot Post-Instalación Después de reiniciar e iniciar sesión:">
+  <meta itemprop="datePublished" content="2025-12-28T01:24:27-03:00">
+  <meta itemprop="dateModified" content="2025-12-28T01:24:27-03:00">
+  <meta itemprop="wordCount" content="726">
+  
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Instalar Debian como ArchLinux con debootstrap">
+  <meta name="twitter:description" content="Todavia tengo que revisar esto. Le pedi a Claude AI que me lo genere a partir de mi instalacion de archlinux.
+Instalación Manual de Debian (siguiendo tu configuración de Arch) Voy a adaptarte la instalación para Debian siguiendo la estructura de tu instalación de Arch.
+Preparación Inicial # Configurar teclado español loadkeys es # Configurar WiFi (Debian usa diferentes herramientas) ip link set wlan0 up wpa_passphrase &#34;nombre_red&#34; &#34;contraseña&#34; &gt; /etc/wpa_supplicant.conf wpa_supplicant -B -i wlan0 -c /etc/wpa_supplicant.conf dhclient wlan0 # Probar conexión ping -c 3 debian.org Particionado (igual que en Arch) # Listar particiones fdisk -l # Particionar cfdisk /dev/sda # Seleccionar GPT y crear: # - Partición EFI: 300MB (tipo: EFI System) # - Partición Swap: 4GB (tipo: Linux swap) # - Partición Root: resto (tipo: Linux filesystem) Formateo y Montaje # Formatear particiones mkfs.ext4 /dev/sda3 # root mkswap /dev/sda2 # swap mkfs.fat -F32 /dev/sda1 # EFI # Montar mount /dev/sda3 /mnt mkdir -p /mnt/boot/efi mount /dev/sda1 /mnt/boot/efi swapon /dev/sda2 Instalación Base # Instalar sistema base (debootstrap viene en el instalador de Debian) debootstrap --arch amd64 bookworm /mnt http://deb.debian.org/debian # Generar fstab genfstab -U /mnt &gt;&gt; /mnt/etc/fstab # Si no tienes genfstab, hazlo manual: echo &#34;UUID=$(blkid -s UUID -o value /dev/sda3) / ext4 defaults 0 1&#34; &gt;&gt; /mnt/etc/fstab echo &#34;UUID=$(blkid -s UUID -o value /dev/sda1) /boot/efi vfat defaults 0 2&#34; &gt;&gt; /mnt/etc/fstab echo &#34;UUID=$(blkid -s UUID -o value /dev/sda2) none swap sw 0 0&#34; &gt;&gt; /mnt/etc/fstab # Chroot mount --bind /dev /mnt/dev mount --bind /proc /mnt/proc mount --bind /sys /mnt/sys chroot /mnt /bin/bash Configuración del Sistema # Zona horaria ln -sf /usr/share/zoneinfo/America/Argentina/Buenos_Aires /etc/localtime hwclock --systohc # Locales apt install locales dpkg-reconfigure locales # Seleccionar: en_US.UTF-8 UTF-8 y es_AR.UTF-8 UTF-8 # Teclado en consola echo &#34;KEYMAP=es&#34; &gt; /etc/vconsole.conf echo &#34;FONT=Lat2-Terminus16&#34; &gt;&gt; /etc/vconsole.conf # Hostname echo &#34;debian&#34; &gt; /etc/hostname # Hosts cat &gt; /etc/hosts &lt;&lt; EOF 127.0.0.1 localhost ::1 localhost 127.0.1.1 debian.localdomain debian EOF # DNS (Quad9 o Google) cat &gt; /etc/resolv.conf &lt;&lt; EOF nameserver 9.9.9.11 nameserver 149.112.112.11 EOF chattr &#43;i /etc/resolv.conf # Contraseña root passwd Instalación de Paquetes Base # Actualizar repositorios apt update # Paquetes esenciales apt install -y \ linux-image-amd64 linux-headers-amd64 firmware-linux \ grub-efi-amd64 efibootmgr \ network-manager wireless-tools wpasupplicant \ alsa-utils pulseaudio \ vim git tmux fish \ sudo build-essential \ firmware-iwlwifi firmware-realtek # Fuentes apt install -y \ fonts-noto fonts-noto-cjk fonts-noto-color-emoji \ xfonts-terminus console-setup Configuración de GRUB # Instalar GRUB (UEFI) grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=debian --recheck # Si tienes problemas con UEFI, usa --removable: # grub-install --target=x86_64-efi --efi-directory=/boot/efi --removable # Detectar otros sistemas operativos apt install os-prober echo &#34;GRUB_DISABLE_OS_PROBER=false&#34; &gt;&gt; /etc/default/grub # Generar configuración update-grub Crear Usuario # Crear usuario useradd -m -G sudo,audio,video,netdev tu_usuario passwd tu_usuario # Configurar sudo (ya viene instalado) # El grupo &#39;sudo&#39; ya tiene permisos Servicios # Habilitar NetworkManager systemctl enable NetworkManager # Habilitar SSH (opcional) apt install openssh-server systemctl enable ssh Salir y Reiniciar exit # salir del chroot umount -R /mnt reboot Post-Instalación Después de reiniciar e iniciar sesión:">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Instalar Debian como ArchLinux con debootstrap
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/debian_install_arch/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="Todavia tengo que revisar esto. Le pedi a Claude AI que me lo genere a partir de mi instalacion de archlinux.
+Instalación Manual de Debian (siguiendo tu configuración de Arch)
+Voy a adaptarte la instalación para Debian siguiendo la estructura de tu instalación de Arch.
+Preparación Inicial
+# Configurar teclado español
+loadkeys es
+
+# Configurar WiFi (Debian usa diferentes herramientas)
+ip link set wlan0 up
+wpa_passphrase &#34;nombre_red&#34; &#34;contraseña&#34; &gt; /etc/wpa_supplicant.conf
+wpa_supplicant -B -i wlan0 -c /etc/wpa_supplicant.conf
+dhclient wlan0
+
+# Probar conexión
+ping -c 3 debian.org
+Particionado (igual que en Arch)
+# Listar particiones
+fdisk -l
+
+# Particionar
+cfdisk /dev/sda
+
+# Seleccionar GPT y crear:
+# - Partición EFI: 300MB (tipo: EFI System)
+# - Partición Swap: 4GB (tipo: Linux swap)
+# - Partición Root: resto (tipo: Linux filesystem)
+Formateo y Montaje
+# Formatear particiones
+mkfs.ext4 /dev/sda3        # root
+mkswap /dev/sda2           # swap
+mkfs.fat -F32 /dev/sda1    # EFI
+
+# Montar
+mount /dev/sda3 /mnt
+mkdir -p /mnt/boot/efi
+mount /dev/sda1 /mnt/boot/efi
+swapon /dev/sda2
+Instalación Base
+# Instalar sistema base (debootstrap viene en el instalador de Debian)
+debootstrap --arch amd64 bookworm /mnt http://deb.debian.org/debian
+
+# Generar fstab
+genfstab -U /mnt &gt;&gt; /mnt/etc/fstab
+# Si no tienes genfstab, hazlo manual:
+echo &#34;UUID=$(blkid -s UUID -o value /dev/sda3) / ext4 defaults 0 1&#34; &gt;&gt; /mnt/etc/fstab
+echo &#34;UUID=$(blkid -s UUID -o value /dev/sda1) /boot/efi vfat defaults 0 2&#34; &gt;&gt; /mnt/etc/fstab
+echo &#34;UUID=$(blkid -s UUID -o value /dev/sda2) none swap sw 0 0&#34; &gt;&gt; /mnt/etc/fstab
+
+# Chroot
+mount --bind /dev /mnt/dev
+mount --bind /proc /mnt/proc
+mount --bind /sys /mnt/sys
+chroot /mnt /bin/bash
+Configuración del Sistema
+# Zona horaria
+ln -sf /usr/share/zoneinfo/America/Argentina/Buenos_Aires /etc/localtime
+hwclock --systohc
+
+# Locales
+apt install locales
+dpkg-reconfigure locales
+# Seleccionar: en_US.UTF-8 UTF-8 y es_AR.UTF-8 UTF-8
+
+# Teclado en consola
+echo &#34;KEYMAP=es&#34; &gt; /etc/vconsole.conf
+echo &#34;FONT=Lat2-Terminus16&#34; &gt;&gt; /etc/vconsole.conf
+
+# Hostname
+echo &#34;debian&#34; &gt; /etc/hostname
+
+# Hosts
+cat &gt; /etc/hosts &lt;&lt; EOF
+127.0.0.1       localhost
+::1             localhost
+127.0.1.1       debian.localdomain debian
+EOF
+
+# DNS (Quad9 o Google)
+cat &gt; /etc/resolv.conf &lt;&lt; EOF
+nameserver 9.9.9.11
+nameserver 149.112.112.11
+EOF
+chattr &#43;i /etc/resolv.conf
+
+# Contraseña root
+passwd
+Instalación de Paquetes Base
+# Actualizar repositorios
+apt update
+
+# Paquetes esenciales
+apt install -y \
+    linux-image-amd64 linux-headers-amd64 firmware-linux \
+    grub-efi-amd64 efibootmgr \
+    network-manager wireless-tools wpasupplicant \
+    alsa-utils pulseaudio \
+    vim git tmux fish \
+    sudo build-essential \
+    firmware-iwlwifi firmware-realtek
+
+# Fuentes
+apt install -y \
+    fonts-noto fonts-noto-cjk fonts-noto-color-emoji \
+    xfonts-terminus console-setup
+Configuración de GRUB
+# Instalar GRUB (UEFI)
+grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=debian --recheck
+
+# Si tienes problemas con UEFI, usa --removable:
+# grub-install --target=x86_64-efi --efi-directory=/boot/efi --removable
+
+# Detectar otros sistemas operativos
+apt install os-prober
+echo &#34;GRUB_DISABLE_OS_PROBER=false&#34; &gt;&gt; /etc/default/grub
+
+# Generar configuración
+update-grub
+Crear Usuario
+# Crear usuario
+useradd -m -G sudo,audio,video,netdev tu_usuario
+passwd tu_usuario
+
+# Configurar sudo (ya viene instalado)
+# El grupo &#39;sudo&#39; ya tiene permisos
+Servicios
+# Habilitar NetworkManager
+systemctl enable NetworkManager
+
+# Habilitar SSH (opcional)
+apt install openssh-server
+systemctl enable ssh
+Salir y Reiniciar
+exit  # salir del chroot
+umount -R /mnt
+reboot
+Post-Instalación
+Después de reiniciar e iniciar sesión:">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Instalar Debian como ArchLinux con debootstrap
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2025-12-28T01:24:27-03:00'>
+      December 28, 2025
+    </time>
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <p>Todavia tengo que revisar esto. Le pedi a Claude AI que me lo genere a partir de mi instalacion de archlinux.</p>
+<h1 id="instalación-manual-de-debian-siguiendo-tu-configuración-de-arch">Instalación Manual de Debian (siguiendo tu configuración de Arch)</h1>
+<p>Voy a adaptarte la instalación para Debian siguiendo la estructura de tu instalación de Arch.</p>
+<h2 id="preparación-inicial">Preparación Inicial</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Configurar teclado español</span>
+</span></span><span style="display:flex;"><span>loadkeys es
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Configurar WiFi (Debian usa diferentes herramientas)</span>
+</span></span><span style="display:flex;"><span>ip link set wlan0 up
+</span></span><span style="display:flex;"><span>wpa_passphrase <span style="color:#e6db74">&#34;nombre_red&#34;</span> <span style="color:#e6db74">&#34;contraseña&#34;</span> &gt; /etc/wpa_supplicant.conf
+</span></span><span style="display:flex;"><span>wpa_supplicant -B -i wlan0 -c /etc/wpa_supplicant.conf
+</span></span><span style="display:flex;"><span>dhclient wlan0
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Probar conexión</span>
+</span></span><span style="display:flex;"><span>ping -c <span style="color:#ae81ff">3</span> debian.org
+</span></span></code></pre></div><h2 id="particionado-igual-que-en-arch">Particionado (igual que en Arch)</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Listar particiones</span>
+</span></span><span style="display:flex;"><span>fdisk -l
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Particionar</span>
+</span></span><span style="display:flex;"><span>cfdisk /dev/sda
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Seleccionar GPT y crear:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># - Partición EFI: 300MB (tipo: EFI System)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># - Partición Swap: 4GB (tipo: Linux swap)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># - Partición Root: resto (tipo: Linux filesystem)</span>
+</span></span></code></pre></div><h2 id="formateo-y-montaje">Formateo y Montaje</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Formatear particiones</span>
+</span></span><span style="display:flex;"><span>mkfs.ext4 /dev/sda3        <span style="color:#75715e"># root</span>
+</span></span><span style="display:flex;"><span>mkswap /dev/sda2           <span style="color:#75715e"># swap</span>
+</span></span><span style="display:flex;"><span>mkfs.fat -F32 /dev/sda1    <span style="color:#75715e"># EFI</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Montar</span>
+</span></span><span style="display:flex;"><span>mount /dev/sda3 /mnt
+</span></span><span style="display:flex;"><span>mkdir -p /mnt/boot/efi
+</span></span><span style="display:flex;"><span>mount /dev/sda1 /mnt/boot/efi
+</span></span><span style="display:flex;"><span>swapon /dev/sda2
+</span></span></code></pre></div><h2 id="instalación-base">Instalación Base</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Instalar sistema base (debootstrap viene en el instalador de Debian)</span>
+</span></span><span style="display:flex;"><span>debootstrap --arch amd64 bookworm /mnt http://deb.debian.org/debian
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Generar fstab</span>
+</span></span><span style="display:flex;"><span>genfstab -U /mnt &gt;&gt; /mnt/etc/fstab
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Si no tienes genfstab, hazlo manual:</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;UUID=</span><span style="color:#66d9ef">$(</span>blkid -s UUID -o value /dev/sda3<span style="color:#66d9ef">)</span><span style="color:#e6db74"> / ext4 defaults 0 1&#34;</span> &gt;&gt; /mnt/etc/fstab
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;UUID=</span><span style="color:#66d9ef">$(</span>blkid -s UUID -o value /dev/sda1<span style="color:#66d9ef">)</span><span style="color:#e6db74"> /boot/efi vfat defaults 0 2&#34;</span> &gt;&gt; /mnt/etc/fstab
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;UUID=</span><span style="color:#66d9ef">$(</span>blkid -s UUID -o value /dev/sda2<span style="color:#66d9ef">)</span><span style="color:#e6db74"> none swap sw 0 0&#34;</span> &gt;&gt; /mnt/etc/fstab
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Chroot</span>
+</span></span><span style="display:flex;"><span>mount --bind /dev /mnt/dev
+</span></span><span style="display:flex;"><span>mount --bind /proc /mnt/proc
+</span></span><span style="display:flex;"><span>mount --bind /sys /mnt/sys
+</span></span><span style="display:flex;"><span>chroot /mnt /bin/bash
+</span></span></code></pre></div><h2 id="configuración-del-sistema">Configuración del Sistema</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Zona horaria</span>
+</span></span><span style="display:flex;"><span>ln -sf /usr/share/zoneinfo/America/Argentina/Buenos_Aires /etc/localtime
+</span></span><span style="display:flex;"><span>hwclock --systohc
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Locales</span>
+</span></span><span style="display:flex;"><span>apt install locales
+</span></span><span style="display:flex;"><span>dpkg-reconfigure locales
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Seleccionar: en_US.UTF-8 UTF-8 y es_AR.UTF-8 UTF-8</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Teclado en consola</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;KEYMAP=es&#34;</span> &gt; /etc/vconsole.conf
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;FONT=Lat2-Terminus16&#34;</span> &gt;&gt; /etc/vconsole.conf
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Hostname</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;debian&#34;</span> &gt; /etc/hostname
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Hosts</span>
+</span></span><span style="display:flex;"><span>cat &gt; /etc/hosts <span style="color:#e6db74">&lt;&lt; EOF
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">127.0.0.1       localhost
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">::1             localhost
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">127.0.1.1       debian.localdomain debian
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOF</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># DNS (Quad9 o Google)</span>
+</span></span><span style="display:flex;"><span>cat &gt; /etc/resolv.conf <span style="color:#e6db74">&lt;&lt; EOF
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">nameserver 9.9.9.11
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">nameserver 149.112.112.11
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOF</span>
+</span></span><span style="display:flex;"><span>chattr +i /etc/resolv.conf
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Contraseña root</span>
+</span></span><span style="display:flex;"><span>passwd
+</span></span></code></pre></div><h2 id="instalación-de-paquetes-base">Instalación de Paquetes Base</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Actualizar repositorios</span>
+</span></span><span style="display:flex;"><span>apt update
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Paquetes esenciales</span>
+</span></span><span style="display:flex;"><span>apt install -y <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    linux-image-amd64 linux-headers-amd64 firmware-linux <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    grub-efi-amd64 efibootmgr <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    network-manager wireless-tools wpasupplicant <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    alsa-utils pulseaudio <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    vim git tmux fish <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    sudo build-essential <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    firmware-iwlwifi firmware-realtek
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Fuentes</span>
+</span></span><span style="display:flex;"><span>apt install -y <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    fonts-noto fonts-noto-cjk fonts-noto-color-emoji <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    xfonts-terminus console-setup
+</span></span></code></pre></div><h2 id="configuración-de-grub">Configuración de GRUB</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Instalar GRUB (UEFI)</span>
+</span></span><span style="display:flex;"><span>grub-install --target<span style="color:#f92672">=</span>x86_64-efi --efi-directory<span style="color:#f92672">=</span>/boot/efi --bootloader-id<span style="color:#f92672">=</span>debian --recheck
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Si tienes problemas con UEFI, usa --removable:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># grub-install --target=x86_64-efi --efi-directory=/boot/efi --removable</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Detectar otros sistemas operativos</span>
+</span></span><span style="display:flex;"><span>apt install os-prober
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;GRUB_DISABLE_OS_PROBER=false&#34;</span> &gt;&gt; /etc/default/grub
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Generar configuración</span>
+</span></span><span style="display:flex;"><span>update-grub
+</span></span></code></pre></div><h2 id="crear-usuario">Crear Usuario</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Crear usuario</span>
+</span></span><span style="display:flex;"><span>useradd -m -G sudo,audio,video,netdev tu_usuario
+</span></span><span style="display:flex;"><span>passwd tu_usuario
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Configurar sudo (ya viene instalado)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># El grupo &#39;sudo&#39; ya tiene permisos</span>
+</span></span></code></pre></div><h2 id="servicios">Servicios</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Habilitar NetworkManager</span>
+</span></span><span style="display:flex;"><span>systemctl enable NetworkManager
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Habilitar SSH (opcional)</span>
+</span></span><span style="display:flex;"><span>apt install openssh-server
+</span></span><span style="display:flex;"><span>systemctl enable ssh
+</span></span></code></pre></div><h2 id="salir-y-reiniciar">Salir y Reiniciar</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>exit  <span style="color:#75715e"># salir del chroot</span>
+</span></span><span style="display:flex;"><span>umount -R /mnt
+</span></span><span style="display:flex;"><span>reboot
+</span></span></code></pre></div><h2 id="post-instalación">Post-Instalación</h2>
+<p>Después de reiniciar e iniciar sesión:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Conectar WiFi</span>
+</span></span><span style="display:flex;"><span>nmtui
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Instalar paquetes adicionales (equivalentes a tu lista de Arch)</span>
+</span></span><span style="display:flex;"><span>sudo apt install -y <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    mpv firefox-esr chromium <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    w3m lynx links2 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    irssi <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    thunderbird <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    gimp kdenlive obs-studio <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    qbittorrent transmission <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    git hugo <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    python3-pip <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    imagemagick <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    tor torbrowser-launcher <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    libreoffice <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    telegram-desktop <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    neovim <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    tmux btop htop <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    fastfetch neofetch <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    rsync rclone <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    unrar unzip p7zip-full <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    vlc <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    samba cifs-utils <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    texlive-full <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    evince okular
+</span></span></code></pre></div><h2 id="configuración-de-teclado-español-signo--">Configuración de Teclado Español (signo &gt; &lt;)</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Igual que en tu Arch</span>
+</span></span><span style="display:flex;"><span>sudo loadkeys es
+</span></span><span style="display:flex;"><span>sudo dumpkeys &gt; mi_mapa.kmap
+</span></span><span style="display:flex;"><span>vim mi_mapa.kmap
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Agregar después del keycode 119:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># keycode 120 = period greater</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#     altgr keycode 51 = less</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># keycode 121 = comma less</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#     altgr keycode 52 = greater</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>sudo cp mi_mapa.kmap /usr/share/keymaps/
+</span></span><span style="display:flex;"><span>sudo loadkeys mi_mapa
+</span></span></code></pre></div><h2 id="diferencias-clave-debian-vs-arch">Diferencias Clave: Debian vs Arch</h2>
+<table>
+  <thead>
+      <tr>
+          <th>Aspecto</th>
+          <th>Arch</th>
+          <th>Debian</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Instalación base</td>
+          <td><code>pacstrap</code></td>
+          <td><code>debootstrap</code></td>
+      </tr>
+      <tr>
+          <td>Gestor de paquetes</td>
+          <td><code>pacman</code></td>
+          <td><code>apt</code></td>
+      </tr>
+      <tr>
+          <td>AUR</td>
+          <td><code>yay</code></td>
+          <td>No oficial (usar repos externos con cuidado)</td>
+      </tr>
+      <tr>
+          <td>Actualización</td>
+          <td><code>pacman -Syu</code></td>
+          <td><code>apt update &amp;&amp; apt upgrade</code></td>
+      </tr>
+      <tr>
+          <td>Paquetes</td>
+          <td>Rolling release</td>
+          <td>Versiones estables</td>
+      </tr>
+      <tr>
+          <td>Configuración</td>
+          <td>Más manual</td>
+          <td>Más automática</td>
+      </tr>
+  </tbody>
+</table>
+<h2 id="para-instalar-software-no-oficial-en-debian">Para Instalar Software No Oficial en Debian</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Flatpak (alternativa a AUR)</span>
+</span></span><span style="display:flex;"><span>sudo apt install flatpak
+</span></span><span style="display:flex;"><span>flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># AppImage (portables)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Descargar .appimage, dar permisos de ejecución</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Compilar desde fuente (como en tu guía de Arch con dwm/st)</span>
+</span></span><span style="display:flex;"><span>sudo apt install build-essential libx11-dev libxinerama-dev libxft-dev
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Luego: git clone, make, sudo make install</span>
+</span></span></code></pre></div>
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+</footer>
+
+
+</body>
+</html>
