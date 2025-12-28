@@ -23,7 +23,7 @@ export PKG_PATH=https://cdn.NetBSD.org/pub/pkgsrc/packages/NetBSD/10.1/x86_64/ p
 export PKG_PATH=https://cdn.NetBSD.org/pub/pkgsrc/packages/NetBSD/10.1/x86_64/ pkg_add pkgin not found PKG_PATH=https://cdn.NetBSD.org/pub/pkgsrc/packages/NetBSD/amd64/10.1/All PKG_PATH=&#34;https://cdn.NetBSD.org/pub/pkgsrc/packages/$(uname -s)/$(uname -m)/$(uname -r | cut -f &#39;1 2&#39; -d.)/All&#34; pkg_add pkgin not found # pkgin es frontend para las herramientas pkg_* su pkg_add w3m tmux newsraft pkgin pkg install dwm dmenu mpv yt-dlp Segui mi instalacion de archlinux o de gentoo (los nombre de los programas). Otter-browser esta disponible en pkgsrc pero no esta en pkgin porque pkgin solo tiene binarios, pkgsrc tenes que compilarlo. # No hace falta, si usas PKG_PATH. ls /usr/pkgsrc: No such file or directory su cd /usr; ftp https://cdn.NetBSD.org/pub/pkgsrc/current/pkgsrc.tar.gz tar xvf pkgsrc.tar.gz cd /usr/pkgsrc/net/netbssd make install clean /usr/pkg/sbin/netbssd -h pkg_info | grep netbssd ls /usr/pkgsrc/net | grep bsd Para solucionar flickering en mi intel celeron con igpu integrada. Section &#34;Device&#34; Identifier &#34;Intel Graphics&#34; Driver &#34;modesetting&#34; Option &#34;AccelMethod&#34; &#34;none&#34; EndSection doas sin contraseña tenes que agregar alias sudo=&#34;doas&#34; en el .shrc /usr/pkg/etc/doas.conf permit persist :wheel permit nopass esotericwarfare XTerm*locale: true XTerm*utf8: 1 xterm*background:black xterm*foreground:white xterm*faceName:Monospace xterm*faceSize:15 # al pedo groupadd video sudo usermod -G video,wheel &lt;your_username&gt; su X -configure mv /root/xorg.conf.new /etc/X11/xorg.conf Tenia xterm asi que hice esto primero cree un system link pero no funciono, asi que cree archivo bash sudo /usr/bin/pkg/vim /usr/pkg/bin/st #!/bin/sh xterm xD sino no me tomaba la configuracion del .Xdefaults .Xresources">
   <meta itemprop="datePublished" content="2025-12-27T14:58:04-03:00">
   <meta itemprop="dateModified" content="2025-12-27T14:58:04-03:00">
-  <meta itemprop="wordCount" content="241">
+  <meta itemprop="wordCount" content="860">
   <meta itemprop="keywords" content="Bsd">
   
   <meta name="twitter:card" content="summary">
@@ -256,7 +256,199 @@ xD sino no me tomaba la configuracion del .Xdefaults .Xresources
 <img src="https://ia600709.us.archive.org/17/items/2025-12-27-netbsd_archlinux_pasto-images/IMG_20251227_060103022_BURST000_COVER_TOP.jpg" alt="https://ia600709.us.archive.org/17/items/2025-12-27-netbsd_archlinux_pasto-images/IMG_20251227_060103022_BURST000_COVER_TOP_thumb.jpg">
 <img src="https://ia600709.us.archive.org/17/items/2025-12-27-netbsd_archlinux_pasto-images/IMG_20251227_060108397_BURST001.jpg" alt="https://ia600709.us.archive.org/17/items/2025-12-27-netbsd_archlinux_pasto-images/IMG_20251227_060108397_BURST001_thumb.jpg">
 <img src="https://ia600709.us.archive.org/17/items/2025-12-27-netbsd_archlinux_pasto-images/IMG_20251227_060118438.jpg" alt="https://ia600709.us.archive.org/17/items/2025-12-27-netbsd_archlinux_pasto-images/IMG_20251227_060118438_thumb.jpg"></p>
-
+<h1 id="claude-ai">Claude AI</h1>
+<p>Le pedi que me haga una instalacion como archlinux.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># NetBSD Installation Guide (Based on Your Arch Workflow)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Here<span style="color:#960050;background-color:#1e0010">&#39;</span>s how to achieve a similar setup on NetBSD, adapted from your Arch installation process:
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">## Pre-Installation</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">```</span>bash
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Set keyboard layout (NetBSD uses wscons)</span>
+</span></span><span style="display:flex;"><span>wsconsctl -w encoding<span style="color:#f92672">=</span>es
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># NetBSD installer handles network during installation</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># For manual WiFi after boot:</span>
+</span></span><span style="display:flex;"><span>ifconfig -a  <span style="color:#75715e"># list interfaces</span>
+</span></span><span style="display:flex;"><span>ifconfig iwn0 up  <span style="color:#75715e"># replace iwn0 with your interface</span>
+</span></span><span style="display:flex;"><span>ifconfig iwn0 nwid <span style="color:#e6db74">&#34;your-ssid&#34;</span> wpakey <span style="color:#e6db74">&#34;your-password&#34;</span>
+</span></span><span style="display:flex;"><span>dhcpcd iwn0
+</span></span></code></pre></div><h2 id="partitioning-gpt-for-uefi">Partitioning (GPT for UEFI)</h2>
+<p>NetBSD uses different partition tools:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># List disks</span>
+</span></span><span style="display:flex;"><span>dkctl wd0 listwedges
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># or</span>
+</span></span><span style="display:flex;"><span>gpt show wd0
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Partition with gpt tool</span>
+</span></span><span style="display:flex;"><span>gpt destroy wd0  <span style="color:#75715e"># if needed</span>
+</span></span><span style="display:flex;"><span>gpt create wd0
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Create EFI partition (300MB)</span>
+</span></span><span style="display:flex;"><span>gpt add -b <span style="color:#ae81ff">2048</span> -s <span style="color:#ae81ff">614400</span> -t efi -l <span style="color:#e6db74">&#34;EFI System&#34;</span> wd0
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Create swap (4GB)</span>
+</span></span><span style="display:flex;"><span>gpt add -s <span style="color:#ae81ff">8388608</span> -t swap -l <span style="color:#e6db74">&#34;swap&#34;</span> wd0
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Create root partition (rest of disk)</span>
+</span></span><span style="display:flex;"><span>gpt add -t ffs -l <span style="color:#e6db74">&#34;NetBSD Root&#34;</span> wd0
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Show partitions</span>
+</span></span><span style="display:flex;"><span>gpt show wd0
+</span></span></code></pre></div><h2 id="format-and-mount">Format and Mount</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Format partitions</span>
+</span></span><span style="display:flex;"><span>newfs_msdos -F <span style="color:#ae81ff">32</span> /dev/rdk0  <span style="color:#75715e"># EFI partition (use actual device name)</span>
+</span></span><span style="display:flex;"><span>newfs -O2 /dev/rdk2  <span style="color:#75715e"># root partition with FFSv2</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Mount</span>
+</span></span><span style="display:flex;"><span>mount /dev/dk2 /mnt
+</span></span><span style="display:flex;"><span>mkdir /mnt/boot
+</span></span><span style="display:flex;"><span>mount_msdos /dev/dk0 /mnt/boot
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Enable swap</span>
+</span></span><span style="display:flex;"><span>swapon /dev/dk1
+</span></span></code></pre></div><h2 id="base-system-installation">Base System Installation</h2>
+<p>NetBSD installation is typically done via the installer, but for manual installation:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Download sets from NetBSD mirror</span>
+</span></span><span style="display:flex;"><span>cd /mnt
+</span></span><span style="display:flex;"><span>ftp ftp://ftp.netbsd.org/pub/NetBSD/NetBSD-10.0/amd64/binary/sets/
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Extract base sets (minimum required)</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> set in base comp etc kern-GENERIC man misc modules text; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>    tar -xzpf <span style="color:#e6db74">${</span>set<span style="color:#e6db74">}</span>.tar.xz -C /mnt
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Optional sets</span>
+</span></span><span style="display:flex;"><span>tar -xzpf xbase.tar.xz -C /mnt  <span style="color:#75715e"># X11 base</span>
+</span></span><span style="display:flex;"><span>tar -xzpf xetc.tar.xz -C /mnt   <span style="color:#75715e"># X11 config</span>
+</span></span></code></pre></div><h2 id="configure-system-chroot">Configure System (chroot)</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>chroot /mnt /bin/sh
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Set timezone</span>
+</span></span><span style="display:flex;"><span>ln -sf /usr/share/zoneinfo/America/Argentina/Buenos_Aires /etc/localtime
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Set hostname</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;netbsd&#34;</span> &gt; /etc/myname
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Configure rc.conf</span>
+</span></span><span style="display:flex;"><span>cat &gt;&gt; /etc/rc.conf <span style="color:#e6db74">&lt;&lt; EOF
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">hostname=&#34;netbsd&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">dhcpcd=YES
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">sshd=YES
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">wscons=YES
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOF</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Set root password</span>
+</span></span><span style="display:flex;"><span>passwd
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Configure keyboard</span>
+</span></span><span style="display:flex;"><span>cat &gt; /etc/wscons.conf <span style="color:#e6db74">&lt;&lt; EOF
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">encoding es
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">font terminus-32
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOF</span>
+</span></span></code></pre></div><h2 id="network-configuration">Network Configuration</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># /etc/ifconfig.iwn0 (replace iwn0 with your interface)</span>
+</span></span><span style="display:flex;"><span>cat &gt; /etc/ifconfig.iwn0 <span style="color:#e6db74">&lt;&lt; EOF
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">nwid your-ssid wpakey your-password
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">dhcp
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOF</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># DNS configuration</span>
+</span></span><span style="display:flex;"><span>cat &gt; /etc/resolv.conf <span style="color:#e6db74">&lt;&lt; EOF
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">nameserver 8.8.8.8
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">nameserver 8.8.4.4
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOF</span>
+</span></span></code></pre></div><h2 id="bootloader-uefi">Bootloader (UEFI)</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Install bootloader</span>
+</span></span><span style="display:flex;"><span>mkdir -p /boot/EFI/boot
+</span></span><span style="display:flex;"><span>cp /usr/mdec/bootx64.efi /boot/EFI/boot/bootx64.efi
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Create boot.cfg</span>
+</span></span><span style="display:flex;"><span>cat &gt; /boot/boot.cfg <span style="color:#e6db74">&lt;&lt; EOF
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">menu=Boot NetBSD:rndseed /var/db/entropy-file;boot
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">menu=Boot single user:rndseed /var/db/entropy-file;boot -s
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">timeout=5
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOF</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Exit chroot</span>
+</span></span><span style="display:flex;"><span>exit
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Unmount and reboot</span>
+</span></span><span style="display:flex;"><span>umount /mnt/boot
+</span></span><span style="display:flex;"><span>umount /mnt
+</span></span><span style="display:flex;"><span>reboot
+</span></span></code></pre></div><h2 id="post-installation">Post-Installation</h2>
+<p>After first boot:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Update package database</span>
+</span></span><span style="display:flex;"><span>pkgin update
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Install pkgin if not available</span>
+</span></span><span style="display:flex;"><span>cd /usr <span style="color:#f92672">&amp;&amp;</span> cvs checkout -P pkgsrc
+</span></span><span style="display:flex;"><span>cd /usr/pkgsrc/pkgtools/pkgin
+</span></span><span style="display:flex;"><span>bmake install clean
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Install essential packages</span>
+</span></span><span style="display:flex;"><span>pkgin install vim tmux git bash fish wget curl rsync
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Audio (NetBSD uses audio(4) and mixer(4))</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Audio works out of the box, configure with mixerctl</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># For PipeWire-like functionality, use oss or sndiod</span>
+</span></span></code></pre></div><h2 id="key-differences-from-arch">Key Differences from Arch</h2>
+<ol>
+<li>
+<p><strong>Package Manager</strong>: <code>pkgin</code> instead of <code>pacman</code></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pkgin search package
+</span></span><span style="display:flex;"><span>pkgin install package
+</span></span><span style="display:flex;"><span>pkgin remove package
+</span></span><span style="display:flex;"><span>pkgin list
+</span></span></code></pre></div></li>
+<li>
+<p><strong>Service Management</strong>: <code>/etc/rc.d/</code> instead of systemd</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>/etc/rc.d/sshd start
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#39;sshd=YES&#39;</span> &gt;&gt; /etc/rc.conf
+</span></span></code></pre></div></li>
+<li>
+<p><strong>File Systems</strong>: FFS/FFSv2 instead of ext4</p>
+</li>
+<li>
+<p><strong>Device Names</strong>: <code>wd0</code>, <code>dk0</code> instead of <code>sda</code>, <code>sda1</code></p>
+</li>
+<li>
+<p><strong>Network Config</strong>: <code>/etc/ifconfig.interface</code> files</p>
+</li>
+<li>
+<p><strong>Building from Source</strong>: Use pkgsrc instead of AUR</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cd /usr/pkgsrc/category/package
+</span></span><span style="display:flex;"><span>bmake install clean
+</span></span></code></pre></div></li>
+</ol>
+<h2 id="user-management">User Management</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Add user</span>
+</span></span><span style="display:flex;"><span>useradd -m -G wheel -s /usr/pkg/bin/bash username
+</span></span><span style="display:flex;"><span>passwd username
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Enable sudo</span>
+</span></span><span style="display:flex;"><span>pkgin install sudo
+</span></span><span style="display:flex;"><span>visudo  <span style="color:#75715e"># uncomment %wheel line</span>
+</span></span></code></pre></div><h2 id="additional-software">Additional Software</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Web browsers</span>
+</span></span><span style="display:flex;"><span>pkgin install firefox links lynx w3m
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Multimedia</span>
+</span></span><span style="display:flex;"><span>pkgin install mpv ffmpeg imagemagick
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Development</span>
+</span></span><span style="display:flex;"><span>pkgin install gcc git python39 nodejs
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Terminal multiplexer</span>
+</span></span><span style="display:flex;"><span>pkgin install tmux dvtm
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Mail</span>
+</span></span><span style="display:flex;"><span>pkgin install mutt isync msmtp
+</span></span></code></pre></div><p>NetBSD&rsquo;s philosophy emphasizes clean, well-documented code over bleeding-edge features. The system is more conservative than Arch but extremely stable and portable.</p>
+<pre tabindex="0"><code></code></pre>
 </div>
 
 
