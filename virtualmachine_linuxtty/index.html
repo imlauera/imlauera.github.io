@@ -27,7 +27,7 @@ sudo pacman -S qemu-full Luego ejecuta tu VM con el display curses:
 qemu-system-x86_64 -hda tu-disco.img -m 2G -display curses El modo curses renderiza la salida de la VM directamente en la terminal usando caracteres. Puedes salir con Esc &#43; 2 y luego escribir quit.">
   <meta itemprop="datePublished" content="2025-12-29T11:47:52-03:00">
   <meta itemprop="dateModified" content="2025-12-29T11:47:52-03:00">
-  <meta itemprop="wordCount" content="426">
+  <meta itemprop="wordCount" content="738">
   <meta itemprop="keywords" content="Cli">
   
   <meta name="twitter:card" content="summary">
@@ -181,6 +181,90 @@ El modo curses renderiza la salida de la VM directamente en la terminal usando c
 <li><code>Ctrl+A</code> luego <code>C</code>: acceder al monitor de QEMU</li>
 <li><code>Ctrl+A</code> luego <code>H</code>: ayuda</li>
 </ul>
+<hr>
+<p>Perfecto 👍
+Te explico <strong>desde cero</strong>, paso a paso, cómo correr <strong>Gentoo como máquina virtual en Arch Linux usando solo TTY</strong>, <strong>sin Xorg ni Wayland</strong>, usando <strong>libvirt + virt-install</strong> (opción 3).
+Esto es exactamente el enfoque que se usa en <strong>servidores reales</strong>.</p>
+<hr>
+<h1 id="objetivo">Objetivo</h1>
+<ul>
+<li>Host: <strong>Arch Linux (solo TTY)</strong></li>
+<li>Guest: <strong>Gentoo Linux</strong></li>
+<li>Sin entorno gráfico</li>
+<li>Control 100% desde consola</li>
+<li>Usando <strong>KVM + libvirt</strong></li>
+<li>Acceso por <strong>consola serial</strong></li>
+</ul>
+<hr>
+<h2 id="0-requisitos-de-hardware">0️⃣ Requisitos de hardware</h2>
+<p>Verifica virtualización:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>lscpu | grep Virtualization
+</span></span></code></pre></div><p>Debe decir:</p>
+<ul>
+<li><code>VT-x</code> (Intel) o</li>
+<li><code>AMD-V</code></li>
+</ul>
+<p>Y que KVM esté activo:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>lsmod | grep kvm
+</span></span></code></pre></div><hr>
+<h2 id="1-instalar-paquetes-necesarios">1️⃣ Instalar paquetes necesarios</h2>
+<p>En Arch:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo pacman -Syu
+</span></span><span style="display:flex;"><span>sudo pacman -S libvirt qemu-full virt-install dnsmasq bridge-utils
+</span></span></code></pre></div><p>Instala también herramientas útiles:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo pacman -S tmux wget
+</span></span></code></pre></div><hr>
+<h2 id="2-habilitar-y-configurar-libvirt">2️⃣ Habilitar y configurar libvirt</h2>
+<p>Activa el daemon:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo systemctl enable --now libvirtd
+</span></span></code></pre></div><p>Verifica:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>systemctl status libvirtd
+</span></span></code></pre></div><p>Agrega tu usuario a los grupos necesarios:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo usermod -aG libvirt,kvm <span style="color:#66d9ef">$(</span>whoami<span style="color:#66d9ef">)</span>
+</span></span></code></pre></div><p>⚠️ <strong>Cierra sesión y vuelve a entrar</strong> para que los grupos apliquen.</p>
+<hr>
+<h2 id="3-verifica-que-libvirt-funciona">3️⃣ Verifica que libvirt funciona</h2>
+<p>Ejecuta:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>virsh list --all
+</span></span></code></pre></div><p>Si no da error, libvirt está listo.</p>
+<hr>
+<h2 id="4-descarga-el-iso-de-gentoo-minimal">4️⃣ Descarga el ISO de Gentoo (minimal)</h2>
+<p>Desde TTY:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mkdir -p ~/isos
+</span></span><span style="display:flex;"><span>cd ~/isos
+</span></span><span style="display:flex;"><span>wget https://distfiles.gentoo.org/releases/amd64/autobuilds/current-install-amd64-minimal/install-amd64-minimal.iso
+</span></span></code></pre></div><hr>
+<h2 id="5-crear-la-vm-gentoo-modo-consola">5️⃣ Crear la VM Gentoo (modo consola)</h2>
+<p>Este comando crea <strong>la VM y entra directamente a la consola serial</strong>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>virt-install <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --name gentoo-vm <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --memory <span style="color:#ae81ff">2048</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --vcpus <span style="color:#ae81ff">2</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --disk path<span style="color:#f92672">=</span>/var/lib/libvirt/images/gentoo.qcow2,size<span style="color:#f92672">=</span><span style="color:#ae81ff">20</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --cdrom ~/isos/install-amd64-minimal.iso <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --os-variant gentoo <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --graphics none <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --console pty,target_type<span style="color:#f92672">=</span>serial <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --network network<span style="color:#f92672">=</span>default
+</span></span></code></pre></div><h3 id="qué-hace-cada-parte">Qué hace cada parte:</h3>
+<ul>
+<li><code>--graphics none</code> → NO usa gráficos</li>
+<li><code>--console serial</code> → usa TTY</li>
+<li><code>--cdrom</code> → ISO de instalación</li>
+<li><code>--disk</code> → disco virtual qcow2</li>
+<li><code>--network default</code> → NAT automático</li>
+</ul>
+<hr>
+<h2 id="6-conectarse-a-la-vm">6️⃣ Conectarse a la VM</h2>
+<p>Cuando arranque verás:</p>
+<pre tabindex="0"><code>Connected to domain &#39;gentoo-vm&#39;
+Escape character is ^]
+</code></pre><p>Eso <strong>YA ES la VM</strong>, estás dentro del instalador de Gentoo.</p>
+<p>👉 Si no ves nada, presiona:</p>
+<pre tabindex="0"><code>Enter
+</code></pre><hr>
+<h2 id="7-instalación-de-gentoo-resumen">7️⃣ Instalación de Gentoo (resumen)</h2>
+<p>Para eso mira mis otras publicaciones.</p>
 
 </div>
 
