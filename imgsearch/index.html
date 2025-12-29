@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/imgsearch/">
+  <meta property="og:site_name" content="Imlauer">
+  <meta property="og:title" content="Imgsearch: buscar imágenes desde la consola más rápido">
+  <meta property="og:description" content="Cortecía de Claude AI #!/bin/bash # img-search - Buscador simple de imágenes que SIEMPRE funciona # Soporta múltiples motores sin JavaScript set -e # Colores RED=&#39;\033[0;31m&#39; GREEN=&#39;\033[0;32m&#39; YELLOW=&#39;\033[1;33m&#39; CYAN=&#39;\033[0;36m&#39; NC=&#39;\033[0m&#39; # Configuración CACHE_DIR=&#34;$HOME/.cache/img-search&#34; mkdir -p &#34;$CACHE_DIR&#34; W3M=&#34;w3m -o display_image=1 -o auto_image=1&#34; # Ayuda show_help() { cat &lt;&lt; EOF ${CYAN}img-search - Buscador universal de imágenes para consola${NC} ${GREEN}USO:${NC} img-search MOTOR &#34;búsqueda&#34; [opciones] ${GREEN}MOTORES:${NC} searx - SearXNG local (localhost:8888) ddg - DuckDuckGo Images (sin JS) ecosia - Ecosia Images (sin JS) bing - Bing Images (sin JS) qwant - Qwant Images (sin JS) ${GREEN}OPCIONES:${NC} --list|-l Listar URLs encontradas --download|-d Descargar imágenes --urls|-u Solo mostrar URLs (para pipes) --open|-o Abrir en navegador (default) ${GREEN}EJEMPLOS:${NC} img-search ddg &#34;gatos&#34; img-search searx &#34;wallpapers&#34; --list img-search bing &#34;linux logos&#34; --download img-search ecosia &#34;nature&#34; --urls &gt; urls.txt ${YELLOW}DEPENDENCIAS:${NC} w3m curl wget (opcional: jq para SearXNG) EOF } # Función para extraer URLs de HTML extract_urls_from_html() { local html=&#34;$1&#34; # Múltiples patrones para capturar diferentes formatos grep -oE &#39;(src|data-src|href)=&#34;https?://[^&#34;]&#43;\.(jpg|jpeg|png|gif|webp|svg)(\?[^&#34;]*)?[^&#34;]*&#34;&#39; &#34;$html&#34; | \ sed &#39;s/.*=&#34;\(.*\)&#34;/\1/&#39; | \ grep -v &#39;^//&#39; | \ grep -v &#39;data:image&#39; | \ sort -u || true # También buscar URLs sin comillas grep -oE &#39;https?://[^\s&#34;&lt;&gt;()]&#43;\.(jpg|jpeg|png|gif|webp)(\?[^\s&#34;&lt;&gt;()]&#43;)?&#39; &#34;$html&#34; | \ grep -v &#39;data:image&#39; | \ sort -u || true } # Validar argumentos if [ $# -lt 2 ]; then show_help exit 1 fi MOTOR=&#34;$1&#34; QUERY=&#34;$2&#34; MODE=&#34;${3:-open}&#34; # Validar motor case &#34;$MOTOR&#34; in searx|ddg|ecosia|bing|qwant) ;; -h|--help|help) show_help exit 0 ;; *) echo -e &#34;${RED}Motor desconocido: $MOTOR${NC}&#34; echo -e &#34;${YELLOW}Usa: searx, ddg, ecosia, bing o qwant${NC}&#34; exit 1 ;; esac # Encode query ENCODED=$(echo &#34;$QUERY&#34; | sed &#39;s/ /%20/g&#39; | sed &#39;s/&#43;/%2B/g&#39;) # Construir URL según motor case &#34;$MOTOR&#34; in searx) URL=&#34;http://localhost:8888/search?q=${ENCODED}&amp;categories=images&amp;format=json&#34; USE_JSON=true ;; ddg) URL=&#34;https://duckduckgo.com/?q=${ENCODED}&amp;iax=images&amp;ia=images&#34; USE_JSON=false ;; ecosia) URL=&#34;https://www.ecosia.org/images?q=${ENCODED}&#34; USE_JSON=false ;; bing) URL=&#34;https://www.bing.com/images/search?q=${ENCODED}&#34; USE_JSON=false ;; qwant) URL=&#34;https://www.qwant.com/?q=${ENCODED}&amp;t=images&#34; USE_JSON=false ;; esac # Banner echo -e &#34;${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}&#34; echo -e &#34;${CYAN} Buscador de Imágenes - ${MOTOR^^}${NC}&#34; echo -e &#34;${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}&#34; echo -e &#34;${GREEN}Búsqueda:${NC} $QUERY&#34; echo -e &#34;${GREEN}Motor:${NC} $MOTOR&#34; echo -e &#34;&#34; # Descargar resultados CACHE_FILE=&#34;${CACHE_DIR}/${MOTOR}_$(echo $QUERY | tr &#39; &#39; &#39;_&#39;).cache&#34; echo -e &#34;${YELLOW}Descargando resultados...${NC}&#34; if $USE_JSON; then curl -s &#34;$URL&#34; &gt; &#34;$CACHE_FILE&#34; else curl -s -A &#34;Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101 Firefox/91.0&#34; &#34;$URL&#34; &gt; &#34;$CACHE_FILE&#34; fi if [ ! -s &#34;$CACHE_FILE&#34; ]; then echo -e &#34;${RED}Error: No se pudo descargar resultados${NC}&#34; exit 1 fi # Extraer URLs según el tipo echo -e &#34;${YELLOW}Extrayendo URLs...${NC}&#34; if $USE_JSON; then # SearXNG JSON if command -v jq &amp;&gt; /dev/null; then URLS=$(jq -r &#39;.results[]? | select(.img_src != null) | .img_src&#39; &#34;$CACHE_FILE&#34; 2&gt;/dev/null | head -30) [ -z &#34;$URLS&#34; ] &amp;&amp; URLS=$(jq -r &#39;.results[]? | select(.thumbnail != null) | .thumbnail&#39; &#34;$CACHE_FILE&#34; 2&gt;/dev/null | head -30) else echo -e &#34;${RED}Error: jq no está instalado (necesario para SearXNG)${NC}&#34; echo -e &#34;${YELLOW}Instala con: sudo pacman -S jq${NC}&#34; exit 1 fi else # HTML parsing URLS=$(extract_urls_from_html &#34;$CACHE_FILE&#34;) fi # Verificar si hay URLs if [ -z &#34;$URLS&#34; ]; then echo -e &#34;${RED}No se encontraron URLs de imágenes${NC}&#34; echo -e &#34;${YELLOW}Tip: Prueba con otro motor${NC}&#34; echo -e &#34;${YELLOW}Debug: cat $CACHE_FILE${NC}&#34; exit 1 fi NUM_URLS=$(echo &#34;$URLS&#34; | wc -l) echo -e &#34;${GREEN}✓ Encontradas $NUM_URLS URLs${NC}\n&#34; # Procesar según modo case &#34;$MODE&#34; in --list|-l) echo -e &#34;${CYAN}URLs encontradas:${NC}\n&#34; echo &#34;$URLS&#34; | nl -w2 -s&#39;. &#39; ;; --urls|-u) echo &#34;$URLS&#34; ;; --download|-d) DOWNLOAD_DIR=&#34;${CACHE_DIR}/downloads/$(date &#43;%Y%m%d_%H%M%S)_${QUERY// /_}&#34; mkdir -p &#34;$DOWNLOAD_DIR&#34; echo -e &#34;${CYAN}Descargando a: $DOWNLOAD_DIR${NC}\n&#34; counter=1 echo &#34;$URLS&#34; | while read url; do [ -z &#34;$url&#34; ] &amp;&amp; continue ext=&#34;${url##*.}&#34; ext=&#34;${ext%%\?*}&#34; ext=&#34;${ext%%&amp;*}&#34; case &#34;$ext&#34; in jpg|jpeg|png|gif|webp|svg) ;; *) ext=&#34;jpg&#34; ;; esac filename=&#34;${counter}.${ext}&#34; echo -n &#34;[$counter/$NUM_URLS] $filename ... &#34; if timeout 10 wget -q --max-redirect=3 -U &#34;Mozilla/5.0&#34; \ -O &#34;${DOWNLOAD_DIR}/${filename}&#34; &#34;$url&#34; 2&gt;/dev/null; then # Verificar que sea imagen if file &#34;${DOWNLOAD_DIR}/${filename}&#34; 2&gt;/dev/null | grep -qE &#34;image|JPEG|PNG|GIF|WebP|SVG&#34;; then echo -e &#34;${GREEN}✓${NC}&#34; else rm -f &#34;${DOWNLOAD_DIR}/${filename}&#34; echo -e &#34;${YELLOW}✗${NC}&#34; fi else echo -e &#34;${RED}✗${NC}&#34; fi ((counter&#43;&#43;)) done DOWNLOADED=$(find &#34;$DOWNLOAD_DIR&#34; -type f 2&gt;/dev/null | wc -l) echo -e &#34;\n${GREEN}Descargadas: $DOWNLOADED imágenes${NC}&#34; echo -e &#34;${GREEN}Ubicación: $DOWNLOAD_DIR${NC}&#34; if [ &#34;$DOWNLOADED&#34; -gt 0 ]; then echo -e &#34;${YELLOW}Ver con: feh $DOWNLOAD_DIR/${NC}&#34; else rmdir &#34;$DOWNLOAD_DIR&#34; 2&gt;/dev/null fi ;; --open|-o|*) echo -e &#34;${YELLOW}Abriendo en w3m... (Presiona &#39;q&#39; para salir)${NC}\n&#34; sleep 1 $W3M &#34;$URL&#34; ;; esac">
+  <meta property="og:locale" content="es_es">
+  <meta property="og:type" content="article">
+    <meta property="article:published_time" content="2025-12-28T13:04:19-03:00">
+    <meta property="article:modified_time" content="2025-12-28T13:04:19-03:00">
+
+  
+  <meta itemprop="name" content="Imgsearch: buscar imágenes desde la consola más rápido">
+  <meta itemprop="description" content="Cortecía de Claude AI #!/bin/bash # img-search - Buscador simple de imágenes que SIEMPRE funciona # Soporta múltiples motores sin JavaScript set -e # Colores RED=&#39;\033[0;31m&#39; GREEN=&#39;\033[0;32m&#39; YELLOW=&#39;\033[1;33m&#39; CYAN=&#39;\033[0;36m&#39; NC=&#39;\033[0m&#39; # Configuración CACHE_DIR=&#34;$HOME/.cache/img-search&#34; mkdir -p &#34;$CACHE_DIR&#34; W3M=&#34;w3m -o display_image=1 -o auto_image=1&#34; # Ayuda show_help() { cat &lt;&lt; EOF ${CYAN}img-search - Buscador universal de imágenes para consola${NC} ${GREEN}USO:${NC} img-search MOTOR &#34;búsqueda&#34; [opciones] ${GREEN}MOTORES:${NC} searx - SearXNG local (localhost:8888) ddg - DuckDuckGo Images (sin JS) ecosia - Ecosia Images (sin JS) bing - Bing Images (sin JS) qwant - Qwant Images (sin JS) ${GREEN}OPCIONES:${NC} --list|-l Listar URLs encontradas --download|-d Descargar imágenes --urls|-u Solo mostrar URLs (para pipes) --open|-o Abrir en navegador (default) ${GREEN}EJEMPLOS:${NC} img-search ddg &#34;gatos&#34; img-search searx &#34;wallpapers&#34; --list img-search bing &#34;linux logos&#34; --download img-search ecosia &#34;nature&#34; --urls &gt; urls.txt ${YELLOW}DEPENDENCIAS:${NC} w3m curl wget (opcional: jq para SearXNG) EOF } # Función para extraer URLs de HTML extract_urls_from_html() { local html=&#34;$1&#34; # Múltiples patrones para capturar diferentes formatos grep -oE &#39;(src|data-src|href)=&#34;https?://[^&#34;]&#43;\.(jpg|jpeg|png|gif|webp|svg)(\?[^&#34;]*)?[^&#34;]*&#34;&#39; &#34;$html&#34; | \ sed &#39;s/.*=&#34;\(.*\)&#34;/\1/&#39; | \ grep -v &#39;^//&#39; | \ grep -v &#39;data:image&#39; | \ sort -u || true # También buscar URLs sin comillas grep -oE &#39;https?://[^\s&#34;&lt;&gt;()]&#43;\.(jpg|jpeg|png|gif|webp)(\?[^\s&#34;&lt;&gt;()]&#43;)?&#39; &#34;$html&#34; | \ grep -v &#39;data:image&#39; | \ sort -u || true } # Validar argumentos if [ $# -lt 2 ]; then show_help exit 1 fi MOTOR=&#34;$1&#34; QUERY=&#34;$2&#34; MODE=&#34;${3:-open}&#34; # Validar motor case &#34;$MOTOR&#34; in searx|ddg|ecosia|bing|qwant) ;; -h|--help|help) show_help exit 0 ;; *) echo -e &#34;${RED}Motor desconocido: $MOTOR${NC}&#34; echo -e &#34;${YELLOW}Usa: searx, ddg, ecosia, bing o qwant${NC}&#34; exit 1 ;; esac # Encode query ENCODED=$(echo &#34;$QUERY&#34; | sed &#39;s/ /%20/g&#39; | sed &#39;s/&#43;/%2B/g&#39;) # Construir URL según motor case &#34;$MOTOR&#34; in searx) URL=&#34;http://localhost:8888/search?q=${ENCODED}&amp;categories=images&amp;format=json&#34; USE_JSON=true ;; ddg) URL=&#34;https://duckduckgo.com/?q=${ENCODED}&amp;iax=images&amp;ia=images&#34; USE_JSON=false ;; ecosia) URL=&#34;https://www.ecosia.org/images?q=${ENCODED}&#34; USE_JSON=false ;; bing) URL=&#34;https://www.bing.com/images/search?q=${ENCODED}&#34; USE_JSON=false ;; qwant) URL=&#34;https://www.qwant.com/?q=${ENCODED}&amp;t=images&#34; USE_JSON=false ;; esac # Banner echo -e &#34;${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}&#34; echo -e &#34;${CYAN} Buscador de Imágenes - ${MOTOR^^}${NC}&#34; echo -e &#34;${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}&#34; echo -e &#34;${GREEN}Búsqueda:${NC} $QUERY&#34; echo -e &#34;${GREEN}Motor:${NC} $MOTOR&#34; echo -e &#34;&#34; # Descargar resultados CACHE_FILE=&#34;${CACHE_DIR}/${MOTOR}_$(echo $QUERY | tr &#39; &#39; &#39;_&#39;).cache&#34; echo -e &#34;${YELLOW}Descargando resultados...${NC}&#34; if $USE_JSON; then curl -s &#34;$URL&#34; &gt; &#34;$CACHE_FILE&#34; else curl -s -A &#34;Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101 Firefox/91.0&#34; &#34;$URL&#34; &gt; &#34;$CACHE_FILE&#34; fi if [ ! -s &#34;$CACHE_FILE&#34; ]; then echo -e &#34;${RED}Error: No se pudo descargar resultados${NC}&#34; exit 1 fi # Extraer URLs según el tipo echo -e &#34;${YELLOW}Extrayendo URLs...${NC}&#34; if $USE_JSON; then # SearXNG JSON if command -v jq &amp;&gt; /dev/null; then URLS=$(jq -r &#39;.results[]? | select(.img_src != null) | .img_src&#39; &#34;$CACHE_FILE&#34; 2&gt;/dev/null | head -30) [ -z &#34;$URLS&#34; ] &amp;&amp; URLS=$(jq -r &#39;.results[]? | select(.thumbnail != null) | .thumbnail&#39; &#34;$CACHE_FILE&#34; 2&gt;/dev/null | head -30) else echo -e &#34;${RED}Error: jq no está instalado (necesario para SearXNG)${NC}&#34; echo -e &#34;${YELLOW}Instala con: sudo pacman -S jq${NC}&#34; exit 1 fi else # HTML parsing URLS=$(extract_urls_from_html &#34;$CACHE_FILE&#34;) fi # Verificar si hay URLs if [ -z &#34;$URLS&#34; ]; then echo -e &#34;${RED}No se encontraron URLs de imágenes${NC}&#34; echo -e &#34;${YELLOW}Tip: Prueba con otro motor${NC}&#34; echo -e &#34;${YELLOW}Debug: cat $CACHE_FILE${NC}&#34; exit 1 fi NUM_URLS=$(echo &#34;$URLS&#34; | wc -l) echo -e &#34;${GREEN}✓ Encontradas $NUM_URLS URLs${NC}\n&#34; # Procesar según modo case &#34;$MODE&#34; in --list|-l) echo -e &#34;${CYAN}URLs encontradas:${NC}\n&#34; echo &#34;$URLS&#34; | nl -w2 -s&#39;. &#39; ;; --urls|-u) echo &#34;$URLS&#34; ;; --download|-d) DOWNLOAD_DIR=&#34;${CACHE_DIR}/downloads/$(date &#43;%Y%m%d_%H%M%S)_${QUERY// /_}&#34; mkdir -p &#34;$DOWNLOAD_DIR&#34; echo -e &#34;${CYAN}Descargando a: $DOWNLOAD_DIR${NC}\n&#34; counter=1 echo &#34;$URLS&#34; | while read url; do [ -z &#34;$url&#34; ] &amp;&amp; continue ext=&#34;${url##*.}&#34; ext=&#34;${ext%%\?*}&#34; ext=&#34;${ext%%&amp;*}&#34; case &#34;$ext&#34; in jpg|jpeg|png|gif|webp|svg) ;; *) ext=&#34;jpg&#34; ;; esac filename=&#34;${counter}.${ext}&#34; echo -n &#34;[$counter/$NUM_URLS] $filename ... &#34; if timeout 10 wget -q --max-redirect=3 -U &#34;Mozilla/5.0&#34; \ -O &#34;${DOWNLOAD_DIR}/${filename}&#34; &#34;$url&#34; 2&gt;/dev/null; then # Verificar que sea imagen if file &#34;${DOWNLOAD_DIR}/${filename}&#34; 2&gt;/dev/null | grep -qE &#34;image|JPEG|PNG|GIF|WebP|SVG&#34;; then echo -e &#34;${GREEN}✓${NC}&#34; else rm -f &#34;${DOWNLOAD_DIR}/${filename}&#34; echo -e &#34;${YELLOW}✗${NC}&#34; fi else echo -e &#34;${RED}✗${NC}&#34; fi ((counter&#43;&#43;)) done DOWNLOADED=$(find &#34;$DOWNLOAD_DIR&#34; -type f 2&gt;/dev/null | wc -l) echo -e &#34;\n${GREEN}Descargadas: $DOWNLOADED imágenes${NC}&#34; echo -e &#34;${GREEN}Ubicación: $DOWNLOAD_DIR${NC}&#34; if [ &#34;$DOWNLOADED&#34; -gt 0 ]; then echo -e &#34;${YELLOW}Ver con: feh $DOWNLOAD_DIR/${NC}&#34; else rmdir &#34;$DOWNLOAD_DIR&#34; 2&gt;/dev/null fi ;; --open|-o|*) echo -e &#34;${YELLOW}Abriendo en w3m... (Presiona &#39;q&#39; para salir)${NC}\n&#34; sleep 1 $W3M &#34;$URL&#34; ;; esac">
+  <meta itemprop="datePublished" content="2025-12-28T13:04:19-03:00">
+  <meta itemprop="dateModified" content="2025-12-28T13:04:19-03:00">
+  <meta itemprop="wordCount" content="672">
+  
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Imgsearch: buscar imágenes desde la consola más rápido">
+  <meta name="twitter:description" content="Cortecía de Claude AI #!/bin/bash # img-search - Buscador simple de imágenes que SIEMPRE funciona # Soporta múltiples motores sin JavaScript set -e # Colores RED=&#39;\033[0;31m&#39; GREEN=&#39;\033[0;32m&#39; YELLOW=&#39;\033[1;33m&#39; CYAN=&#39;\033[0;36m&#39; NC=&#39;\033[0m&#39; # Configuración CACHE_DIR=&#34;$HOME/.cache/img-search&#34; mkdir -p &#34;$CACHE_DIR&#34; W3M=&#34;w3m -o display_image=1 -o auto_image=1&#34; # Ayuda show_help() { cat &lt;&lt; EOF ${CYAN}img-search - Buscador universal de imágenes para consola${NC} ${GREEN}USO:${NC} img-search MOTOR &#34;búsqueda&#34; [opciones] ${GREEN}MOTORES:${NC} searx - SearXNG local (localhost:8888) ddg - DuckDuckGo Images (sin JS) ecosia - Ecosia Images (sin JS) bing - Bing Images (sin JS) qwant - Qwant Images (sin JS) ${GREEN}OPCIONES:${NC} --list|-l Listar URLs encontradas --download|-d Descargar imágenes --urls|-u Solo mostrar URLs (para pipes) --open|-o Abrir en navegador (default) ${GREEN}EJEMPLOS:${NC} img-search ddg &#34;gatos&#34; img-search searx &#34;wallpapers&#34; --list img-search bing &#34;linux logos&#34; --download img-search ecosia &#34;nature&#34; --urls &gt; urls.txt ${YELLOW}DEPENDENCIAS:${NC} w3m curl wget (opcional: jq para SearXNG) EOF } # Función para extraer URLs de HTML extract_urls_from_html() { local html=&#34;$1&#34; # Múltiples patrones para capturar diferentes formatos grep -oE &#39;(src|data-src|href)=&#34;https?://[^&#34;]&#43;\.(jpg|jpeg|png|gif|webp|svg)(\?[^&#34;]*)?[^&#34;]*&#34;&#39; &#34;$html&#34; | \ sed &#39;s/.*=&#34;\(.*\)&#34;/\1/&#39; | \ grep -v &#39;^//&#39; | \ grep -v &#39;data:image&#39; | \ sort -u || true # También buscar URLs sin comillas grep -oE &#39;https?://[^\s&#34;&lt;&gt;()]&#43;\.(jpg|jpeg|png|gif|webp)(\?[^\s&#34;&lt;&gt;()]&#43;)?&#39; &#34;$html&#34; | \ grep -v &#39;data:image&#39; | \ sort -u || true } # Validar argumentos if [ $# -lt 2 ]; then show_help exit 1 fi MOTOR=&#34;$1&#34; QUERY=&#34;$2&#34; MODE=&#34;${3:-open}&#34; # Validar motor case &#34;$MOTOR&#34; in searx|ddg|ecosia|bing|qwant) ;; -h|--help|help) show_help exit 0 ;; *) echo -e &#34;${RED}Motor desconocido: $MOTOR${NC}&#34; echo -e &#34;${YELLOW}Usa: searx, ddg, ecosia, bing o qwant${NC}&#34; exit 1 ;; esac # Encode query ENCODED=$(echo &#34;$QUERY&#34; | sed &#39;s/ /%20/g&#39; | sed &#39;s/&#43;/%2B/g&#39;) # Construir URL según motor case &#34;$MOTOR&#34; in searx) URL=&#34;http://localhost:8888/search?q=${ENCODED}&amp;categories=images&amp;format=json&#34; USE_JSON=true ;; ddg) URL=&#34;https://duckduckgo.com/?q=${ENCODED}&amp;iax=images&amp;ia=images&#34; USE_JSON=false ;; ecosia) URL=&#34;https://www.ecosia.org/images?q=${ENCODED}&#34; USE_JSON=false ;; bing) URL=&#34;https://www.bing.com/images/search?q=${ENCODED}&#34; USE_JSON=false ;; qwant) URL=&#34;https://www.qwant.com/?q=${ENCODED}&amp;t=images&#34; USE_JSON=false ;; esac # Banner echo -e &#34;${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}&#34; echo -e &#34;${CYAN} Buscador de Imágenes - ${MOTOR^^}${NC}&#34; echo -e &#34;${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}&#34; echo -e &#34;${GREEN}Búsqueda:${NC} $QUERY&#34; echo -e &#34;${GREEN}Motor:${NC} $MOTOR&#34; echo -e &#34;&#34; # Descargar resultados CACHE_FILE=&#34;${CACHE_DIR}/${MOTOR}_$(echo $QUERY | tr &#39; &#39; &#39;_&#39;).cache&#34; echo -e &#34;${YELLOW}Descargando resultados...${NC}&#34; if $USE_JSON; then curl -s &#34;$URL&#34; &gt; &#34;$CACHE_FILE&#34; else curl -s -A &#34;Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101 Firefox/91.0&#34; &#34;$URL&#34; &gt; &#34;$CACHE_FILE&#34; fi if [ ! -s &#34;$CACHE_FILE&#34; ]; then echo -e &#34;${RED}Error: No se pudo descargar resultados${NC}&#34; exit 1 fi # Extraer URLs según el tipo echo -e &#34;${YELLOW}Extrayendo URLs...${NC}&#34; if $USE_JSON; then # SearXNG JSON if command -v jq &amp;&gt; /dev/null; then URLS=$(jq -r &#39;.results[]? | select(.img_src != null) | .img_src&#39; &#34;$CACHE_FILE&#34; 2&gt;/dev/null | head -30) [ -z &#34;$URLS&#34; ] &amp;&amp; URLS=$(jq -r &#39;.results[]? | select(.thumbnail != null) | .thumbnail&#39; &#34;$CACHE_FILE&#34; 2&gt;/dev/null | head -30) else echo -e &#34;${RED}Error: jq no está instalado (necesario para SearXNG)${NC}&#34; echo -e &#34;${YELLOW}Instala con: sudo pacman -S jq${NC}&#34; exit 1 fi else # HTML parsing URLS=$(extract_urls_from_html &#34;$CACHE_FILE&#34;) fi # Verificar si hay URLs if [ -z &#34;$URLS&#34; ]; then echo -e &#34;${RED}No se encontraron URLs de imágenes${NC}&#34; echo -e &#34;${YELLOW}Tip: Prueba con otro motor${NC}&#34; echo -e &#34;${YELLOW}Debug: cat $CACHE_FILE${NC}&#34; exit 1 fi NUM_URLS=$(echo &#34;$URLS&#34; | wc -l) echo -e &#34;${GREEN}✓ Encontradas $NUM_URLS URLs${NC}\n&#34; # Procesar según modo case &#34;$MODE&#34; in --list|-l) echo -e &#34;${CYAN}URLs encontradas:${NC}\n&#34; echo &#34;$URLS&#34; | nl -w2 -s&#39;. &#39; ;; --urls|-u) echo &#34;$URLS&#34; ;; --download|-d) DOWNLOAD_DIR=&#34;${CACHE_DIR}/downloads/$(date &#43;%Y%m%d_%H%M%S)_${QUERY// /_}&#34; mkdir -p &#34;$DOWNLOAD_DIR&#34; echo -e &#34;${CYAN}Descargando a: $DOWNLOAD_DIR${NC}\n&#34; counter=1 echo &#34;$URLS&#34; | while read url; do [ -z &#34;$url&#34; ] &amp;&amp; continue ext=&#34;${url##*.}&#34; ext=&#34;${ext%%\?*}&#34; ext=&#34;${ext%%&amp;*}&#34; case &#34;$ext&#34; in jpg|jpeg|png|gif|webp|svg) ;; *) ext=&#34;jpg&#34; ;; esac filename=&#34;${counter}.${ext}&#34; echo -n &#34;[$counter/$NUM_URLS] $filename ... &#34; if timeout 10 wget -q --max-redirect=3 -U &#34;Mozilla/5.0&#34; \ -O &#34;${DOWNLOAD_DIR}/${filename}&#34; &#34;$url&#34; 2&gt;/dev/null; then # Verificar que sea imagen if file &#34;${DOWNLOAD_DIR}/${filename}&#34; 2&gt;/dev/null | grep -qE &#34;image|JPEG|PNG|GIF|WebP|SVG&#34;; then echo -e &#34;${GREEN}✓${NC}&#34; else rm -f &#34;${DOWNLOAD_DIR}/${filename}&#34; echo -e &#34;${YELLOW}✗${NC}&#34; fi else echo -e &#34;${RED}✗${NC}&#34; fi ((counter&#43;&#43;)) done DOWNLOADED=$(find &#34;$DOWNLOAD_DIR&#34; -type f 2&gt;/dev/null | wc -l) echo -e &#34;\n${GREEN}Descargadas: $DOWNLOADED imágenes${NC}&#34; echo -e &#34;${GREEN}Ubicación: $DOWNLOAD_DIR${NC}&#34; if [ &#34;$DOWNLOADED&#34; -gt 0 ]; then echo -e &#34;${YELLOW}Ver con: feh $DOWNLOAD_DIR/${NC}&#34; else rmdir &#34;$DOWNLOAD_DIR&#34; 2&gt;/dev/null fi ;; --open|-o|*) echo -e &#34;${YELLOW}Abriendo en w3m... (Presiona &#39;q&#39; para salir)${NC}\n&#34; sleep 1 $W3M &#34;$URL&#34; ;; esac">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Imgsearch: buscar imágenes desde la consola más rápido
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/imgsearch/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="Cortecía de Claude AI
+#!/bin/bash
+# img-search - Buscador simple de imágenes que SIEMPRE funciona
+# Soporta múltiples motores sin JavaScript
+
+set -e
+
+# Colores
+RED=&#39;\033[0;31m&#39;
+GREEN=&#39;\033[0;32m&#39;
+YELLOW=&#39;\033[1;33m&#39;
+CYAN=&#39;\033[0;36m&#39;
+NC=&#39;\033[0m&#39;
+
+# Configuración
+CACHE_DIR=&#34;$HOME/.cache/img-search&#34;
+mkdir -p &#34;$CACHE_DIR&#34;
+W3M=&#34;w3m -o display_image=1 -o auto_image=1&#34;
+
+# Ayuda
+show_help() {
+    cat &lt;&lt; EOF
+${CYAN}img-search - Buscador universal de imágenes para consola${NC}
+
+${GREEN}USO:${NC}
+    img-search MOTOR &#34;búsqueda&#34; [opciones]
+
+${GREEN}MOTORES:${NC}
+    searx     - SearXNG local (localhost:8888)
+    ddg       - DuckDuckGo Images (sin JS)
+    ecosia    - Ecosia Images (sin JS)
+    bing      - Bing Images (sin JS)
+    qwant     - Qwant Images (sin JS)
+
+${GREEN}OPCIONES:${NC}
+    --list|-l       Listar URLs encontradas
+    --download|-d   Descargar imágenes
+    --urls|-u       Solo mostrar URLs (para pipes)
+    --open|-o       Abrir en navegador (default)
+
+${GREEN}EJEMPLOS:${NC}
+    img-search ddg &#34;gatos&#34;
+    img-search searx &#34;wallpapers&#34; --list
+    img-search bing &#34;linux logos&#34; --download
+    img-search ecosia &#34;nature&#34; --urls &gt; urls.txt
+
+${YELLOW}DEPENDENCIAS:${NC}
+    w3m curl wget (opcional: jq para SearXNG)
+
+EOF
+}
+
+# Función para extraer URLs de HTML
+extract_urls_from_html() {
+    local html=&#34;$1&#34;
+    
+    # Múltiples patrones para capturar diferentes formatos
+    grep -oE &#39;(src|data-src|href)=&#34;https?://[^&#34;]&#43;\.(jpg|jpeg|png|gif|webp|svg)(\?[^&#34;]*)?[^&#34;]*&#34;&#39; &#34;$html&#34; | \
+        sed &#39;s/.*=&#34;\(.*\)&#34;/\1/&#39; | \
+        grep -v &#39;^//&#39; | \
+        grep -v &#39;data:image&#39; | \
+        sort -u || true
+    
+    # También buscar URLs sin comillas
+    grep -oE &#39;https?://[^\s&#34;&lt;&gt;()]&#43;\.(jpg|jpeg|png|gif|webp)(\?[^\s&#34;&lt;&gt;()]&#43;)?&#39; &#34;$html&#34; | \
+        grep -v &#39;data:image&#39; | \
+        sort -u || true
+}
+
+# Validar argumentos
+if [ $# -lt 2 ]; then
+    show_help
+    exit 1
+fi
+
+MOTOR=&#34;$1&#34;
+QUERY=&#34;$2&#34;
+MODE=&#34;${3:-open}&#34;
+
+# Validar motor
+case &#34;$MOTOR&#34; in
+    searx|ddg|ecosia|bing|qwant) ;;
+    -h|--help|help)
+        show_help
+        exit 0
+        ;;
+    *)
+        echo -e &#34;${RED}Motor desconocido: $MOTOR${NC}&#34;
+        echo -e &#34;${YELLOW}Usa: searx, ddg, ecosia, bing o qwant${NC}&#34;
+        exit 1
+        ;;
+esac
+
+# Encode query
+ENCODED=$(echo &#34;$QUERY&#34; | sed &#39;s/ /%20/g&#39; | sed &#39;s/&#43;/%2B/g&#39;)
+
+# Construir URL según motor
+case &#34;$MOTOR&#34; in
+    searx)
+        URL=&#34;http://localhost:8888/search?q=${ENCODED}&amp;categories=images&amp;format=json&#34;
+        USE_JSON=true
+        ;;
+    ddg)
+        URL=&#34;https://duckduckgo.com/?q=${ENCODED}&amp;iax=images&amp;ia=images&#34;
+        USE_JSON=false
+        ;;
+    ecosia)
+        URL=&#34;https://www.ecosia.org/images?q=${ENCODED}&#34;
+        USE_JSON=false
+        ;;
+    bing)
+        URL=&#34;https://www.bing.com/images/search?q=${ENCODED}&#34;
+        USE_JSON=false
+        ;;
+    qwant)
+        URL=&#34;https://www.qwant.com/?q=${ENCODED}&amp;t=images&#34;
+        USE_JSON=false
+        ;;
+esac
+
+# Banner
+echo -e &#34;${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}&#34;
+echo -e &#34;${CYAN}  Buscador de Imágenes - ${MOTOR^^}${NC}&#34;
+echo -e &#34;${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}&#34;
+echo -e &#34;${GREEN}Búsqueda:${NC} $QUERY&#34;
+echo -e &#34;${GREEN}Motor:${NC}    $MOTOR&#34;
+echo -e &#34;&#34;
+
+# Descargar resultados
+CACHE_FILE=&#34;${CACHE_DIR}/${MOTOR}_$(echo $QUERY | tr &#39; &#39; &#39;_&#39;).cache&#34;
+
+echo -e &#34;${YELLOW}Descargando resultados...${NC}&#34;
+if $USE_JSON; then
+    curl -s &#34;$URL&#34; &gt; &#34;$CACHE_FILE&#34;
+else
+    curl -s -A &#34;Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101 Firefox/91.0&#34; &#34;$URL&#34; &gt; &#34;$CACHE_FILE&#34;
+fi
+
+if [ ! -s &#34;$CACHE_FILE&#34; ]; then
+    echo -e &#34;${RED}Error: No se pudo descargar resultados${NC}&#34;
+    exit 1
+fi
+
+# Extraer URLs según el tipo
+echo -e &#34;${YELLOW}Extrayendo URLs...${NC}&#34;
+
+if $USE_JSON; then
+    # SearXNG JSON
+    if command -v jq &amp;&gt; /dev/null; then
+        URLS=$(jq -r &#39;.results[]? | select(.img_src != null) | .img_src&#39; &#34;$CACHE_FILE&#34; 2&gt;/dev/null | head -30)
+        [ -z &#34;$URLS&#34; ] &amp;&amp; URLS=$(jq -r &#39;.results[]? | select(.thumbnail != null) | .thumbnail&#39; &#34;$CACHE_FILE&#34; 2&gt;/dev/null | head -30)
+    else
+        echo -e &#34;${RED}Error: jq no está instalado (necesario para SearXNG)${NC}&#34;
+        echo -e &#34;${YELLOW}Instala con: sudo pacman -S jq${NC}&#34;
+        exit 1
+    fi
+else
+    # HTML parsing
+    URLS=$(extract_urls_from_html &#34;$CACHE_FILE&#34;)
+fi
+
+# Verificar si hay URLs
+if [ -z &#34;$URLS&#34; ]; then
+    echo -e &#34;${RED}No se encontraron URLs de imágenes${NC}&#34;
+    echo -e &#34;${YELLOW}Tip: Prueba con otro motor${NC}&#34;
+    echo -e &#34;${YELLOW}Debug: cat $CACHE_FILE${NC}&#34;
+    exit 1
+fi
+
+NUM_URLS=$(echo &#34;$URLS&#34; | wc -l)
+echo -e &#34;${GREEN}✓ Encontradas $NUM_URLS URLs${NC}\n&#34;
+
+# Procesar según modo
+case &#34;$MODE&#34; in
+    --list|-l)
+        echo -e &#34;${CYAN}URLs encontradas:${NC}\n&#34;
+        echo &#34;$URLS&#34; | nl -w2 -s&#39;. &#39;
+        ;;
+    
+    --urls|-u)
+        echo &#34;$URLS&#34;
+        ;;
+    
+    --download|-d)
+        DOWNLOAD_DIR=&#34;${CACHE_DIR}/downloads/$(date &#43;%Y%m%d_%H%M%S)_${QUERY// /_}&#34;
+        mkdir -p &#34;$DOWNLOAD_DIR&#34;
+        
+        echo -e &#34;${CYAN}Descargando a: $DOWNLOAD_DIR${NC}\n&#34;
+        
+        counter=1
+        echo &#34;$URLS&#34; | while read url; do
+            [ -z &#34;$url&#34; ] &amp;&amp; continue
+            
+            ext=&#34;${url##*.}&#34;
+            ext=&#34;${ext%%\?*}&#34;
+            ext=&#34;${ext%%&amp;*}&#34;
+            case &#34;$ext&#34; in
+                jpg|jpeg|png|gif|webp|svg) ;;
+                *) ext=&#34;jpg&#34; ;;
+            esac
+            
+            filename=&#34;${counter}.${ext}&#34;
+            echo -n &#34;[$counter/$NUM_URLS] $filename ... &#34;
+            
+            if timeout 10 wget -q --max-redirect=3 -U &#34;Mozilla/5.0&#34; \
+                -O &#34;${DOWNLOAD_DIR}/${filename}&#34; &#34;$url&#34; 2&gt;/dev/null; then
+                
+                # Verificar que sea imagen
+                if file &#34;${DOWNLOAD_DIR}/${filename}&#34; 2&gt;/dev/null | grep -qE &#34;image|JPEG|PNG|GIF|WebP|SVG&#34;; then
+                    echo -e &#34;${GREEN}✓${NC}&#34;
+                else
+                    rm -f &#34;${DOWNLOAD_DIR}/${filename}&#34;
+                    echo -e &#34;${YELLOW}✗${NC}&#34;
+                fi
+            else
+                echo -e &#34;${RED}✗${NC}&#34;
+            fi
+            
+            ((counter&#43;&#43;))
+        done
+        
+        DOWNLOADED=$(find &#34;$DOWNLOAD_DIR&#34; -type f 2&gt;/dev/null | wc -l)
+        echo -e &#34;\n${GREEN}Descargadas: $DOWNLOADED imágenes${NC}&#34;
+        echo -e &#34;${GREEN}Ubicación: $DOWNLOAD_DIR${NC}&#34;
+        
+        if [ &#34;$DOWNLOADED&#34; -gt 0 ]; then
+            echo -e &#34;${YELLOW}Ver con: feh $DOWNLOAD_DIR/${NC}&#34;
+        else
+            rmdir &#34;$DOWNLOAD_DIR&#34; 2&gt;/dev/null
+        fi
+        ;;
+    
+    --open|-o|*)
+        echo -e &#34;${YELLOW}Abriendo en w3m... (Presiona &#39;q&#39; para salir)${NC}\n&#34;
+        sleep 1
+        $W3M &#34;$URL&#34;
+        ;;
+esac
+">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Imgsearch: buscar imágenes desde la consola más rápido
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2025-12-28T13:04:19-03:00'>
+      December 28, 2025
+    </time>
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <h1 id="cortecía-de-claude-ai">Cortecía de Claude AI</h1>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/bash
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"># img-search - Buscador simple de imágenes que SIEMPRE funciona</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Soporta múltiples motores sin JavaScript</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>set -e
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Colores</span>
+</span></span><span style="display:flex;"><span>RED<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;\033[0;31m&#39;</span>
+</span></span><span style="display:flex;"><span>GREEN<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;\033[0;32m&#39;</span>
+</span></span><span style="display:flex;"><span>YELLOW<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;\033[1;33m&#39;</span>
+</span></span><span style="display:flex;"><span>CYAN<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;\033[0;36m&#39;</span>
+</span></span><span style="display:flex;"><span>NC<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;\033[0m&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Configuración</span>
+</span></span><span style="display:flex;"><span>CACHE_DIR<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$HOME<span style="color:#e6db74">/.cache/img-search&#34;</span>
+</span></span><span style="display:flex;"><span>mkdir -p <span style="color:#e6db74">&#34;</span>$CACHE_DIR<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>W3M<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;w3m -o display_image=1 -o auto_image=1&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Ayuda</span>
+</span></span><span style="display:flex;"><span>show_help<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    cat <span style="color:#e6db74">&lt;&lt; EOF
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">${CYAN}img-search - Buscador universal de imágenes para consola${NC}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">${GREEN}USO:${NC}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    img-search MOTOR &#34;búsqueda&#34; [opciones]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">${GREEN}MOTORES:${NC}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    searx     - SearXNG local (localhost:8888)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    ddg       - DuckDuckGo Images (sin JS)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    ecosia    - Ecosia Images (sin JS)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    bing      - Bing Images (sin JS)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    qwant     - Qwant Images (sin JS)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">${GREEN}OPCIONES:${NC}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    --list|-l       Listar URLs encontradas
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    --download|-d   Descargar imágenes
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    --urls|-u       Solo mostrar URLs (para pipes)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    --open|-o       Abrir en navegador (default)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">${GREEN}EJEMPLOS:${NC}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    img-search ddg &#34;gatos&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    img-search searx &#34;wallpapers&#34; --list
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    img-search bing &#34;linux logos&#34; --download
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    img-search ecosia &#34;nature&#34; --urls &gt; urls.txt
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">${YELLOW}DEPENDENCIAS:${NC}
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    w3m curl wget (opcional: jq para SearXNG)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOF</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Función para extraer URLs de HTML</span>
+</span></span><span style="display:flex;"><span>extract_urls_from_html<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    local html<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Múltiples patrones para capturar diferentes formatos</span>
+</span></span><span style="display:flex;"><span>    grep -oE <span style="color:#e6db74">&#39;(src|data-src|href)=&#34;https?://[^&#34;]+\.(jpg|jpeg|png|gif|webp|svg)(\?[^&#34;]*)?[^&#34;]*&#34;&#39;</span> <span style="color:#e6db74">&#34;</span>$html<span style="color:#e6db74">&#34;</span> | <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>        sed <span style="color:#e6db74">&#39;s/.*=&#34;\(.*\)&#34;/\1/&#39;</span> | <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>        grep -v <span style="color:#e6db74">&#39;^//&#39;</span> | <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>        grep -v <span style="color:#e6db74">&#39;data:image&#39;</span> | <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>        sort -u <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># También buscar URLs sin comillas</span>
+</span></span><span style="display:flex;"><span>    grep -oE <span style="color:#e6db74">&#39;https?://[^\s&#34;&lt;&gt;()]+\.(jpg|jpeg|png|gif|webp)(\?[^\s&#34;&lt;&gt;()]+)?&#39;</span> <span style="color:#e6db74">&#34;</span>$html<span style="color:#e6db74">&#34;</span> | <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>        grep -v <span style="color:#e6db74">&#39;data:image&#39;</span> | <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>        sort -u <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Validar argumentos</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> $# -lt <span style="color:#ae81ff">2</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    show_help
+</span></span><span style="display:flex;"><span>    exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>MOTOR<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>QUERY<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$2<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>MODE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>3<span style="color:#66d9ef">:-</span>open<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Validar motor</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;</span>$MOTOR<span style="color:#e6db74">&#34;</span> in
+</span></span><span style="display:flex;"><span>    searx|ddg|ecosia|bing|qwant<span style="color:#f92672">)</span> ;;
+</span></span><span style="display:flex;"><span>    -h|--help|help<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        show_help
+</span></span><span style="display:flex;"><span>        exit <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>        ;;
+</span></span><span style="display:flex;"><span>    *<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>RED<span style="color:#e6db74">}</span><span style="color:#e6db74">Motor desconocido: </span>$MOTOR<span style="color:#e6db74">${</span>NC<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>        echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>YELLOW<span style="color:#e6db74">}</span><span style="color:#e6db74">Usa: searx, ddg, ecosia, bing o qwant</span><span style="color:#e6db74">${</span>NC<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>        exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>        ;;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">esac</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Encode query</span>
+</span></span><span style="display:flex;"><span>ENCODED<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>echo <span style="color:#e6db74">&#34;</span>$QUERY<span style="color:#e6db74">&#34;</span> | sed <span style="color:#e6db74">&#39;s/ /%20/g&#39;</span> | sed <span style="color:#e6db74">&#39;s/+/%2B/g&#39;</span><span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Construir URL según motor</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;</span>$MOTOR<span style="color:#e6db74">&#34;</span> in
+</span></span><span style="display:flex;"><span>    searx<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        URL<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;http://localhost:8888/search?q=</span><span style="color:#e6db74">${</span>ENCODED<span style="color:#e6db74">}</span><span style="color:#e6db74">&amp;categories=images&amp;format=json&#34;</span>
+</span></span><span style="display:flex;"><span>        USE_JSON<span style="color:#f92672">=</span>true
+</span></span><span style="display:flex;"><span>        ;;
+</span></span><span style="display:flex;"><span>    ddg<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        URL<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;https://duckduckgo.com/?q=</span><span style="color:#e6db74">${</span>ENCODED<span style="color:#e6db74">}</span><span style="color:#e6db74">&amp;iax=images&amp;ia=images&#34;</span>
+</span></span><span style="display:flex;"><span>        USE_JSON<span style="color:#f92672">=</span>false
+</span></span><span style="display:flex;"><span>        ;;
+</span></span><span style="display:flex;"><span>    ecosia<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        URL<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;https://www.ecosia.org/images?q=</span><span style="color:#e6db74">${</span>ENCODED<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>        USE_JSON<span style="color:#f92672">=</span>false
+</span></span><span style="display:flex;"><span>        ;;
+</span></span><span style="display:flex;"><span>    bing<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        URL<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;https://www.bing.com/images/search?q=</span><span style="color:#e6db74">${</span>ENCODED<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>        USE_JSON<span style="color:#f92672">=</span>false
+</span></span><span style="display:flex;"><span>        ;;
+</span></span><span style="display:flex;"><span>    qwant<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        URL<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;https://www.qwant.com/?q=</span><span style="color:#e6db74">${</span>ENCODED<span style="color:#e6db74">}</span><span style="color:#e6db74">&amp;t=images&#34;</span>
+</span></span><span style="display:flex;"><span>        USE_JSON<span style="color:#f92672">=</span>false
+</span></span><span style="display:flex;"><span>        ;;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">esac</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Banner</span>
+</span></span><span style="display:flex;"><span>echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>CYAN<span style="color:#e6db74">}</span><span style="color:#e6db74">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span><span style="color:#e6db74">${</span>NC<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>CYAN<span style="color:#e6db74">}</span><span style="color:#e6db74">  Buscador de Imágenes - </span><span style="color:#e6db74">${</span>MOTOR^^<span style="color:#e6db74">}${</span>NC<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>CYAN<span style="color:#e6db74">}</span><span style="color:#e6db74">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span><span style="color:#e6db74">${</span>NC<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>GREEN<span style="color:#e6db74">}</span><span style="color:#e6db74">Búsqueda:</span><span style="color:#e6db74">${</span>NC<span style="color:#e6db74">}</span><span style="color:#e6db74"> </span>$QUERY<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>GREEN<span style="color:#e6db74">}</span><span style="color:#e6db74">Motor:</span><span style="color:#e6db74">${</span>NC<span style="color:#e6db74">}</span><span style="color:#e6db74">    </span>$MOTOR<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>echo -e <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Descargar resultados</span>
+</span></span><span style="display:flex;"><span>CACHE_FILE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>CACHE_DIR<span style="color:#e6db74">}</span><span style="color:#e6db74">/</span><span style="color:#e6db74">${</span>MOTOR<span style="color:#e6db74">}</span><span style="color:#e6db74">_</span><span style="color:#66d9ef">$(</span>echo $QUERY | tr <span style="color:#e6db74">&#39; &#39;</span> <span style="color:#e6db74">&#39;_&#39;</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">.cache&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>YELLOW<span style="color:#e6db74">}</span><span style="color:#e6db74">Descargando resultados...</span><span style="color:#e6db74">${</span>NC<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> $USE_JSON; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    curl -s <span style="color:#e6db74">&#34;</span>$URL<span style="color:#e6db74">&#34;</span> &gt; <span style="color:#e6db74">&#34;</span>$CACHE_FILE<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>    curl -s -A <span style="color:#e6db74">&#34;Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101 Firefox/91.0&#34;</span> <span style="color:#e6db74">&#34;</span>$URL<span style="color:#e6db74">&#34;</span> &gt; <span style="color:#e6db74">&#34;</span>$CACHE_FILE<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> ! -s <span style="color:#e6db74">&#34;</span>$CACHE_FILE<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>RED<span style="color:#e6db74">}</span><span style="color:#e6db74">Error: No se pudo descargar resultados</span><span style="color:#e6db74">${</span>NC<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Extraer URLs según el tipo</span>
+</span></span><span style="display:flex;"><span>echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>YELLOW<span style="color:#e6db74">}</span><span style="color:#e6db74">Extrayendo URLs...</span><span style="color:#e6db74">${</span>NC<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> $USE_JSON; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># SearXNG JSON</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> command -v jq &amp;&gt; /dev/null; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        URLS<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>jq -r <span style="color:#e6db74">&#39;.results[]? | select(.img_src != null) | .img_src&#39;</span> <span style="color:#e6db74">&#34;</span>$CACHE_FILE<span style="color:#e6db74">&#34;</span> 2&gt;/dev/null | head -30<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">[</span> -z <span style="color:#e6db74">&#34;</span>$URLS<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span> <span style="color:#f92672">&amp;&amp;</span> URLS<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>jq -r <span style="color:#e6db74">&#39;.results[]? | select(.thumbnail != null) | .thumbnail&#39;</span> <span style="color:#e6db74">&#34;</span>$CACHE_FILE<span style="color:#e6db74">&#34;</span> 2&gt;/dev/null | head -30<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>        echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>RED<span style="color:#e6db74">}</span><span style="color:#e6db74">Error: jq no está instalado (necesario para SearXNG)</span><span style="color:#e6db74">${</span>NC<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>        echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>YELLOW<span style="color:#e6db74">}</span><span style="color:#e6db74">Instala con: sudo pacman -S jq</span><span style="color:#e6db74">${</span>NC<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>        exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># HTML parsing</span>
+</span></span><span style="display:flex;"><span>    URLS<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>extract_urls_from_html <span style="color:#e6db74">&#34;</span>$CACHE_FILE<span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Verificar si hay URLs</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> -z <span style="color:#e6db74">&#34;</span>$URLS<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>RED<span style="color:#e6db74">}</span><span style="color:#e6db74">No se encontraron URLs de imágenes</span><span style="color:#e6db74">${</span>NC<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>YELLOW<span style="color:#e6db74">}</span><span style="color:#e6db74">Tip: Prueba con otro motor</span><span style="color:#e6db74">${</span>NC<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>YELLOW<span style="color:#e6db74">}</span><span style="color:#e6db74">Debug: cat </span>$CACHE_FILE<span style="color:#e6db74">${</span>NC<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>NUM_URLS<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>echo <span style="color:#e6db74">&#34;</span>$URLS<span style="color:#e6db74">&#34;</span> | wc -l<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>GREEN<span style="color:#e6db74">}</span><span style="color:#e6db74">✓ Encontradas </span>$NUM_URLS<span style="color:#e6db74"> URLs</span><span style="color:#e6db74">${</span>NC<span style="color:#e6db74">}</span><span style="color:#e6db74">\n&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Procesar según modo</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;</span>$MODE<span style="color:#e6db74">&#34;</span> in
+</span></span><span style="display:flex;"><span>    --list|-l<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>CYAN<span style="color:#e6db74">}</span><span style="color:#e6db74">URLs encontradas:</span><span style="color:#e6db74">${</span>NC<span style="color:#e6db74">}</span><span style="color:#e6db74">\n&#34;</span>
+</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;</span>$URLS<span style="color:#e6db74">&#34;</span> | nl -w2 -s<span style="color:#e6db74">&#39;. &#39;</span>
+</span></span><span style="display:flex;"><span>        ;;
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    --urls|-u<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;</span>$URLS<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>        ;;
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    --download|-d<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        DOWNLOAD_DIR<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>CACHE_DIR<span style="color:#e6db74">}</span><span style="color:#e6db74">/downloads/</span><span style="color:#66d9ef">$(</span>date +%Y%m%d_%H%M%S<span style="color:#66d9ef">)</span><span style="color:#e6db74">_</span><span style="color:#e6db74">${</span>QUERY// /_<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>        mkdir -p <span style="color:#e6db74">&#34;</span>$DOWNLOAD_DIR<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>CYAN<span style="color:#e6db74">}</span><span style="color:#e6db74">Descargando a: </span>$DOWNLOAD_DIR<span style="color:#e6db74">${</span>NC<span style="color:#e6db74">}</span><span style="color:#e6db74">\n&#34;</span>
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        counter<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;</span>$URLS<span style="color:#e6db74">&#34;</span> | <span style="color:#66d9ef">while</span> read url; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">[</span> -z <span style="color:#e6db74">&#34;</span>$url<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#66d9ef">continue</span>
+</span></span><span style="display:flex;"><span>            
+</span></span><span style="display:flex;"><span>            ext<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>url##*.<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>            ext<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>ext%%<span style="color:#ae81ff">\?</span>*<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>            ext<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>ext%%&amp;*<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;</span>$ext<span style="color:#e6db74">&#34;</span> in
+</span></span><span style="display:flex;"><span>                jpg|jpeg|png|gif|webp|svg<span style="color:#f92672">)</span> ;;
+</span></span><span style="display:flex;"><span>                *<span style="color:#f92672">)</span> ext<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;jpg&#34;</span> ;;
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">esac</span>
+</span></span><span style="display:flex;"><span>            
+</span></span><span style="display:flex;"><span>            filename<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>counter<span style="color:#e6db74">}</span><span style="color:#e6db74">.</span><span style="color:#e6db74">${</span>ext<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>            echo -n <span style="color:#e6db74">&#34;[</span>$counter<span style="color:#e6db74">/</span>$NUM_URLS<span style="color:#e6db74">] </span>$filename<span style="color:#e6db74"> ... &#34;</span>
+</span></span><span style="display:flex;"><span>            
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> timeout <span style="color:#ae81ff">10</span> wget -q --max-redirect<span style="color:#f92672">=</span><span style="color:#ae81ff">3</span> -U <span style="color:#e6db74">&#34;Mozilla/5.0&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>                -O <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>DOWNLOAD_DIR<span style="color:#e6db74">}</span><span style="color:#e6db74">/</span><span style="color:#e6db74">${</span>filename<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;</span>$url<span style="color:#e6db74">&#34;</span> 2&gt;/dev/null; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>                
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e"># Verificar que sea imagen</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">if</span> file <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>DOWNLOAD_DIR<span style="color:#e6db74">}</span><span style="color:#e6db74">/</span><span style="color:#e6db74">${</span>filename<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> 2&gt;/dev/null | grep -qE <span style="color:#e6db74">&#34;image|JPEG|PNG|GIF|WebP|SVG&#34;</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>                    echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>GREEN<span style="color:#e6db74">}</span><span style="color:#e6db74">✓</span><span style="color:#e6db74">${</span>NC<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>                    rm -f <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>DOWNLOAD_DIR<span style="color:#e6db74">}</span><span style="color:#e6db74">/</span><span style="color:#e6db74">${</span>filename<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>                    echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>YELLOW<span style="color:#e6db74">}</span><span style="color:#e6db74">✗</span><span style="color:#e6db74">${</span>NC<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>                echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>RED<span style="color:#e6db74">}</span><span style="color:#e6db74">✗</span><span style="color:#e6db74">${</span>NC<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>            
+</span></span><span style="display:flex;"><span>            <span style="color:#f92672">((</span>counter++<span style="color:#f92672">))</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        DOWNLOADED<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>find <span style="color:#e6db74">&#34;</span>$DOWNLOAD_DIR<span style="color:#e6db74">&#34;</span> -type f 2&gt;/dev/null | wc -l<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>        echo -e <span style="color:#e6db74">&#34;\n</span><span style="color:#e6db74">${</span>GREEN<span style="color:#e6db74">}</span><span style="color:#e6db74">Descargadas: </span>$DOWNLOADED<span style="color:#e6db74"> imágenes</span><span style="color:#e6db74">${</span>NC<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>        echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>GREEN<span style="color:#e6db74">}</span><span style="color:#e6db74">Ubicación: </span>$DOWNLOAD_DIR<span style="color:#e6db74">${</span>NC<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>        
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span>$DOWNLOADED<span style="color:#e6db74">&#34;</span> -gt <span style="color:#ae81ff">0</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>            echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>YELLOW<span style="color:#e6db74">}</span><span style="color:#e6db74">Ver con: feh </span>$DOWNLOAD_DIR<span style="color:#e6db74">/</span><span style="color:#e6db74">${</span>NC<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>            rmdir <span style="color:#e6db74">&#34;</span>$DOWNLOAD_DIR<span style="color:#e6db74">&#34;</span> 2&gt;/dev/null
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>        ;;
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    --open|-o|*<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>YELLOW<span style="color:#e6db74">}</span><span style="color:#e6db74">Abriendo en w3m... (Presiona &#39;q&#39; para salir)</span><span style="color:#e6db74">${</span>NC<span style="color:#e6db74">}</span><span style="color:#e6db74">\n&#34;</span>
+</span></span><span style="display:flex;"><span>        sleep <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>        $W3M <span style="color:#e6db74">&#34;</span>$URL<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>        ;;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">esac</span>
+</span></span></code></pre></div>
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+</footer>
+
+
+</body>
+</html>
