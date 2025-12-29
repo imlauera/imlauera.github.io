@@ -27,7 +27,7 @@ sudo pacman -S qemu-full Luego ejecuta tu VM con el display curses:
 qemu-system-x86_64 -hda tu-disco.img -m 2G -display curses El modo curses renderiza la salida de la VM directamente en la terminal usando caracteres. Puedes salir con Esc &#43; 2 y luego escribir quit.">
   <meta itemprop="datePublished" content="2025-12-29T11:47:52-03:00">
   <meta itemprop="dateModified" content="2025-12-29T11:47:52-03:00">
-  <meta itemprop="wordCount" content="738">
+  <meta itemprop="wordCount" content="1062">
   <meta itemprop="keywords" content="Cli">
   
   <meta name="twitter:card" content="summary">
@@ -265,6 +265,83 @@ Escape character is ^]
 </code></pre><hr>
 <h2 id="7-instalación-de-gentoo-resumen">7️⃣ Instalación de Gentoo (resumen)</h2>
 <p>Para eso mira mis otras publicaciones.</p>
+<p>Good — this output actually narrows it down nicely 👍
+<strong>Libvirt side is correct.</strong> The VM <em>does</em> have a serial console (<code>/dev/pts/1</code>). The reason you’re dropped back to your shell is <strong>100% inside Gentoo now</strong>.</p>
+<p>So we’re debugging <strong>guest configuration</strong>, not libvirt.</p>
+<hr>
+<h2 id="what-this-tells-us">What this tells us</h2>
+<ul>
+<li>VM is running ✔</li>
+<li>Serial console exists ✔</li>
+<li><code>virsh console</code> connects ✔</li>
+<li><strong>Gentoo is not sending output to that console</strong> ❌</li>
+</ul>
+<p>That means <strong>one (or more)</strong> of these is missing:</p>
+<ol>
+<li>Kernel cmdline console parameter</li>
+<li>Login getty on the serial device</li>
+<li>Wrong console device name</li>
+</ol>
+<hr>
+<h2 id="step-1--confirm-which-console-device-gentoo-should-use">Step 1 — confirm which console device Gentoo should use</h2>
+<p>Because this is <strong>QEMU session + libvirt</strong>, the serial console is almost always:</p>
+<pre tabindex="0"><code>ttyS0
+</code></pre><p>(not <code>hvc0</code>, not <code>ttyAMA0</code>)</p>
+<hr>
+<h2 id="step-2--check-kernel-cmdline-inside-the-vm">Step 2 — check kernel cmdline (inside the VM)</h2>
+<p>Since console is blank, use <strong>graphics once</strong>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>virt-viewer --connect qemu:///session gentoo-vm
+</span></span></code></pre></div><p>Login, then run <strong>inside Gentoo</strong>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cat /proc/cmdline
+</span></span></code></pre></div><p>You should see <strong>both</strong> of these:</p>
+<pre tabindex="0"><code>console=tty0
+console=ttyS0,115200
+</code></pre><h3 id="if-ttys0-is-missing--fix-it">If <code>ttyS0</code> is missing → FIX IT</h3>
+<p>Edit <code>/etc/default/grub</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>GRUB_CMDLINE_LINUX<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;console=tty0 console=ttyS0,115200&#34;</span>
+</span></span></code></pre></div><p>Rebuild GRUB:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>grub-mkconfig -o /boot/grub/grub.cfg
+</span></span></code></pre></div><p>Reboot.</p>
+<hr>
+<h2 id="step-3--enable-a-login-prompt-on-the-serial-port-critical">Step 3 — enable a login prompt on the serial port (critical)</h2>
+<p>Gentoo <strong>does NOT enable this by default</strong>.</p>
+<p>Inside the VM:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>systemctl enable serial-getty@ttyS0.service
+</span></span><span style="display:flex;"><span>systemctl start serial-getty@ttyS0.service
+</span></span></code></pre></div><p>Check:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>systemctl status serial-getty@ttyS0
+</span></span></code></pre></div><p>You want <code>active (running)</code>.</p>
+<hr>
+<h2 id="step-4--reboot-and-test-again">Step 4 — reboot and test again</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>virsh --connect qemu:///session reboot gentoo-vm
+</span></span><span style="display:flex;"><span>virsh --connect qemu:///session console gentoo-vm
+</span></span></code></pre></div><p>You should now see:</p>
+<ul>
+<li>kernel boot messages</li>
+<li>followed by a <strong>login prompt</strong></li>
+</ul>
+<hr>
+<h2 id="if-its-still-blank-rare-but-fixable">If it’s STILL blank (rare but fixable)</h2>
+<p>Try explicitly specifying the device:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>virsh --connect qemu:///session console gentoo-vm --devname serial0
+</span></span></code></pre></div><p>Or send a newline after connecting — sometimes getty is there but quiet:</p>
+<pre tabindex="0"><code>[press Enter]
+</code></pre><hr>
+<h2 id="tldr-root-cause">TL;DR (root cause)</h2>
+<p>Your VM is perfect.
+Gentoo just wasn’t told:</p>
+<ul>
+<li><strong>“print output to ttyS0”</strong></li>
+<li><strong>“start a login on ttyS0”</strong></li>
+</ul>
+<p>Once those two are set, <code>virsh console</code> works every time.</p>
+<p>If you want, tell me:</p>
+<ul>
+<li>BIOS or UEFI?</li>
+<li>systemd or OpenRC?</li>
+<li>virtio or SATA disk?</li>
+</ul>
+<p>I can tune the setup <em>exactly</em> for your Gentoo VM.</p>
 
 </div>
 
