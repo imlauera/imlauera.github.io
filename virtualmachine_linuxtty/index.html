@@ -27,7 +27,7 @@ sudo pacman -S qemu-full Luego ejecuta tu VM con el display curses:
 qemu-system-x86_64 -hda tu-disco.img -m 2G -display curses El modo curses renderiza la salida de la VM directamente en la terminal usando caracteres. Puedes salir con Esc &#43; 2 y luego escribir quit.">
   <meta itemprop="datePublished" content="2025-12-29T11:47:52-03:00">
   <meta itemprop="dateModified" content="2025-12-29T11:47:52-03:00">
-  <meta itemprop="wordCount" content="1062">
+  <meta itemprop="wordCount" content="4211">
   <meta itemprop="keywords" content="Cli">
   
   <meta name="twitter:card" content="summary">
@@ -342,6 +342,592 @@ Gentoo just wasn’t told:</p>
 <li>virtio or SATA disk?</li>
 </ul>
 <p>I can tune the setup <em>exactly</em> for your Gentoo VM.</p>
+<hr>
+<p>Based on your document, you&rsquo;ve hit the classic issue: <strong>the VM is running, but you can&rsquo;t see it because there&rsquo;s no graphics and the serial console isn&rsquo;t configured in Gentoo</strong>.</p>
+<p>Let me give you the exact fix:</p>
+<h2 id="the-problem">The Problem</h2>
+<ul>
+<li><code>virt-viewer</code> fails because you used <code>--graphics none</code> (correct for TTY-only)</li>
+<li><code>virsh console</code> connects but shows nothing because Gentoo isn&rsquo;t outputting to the serial console</li>
+</ul>
+<h2 id="the-solution-step-by-step">The Solution (Step by Step)</h2>
+<h3 id="1-temporarily-add-graphics-to-fix-the-vm">1️⃣ <strong>Temporarily add graphics to fix the VM</strong></h3>
+<p>Shut down your VM first:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>virsh --connect qemu:///session shutdown gentoo-vm
+</span></span></code></pre></div><p>Edit the VM to add graphics temporarily:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>virsh --connect qemu:///session edit gentoo-vm
+</span></span></code></pre></div><p>Find the <code>&lt;graphics&gt;</code> section and change it to:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-xml" data-lang="xml"><span style="display:flex;"><span><span style="color:#f92672">&lt;graphics</span> <span style="color:#a6e22e">type=</span><span style="color:#e6db74">&#39;spice&#39;</span> <span style="color:#a6e22e">autoport=</span><span style="color:#e6db74">&#39;yes&#39;</span><span style="color:#f92672">/&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;video&gt;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&lt;model</span> <span style="color:#a6e22e">type=</span><span style="color:#e6db74">&#39;qxl&#39;</span><span style="color:#f92672">/&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;/video&gt;</span>
+</span></span></code></pre></div><p>Save and exit.</p>
+<h3 id="2-start-vm-and-connect-with-virt-viewer">2️⃣ <strong>Start VM and connect with virt-viewer</strong></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>virsh --connect qemu:///session start gentoo-vm
+</span></span><span style="display:flex;"><span>virt-viewer --connect qemu:///session gentoo-vm
+</span></span></code></pre></div><p>Now you should see the graphical console.</p>
+<h3 id="3-configure-serial-console-inside-gentoo">3️⃣ <strong>Configure serial console inside Gentoo</strong></h3>
+<p>Login to Gentoo, then run:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Enable serial console in kernel boot</span>
+</span></span><span style="display:flex;"><span>nano /etc/default/grub
+</span></span></code></pre></div><p>Add/modify this line:</p>
+<pre tabindex="0"><code>GRUB_CMDLINE_LINUX=&#34;console=tty0 console=ttyS0,115200&#34;
+</code></pre><p>Rebuild GRUB:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>grub-mkconfig -o /boot/grub/grub.cfg
+</span></span></code></pre></div><p><strong>Enable login on serial port (THIS IS CRITICAL):</strong></p>
+<p>If using <strong>systemd</strong>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>systemctl enable serial-getty@ttyS0.service
+</span></span><span style="display:flex;"><span>systemctl start serial-getty@ttyS0.service
+</span></span></code></pre></div><p>If using <strong>OpenRC</strong>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Edit /etc/inittab, add this line:</span>
+</span></span><span style="display:flex;"><span>s0:12345:respawn:/sbin/agetty -L <span style="color:#ae81ff">115200</span> ttyS0 vt100
+</span></span></code></pre></div><h3 id="4-remove-graphics-and-test">4️⃣ <strong>Remove graphics and test</strong></h3>
+<p>Shutdown the VM:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>virsh --connect qemu:///session shutdown gentoo-vm
+</span></span></code></pre></div><p>Edit again and remove graphics:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>virsh --connect qemu:///session edit gentoo-vm
+</span></span></code></pre></div><p>Remove the <code>&lt;graphics&gt;</code> and <code>&lt;video&gt;</code> sections entirely.</p>
+<p>Start and connect via console:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>virsh --connect qemu:///session start gentoo-vm
+</span></span><span style="display:flex;"><span>virsh --connect qemu:///session console gentoo-vm
+</span></span></code></pre></div><p>Press <strong>Enter</strong> a few times. You should now see the login prompt!</p>
+<hr>
+<h2 id="quick-alternative-keep-it-simple">Quick Alternative: Keep it simple</h2>
+<p>If you just want to <strong>use the VM right now</strong> without serial console:</p>
+<ol>
+<li>Keep the graphics enabled</li>
+<li>Use <code>virt-viewer</code> to access it</li>
+<li>Configure serial console later when you have time</li>
+</ol>
+<p>Let me know:</p>
+<ul>
+<li>Are you using <strong>systemd</strong> or <strong>OpenRC</strong> in Gentoo?</li>
+<li>Did you install GRUB or another bootloader?</li>
+</ul>
+<p>I can give you the exact commands for your setup! 🚀</p>
+<hr>
+<p>Ah! That makes sense - since you created it with <code>--graphics none</code>, there&rsquo;s no graphics section at all.</p>
+<h2 id="solution-add-graphics-temporarily-to-fix-the-serial-console">Solution: Add graphics temporarily to fix the serial console</h2>
+<h3 id="1-add-graphics-to-the-vm">1️⃣ <strong>Add graphics to the VM</strong></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>virsh --connect qemu:///session shutdown gentoo-vm
+</span></span><span style="display:flex;"><span>virsh --connect qemu:///session edit gentoo-vm
+</span></span></code></pre></div><p>Find the <code>&lt;devices&gt;</code> section and add this <strong>inside</strong> it:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-xml" data-lang="xml"><span style="display:flex;"><span><span style="color:#f92672">&lt;devices&gt;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">&lt;!-- your existing devices... --&gt;</span>
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&lt;graphics</span> <span style="color:#a6e22e">type=</span><span style="color:#e6db74">&#39;spice&#39;</span> <span style="color:#a6e22e">autoport=</span><span style="color:#e6db74">&#39;yes&#39;</span><span style="color:#f92672">/&gt;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&lt;video&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;model</span> <span style="color:#a6e22e">type=</span><span style="color:#e6db74">&#39;qxl&#39;</span><span style="color:#f92672">/&gt;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&lt;/video&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;/devices&gt;</span>
+</span></span></code></pre></div><p>Save and exit.</p>
+<h3 id="2-now-start-and-connect">2️⃣ <strong>Now start and connect</strong></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>virsh --connect qemu:///session start gentoo-vm
+</span></span><span style="display:flex;"><span>virt-viewer --connect qemu:///session gentoo-vm
+</span></span></code></pre></div><p>This should open the graphical window with your Gentoo installer/system.</p>
+<h3 id="3-fix-the-serial-console-inside-gentoo">3️⃣ <strong>Fix the serial console (inside Gentoo)</strong></h3>
+<p>Once you can see Gentoo:</p>
+<p><strong>Check kernel parameters:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cat /proc/cmdline
+</span></span></code></pre></div><p>If you don&rsquo;t see <code>console=ttyS0,115200</code>, add it:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nano /etc/default/grub
+</span></span></code></pre></div><p>Change/add:</p>
+<pre tabindex="0"><code>GRUB_CMDLINE_LINUX=&#34;console=tty0 console=ttyS0,115200&#34;
+</code></pre><p>Rebuild:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>grub-mkconfig -o /boot/grub/grub.cfg
+</span></span></code></pre></div><p><strong>Enable serial getty:</strong></p>
+<p><strong>Systemd:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>systemctl enable serial-getty@ttyS0.service
+</span></span><span style="display:flex;"><span>systemctl start serial-getty@ttyS0.service
+</span></span></code></pre></div><p><strong>OpenRC:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nano /etc/inittab
+</span></span></code></pre></div><p>Add this line:</p>
+<pre tabindex="0"><code>s0:12345:respawn:/sbin/agetty -L 115200 ttyS0 vt100
+</code></pre><p>Then:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>rc-service agetty.ttyS0 start
+</span></span><span style="display:flex;"><span>rc-update add agetty.ttyS0 default
+</span></span></code></pre></div><h3 id="4-remove-graphics-again">4️⃣ <strong>Remove graphics again</strong></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>virsh --connect qemu:///session shutdown gentoo-vm
+</span></span><span style="display:flex;"><span>virsh --connect qemu:///session edit gentoo-vm
+</span></span></code></pre></div><p>Delete the <code>&lt;graphics&gt;</code> and <code>&lt;video&gt;</code> lines you added.</p>
+<h3 id="5-test-serial-console">5️⃣ <strong>Test serial console</strong></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>virsh --connect qemu:///session start gentoo-vm
+</span></span><span style="display:flex;"><span>virsh --connect qemu:///session console gentoo-vm
+</span></span></code></pre></div><p>Press <strong>Enter</strong> - you should see the login prompt! 🎉</p>
+<hr>
+<p><strong>Quick question:</strong> Are you still in the Gentoo <strong>installer</strong> (LiveCD) or did you already install Gentoo to the disk? This changes which steps you need.</p>
+<hr>
+<p>Perfect! You&rsquo;re connected to the console. The issue is that <strong>nothing is appearing</strong> because Gentoo isn&rsquo;t sending output to the serial console.</p>
+<h2 id="the-real-problem">The Real Problem</h2>
+<p>You need to <strong>boot the VM with different parameters</strong> that force output to the serial console from the start.</p>
+<h2 id="solution-reconfigure-the-vms-boot-to-use-serial">Solution: Reconfigure the VM&rsquo;s boot to use serial</h2>
+<h3 id="option-1-edit-grub-from-inside-if-you-cant-see-anything">Option 1: Edit GRUB from inside (if you can&rsquo;t see anything)</h3>
+<p>Since you can&rsquo;t see anything, you need to <strong>type blind</strong>. Here&rsquo;s what to do:</p>
+<ol>
+<li>
+<p><strong>You&rsquo;re already connected</strong> (<code>virsh console gentoo-vm</code>)</p>
+</li>
+<li>
+<p><strong>Reboot the VM</strong> from another terminal:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>virsh --connect qemu:///session reboot gentoo-vm
+</span></span></code></pre></div></li>
+<li>
+<p><strong>In the console terminal</strong>, when GRUB boots (even if you can&rsquo;t see it), quickly press <code>e</code> (wait 2 seconds after reboot, then press <code>e</code>)</p>
+</li>
+<li>
+<p><strong>Type blind</strong> to add console parameters:</p>
+<ul>
+<li>Press <code>Down Arrow</code> 3-4 times (to get to the kernel line)</li>
+<li>Press <code>End</code> (to go to end of line)</li>
+<li>Type: <code> console=ttyS0,115200</code></li>
+<li>Press <code>Ctrl+X</code> or <code>F10</code> to boot</li>
+</ul>
+</li>
+</ol>
+<p>You should start seeing output!</p>
+<hr>
+<h3 id="option-2-recreate-the-vm-with-proper-serial-console-from-boot">Option 2: Recreate the VM with proper serial console from boot</h3>
+<p>This is cleaner. Destroy and recreate:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>virsh --connect qemu:///session destroy gentoo-vm
+</span></span><span style="display:flex;"><span>virsh --connect qemu:///session undefine gentoo-vm
+</span></span></code></pre></div><p>Recreate with <strong>extra boot args</strong>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>virt-install <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --name gentoo-vm <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --memory <span style="color:#ae81ff">2048</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --vcpus <span style="color:#ae81ff">2</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --disk path<span style="color:#f92672">=</span>/var/lib/libvirt/images/gentoo.qcow2 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --cdrom ~/isos/install-amd64-minimal.iso <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --os-variant gentoo <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --graphics none <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --console pty,target_type<span style="color:#f92672">=</span>serial <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --network network<span style="color:#f92672">=</span>default <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --boot kernel_args<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;console=ttyS0,115200 console=tty0&#34;</span>
+</span></span></code></pre></div><p><strong>Note:</strong> The <code>--boot kernel_args</code> tells the installer to use serial from the start.</p>
+<hr>
+<h3 id="option-3-use-a-different-connection-method">Option 3: Use a different connection method</h3>
+<p>Try connecting with the device name explicitly:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>virsh --connect qemu:///session console gentoo-vm --devname serial0
+</span></span></code></pre></div><p>Then press <strong>Enter</strong> several times to wake up the getty.</p>
+<hr>
+<h2 id="quick-test">Quick Test</h2>
+<p>While connected to <code>virsh console gentoo-vm</code>, try:</p>
+<ol>
+<li>Press <strong>Enter</strong> 5-6 times rapidly</li>
+<li>Try <code>Ctrl+C</code></li>
+<li>Type <code>root</code> and press Enter (blind login attempt)</li>
+</ol>
+<p>If you&rsquo;re at a login prompt but it&rsquo;s just not showing, this might work!</p>
+<hr>
+<p><strong>Which would you prefer?</strong></p>
+<ul>
+<li>Try Option 1 (edit GRUB blind)?</li>
+<li>Option 2 (recreate VM properly)?</li>
+<li>Option 3 (try different console commands first)?</li>
+</ul>
+<p>Let me know what happens! 🚀</p>
+<hr>
+<p>The <code>--location</code> method doesn&rsquo;t work with Gentoo&rsquo;s minimal ISO. Let&rsquo;s go with the <strong>kernel extraction method</strong> - it&rsquo;s the most reliable way to get serial console working from the start.</p>
+<h2 id="step-by-step-extract-kernel-and-boot-directly">Step-by-step: Extract kernel and boot directly</h2>
+<h3 id="1-mount-the-iso-and-find-the-kernel-files">1️⃣ <strong>Mount the ISO and find the kernel files</strong></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mkdir -p ~/gentoo-boot
+</span></span><span style="display:flex;"><span>sudo mount -o loop ~/isos/install-amd64-minimal-20251228T163057Z.iso ~/gentoo-boot
+</span></span><span style="display:flex;"><span>ls ~/gentoo-boot/boot/
+</span></span></code></pre></div><p>You should see files like <code>gentoo</code> (kernel) and <code>gentoo.igz</code> or <code>gentoo.xz</code> (initramfs).</p>
+<h3 id="2-copy-kernel-and-initrd-to-your-home">2️⃣ <strong>Copy kernel and initrd to your home</strong></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cp ~/gentoo-boot/boot/gentoo ~/gentoo-kernel
+</span></span><span style="display:flex;"><span>cp ~/gentoo-boot/boot/gentoo.igz ~/gentoo-initrd  <span style="color:#75715e"># or .xz if that&#39;s what you see</span>
+</span></span><span style="display:flex;"><span>sudo umount ~/gentoo-boot
+</span></span></code></pre></div><h3 id="3-create-the-vm-with-direct-kernel-boot">3️⃣ <strong>Create the VM with direct kernel boot</strong></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>virt-install <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --name gentoo-vm <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --memory <span style="color:#ae81ff">2048</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --vcpus <span style="color:#ae81ff">2</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --disk path<span style="color:#f92672">=</span>gentoo.qcow2,size<span style="color:#f92672">=</span><span style="color:#ae81ff">20</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --os-variant gentoo <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --graphics none <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --console pty,target_type<span style="color:#f92672">=</span>serial <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --network default <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --boot kernel<span style="color:#f92672">=</span>gentoo-kernel,initrd<span style="color:#f92672">=</span>gentoo-initrd,kernel_args<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;console=ttyS0,115200 console=tty0 root=/dev/ram0 init=/linuxrc dokeymap looptype=squashfs loop=/image.squashfs cdroot&#34;</span>
+</span></span></code></pre></div><p><strong>Note:</strong> The <code>root=/dev/ram0 init=/linuxrc...</code> parameters are needed because we&rsquo;re booting the LiveCD kernel directly.</p>
+<hr>
+<h2 id="alternative-simplest-method-if-you-just-want-it-working-now">Alternative: Simplest method (if you just want it working NOW)</h2>
+<p>Create the VM <strong>with the CDROM</strong> and add a serial device manually after:</p>
+<h3 id="1-create-vm-normally">1️⃣ Create VM normally:</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>virt-install <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --name gentoo-vm <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --memory <span style="color:#ae81ff">2048</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --vcpus <span style="color:#ae81ff">2</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --disk path<span style="color:#f92672">=</span>gentoo.qcow2,size<span style="color:#f92672">=</span><span style="color:#ae81ff">20</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --cdrom ~/isos/install-amd64-minimal-20251228T163057Z.iso <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --os-variant gentoo <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --graphics none <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --console pty,target_type<span style="color:#f92672">=</span>serial <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --network default <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --noautoconsole
+</span></span></code></pre></div><p>The <code>--noautoconsole</code> prevents it from trying to connect immediately.</p>
+<h3 id="2-start-the-vm-and-wait-30-seconds-for-it-to-boot">2️⃣ Start the VM and wait ~30 seconds for it to boot:</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>virsh --connect qemu:///session start gentoo-vm
+</span></span><span style="display:flex;"><span>sleep <span style="color:#ae81ff">30</span>
+</span></span></code></pre></div><h3 id="3-connect-to-console">3️⃣ Connect to console:</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>virsh --connect qemu:///session console gentoo-vm
+</span></span></code></pre></div><p>Press <strong>Enter</strong> several times. The Gentoo LiveCD <strong>might</strong> already have a getty on the serial console by default!</p>
+<hr>
+<h2 id="which-method-do-you-prefer">Which method do you prefer?</h2>
+<ol>
+<li><strong>Kernel extraction</strong> (most reliable, guaranteed serial output)</li>
+<li><strong>Simple CDROM + wait</strong> (easiest, might just work)</li>
+</ol>
+<p>Try option 2 first - it&rsquo;s literally 3 commands. If you see nothing after pressing Enter, we&rsquo;ll do the kernel extraction method.</p>
+<p>What do you see when you try the simple method? 🚀</p>
+<hr>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#f92672">[</span>I<span style="color:#f92672">]</span> esotericwarfare@arch ~/p/b/content <span style="color:#f92672">(</span>master<span style="color:#f92672">)</span>&gt; virsh --connect qemu:///session destroy gentoo-vm
+</span></span><span style="display:flex;"><span>                                                 virsh --connect qemu:///session undefine gentoo-vm
+</span></span></code></pre></div><hr>
+<p>Alright, the simple method didn&rsquo;t work. Let&rsquo;s do the <strong>kernel extraction method</strong> - this will definitely work.</p>
+<h2 id="extract-kernel-from-iso-and-boot-directly">Extract kernel from ISO and boot directly</h2>
+<h3 id="1-mount-the-iso-and-check-what">1️⃣ <strong>Mount the ISO and check what&rsquo;s inside</strong></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mkdir -p ~/gentoo-boot
+</span></span><span style="display:flex;"><span>sudo mount -o loop ~/isos/install-amd64-minimal-20251228T163057Z.iso ~/gentoo-boot
+</span></span><span style="display:flex;"><span>ls -lh ~/gentoo-boot/boot/
+</span></span></code></pre></div><p><strong>Tell me what files you see</strong> - especially looking for:</p>
+<ul>
+<li><code>gentoo</code> or <code>kernel</code> (the kernel file)</li>
+<li><code>gentoo.igz</code>, <code>gentoo.xz</code>, or <code>initramfs</code> (the initrd file)</li>
+</ul>
+<p>Once you tell me the exact filenames, I&rsquo;ll give you the exact commands to copy and boot them.</p>
+<hr>
+<h3 id="quick-check-while-mounted">Quick check while mounted</h3>
+<p>Also run this to see the structure:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>tree -L <span style="color:#ae81ff">2</span> ~/gentoo-boot/
+</span></span></code></pre></div><p>or if you don&rsquo;t have <code>tree</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ls -R ~/gentoo-boot/ | head -20
+</span></span></code></pre></div><p>Paste the output here and I&rsquo;ll give you the exact commands! 📋</p>
+<hr>
+<p>[I] esotericwarfare@arch ~&gt; tree -L 2 ~/gentoo-boot/
+/home/esotericwarfare/gentoo-boot/
+├── boot
+│   ├── gentoo
+│   ├── gentoo-config
+│   ├── gentoo.igz
+│   ├── grub
+│   └── System-gentoo.map
+├── boot.catalog
+├── efi
+│   └── boot
+├── efi.img
+├── image.squashfs
+├── livecd
+├── mach_kernel
+├── memtest64.bios
+├── memtest.efi64
+├── README.txt
+└── System
+└── Library
+7 directories, 12 files
+[I] esotericwarfare@arch ~&gt; ls -R ~/gentoo-boot/ | head -20
+/home/esotericwarfare/gentoo-boot/:
+boot
+boot.catalog
+efi
+efi.img
+image.squashfs
+livecd
+mach_kernel
+memtest64.bios
+memtest.efi64
+README.txt
+System
+/home/esotericwarfare/gentoo-boot/boot:
+gentoo
+gentoo-config
+gentoo.igz
+grub
+System-gentoo.map
+[I] esotericwarfare@arch ~&gt;</p>
+<hr>
+<p>Perfect! I can see the files clearly:</p>
+<ul>
+<li><strong>Kernel</strong>: <code>gentoo</code></li>
+<li><strong>Initramfs</strong>: <code>gentoo.igz</code></li>
+</ul>
+<h3 id="2-copy-the-kernel-and-initrd">2️⃣ <strong>Copy the kernel and initrd</strong></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cp ~/gentoo-boot/boot/gentoo ~/gentoo-kernel
+</span></span><span style="display:flex;"><span>cp ~/gentoo-boot/boot/gentoo.igz ~/gentoo-initrd
+</span></span><span style="display:flex;"><span>sudo umount ~/gentoo-boot
+</span></span></code></pre></div><h3 id="3-delete-the-old-vm-and-create-new-one-with-direct-kernel-boot">3️⃣ <strong>Delete the old VM and create new one with direct kernel boot</strong></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>virsh --connect qemu:///session destroy gentoo-vm
+</span></span><span style="display:flex;"><span>virsh --connect qemu:///session undefine gentoo-vm
+</span></span></code></pre></div><p>Now create with kernel boot:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>virt-install <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --name gentoo-vm <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --memory <span style="color:#ae81ff">2048</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --vcpus <span style="color:#ae81ff">2</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --disk path<span style="color:#f92672">=</span>gentoo.qcow2,size<span style="color:#f92672">=</span><span style="color:#ae81ff">20</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --os-variant gentoo <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --graphics none <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --console pty,target_type<span style="color:#f92672">=</span>serial <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --network default <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --boot kernel<span style="color:#f92672">=</span>gentoo-kernel,initrd<span style="color:#f92672">=</span>gentoo-initrd,kernel_args<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;console=ttyS0,115200 console=tty0 root=/dev/ram0 init=/linuxrc dokeymap looptype=squashfs loop=/image.squashfs cdroot&#34;</span>
+</span></span></code></pre></div><p><strong>This should immediately connect you and show kernel boot messages!</strong></p>
+<p>You should see output like:</p>
+<pre tabindex="0"><code>[    0.000000] Linux version 6.x.x-gentoo...
+[    0.000000] Command line: console=ttyS0,115200...
+</code></pre><p>Tell me what you see! 🎉</p>
+<hr>
+<p>[   36.107452] CPU: 0 UID: 0 PID: 1 Comm: init Not tainted 6.12.58 #1
+[   36.138067] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS Arch Linux 1.17.0-2-2 04/01/2014
+[   36.187462] Call Trace:
+[   36.207988]  <!-- raw HTML omitted -->
+[   36.221231]  dump_stack_lvl+0x5d/0x80
+[   36.246507]  panic+0x157/0x32b
+[   36.250833]  ? do_coredump+0x7c8/0x19d0
+[   36.255665]  do_exit.cold+0x15/0x15
+[   36.259740]  do_group_exit+0x2d/0xc0
+[   36.266504]  get_signal+0x916/0x920
+[   36.272971]  ? __schedule+0x3fc/0x1530
+[   36.278454]  arch_do_signal_or_restart+0x40/0x270
+[   36.286128]  irqentry_exit_to_user_mode+0x169/0x1b0
+[   36.292700]  asm_exc_page_fault+0x26/0x30
+[   36.298938] RIP: 0033:0x0
+[   36.302873] Code: Unable to access opcode bytes at 0xffffffffffffffd6.
+[   36.311051] RSP: 002b:00007ffe8380ac10 EFLAGS: 00010246
+[   36.319593] RAX: 0000000000000000 RBX: 00007f8b173dd378 RCX: 0000000000000000
+[   36.331866] RDX: 0000000000000001 RSI: 0000000000000000 RDI: 00007f8b17520b60
+[   36.342667] RBP: 00007ffe8380ac20 R08: 00007f8b17520b60 R09: 0000000000000000
+[   36.351743] R10: 00007f8b173015d0 R11: 0000000000000246 R12: 00007ffe8380ad90
+[   36.361851] R13: 0000000000000000 R14: 0000000000000000 R15: 00000040ffffff00
+[   36.374840]  <!-- raw HTML omitted -->
+[   36.381087] Kernel Offset: 0x36000000 from 0xffffffff81000000 (relocation range: 0xffffffff80000000-0xffffffffbfffffff)
+[   36.394687] &mdash;[ end Kernel panic - not syncing: Attempted to kill init! exitcode=0x0000000b ]&mdash;</p>
+<p>The kernel is booting but <strong>crashing</strong> because it can&rsquo;t find the root filesystem (the squashfs image). This is because we&rsquo;re booting the kernel directly but it needs access to the ISO&rsquo;s <code>image.squashfs</code> file.</p>
+<h2 id="solution-add-the-cdrom-back-so-it-can-access-the-filesystem">Solution: Add the CDROM back so it can access the filesystem</h2>
+<p>We need to boot with the kernel <strong>AND</strong> attach the ISO as a CDROM:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>virsh --connect qemu:///session destroy gentoo-vm
+</span></span><span style="display:flex;"><span>virsh --connect qemu:///session undefine gentoo-vm
+</span></span></code></pre></div><p>Now create with <strong>both</strong> kernel boot and CDROM:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>virt-install <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --name gentoo-vm <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --memory <span style="color:#ae81ff">2048</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --vcpus <span style="color:#ae81ff">2</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --disk path<span style="color:#f92672">=</span>gentoo.qcow2,size<span style="color:#f92672">=</span><span style="color:#ae81ff">20</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --disk ~/isos/install-amd64-minimal-20251228T163057Z.iso,device<span style="color:#f92672">=</span>cdrom <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --os-variant gentoo <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --graphics none <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --console pty,target_type<span style="color:#f92672">=</span>serial <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --network default <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --boot kernel<span style="color:#f92672">=</span>gentoo-kernel,initrd<span style="color:#f92672">=</span>gentoo-initrd,kernel_args<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;console=ttyS0,115200 console=tty0 root=/dev/sr0 init=/linuxrc dokeymap looptype=squashfs loop=/image.squashfs cdroot&#34;</span>
+</span></span></code></pre></div><p><strong>Key change</strong>: <code>root=/dev/sr0</code> (the CDROM device) instead of <code>root=/dev/ram0</code></p>
+<p>This should boot successfully and you&rsquo;ll see the Gentoo LiveCD environment with a working serial console! 🚀</p>
+<p>Try it and tell me what happens!</p>
+<hr>
+<p>[    1.693537]  <!-- raw HTML omitted -->
+[    1.693537] Modules linked in:
+[    1.693537] &mdash;[ end trace 0000000000000000 ]&mdash;
+[    1.693537] RIP: 0010:__text_poke+0x421/0x4c0
+[    1.693537] Code: 31 01 90 e9 2e fe ff ff e8 4c 9f 06 00 e9 f9 fd ff ff 48 8b 74 24 10 4c 89 e2 4c 89 f7 e8 37 3f 22 01 85 c0 0f 84 90 fe ff ff &lt;0f&gt; 0b 48 21 df 4d 85 ed 0f 84 a5 fd ff ff 48 23 2d 72 a7 c6 02 48
+[    1.693537] RSP: 0000:ffffd13bc0013c10 EFLAGS: 00010082
+[    1.693537] RAX: 00000000fffffff7 RBX: ffff8ab301090000 RCX: 0000000000000000
+[    1.693537] RDX: 0000000000000001 RSI: ffffd13bc0013ca2 RDI: ffffffff8f020e2f
+[    1.693537] RBP: ffffffff91a34dc0 R08: 00000000000000cc R09: 0000000000000001
+[    1.693537] R10: ffffffff8f00f99b R11: 0000000000000002 R12: 0000000000000001
+[    1.693537] R13: ffff8ab3013d5100 R14: ffffffff8f020e2f R15: 0000000000000e30
+[    1.693537] FS:  0000000000000000(0000) GS:ffff8ab37ba00000(0000) knlGS:0000000000000000
+[    1.693537] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[    1.693537] CR2: ffff8ab34ec01000 CR3: 000000004d82c000 CR4: 0000000000100ef0
+[    1.693537] note: swapper/0[1] exited with irqs disabled
+[    1.693558] note: swapper/0[1] exited with preempt_count 1
+[    1.696909] Kernel panic - not syncing: Attempted to kill init! exitcode=0x0000000b
+[    1.700204] &mdash;[ end Kernel panic - not syncing: Attempted to kill init! exitcode=0x0000000b ]&mdash;</p>
+<p>The kernel is still crashing very early in boot. This is a different error - it&rsquo;s crashing before it even gets to mounting the filesystem.</p>
+<p>This might be a compatibility issue between the Gentoo kernel and QEMU. Let&rsquo;s try a <strong>different approach</strong>: use QEMU directly without virt-install complications.</p>
+<h2 id="alternative-boot-with-qemu-directly-simpler-and-more-control">Alternative: Boot with QEMU directly (simpler and more control)</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># First, stop and remove the old VM</span>
+</span></span><span style="display:flex;"><span>virsh --connect qemu:///session destroy gentoo-vm 2&gt;/dev/null
+</span></span><span style="display:flex;"><span>virsh --connect qemu:///session undefine gentoo-vm 2&gt;/dev/null
+</span></span></code></pre></div><p>Now boot directly with QEMU:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>qemu-system-x86_64 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -enable-kvm <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -m <span style="color:#ae81ff">2048</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -smp <span style="color:#ae81ff">2</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -drive file<span style="color:#f92672">=</span>gentoo.qcow2,format<span style="color:#f92672">=</span>qcow2,if<span style="color:#f92672">=</span>virtio <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -cdrom ~/isos/install-amd64-minimal-20251228T163057Z.iso <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -boot d <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -nographic <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -serial mon:stdio <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -netdev user,id<span style="color:#f92672">=</span>net0 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -device virtio-net-pci,netdev<span style="color:#f92672">=</span>net0
+</span></span></code></pre></div><p><strong>What this does:</strong></p>
+<ul>
+<li><code>-nographic</code>: no graphics</li>
+<li><code>-serial mon:stdio</code>: serial console goes to your terminal</li>
+<li><code>-boot d</code>: boot from CDROM</li>
+<li>Let the ISO&rsquo;s bootloader (GRUB) handle everything</li>
+</ul>
+<p>This should just work! The Gentoo ISO will boot normally and you&rsquo;ll see everything in your terminal.</p>
+<p><strong>To exit</strong>: Press <code>Ctrl+A</code> then <code>X</code></p>
+<p>Try this and tell me what you see! This bypasses all the virt-install/libvirt complexity. 🚀</p>
+<hr>
+<p>I think the enable kvm is giving me problems</p>
+<p>Good catch! Let&rsquo;s try <strong>without KVM</strong> - this will use pure emulation (slower but more compatible):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>qemu-system-x86_64 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -m <span style="color:#ae81ff">2048</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -smp <span style="color:#ae81ff">2</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -drive file<span style="color:#f92672">=</span>gentoo.qcow2,format<span style="color:#f92672">=</span>qcow2,if<span style="color:#f92672">=</span>virtio <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -cdrom ~/isos/install-amd64-minimal-20251228T163057Z.iso <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -boot d <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -nographic <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -serial mon:stdio <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -netdev user,id<span style="color:#f92672">=</span>net0 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -device virtio-net-pci,netdev<span style="color:#f92672">=</span>net0
+</span></span></code></pre></div><p><strong>Or</strong> if you want to keep KVM but disable problematic CPU features:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>qemu-system-x86_64 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -enable-kvm <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -cpu host,-x2apic <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -m <span style="color:#ae81ff">2048</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -smp <span style="color:#ae81ff">2</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -drive file<span style="color:#f92672">=</span>gentoo.qcow2,format<span style="color:#f92672">=</span>qcow2,if<span style="color:#f92672">=</span>virtio <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -cdrom ~/isos/install-amd64-minimal-20251228T163057Z.iso <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -boot d <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -nographic <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -serial mon:stdio <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -netdev user,id<span style="color:#f92672">=</span>net0 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -device virtio-net-pci,netdev<span style="color:#f92672">=</span>net0
+</span></span></code></pre></div><p>The <code>-cpu host,-x2apic</code> disables a CPU feature that sometimes causes kernel panics.</p>
+<p>When GRUB appears, still press <code>e</code> and add <code>console=ttyS0,115200 console=tty0</code> to the linux line.</p>
+<p><strong>Try the second option first</strong> (with <code>-cpu host,-x2apic</code>), then the pure emulation if that fails. Let me know what happens! 🚀</p>
+<p>This is frustrating! The Gentoo minimal ISO kernel has issues with your KVM setup. Let&rsquo;s try a <strong>completely different approach</strong> - use a different distro&rsquo;s ISO just to get the VM working, then install Gentoo from within it.</p>
+<h2 id="option-1-use-alpine-linux-tiny-fast-works-everywhere">Option 1: Use Alpine Linux (tiny, fast, works everywhere)</h2>
+<p>Alpine always works with serial consoles:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cd ~/isos
+</span></span><span style="display:flex;"><span>wget https://dl-cdn.alpinelinux.org/alpine/v3.19/releases/x86_64/alpine-virt-3.19.1-x86_64.iso
+</span></span></code></pre></div><p>Boot with KVM:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>qemu-system-x86_64 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -enable-kvm <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -m <span style="color:#ae81ff">2048</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -smp <span style="color:#ae81ff">2</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -drive file<span style="color:#f92672">=</span>gentoo.qcow2,format<span style="color:#f92672">=</span>qcow2,if<span style="color:#f92672">=</span>virtio <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -cdrom ~/isos/alpine-virt-3.19.1-x86_64.iso <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -boot d <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -nographic <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -serial mon:stdio <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -netdev user,id<span style="color:#f92672">=</span>net0 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -device virtio-net-pci,netdev<span style="color:#f92672">=</span>net0
+</span></span></code></pre></div><p>Alpine boots straight to a login prompt on serial. Login as <code>root</code> (no password), then you can partition the disk and install Gentoo manually using chroot.</p>
+<hr>
+<h2 id="option-2-use-arch-linux-iso-youre-on-arch-itll-work">Option 2: Use Arch Linux ISO (you&rsquo;re on Arch, it&rsquo;ll work)</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cd ~/isos
+</span></span><span style="display:flex;"><span>wget https://mirror.rackspace.com/archlinux/iso/latest/archlinux-x86_64.iso
+</span></span></code></pre></div><p>Boot:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>qemu-system-x86_64 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -enable-kvm <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -m <span style="color:#ae81ff">2048</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -smp <span style="color:#ae81ff">2</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -drive file<span style="color:#f92672">=</span>gentoo.qcow2,format<span style="color:#f92672">=</span>qcow2,if<span style="color:#f92672">=</span>virtio <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -cdrom ~/isos/archlinux-x86_64.iso <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -boot d <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -nographic <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -serial mon:stdio <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -netdev user,id<span style="color:#f92672">=</span>net0 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -device virtio-net-pci,netdev<span style="color:#f92672">=</span>net0
+</span></span></code></pre></div><p>Arch ISO has perfect serial console support and boots fast with KVM.</p>
+<hr>
+<h2 id="option-3-just-give-up-on-serial-and-use-ssh">Option 3: Just give up on serial and use SSH</h2>
+<p>Keep the slow emulation boot running, wait for it to finish (maybe 10-15 minutes), then SSH in:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Let it boot fully, then:</span>
+</span></span><span style="display:flex;"><span>ssh -p <span style="color:#ae81ff">2222</span> root@localhost
+</span></span></code></pre></div><p>Once in via SSH, you can install Gentoo normally and configure the serial console properly for next boot.</p>
+<hr>
+<p><strong>Which sounds best?</strong> Alpine is smallest/fastest, Arch is most familiar to you, or just wait out the slow boot and use SSH? 🤔</p>
+<hr>
+<p>Tenés razón, disculpá la confusión. Mirando el documento, veo que <strong>el problema principal fue el kernel panic</strong>.</p>
+<p>Según el documento, intentaste con el ISO mínimal de Gentoo y conseguiste que arranque pero crasheó con kernel panic. Los errores muestran que el kernel estaba fallando muy temprano en el boot.</p>
+<h2 id="el-problema-real">El problema real</h2>
+<p>El kernel del LiveCD de Gentoo estaba teniendo problemas de compatibilidad con tu configuración de KVM/QEMU. Probaste:</p>
+<ol>
+<li>Bootear directo desde el ISO con virt-install</li>
+<li>Extraer el kernel y bootear directamente</li>
+<li>QEMU directo con y sin KVM</li>
+<li>QEMU con <code>-cpu host,-x2apic</code></li>
+</ol>
+<p>Y todo terminaba en kernel panic.</p>
+<h2 id="para-intentar-gentoo-de-nuevo">Para intentar Gentoo de nuevo</h2>
+<p><strong>Opción 1: Probar un ISO diferente de Gentoo</strong></p>
+<p>El ISO &ldquo;minimal&rdquo; que usaste (<code>install-amd64-minimal-20251228T163057Z.iso</code>) parece tener problemas. Podés probar:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Descargar el ISO &#34;admin&#34; en lugar del minimal</span>
+</span></span><span style="display:flex;"><span>wget https://distfiles.gentoo.org/releases/amd64/autobuilds/current-admincd-amd64/admincd-amd64-XXXXXX.iso
+</span></span></code></pre></div><p>El ISO admin tiene más drivers y suele ser más compatible.</p>
+<p><strong>Opción 2: Bootear con parámetros de kernel más seguros</strong></p>
+<p>Si volvés a intentar, cuando veas GRUB presioná <code>e</code> y agregá estos parámetros:</p>
+<pre tabindex="0"><code>console=ttyS0,115200 console=tty0 nomodeset noapic acpi=off
+</code></pre><p>Los parámetros <code>nomodeset noapic acpi=off</code> desactivan features que pueden causar kernel panics.</p>
+<p><strong>¿Querés que intentemos con otro ISO de Gentoo o preferís probar con otra distro source-based como CRUX?</strong></p>
+<hr>
+<p>Perfecto, usemos el admincd de Gentoo. Sobre tu pregunta: <strong>extraer el kernel del ISO NO hace más fácil cambiar los parámetros</strong> - es más complicado porque tenés que pasarlos manualmente en el comando virt-install.</p>
+<h2 id="mi-recomendación-bootear-directo-desde-el-iso">Mi recomendación: Bootear directo desde el ISO</h2>
+<p>Es más simple y podés editar los parámetros desde GRUB cuando arranque. Así:</p>
+<h3 id="1-descargá-el-admincd">1️⃣ Descargá el admincd</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cd ~/isos
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Buscá la última versión en:</span>
+</span></span><span style="display:flex;"><span>wget https://distfiles.gentoo.org/releases/amd64/autobuilds/current-admincd-amd64/admincd-amd64-&lt;fecha&gt;.iso
+</span></span></code></pre></div><p>Primero necesitás ver qué versión está disponible:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>curl -s https://distfiles.gentoo.org/releases/amd64/autobuilds/current-admincd-amd64/ | grep -o <span style="color:#e6db74">&#39;admincd.*\.iso&#39;</span> | head -1
+</span></span></code></pre></div><h3 id="2-bootear-con-qemu-directo-más-simple-que-virt-install">2️⃣ Bootear con QEMU directo (más simple que virt-install)</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>qemu-system-x86_64 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -enable-kvm <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -cpu host,-x2apic <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -m <span style="color:#ae81ff">2048</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -smp <span style="color:#ae81ff">2</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -drive file<span style="color:#f92672">=</span>gentoo.qcow2,format<span style="color:#f92672">=</span>qcow2,if<span style="color:#f92672">=</span>virtio <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -cdrom ~/isos/admincd-amd64-*.iso <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -boot d <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -nographic <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -serial mon:stdio <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -netdev user,id<span style="color:#f92672">=</span>net0 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -device virtio-net-pci,netdev<span style="color:#f92672">=</span>net0
+</span></span></code></pre></div><h3 id="3-cuando-veas-grub">3️⃣ Cuando veas GRUB</h3>
+<p>Cuando aparezca el menú de GRUB (puede tardar unos segundos):</p>
+<ol>
+<li><strong>Rápidamente presioná <code>e</code></strong> para editar</li>
+<li>Buscá la línea que empieza con <code>linux</code> o <code>kernel</code></li>
+<li>Al final de esa línea agregá: <code>console=ttyS0,115200 console=tty0 nomodeset</code></li>
+<li>Presioná <code>Ctrl+X</code> o <code>F10</code> para bootear</li>
+</ol>
+<p>El admincd tiene más drivers que el minimal, así que debería funcionar mejor.</p>
+<p><strong>¿Querés que primero busquemos juntos qué versión del admincd está disponible?</strong></p>
+<hr>
+<p>Perfecto, usemos todos esos parámetros para maximizar la compatibilidad.</p>
+<h2 id="plan-completo-con-admincd">Plan completo con admincd</h2>
+<h3 id="1-verificar-qué-admincd-está-disponible">1️⃣ Verificar qué admincd está disponible</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>curl -s https://distfiles.gentoo.org/releases/amd64/autobuilds/current-admincd-amd64/ | grep -o <span style="color:#e6db74">&#39;admincd.*\.iso&#39;</span> | head -1
+</span></span></code></pre></div><p>Esto te va a mostrar el nombre exacto del ISO.</p>
+<h3 id="2-descargar">2️⃣ Descargar</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cd ~/isos
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Reemplazá &lt;FECHA&gt; con lo que te mostró el comando anterior</span>
+</span></span><span style="display:flex;"><span>wget https://distfiles.gentoo.org/releases/amd64/autobuilds/current-admincd-amd64/admincd-amd64-&lt;FECHA&gt;.iso
+</span></span></code></pre></div><h3 id="3-bootear-con-qemu">3️⃣ Bootear con QEMU</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>qemu-system-x86_64 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -enable-kvm <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -cpu host,-x2apic <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -m <span style="color:#ae81ff">2048</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -smp <span style="color:#ae81ff">2</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -drive file<span style="color:#f92672">=</span>gentoo.qcow2,format<span style="color:#f92672">=</span>qcow2,if<span style="color:#f92672">=</span>virtio <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -cdrom ~/isos/admincd-amd64-*.iso <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -boot d <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -nographic <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -serial mon:stdio <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -netdev user,id<span style="color:#f92672">=</span>net0 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -device virtio-net-pci,netdev<span style="color:#f92672">=</span>net0
+</span></span></code></pre></div><h3 id="4-cuando-veas-grub-importante">4️⃣ Cuando veas GRUB (importante)</h3>
+<ol>
+<li><strong>Presioná <code>e</code> inmediatamente</strong></li>
+<li>Buscá la línea que dice <code>linux</code> o <code>kernel</code></li>
+<li>Al final agregá exactamente esto:
+<pre tabindex="0"><code>console=ttyS0,115200 console=tty0 nomodeset noapic acpi=off
+</code></pre></li>
+<li><strong>Presioná <code>Ctrl+X</code></strong> para bootear</li>
+</ol>
+<p>Estos parámetros desactivan features problemáticas que causan kernel panic en VMs.</p>
+<p><strong>Empezá con el paso 1 y decime qué nombre de ISO te aparece</strong>, así te doy el comando exacto de wget.</p>
 
 </div>
 
