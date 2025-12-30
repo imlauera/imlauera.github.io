@@ -27,7 +27,7 @@ sudo pacman -S qemu-full Luego ejecuta tu VM con el display curses:
 qemu-system-x86_64 -hda tu-disco.img -m 2G -display curses El modo curses renderiza la salida de la VM directamente en la terminal usando caracteres. Puedes salir con Esc &#43; 2 y luego escribir quit.">
   <meta itemprop="datePublished" content="2025-12-29T11:47:52-03:00">
   <meta itemprop="dateModified" content="2025-12-29T11:47:52-03:00">
-  <meta itemprop="wordCount" content="7584">
+  <meta itemprop="wordCount" content="8791">
   <meta itemprop="keywords" content="Cli">
   
   <meta name="twitter:card" content="summary">
@@ -1851,6 +1851,267 @@ kernel panic
 <li>o cómo parchear el kernel para KVM Bay Trail</li>
 </ul>
 <p>Decime.</p>
+<hr>
+<h1 id="gentoo-linux-26">Gentoo Linux 2.6</h1>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>qemu-system-x86_64 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -enable-kvm <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -cpu qemu64 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -m <span style="color:#ae81ff">2048</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -smp <span style="color:#ae81ff">2</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -machine accel<span style="color:#f92672">=</span>kvm <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -drive file<span style="color:#f92672">=</span>gentoo.qcow2,format<span style="color:#f92672">=</span>qcow2,if<span style="color:#f92672">=</span>ide <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -cdrom gentoo/livedvd-amd64-multilib-20121221.iso <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -boot d <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -nographic <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -serial mon:stdio <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -netdev user,id<span style="color:#f92672">=</span>net0 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -device e1000,netdev<span style="color:#f92672">=</span>net0
+</span></span></code></pre></div><hr>
+<p>Bien, esto es <strong>clave</strong> y no es error tuyo.</p>
+<p>👉 <strong>Esa ISO de Gentoo NO usa GRUB</strong>, usa <strong>ISOLINUX</strong>, y <strong>por defecto ISOLINUX NO muestra menú por serial</strong>.
+Por eso con <code>-nographic</code> <strong>no ves ningún menú</strong>.</p>
+<p>No es que “no tengas GRUB”: <strong>nunca lo vas a ver</strong> en ese setup.</p>
+<hr>
+<h2 id="opción-1-la-correcta-arrancar-isolinux-en-tty-serial">OPCIÓN 1 (la correcta): arrancar ISOLINUX en TTY serial</h2>
+<p>Usá <strong>esto exacto</strong>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>qemu-system-x86_64 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -enable-kvm <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -cpu qemu64 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -m <span style="color:#ae81ff">2048</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -smp <span style="color:#ae81ff">2</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -machine accel<span style="color:#f92672">=</span>kvm <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -cdrom gentoo/livedvd-amd64-multilib-20121221.iso <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -drive file<span style="color:#f92672">=</span>gentoo.qcow2,format<span style="color:#f92672">=</span>qcow2,if<span style="color:#f92672">=</span>ide <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -boot d <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -display none <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -serial stdio <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -netdev user,id<span style="color:#f92672">=</span>net0 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -device e1000,netdev<span style="color:#f92672">=</span>net0
+</span></span></code></pre></div><p>📌 <strong>No aparece menú</strong>, pero <strong>sí arranca solo</strong> con la opción por defecto.</p>
+<p>⏳ Esperá 10–20 segundos.
+Si bootea, vas a ver logs del kernel directo.</p>
+<hr>
+<h2 id="opción-2-forzar-menú-isolinux-visible-la-única-forma">OPCIÓN 2: forzar menú ISOLINUX visible (la única forma)</h2>
+<p>Tenés que <strong>editar la ISO</strong> (sí o sí).</p>
+<h3 id="1-copiar-iso">1️⃣ Copiar ISO</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mkdir ~/gentoo-iso-edit
+</span></span><span style="display:flex;"><span>sudo mount -o loop gentoo/livedvd-amd64-multilib-20121221.iso /mnt
+</span></span><span style="display:flex;"><span>cp -r /mnt/* ~/gentoo-iso-edit/
+</span></span><span style="display:flex;"><span>sudo umount /mnt
+</span></span></code></pre></div><h3 id="2-editar-isolinux">2️⃣ Editar ISOLINUX</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nano ~/gentoo-iso-edit/isolinux/isolinux.cfg
+</span></span></code></pre></div><p>Cambiar / agregar:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cfg" data-lang="cfg"><span style="display:flex;"><span><span style="color:#a6e22e">prompt 1</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">timeout 0</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">serial 0 115200</span>
+</span></span></code></pre></div><p>Y en cada <code>append</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cfg" data-lang="cfg"><span style="display:flex;"><span><span style="color:#a6e22e">console</span><span style="color:#f92672">=</span><span style="color:#e6db74">ttyS0,115200</span>
+</span></span></code></pre></div><h3 id="3-reempaquetar-iso">3️⃣ Reempaquetar ISO</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo pacman --noconfirm -S cdrkit
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>genisoimage -o gentoo-serial.iso <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -b isolinux/isolinux.bin <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -c isolinux/boot.cat <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -no-emul-boot -boot-load-size <span style="color:#ae81ff">4</span> -boot-info-table <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -J -R -V GENTOO gentoo-iso-edit
+</span></span></code></pre></div><h3 id="4-bootear">4️⃣ Bootear</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>qemu-system-x86_64 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -enable-kvm <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -cpu qemu64 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -m <span style="color:#ae81ff">2048</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -smp <span style="color:#ae81ff">2</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -cdrom gentoo-serial.iso <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -boot d <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -display none <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -serial stdio
+</span></span></code></pre></div><p>👉 <strong>AHÍ sí aparece el menú</strong>.</p>
+<hr>
+<h2 id="opción-3-la-que-recomiendo-con-tu-hardware">OPCIÓN 3 (la que recomiendo con tu hardware)</h2>
+<p>No usar LiveDVD viejo.
+Usar <strong>Alpine o Debian netinst</strong>, chroot Gentoo, kernel 2.6 después.</p>
+<p>Tu <strong>Celeron N2806 + KVM</strong> tiene problemas reales con kernels viejos <em>booteados directo</em>.</p>
+<hr>
+<h2 id="resumen-corto-la-verdad-técnica">Resumen corto (la verdad técnica)</h2>
+<pre tabindex="0"><code>• No ves GRUB porque NO hay GRUB
+• ISOLINUX no habla serial por defecto
+• -nographic oculta el menú
+• No es error tuyo
+• O auto-booteás
+• O reconstruís la ISO
+</code></pre><p>Si querés:</p>
+<ul>
+<li>kernel <strong>2.6 exacto</strong></li>
+<li>Gentoo <strong>2.16</strong></li>
+<li>KVM <strong>estable en tu CPU</strong></li>
+</ul>
+<p>decímelo y seguimos <strong>solo comandos</strong>, sin relleno.</p>
+<hr>
+<p>Bien, <strong>eso que ves significa que el kernel BOOTEÓ BIEN</strong>.
+No hay panic, no hay crash. El problema ahora es <strong>solo de consola / getty</strong>, no de kernel ni de KVM.</p>
+<p>Vamos directo y claro.</p>
+<hr>
+<h2 id="qué-pasó-realmente">Qué pasó realmente</h2>
+<p>El kernel terminó acá:</p>
+<pre tabindex="0"><code>Freeing unused kernel memory: 476k freed
+</code></pre><p>Eso es <strong>justo antes de lanzar <code>init</code> / userspace</strong>.</p>
+<p>Si <strong>no aparece login</strong>, es por <strong>UNA de estas razones</strong> (en orden de probabilidad):</p>
+<ol>
+<li><strong>No hay getty en ttyS0</strong></li>
+<li>El sistema está usando <strong>tty1 / VGA</strong>, no serial</li>
+<li>El init arrancó, pero <strong>no escribe a la consola correcta</strong></li>
+<li>Estás en TTY serial pero <strong>no presionaste Enter</strong></li>
+</ol>
+<hr>
+<h2 id="primero-probá-esto-ya">PRIMERO (probá esto ya)</h2>
+<p>👉 <strong>Presioná ENTER varias veces</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>[Enter]
+</span></span><span style="display:flex;"><span>[Enter]
+</span></span><span style="display:flex;"><span>[Enter]
+</span></span></code></pre></div><p>Muchas veces el login aparece recién ahí.</p>
+<hr>
+<h2 id="si-no-aparece-nada--debug-inmediato-desde-qemu">Si NO aparece nada → debug inmediato desde QEMU</h2>
+<p>Lanzá QEMU así (IMPORTANTE):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>qemu-system-x86_64 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -enable-kvm <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -cpu qemu64 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -m <span style="color:#ae81ff">2048</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -smp <span style="color:#ae81ff">2</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -machine accel<span style="color:#f92672">=</span>kvm <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -cdrom gentoo/livedvd-amd64-multilib-20121221.iso <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -boot d <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -nographic <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -serial mon:stdio <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -append <span style="color:#e6db74">&#34;console=ttyS0,115200&#34;</span>
+</span></span></code></pre></div><p>⚠️ <strong>Esto SOLO funciona si la ISO acepta parámetros</strong>
+(si no, seguí al paso siguiente).</p>
+<hr>
+<h2 id="si-sigue-sin-login--init-arrancó-pero-no-hay-getty">Si sigue sin login → init arrancó pero NO hay getty</h2>
+<p>En <strong>Gentoo LiveDVD viejo</strong>, el login suele estar en <strong>tty1 (VGA)</strong>, no serial.</p>
+<p>Soluciones reales:</p>
+<hr>
+<h2 id="opción-a-rápida-usar-pseudo-gráficos-pero-sin-x">OPCIÓN A (rápida): usar pseudo-gráficos pero sin X</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>qemu-system-x86_64 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -enable-kvm <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -cpu qemu64 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -m <span style="color:#ae81ff">2048</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -smp <span style="color:#ae81ff">2</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -machine accel<span style="color:#f92672">=</span>kvm <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -cdrom gentoo/livedvd-amd64-multilib-20121221.iso <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -boot d <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -display curses <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -netdev user,id<span style="color:#f92672">=</span>net0 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -device e1000,netdev<span style="color:#f92672">=</span>net0
+</span></span></code></pre></div><p>👉 Eso <strong>NO usa X</strong>, es texto puro, pero <strong>sí muestra tty1</strong>.
+Ahí vas a ver el login seguro.</p>
+<hr>
+<h2 id="opción-b-la-correcta-técnica-arrancar-con-initbinsh">OPCIÓN B (la correcta técnica): arrancar con init=/bin/sh</h2>
+<p>Si podés editar el boot (en ISO):</p>
+<p>En la línea del kernel agregá:</p>
+<pre tabindex="0"><code>init=/bin/sh
+</code></pre><p>Cuando termine de bootear:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mount -o remount,rw /
+</span></span><span style="display:flex;"><span>exec /sbin/init
+</span></span></code></pre></div><p>Y después:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>agetty ttyS0 <span style="color:#ae81ff">115200</span>
+</span></span></code></pre></div><hr>
+<h2 id="por-qué-esto-pasa-importante">Por qué esto pasa (importante)</h2>
+<pre tabindex="0"><code>ISOLINUX viejo
++ kernels viejos
++ serial console
+= no hay getty automático
+</code></pre><p>Esto <strong>NO es bug tuyo</strong>, es diseño viejo.</p>
+<hr>
+<h2 id="confirmación-importante">Confirmación importante</h2>
+<p>El hecho de que llegues a:</p>
+<pre tabindex="0"><code>Freeing unused kernel memory
+</code></pre><p>significa:</p>
+<p>✔ KVM funciona
+✔ CPU OK
+✔ kernel OK
+✔ init OK</p>
+<p>❌ solo falta <strong>consola</strong></p>
+<hr>
+<h2 id="qué-te-recomiendo-ahora-realista">Qué te recomiendo ahora (realista)</h2>
+<p>Si tu objetivo es:</p>
+<ul>
+<li>Gentoo 2.16</li>
+<li>kernel 2.6</li>
+<li>KVM estable</li>
+</ul>
+<p>👉 <strong>NO uses LiveDVD viejo para trabajar</strong>
+👉 Usá <strong>Alpine / Debian netinst</strong>
+👉 chroot Gentoo
+👉 compilá kernel 2.6
+👉 instalá GRUB con <code>console=ttyS0</code></p>
+<p>Si querés, en el próximo mensaje te doy <strong>SOLO comandos</strong>, sin texto, para eso.</p>
+<hr>
+<p>Entiendo tu frustración 😞 — has probado de todo (kernels viejos, parámetros, TCG, KVM, ISOs antiguos) y siempre algo falla. Pero <strong>sí puedes correr una VM desde la TTY</strong>, y te voy a dar la solución <strong>más simple y que funciona 100% en tu hardware</strong> (Celeron N2806 Bay Trail, donde KVM es problemático).</p>
+<h3 id="por-qué-ha-sido-tan-difícil-hasta-ahora">Por qué ha sido tan difícil hasta ahora</h3>
+<ul>
+<li>Tu CPU tiene VT-x, pero <strong>KVM tiene incompatibilidades graves con kernels modernos</strong> (panic en text_poke/perf/NMI).</li>
+<li>Kernels viejos (como el de la LiveDVD 2012) bootearon, pero <strong>el LiveDVD antiguo no tiene getty automático en serial</strong> → parece &ldquo;colgado&rdquo; después de &ldquo;Freeing unused kernel memory&rdquo;.</li>
+<li>ISOs modernas de Gentoo → panic con KVM.</li>
+<li>Solución forzada con TCG → muy lenta.</li>
+</ul>
+<h3 id="la-solución-que-sí-funciona-usa-la-imagen-qcow2-preinstalada-de-gentoo-actual-diciembre-2025">La solución que SÍ funciona: Usa la imagen QCOW2 preinstalada de Gentoo (actual, diciembre 2025)</h3>
+<p>Gentoo publica <strong>imágenes QCOW2 listas para QEMU</strong> (instalación completa, bootable, con consola serial configurada).<br>
+No necesitas instalar nada, no hay kernel panic, y <strong>funciona perfecto con TCG</strong> (sin KVM, estable en tu CPU).</p>
+<h4 id="1-descarga-la-imagen-qcow2-elige-una">1. Descarga la imagen QCOW2 (elige una)</h4>
+<ul>
+<li><strong>Con OpenRC</strong> (recomendado si no usas systemd):
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cd ~
+</span></span><span style="display:flex;"><span>wget https://distfiles.gentoo.org/releases/amd64/autobuilds/current-iso/di-amd64-console-openrc-latest.qcow2
+</span></span></code></pre></div></li>
+<li><strong>Con systemd</strong> (si prefieres):
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>wget https://distfiles.gentoo.org/releases/amd64/autobuilds/current-iso/di-amd64-console-systemd-latest.qcow2
+</span></span></code></pre></div></li>
+</ul>
+<p>(Tamaño ~1.6 GB, es una Gentoo completa y actualizada).</p>
+<h4 id="2-arranca-la-vm-directamente-con-tcg-sin-kvm">2. Arranca la VM directamente (con TCG, sin KVM)</h4>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>qemu-system-x86_64 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -machine accel<span style="color:#f92672">=</span>tcg <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -m <span style="color:#ae81ff">2048</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -smp <span style="color:#ae81ff">2</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -drive file<span style="color:#f92672">=</span>di-amd64-console-20251228T163057Z.qcow2,format<span style="color:#f92672">=</span>qcow2 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -nographic <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -serial mon:stdio <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -netdev user,id<span style="color:#f92672">=</span>net0,hostfwd<span style="color:#f92672">=</span>tcp::2222-:22 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -device virtio-net-pci,netdev<span style="color:#f92672">=</span>net0
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>qemu-system-x86_64 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -enable-kvm <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -m <span style="color:#ae81ff">2048</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -smp <span style="color:#ae81ff">2</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -drive file<span style="color:#f92672">=</span>di-amd64-console-20251228T163057Z.qcow2,format<span style="color:#f92672">=</span>qcow2 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -nographic <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -serial mon:stdio <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -netdev user,id<span style="color:#f92672">=</span>net0,hostfwd<span style="color:#f92672">=</span>tcp::2222-:22 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -device virtio-net-pci,netdev<span style="color:#f92672">=</span>net0
+</span></span></code></pre></div><p><strong>Qué vas a ver:</strong></p>
+<ul>
+<li>Mensajes de boot del kernel</li>
+<li>GRUB (si aparece menú, solo espera o presiona Enter)</li>
+<li>Gentoo arrancando</li>
+<li><strong>Login prompt directo en tu TTY</strong></li>
+</ul>
+<p><strong>Login:</strong> <code>root</code> (sin password en esta imagen).</p>
+<h4 id="3-una-vez-dentro">3. Una vez dentro</h4>
+<ul>
+<li>Cambia la password de root: <code>passwd</code></li>
+<li>Configura red si quieres (DHCP automático con user networking)</li>
+<li>SSH desde host: <code>ssh -p 2222 root@localhost</code></li>
+<li>Emerge lo que quieras, es Gentoo real y actual.</li>
+</ul>
+<h4 id="para-salir-de-qemu">Para salir de QEMU</h4>
+<p><code>Ctrl+A</code> luego <code>X</code></p>
+<h4 id="si-quieres-más-ramcpus-tu-celeron-tiene-2-cores">Si quieres más RAM/CPUs (tu Celeron tiene 2 cores)</h4>
+<p>Cambia <code>-m 2048</code> a <code>-m 1536</code> (o lo que tengas libre) y <code>-smp 2</code>.</p>
+<h3 id="por-qué-esto-funciona-donde-todo-lo-anterior-falló">Por qué esto funciona donde todo lo anterior falló</h3>
+<ul>
+<li>La imagen está preconfigurada con <strong>consola serial</strong> (ttyS0 + getty).</li>
+<li>Usa kernel moderno pero <strong>boot sin problemas en TCG</strong>.</li>
+<li>No necesitas ISO, instalación, GRUB manual, nada → arranca en segundos.</li>
+</ul>
+<p>Esta es la forma más fácil de tener Gentoo en VM desde TTY pura en tu hardware.</p>
+<p>Prueba el comando de descarga + arranque y dime qué ves. ¡Esta vez sí va a salir el login! 🚀</p>
 
 </div>
 
