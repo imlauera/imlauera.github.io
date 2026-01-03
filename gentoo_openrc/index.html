@@ -27,7 +27,7 @@ Con el comando emerge -pv obs-studio pude ver las banderas y leyendo la Wiki de 
 [ebuild R ] media-video/obs-studio-31.0.3-r2::gentoo USE=&#34;alsa truetype wayland -browser -decklink -fdk -jack -lua (-mpegts) -nvenc -pipewire -pulseaudio -python -qsv -sndio -speex -test-input -v4l -vlc -websocket&#34; LUA_SINGLE_TARGET=&#34;luajit&#34; PYTHON_SINGLE_TARGET=&#34;python3_13 -python3_11 -python3_12 -python3_14&#34; 0 KiB Ahí se pueden ver las banderas DESHABILITADAS (las que comienzan con un signo -)">
   <meta itemprop="datePublished" content="2025-06-22T22:25:52-03:00">
   <meta itemprop="dateModified" content="2025-06-22T22:25:52-03:00">
-  <meta itemprop="wordCount" content="2299">
+  <meta itemprop="wordCount" content="2952">
   <meta itemprop="keywords" content="Gentoo">
   
   <meta name="twitter:card" content="summary">
@@ -396,7 +396,8 @@ Agregá al final:</p>
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>sudo emerge yt-dlp xdg-desktop-portal-wlr xdg-desktop-portal-wlr vim firefox-bin wmenu telegram-desktop-bin qbittorent tor rclone proxychains unrar unzip tor torsocks os-prober
 </span></span></code></pre></div><h1 id="actualización-2026">Actualización 2026</h1>
-<p>Intenté instalar Gentoo GNU/Linux con ArchLinux (dual boot), pero cuando intenté botear ArchLinux me decía que el kernel de Gentoo no tiene soporte VFAT, FAT32.
+<h3 id="intenté-instalar-gentoo-gnulinux-con-archlinux-dual-boot">Intenté instalar Gentoo GNU/Linux con ArchLinux (dual boot)</h3>
+<p>Pero cuando intenté botear ArchLinux me decía que el kernel de Gentoo no tiene soporte VFAT, FAT32.
 Me olvidé de agregar <code>&quot;dist-kernel&quot;</code>.</p>
 <p><code>emerge gentoo-kernel-bin</code> no funcionó porque no trae soporte para montar vfat en boot así que no podía bootear mi ArchLinux XD</p>
 <p>Tuve que ejecutar:</p>
@@ -414,6 +415,94 @@ Me olvidé de agregar <code>&quot;dist-kernel&quot;</code>.</p>
 </span></span><span style="display:flex;"><span>grub-mkconfig -o /boot...
 </span></span></code></pre></div><p>Intenté separar las particiones en <code>/boot</code> y <code>/boot/efi</code> pero no funcionó. Hice el formateo de <code>/boot</code> en ext4 y <code>/boot/efi</code> en vfat pero no funcionó igual no pude bootear archlinux.</p>
 <p>Encima después de hacer todo eso tuve que reinstalar <code>gentoo-kernel-bin</code> pero igual no funcionó tuve que recompilar el kernel. Mientras compilaba el kernel usé los binarios de archlinux (hice un chroot).</p>
+<p>Luego me dí cuenta(me lo dijo Claude AI) que no era necesario bootear montando la partición <code>/boot</code>, así que la saqué del <code>/etc/fstab</code> y boteo archlinux.</p>
+<h4 id="esto-hice-para-repararlo">Esto hice para repararlo:</h4>
+<p>Desde Gentoo monté <code>/boot</code> corrí grub-install (creo que no era necesario) e instalé gentoo-kernel-bin con <code>/boot</code> montado al terminar de instalar <code>gentoo-kernel-bin</code> me instaló estos archivos: <code>vmlinuz-6.18.2-p1-gentoo-dist, System.map-6.18.2-p1-gentoo-dist, initramfs-6.18.2-p1-gentoo-dist.img</code>.</p>
+<p>Luego desde ArchLinux USB Live monté la partición de ArchLinux con <code>arch-chroot</code> y monté el <code>/boot</code> en <code>/mnt/arch/boot</code> y ejecuté <code>sudo pacman -S linux</code> luego me copió estos archivos al <code>/boot</code>: <code>vmlinuz-linux initramfs-linux.img</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>grub-install --target<span style="color:#f92672">=</span>x86_64-efi --efi-directory<span style="color:#f92672">=</span>/boot --removable   
+</span></span><span style="display:flex;"><span>mkdir /dev/sda4 /mnt/gentoo <span style="color:#75715e"># Para que lo detecte.</span>
+</span></span><span style="display:flex;"><span>grub-mkconfig -o /boot/grub/grub.cfg   
+</span></span></code></pre></div><hr>
+<p>En el proceso me quedo una particion como <code>swap</code> cambie la etiqueta de esta forma (estaba formateado como ext4 no me equivoque).</p>
+<p>Para cambiar el tipo de partición de swap a Linux filesystem en la tabla de particiones GPT, puedes usar <code>fdisk</code> o <code>gdisk</code>. Te muestro ambas opciones:</p>
+<h2 id="usando-fdisk">Usando fdisk</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo fdisk /dev/sda
+</span></span></code></pre></div><p>Luego dentro de fdisk:</p>
+<ol>
+<li>Presiona <code>t</code> (para cambiar el tipo)</li>
+<li>Escribe <code>3</code> (número de partición)</li>
+<li>Escribe <code>20</code> o busca el código con <code>L</code> (Linux filesystem)</li>
+<li>Presiona <code>w</code> para escribir los cambios y salir</li>
+</ol>
+<hr>
+<p><code>grub-mkconfig</code> detecta mi particion pero me pone mal el parametro en el <code>/boot/grub/grub.cfg</code> archlinux esta bien pero gentoo no</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">### BEGIN /etc/grub.d/30_os-prober ###</span>
+</span></span><span style="display:flex;"><span>menuentry <span style="color:#e6db74">&#39;Gentoo Linux (on /dev/sda3)&#39;</span> --class gentoo --class gnu-linux --class gnu --class os $menuentry_id_option <span style="color:#e6db74">&#39;osprober-gnulinux-simple-78b556fb-5a81-40ab-b8f2-29d5527e3120&#39;</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        insmod part_gpt
+</span></span><span style="display:flex;"><span>        insmod fat
+</span></span><span style="display:flex;"><span>        set root<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;hd0,gpt1&#39;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> x$feature_platform_search_hint <span style="color:#f92672">=</span> xy <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>          search --no-floppy --fs-uuid --set<span style="color:#f92672">=</span>root --hint-bios<span style="color:#f92672">=</span>hd0,gpt1 --hint-efi<span style="color:#f92672">=</span>hd0,gpt1 --hint-baremetal<span style="color:#f92672">=</span>ahci0,gpt1  BE8B-209C
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>          search --no-floppy --fs-uuid --set<span style="color:#f92672">=</span>root BE8B-209C
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>        linux /vmlinuz-linux root<span style="color:#f92672">=</span>UUID<span style="color:#f92672">=</span>9f4c187a-f57d-4686-805d-89d82f99e536 rw loglevel<span style="color:#f92672">=</span><span style="color:#ae81ff">3</span> quiet
+</span></span><span style="display:flex;"><span>        initrd /initramfs-linux.img
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><p>pero no deberia usar vmlinuz ni initramfs ese es el de archlinux deberia usar estos:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#f92672">[</span>I<span style="color:#f92672">]</span> esotericwarfare@arch ~&gt; ls /boot
+</span></span><span style="display:flex;"><span>config-6.18.2-p1-gentoo-dist  grub                                 initramfs-linux.img               vmlinuz-6.18.2-p1-gentoo-dist
+</span></span><span style="display:flex;"><span>EFI                           initramfs-6.18.2-p1-gentoo-dist.img  System.map-6.18.2-p1-gentoo-dist  vmlinuz-linux
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>I<span style="color:#f92672">]</span> esotericwarfare@arch ~&gt;
+</span></span></code></pre></div><h3 id="solucion">Solucion</h3>
+<p>Los archivos de Gentoo están en <code>/boot</code> de la partición EFI (que es compartida), no en <code>/dev/sda3/boot</code>.</p>
+<p>Aquí está la entrada correcta para Gentoo:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo vim /etc/grub.d/40_custom
+</span></span></code></pre></div><h4 id="agrega-esto">Agrega esto:</h4>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>menuentry <span style="color:#e6db74">&#39;Gentoo Linux&#39;</span> --class gentoo --class gnu-linux --class gnu --class os <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    insmod part_gpt
+</span></span><span style="display:flex;"><span>    insmod ext2
+</span></span><span style="display:flex;"><span>    set root<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;hd0,gpt3&#39;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> x$feature_platform_search_hint <span style="color:#f92672">=</span> xy <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>      search --no-floppy --fs-uuid --set<span style="color:#f92672">=</span>root --hint-bios<span style="color:#f92672">=</span>hd0,gpt3 --hint-efi<span style="color:#f92672">=</span>hd0,gpt3 --hint-baremetal<span style="color:#f92672">=</span>ahci0,gpt3  78b556fb-5a81-40ab-b8f2-29d5527e3120
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>      search --no-floppy --fs-uuid --set<span style="color:#f92672">=</span>root 78b556fb-5a81-40ab-b8f2-29d5527e3120
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>    linux <span style="color:#f92672">(</span>hd0,gpt1<span style="color:#f92672">)</span>/vmlinuz-6.18.2-p1-gentoo-dist root<span style="color:#f92672">=</span>UUID<span style="color:#f92672">=</span>78b556fb-5a81-40ab-b8f2-29d5527e3120 rw
+</span></span><span style="display:flex;"><span>    initrd <span style="color:#f92672">(</span>hd0,gpt1<span style="color:#f92672">)</span>/initramfs-6.18.2-p1-gentoo-dist.img
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><p>La clave es que el kernel y el initramfs están en <strong>(hd0,gpt1)</strong> que es tu partición EFI <code>/dev/sda1</code>, pero el root filesystem es <strong>/dev/sda3</strong>.</p>
+<p>Luego regenera grub:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo grub-mkconfig -o /boot/grub/grub.cfg
+</span></span></code></pre></div><p>Esto debería crear la entrada correcta apuntando a los archivos de Gentoo que están en la partición EFI compartida.</p>
+<h3 id="os-prober-falla-cuando-tenes-compartido-el-boot-segun-claude-ai">Os prober falla cuando tenes compartido el /boot segun Claude AI</h3>
+<p>Sí, <strong>debería ser automático</strong>, pero <code>os-prober</code> tiene limitaciones y a veces falla en detectar correctamente las configuraciones. En tu caso específico:</p>
+<h2 id="por-qué-falló-os-prober">Por qué falló os-prober:</h2>
+<ol>
+<li>
+<p><strong>Kernel en partición EFI compartida</strong>: <code>os-prober</code> detectó que Gentoo está en <code>/dev/sda3</code>, pero no se dio cuenta de que el kernel de Gentoo está en <code>/dev/sda1</code> (la partición EFI compartida). Asumió que el kernel estaría en <code>/boot</code> dentro de <code>/dev/sda3</code>.</p>
+</li>
+<li>
+<p><strong>Encontró kernels de Arch en /boot</strong>: Cuando montó la partición EFI (que está en <code>/boot</code> de Arch), encontró <code>vmlinuz-linux</code> e <code>initramfs-linux.img</code> y los usó por defecto para la entrada de Gentoo.</p>
+</li>
+<li>
+<p><strong>Configuración de dual-boot compleja</strong>: Tener ambos sistemas compartiendo la misma partición EFI con diferentes kernels confunde a <code>os-prober</code>, que está diseñado para casos más simples donde cada distro tiene su <code>/boot</code> separado.</p>
+</li>
+</ol>
+<h2 id="esto-es-común-cuando">Esto es común cuando:</h2>
+<ul>
+<li>Compartes <code>/boot</code> (EFI) entre múltiples distros</li>
+<li>Los nombres de kernel no siguen convenciones estándar</li>
+<li>Gentoo usa kernels compilados manualmente con nombres personalizados</li>
+</ul>
+<h2 id="alternativas-para-hacerlo-más-automático">Alternativas para hacerlo más automático:</h2>
+<p>Si quieres que sea más automático en el futuro, podrías:</p>
+<ul>
+<li>Usar <code>grub-customizer</code> (interfaz gráfica)</li>
+<li>Mantener las entradas manuales en <code>/etc/grub.d/40_custom</code> (lo más confiable)</li>
+<li>Configurar Gentoo con su propio <code>/boot</code> en <code>/dev/sda3/boot</code> en lugar de usar la EFI compartida</li>
+</ul>
+<p>En resumen: <strong>sí debería ser automático, pero tu configuración es más compleja de lo que os-prober maneja bien</strong>.</p>
 
 </div>
 
