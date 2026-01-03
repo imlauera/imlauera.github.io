@@ -29,7 +29,7 @@ Con el comando emerge -pv obs-studio pude ver las banderas y leyendo la Wiki de 
 [ebuild R ] media-video/obs-studio-31.0.3-r2::gentoo USE=&#34;alsa truetype wayland -browser -decklink -fdk -jack -lua (-mpegts) -nvenc -pipewire -pulseaudio -python -qsv -sndio -speex -test-input -v4l -vlc -websocket&#34; LUA_SINGLE_TARGET=&#34;luajit&#34; PYTHON_SINGLE_TARGET=&#34;python3_13 -python3_11 -python3_12 -python3_14&#34; 0 KiB Ahí se pueden ver las banderas DESHABILITADAS (las que comienzan con un signo -)">
   <meta itemprop="datePublished" content="2025-06-22T22:25:52-03:00">
   <meta itemprop="dateModified" content="2025-06-22T22:25:52-03:00">
-  <meta itemprop="wordCount" content="3048">
+  <meta itemprop="wordCount" content="4733">
   <meta itemprop="keywords" content="Gentoo">
   
   <meta name="twitter:card" content="summary">
@@ -214,7 +214,7 @@ Es decir los binarios vienen con la mínima cantidad de banderas posibles, a dif
 </span></span><span style="display:flex;"><span>FEATURES<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>FEATURES<span style="color:#e6db74">}</span><span style="color:#e6db74"> getbinpkg&#34;</span>
 </span></span><span style="display:flex;"><span>FEATURES<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>FEATURES<span style="color:#e6db74">}</span><span style="color:#e6db74"> binpkg-request-signature&#34;</span>
 </span></span><span style="display:flex;"><span>ACCEPT_LICENSE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;*&#34;</span>
-</span></span><span style="display:flex;"><span>USE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;dist-kernel&#34;</span> <span style="color:#75715e"># Importantisimo porque sino no te carga los módulos no te funcionará nada ni carga las interfaces de red.</span>
+</span></span><span style="display:flex;"><span>USE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;dist-kernel -X -gtk -qt5 -gnome -kde minimal &#34;</span> <span style="color:#75715e"># Importantisimo porque sino no te carga los módulos no te funcionará nada ni carga las interfaces de red.</span>
 </span></span><span style="display:flex;"><span>ACCEPT_KEYWORDS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;~amd64&#34;</span>
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>
@@ -509,6 +509,446 @@ Me olvidé de agregar <code>&quot;dist-kernel&quot;</code>.</p>
 <li>Configurar Gentoo con su propio <code>/boot</code> en <code>/dev/sda3/boot</code> en lugar de usar la EFI compartida</li>
 </ul>
 <p>En resumen: <strong>sí debería ser automático, pero tu configuración es más compleja de lo que os-prober maneja bien</strong>.</p>
+<h1 id="recomendaciones-de-claude-ai-de-software-alternativo">Recomendaciones de Claude AI de software alternativo.</h1>
+<p>Aquí están las alternativas <strong>ligeras</strong> para reducir tiempos de compilación en Gentoo:</p>
+<h2 id="alternativas-ligeras">Alternativas Ligeras</h2>
+<h3 id="navegadores-con-javascript">Navegadores con JavaScript</h3>
+<ul>
+<li><strong>netsurf</strong> - Muy ligero, tiene JavaScript básico</li>
+<li><strong>dillo</strong> (ya lo tienes) - Sin JS pero ultra rápido</li>
+<li><strong>links2</strong> con <code>-g</code> - Modo gráfico, sin JS pero mejor que w3m</li>
+<li><strong>surf</strong> - Basado en webkit, minimalista</li>
+<li><strong>qutebrowser</strong> - Usa QtWebEngine (compila, pero menos que Firefox/Chromium)</li>
+</ul>
+<h3 id="alternativas-a-mpv-más-ligeras">Alternativas a MPV (más ligeras)</h3>
+<ul>
+<li><strong>mplayer</strong> - Clásico, menos dependencias</li>
+<li><strong>vlc</strong> - Opcional, pero compila menos que mpv con todas las features</li>
+<li><strong>ffplay</strong> (viene con ffmpeg) - Minimalista extremo</li>
+</ul>
+<h3 id="alternativas-a-samba">Alternativas a Samba</h3>
+<ul>
+<li><strong>NFS</strong> (nfs-utils) - Protocolo nativo Unix/Linux, mucho más simple</li>
+<li><strong>SSHFS</strong> (fuse-sshfs) - Compartir carpetas vía SSH</li>
+<li><strong>syncthing</strong> - P2P, sin servidor central</li>
+<li><strong>rsync</strong> vía SSH - Para transferencias puntuales (ya lo tienes)</li>
+</ul>
+<h3 id="otras-optimizaciones">Otras Optimizaciones</h3>
+<p><strong>Puedes eliminar/simplificar:</strong></p>
+<ul>
+<li><del>chromium</del> (tarda HORAS) → netsurf o mantén firefox si es crítico</li>
+<li><del>obs-studio</del> → ffmpeg (ya lo mencionaste) + wf-recorder para Wayland</li>
+<li><del>kdenlive</del> → <strong>openshot</strong> o <strong>shotcut</strong> (más ligeros)</li>
+<li><del>libreoffice</del> → <strong>abiword</strong> + <strong>gnumeric</strong> (mucho más ligeros)</li>
+<li><del>gimp</del> → <strong>mtpaint</strong> o <strong>feh</strong> + imagemagick para edición básica</li>
+<li><del>thunderbird</del> → Ya tienes neomutt (perfecto)</li>
+<li><del>qemu-full</del> → qemu con menos targets específicos</li>
+</ul>
+<h3 id="para-gentoo-específicamente">Para Gentoo específicamente</h3>
+<p>En <code>/etc/portage/make.conf</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Usa binarios precompilados para los paquetes más pesados</span>
+</span></span><span style="display:flex;"><span>EMERGE_DEFAULT_OPTS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;--binpkg-respect-use=y --getbinpkg=y&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Reduce paralelismo si te quedas sin RAM</span>
+</span></span><span style="display:flex;"><span>MAKEOPTS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;-j4&#34;</span>  <span style="color:#75715e"># ajusta según tu CPU</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># USE flags minimalistas</span>
+</span></span><span style="display:flex;"><span>USE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;-X -gtk -qt5 -gnome -kde minimal&#34;</span>
+</span></span></code></pre></div><p><strong>Paquetes que puedes usar binarios en Gentoo:</strong></p>
+<ul>
+<li>Firefox/Chromium (disponibles como <code>firefox-bin</code>, <code>chromium-bin</code>)</li>
+<li>Rust toolchain</li>
+<li>LLVM/Clang</li>
+</ul>
+<h3 id="respuesta-a-tu-setup-específico">Respuesta a tu setup específico</h3>
+<p><strong>Para JavaScript ligero:</strong> <code>netsurf</code> o <code>surf</code> son tus mejores opciones</p>
+<p><strong>Para Samba:</strong> Si es para compartir archivos con Windows → mantén samba. Si es solo Linux-Linux → usa <strong>NFS</strong> o <strong>SSHFS</strong></p>
+<p><strong>Para MPV:</strong> <code>mplayer</code> o simplemente usa <code>ffplay</code> para casos básicos</p>
+<p>¿Qué tipo de uso le das a samba y mpv? Te puedo dar una recomendación más específica.</p>
+<hr>
+<p>El problema es que Gentoo compila optimizado para tu CPU específica, pero necesitas configurarlo correctamente. Con un <strong>Intel Celeron N2806</strong> (Bay Trail, arquitectura Silvermont), aquí está la configuración óptima:</p>
+<h2 id="configuración-para-etcportagemakeconf">Configuración para <code>/etc/portage/make.conf</code></h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># CPU específica para Intel Celeron N2806 (Bay Trail)</span>
+</span></span><span style="display:flex;"><span>COMMON_FLAGS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;-march=silvermont -O2 -pipe&#34;</span>
+</span></span><span style="display:flex;"><span>CFLAGS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>COMMON_FLAGS<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>CXXFLAGS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>COMMON_FLAGS<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>FCFLAGS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>COMMON_FLAGS<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>FFLAGS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>COMMON_FLAGS<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Tu CPU tiene 2 cores, usa -j3 (cores + 1)</span>
+</span></span><span style="display:flex;"><span>MAKEOPTS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;-j3 -l2&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Video Drivers para Intel Bay Trail</span>
+</span></span><span style="display:flex;"><span>VIDEO_CARDS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;intel i965&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Input devices</span>
+</span></span><span style="display:flex;"><span>INPUT_DEVICES<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;libinput&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># USE flags mínimos (ajusta según necesites)</span>
+</span></span><span style="display:flex;"><span>USE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;X alsa pulseaudio -gnome -kde -systemd minimal&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Licencias aceptadas</span>
+</span></span><span style="display:flex;"><span>ACCEPT_LICENSE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;*&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Para ahorrar espacio</span>
+</span></span><span style="display:flex;"><span>FEATURES<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;parallel-fetch candy&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Locale</span>
+</span></span><span style="display:flex;"><span>L10N<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;en es&#34;</span>
+</span></span></code></pre></div><h2 id="por-qué-compila-para-amd">Por qué compila para AMD</h2>
+<p>Probablemente tu <code>make.conf</code> tiene:</p>
+<ul>
+<li><code>-march=native</code> → Esto <strong>debería</strong> funcionar, pero a veces detecta mal</li>
+<li><code>-march=x86-64</code> → Genérico, no optimizado</li>
+<li>Algún USE flag con <code>video_cards_amdgpu</code> o <code>video_cards_radeon</code></li>
+</ul>
+<h2 id="verificación">Verificación</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Ver qué arquitectura está usando</span>
+</span></span><span style="display:flex;"><span>gcc -march<span style="color:#f92672">=</span>native -Q --help<span style="color:#f92672">=</span>target | grep march
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Debería mostrar: -march= silvermont</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Ver USE flags de video</span>
+</span></span><span style="display:flex;"><span>emerge --info | grep VIDEO_CARDS
+</span></span></code></pre></div><h2 id="advertencia-tu-hardware-es-muy-limitado">Advertencia: Tu Hardware es MUY limitado</h2>
+<p><strong>Celeron N2806 + 3.7GB RAM</strong> es muy débil para compilar en Gentoo. Recomendaciones:</p>
+<h3 id="1-usa-stage3-precompilado">1. Usa Stage3 Precompilado</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Al instalar, usa stage3 con binarios</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># https://www.gentoo.org/downloads/</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># En make.conf agrega:</span>
+</span></span><span style="display:flex;"><span>EMERGE_DEFAULT_OPTS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;--binpkg-respect-use=y --getbinpkg=y&#34;</span>
+</span></span><span style="display:flex;"><span>FEATURES<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>FEATURES<span style="color:#e6db74">}</span><span style="color:#e6db74"> getbinpkg&#34;</span>
+</span></span></code></pre></div><h3 id="2-cross-compile-desde-otra-máquina">2. Cross-Compile desde otra máquina</h3>
+<p>Si tienes otra PC más potente, compila ahí y copia los binarios.</p>
+<h3 id="3-usa-distcc-compilación-distribuida">3. Usa distcc (compilación distribuida)</h3>
+<p>Si tienes otra máquina en la red.</p>
+<h3 id="4-alternativa-más-realista-void-linux">4. Alternativa más realista: <strong>Void Linux</strong></h3>
+<p>Con tu hardware, considera:</p>
+<ul>
+<li><strong>Void Linux</strong> → Binarios precompilados, musl/glibc, muy minimalista</li>
+<li><strong>Alpine Linux</strong> → Ultra ligero, musl libc</li>
+<li><strong>Artix Linux</strong> → Arch sin systemd, binarios precompilados</li>
+</ul>
+<h3 id="paquetes-que-no-compiles-en-tu-celeron">Paquetes que NO compiles en tu Celeron</h3>
+<p>Estos te matarán (horas/días):</p>
+<ul>
+<li>❌ chromium (8-12 horas)</li>
+<li>❌ firefox (4-8 horas) → usa <code>firefox-bin</code></li>
+<li>❌ libreoffice (6-10 horas)</li>
+<li>❌ qtwebengine (8-15 horas)</li>
+<li>❌ rust (2-4 horas)</li>
+<li>❌ llvm/clang (4-8 horas)</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Instala versiones binarias</span>
+</span></span><span style="display:flex;"><span>emerge firefox-bin chromium-bin
+</span></span></code></pre></div><h2 id="mi-recomendación-honesta">Mi recomendación honesta</h2>
+<p>Con un Celeron N2806 y 3.7GB RAM:</p>
+<ol>
+<li><strong>Gentoo NO es la mejor opción</strong> para uso diario</li>
+<li>Si quieres aprender Gentoo → VM en otra máquina</li>
+<li>Para este hardware → <strong>Void Linux</strong> o <strong>Artix</strong> son perfectos</li>
+<li>Si insistes en Gentoo → Usa <strong>máximo binarios</strong> y crossdev</li>
+</ol>
+<p>¿Quieres que te ayude a configurar Void Linux en su lugar? Es igual de minimalista pero con binarios&mdash;</p>
+<p>El problema es que Gentoo compila optimizado para tu CPU específica, pero necesitas configurarlo correctamente. Con un <strong>Intel Celeron N2806</strong> (Bay Trail, arquitectura Silvermont), aquí está la configuración óptima:</p>
+<h2 id="configuración-para-etcportagemakeconf-1">Configuración para <code>/etc/portage/make.conf</code></h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># CPU específica para Intel Celeron N2806 (Bay Trail)</span>
+</span></span><span style="display:flex;"><span>COMMON_FLAGS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;-march=silvermont -O2 -pipe&#34;</span>
+</span></span><span style="display:flex;"><span>CFLAGS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>COMMON_FLAGS<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>CXXFLAGS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>COMMON_FLAGS<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>FCFLAGS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>COMMON_FLAGS<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>FFLAGS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>COMMON_FLAGS<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Tu CPU tiene 2 cores, usa -j3 (cores + 1)</span>
+</span></span><span style="display:flex;"><span>MAKEOPTS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;-j3 -l2&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Video Drivers para Intel Bay Trail</span>
+</span></span><span style="display:flex;"><span>VIDEO_CARDS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;intel i965&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Input devices</span>
+</span></span><span style="display:flex;"><span>INPUT_DEVICES<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;libinput&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># USE flags mínimos (ajusta según necesites)</span>
+</span></span><span style="display:flex;"><span>USE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;X alsa pulseaudio -gnome -kde -systemd minimal&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Licencias aceptadas</span>
+</span></span><span style="display:flex;"><span>ACCEPT_LICENSE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;*&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Para ahorrar espacio</span>
+</span></span><span style="display:flex;"><span>FEATURES<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;parallel-fetch candy&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Locale</span>
+</span></span><span style="display:flex;"><span>L10N<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;en es&#34;</span>
+</span></span></code></pre></div><h2 id="por-qué-compila-para-amd-1">Por qué compila para AMD</h2>
+<p>Probablemente tu <code>make.conf</code> tiene:</p>
+<ul>
+<li><code>-march=native</code> → Esto <strong>debería</strong> funcionar, pero a veces detecta mal</li>
+<li><code>-march=x86-64</code> → Genérico, no optimizado</li>
+<li>Algún USE flag con <code>video_cards_amdgpu</code> o <code>video_cards_radeon</code></li>
+</ul>
+<h2 id="verificación-1">Verificación</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Ver qué arquitectura está usando</span>
+</span></span><span style="display:flex;"><span>gcc -march<span style="color:#f92672">=</span>native -Q --help<span style="color:#f92672">=</span>target | grep march
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Debería mostrar: -march= silvermont</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Ver USE flags de video</span>
+</span></span><span style="display:flex;"><span>emerge --info | grep VIDEO_CARDS
+</span></span></code></pre></div><h2 id="advertencia-tu-hardware-es-muy-limitado-1">Advertencia: Tu Hardware es MUY limitado</h2>
+<p><strong>Celeron N2806 + 3.7GB RAM</strong> es muy débil para compilar en Gentoo. Recomendaciones:</p>
+<h3 id="1-usa-stage3-precompilado-1">1. Usa Stage3 Precompilado</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Al instalar, usa stage3 con binarios</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># https://www.gentoo.org/downloads/</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># En make.conf agrega:</span>
+</span></span><span style="display:flex;"><span>EMERGE_DEFAULT_OPTS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;--binpkg-respect-use=y --getbinpkg=y&#34;</span>
+</span></span><span style="display:flex;"><span>FEATURES<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>FEATURES<span style="color:#e6db74">}</span><span style="color:#e6db74"> getbinpkg&#34;</span>
+</span></span></code></pre></div><h3 id="2-cross-compile-desde-otra-máquina-1">2. Cross-Compile desde otra máquina</h3>
+<p>Si tienes otra PC más potente, compila ahí y copia los binarios.</p>
+<h3 id="3-usa-distcc-compilación-distribuida-1">3. Usa distcc (compilación distribuida)</h3>
+<p>Si tienes otra máquina en la red.</p>
+<h3 id="4-alternativa-más-realista-void-linux-1">4. Alternativa más realista: <strong>Void Linux</strong></h3>
+<p>Con tu hardware, considera:</p>
+<ul>
+<li><strong>Void Linux</strong> → Binarios precompilados, musl/glibc, muy minimalista</li>
+<li><strong>Alpine Linux</strong> → Ultra ligero, musl libc</li>
+<li><strong>Artix Linux</strong> → Arch sin systemd, binarios precompilados</li>
+</ul>
+<h3 id="paquetes-que-no-compiles-en-tu-celeron-1">Paquetes que NO compiles en tu Celeron</h3>
+<p>Estos te matarán (horas/días):</p>
+<ul>
+<li>❌ chromium (8-12 horas)</li>
+<li>❌ firefox (4-8 horas) → usa <code>firefox-bin</code></li>
+<li>❌ libreoffice (6-10 horas)</li>
+<li>❌ qtwebengine (8-15 horas)</li>
+<li>❌ rust (2-4 horas)</li>
+<li>❌ llvm/clang (4-8 horas)</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Instala versiones binarias</span>
+</span></span><span style="display:flex;"><span>emerge firefox-bin chromium-bin
+</span></span></code></pre></div><h2 id="mi-recomendación-honesta-1">Mi recomendación honesta</h2>
+<p>Con un Celeron N2806 y 3.7GB RAM:</p>
+<ol>
+<li><strong>Gentoo NO es la mejor opción</strong> para uso diario</li>
+<li>Si quieres aprender Gentoo → VM en otra máquina</li>
+<li>Para este hardware → <strong>Void Linux</strong> o <strong>Artix</strong> son perfectos</li>
+<li>Si insistes en Gentoo → Usa <strong>máximo binarios</strong> y crossdev</li>
+</ol>
+<p>¿Quieres que te ayude a configurar Void Linux en su lugar? Es igual de minimalista pero con binarios..</p>
+<hr>
+<hr>
+<h1 id="guía-de-optimización-gentoo---celeron-n2806">Guía de Optimización Gentoo - Celeron N2806</h1>
+<h2 id="-problemas-críticos-detectados">🚨 PROBLEMAS CRÍTICOS DETECTADOS</h2>
+<h3 id="1-video_">1. <strong>VIDEO_CARDS incorrectos</strong></h3>
+<p>Tu <code>make.conf</code> tiene:</p>
+<pre tabindex="0"><code>VIDEO_CARDS=&#34;amdgpu fbdev intel nouveau radeon radeonsi vesa dummy&#34;
+</code></pre><p><strong>INCORRECTO</strong> - Estás compilando drivers AMD/Nouveau que NO USAS.</p>
+<p><strong>Tu CPU tiene Intel HD Graphics (Bay Trail/Gen7)</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>VIDEO_CARDS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;intel i965&#34;</span>
+</span></span></code></pre></div><h3 id="2-profile-desktop-cuando-usás-tty-puro">2. <strong>Profile Desktop cuando usás TTY puro</strong></h3>
+<pre tabindex="0"><code>[3] default/linux/amd64/23.0/desktop (stable) *
+</code></pre><p><strong>CAMBIAR A:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>eselect profile set <span style="color:#ae81ff">1</span>  <span style="color:#75715e"># default/linux/amd64/23.0</span>
+</span></span></code></pre></div><p>El profile desktop instala X11, GTK, Qt - 100% innecesario para TTY.</p>
+<h3 id="3-muchos-paquetes-gui-instalados">3. <strong>Muchos paquetes GUI instalados</strong></h3>
+<p>Detectados en tu sistema:</p>
+<ul>
+<li><code>x11-libs/*</code> (todo X11)</li>
+<li><code>kde-frameworks/*</code></li>
+<li><code>gnome-base/*</code></li>
+<li><code>dev-qt/*</code> (Qt5/Qt6)</li>
+<li><code>x11-apps/*</code></li>
+</ul>
+<p><strong>Estos NO deberían estar en TTY puro.</strong></p>
+<h3 id="4-llvm-compilado-localmente-crítico">4. <strong>LLVM compilado localmente (CRÍTICO)</strong></h3>
+<p>Tienes <code>llvm-core/llvm</code> y <code>llvm-core/clang</code> - esto tarda 8-12 horas en compilar.</p>
+<p><strong>NUNCA compiles LLVM en este CPU.</strong></p>
+<hr>
+<h2 id="-pasos-inmediatos">✅ PASOS INMEDIATOS</h2>
+<h3 id="1-cambiar-profile">1. Cambiar Profile</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>eselect profile set <span style="color:#ae81ff">1</span>
+</span></span></code></pre></div><h3 id="2-limpiar-use-flags-globales">2. Limpiar USE flags globales</h3>
+<p>Editar <code>/etc/portage/make.conf</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>USE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;dist-kernel minimal -X -gtk -qt5 -qt6 -kde -gnome -wayland -dbus&#34;</span>
+</span></span></code></pre></div><h3 id="3-forzar-binarios-para-paquetes-pesados">3. Forzar binarios para paquetes pesados</h3>
+<p>Crear <code>/etc/portage/package.env</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Forzar binarios</span>
+</span></span><span style="display:flex;"><span>llvm-core/llvm nobuild.conf
+</span></span><span style="display:flex;"><span>llvm-core/clang nobuild.conf
+</span></span><span style="display:flex;"><span>dev-lang/rust nobuild.conf
+</span></span><span style="display:flex;"><span>sys-devel/gcc nobuild.conf
+</span></span><span style="display:flex;"><span>dev-qt/qtwebengine nobuild.conf
+</span></span></code></pre></div><p>Crear <code>/etc/portage/env/nobuild.conf</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Rechazar compilación local</span>
+</span></span><span style="display:flex;"><span>FEATURES<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>FEATURES<span style="color:#e6db74">}</span><span style="color:#e6db74"> -test&#34;</span>
+</span></span><span style="display:flex;"><span>ACCEPT_KEYWORDS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;~amd64&#34;</span>
+</span></span></code></pre></div><h3 id="4-instalar-binarios-críticos">4. Instalar binarios críticos</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># LLVM/Clang precompilado</span>
+</span></span><span style="display:flex;"><span>emerge --oneshot --getbinpkg llvm-core/llvm llvm-core/clang
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Rust precompilado</span>
+</span></span><span style="display:flex;"><span>emerge dev-lang/rust-bin
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Eliminar rust source si existe</span>
+</span></span><span style="display:flex;"><span>emerge -C dev-lang/rust
+</span></span></code></pre></div><hr>
+<h2 id="-paquetes-que-nunca-compilar">🔥 PAQUETES QUE <strong>NUNCA</strong> COMPILAR</h2>
+<h3 id="tiempo-de-compilación-estimado-en-tu-cpu">Tiempo de compilación estimado en tu CPU:</h3>
+<table>
+  <thead>
+      <tr>
+          <th>Paquete</th>
+          <th>Tiempo</th>
+          <th>Acción</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><code>chromium</code></td>
+          <td>10-15h</td>
+          <td>❌ Imposible</td>
+      </tr>
+      <tr>
+          <td><code>firefox</code></td>
+          <td>6-10h</td>
+          <td>❌ Usa <code>firefox-bin</code></td>
+      </tr>
+      <tr>
+          <td><code>llvm</code></td>
+          <td>8-12h</td>
+          <td>❌ Usa binarios</td>
+      </tr>
+      <tr>
+          <td><code>rust</code></td>
+          <td>4-6h</td>
+          <td>❌ Usa <code>rust-bin</code></td>
+      </tr>
+      <tr>
+          <td><code>qtwebengine</code></td>
+          <td>8-12h</td>
+          <td>❌ Usa binarios</td>
+      </tr>
+      <tr>
+          <td><code>libreoffice</code></td>
+          <td>8-10h</td>
+          <td>❌ Evitar o binario</td>
+      </tr>
+      <tr>
+          <td><code>gcc</code></td>
+          <td>3-5h</td>
+          <td>⚠️ Binario si es posible</td>
+      </tr>
+      <tr>
+          <td><code>webkit-gtk</code></td>
+          <td>6-8h</td>
+          <td>❌ Evitar</td>
+      </tr>
+  </tbody>
+</table>
+<hr>
+<h2 id="-alternativas-ligeras">🎯 ALTERNATIVAS LIGERAS</h2>
+<h3 id="navegadores">Navegadores</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># TTY puro</span>
+</span></span><span style="display:flex;"><span>emerge www-client/lynx     <span style="color:#75715e"># ~2 min</span>
+</span></span><span style="display:flex;"><span>emerge www-client/w3m      <span style="color:#75715e"># ~3 min</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Si necesitas JS básico</span>
+</span></span><span style="display:flex;"><span>emerge www-client/netsurf  <span style="color:#75715e"># ~15 min</span>
+</span></span></code></pre></div><h3 id="editor">Editor</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Ya tienes vim (bien)</span>
+</span></span><span style="display:flex;"><span>emerge app-editors/nano    <span style="color:#75715e"># ~1 min</span>
+</span></span></code></pre></div><h3 id="herramientas-de-desarrollo">Herramientas de desarrollo</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Git sin GUI</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;dev-vcs/git -gtk -perl&#34;</span> &gt;&gt; /etc/portage/package.use/dev
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Python sin Tkinter</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;dev-lang/python -tk&#34;</span> &gt;&gt; /etc/portage/package.use/dev
+</span></span></code></pre></div><hr>
+<h2 id="-optimizaciones-adicionales">🚀 OPTIMIZACIONES ADICIONALES</h2>
+<h3 id="1-ccache-recomendado">1. CCACHE (recomendado)</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>emerge dev-util/ccache
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># En make.conf</span>
+</span></span><span style="display:flex;"><span>FEATURES<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>FEATURES<span style="color:#e6db74">}</span><span style="color:#e6db74"> ccache&#34;</span>
+</span></span><span style="display:flex;"><span>CCACHE_DIR<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/var/cache/ccache&#34;</span>
+</span></span><span style="display:flex;"><span>CCACHE_SIZE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;2G&#34;</span>
+</span></span></code></pre></div><h3 id="2-tmpfs-para-compilación-si-tienes-ram">2. Tmpfs para compilación (si tienes RAM)</h3>
+<p><strong>NO RECOMENDADO con 3.7GB RAM</strong> - usarías swap constantemente.</p>
+<h3 id="3-binhost-custom-avanzado">3. Binhost custom (avanzado)</h3>
+<p>Si tienes otra máquina más potente:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># En la máquina potente</span>
+</span></span><span style="display:flex;"><span>FEATURES<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>FEATURES<span style="color:#e6db74">}</span><span style="color:#e6db74"> buildpkg&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># En tu Celeron</span>
+</span></span><span style="display:flex;"><span>PORTAGE_BINHOST<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;http://192.168.x.x:8080&#34;</span>
+</span></span></code></pre></div><h3 id="4-eix-para-búsquedas-rápidas">4. eix para búsquedas rápidas</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>emerge app-portage/eix
+</span></span><span style="display:flex;"><span>eix-update
+</span></span></code></pre></div><hr>
+<h2 id="-estimación-de-tiempos">📊 ESTIMACIÓN DE TIEMPOS</h2>
+<h3 id="actualización-del-sistema-completo">Actualización del sistema completo:</h3>
+<ul>
+<li><strong>Con optimizaciones</strong>: 4-8 horas</li>
+<li><strong>Sin optimizaciones</strong>: 24-48 horas</li>
+<li><strong>Mundo ideal (100% binarios)</strong>: 1-2 horas</li>
+</ul>
+<h3 id="primera-instalación-desde-stage3">Primera instalación (desde stage3):</h3>
+<ul>
+<li><strong>Con profile desktop</strong>: 3-5 días</li>
+<li><strong>Con profile minimal + binarios</strong>: 12-24 horas</li>
+</ul>
+<hr>
+<h2 id="-advertencia-final">⚠️ ADVERTENCIA FINAL</h2>
+<p>Tu Celeron N2806 es 10 años viejo y muy débil. Gentoo en este hardware es <strong>extremadamente lento</strong> para compilar.</p>
+<h3 id="recomendación-sincera">Recomendación sincera:</h3>
+<ol>
+<li><strong>Si querés aprender Gentoo</strong>: Usa una VM en otra PC</li>
+<li><strong>Si querés velocidad</strong>: Usa Void Linux o Alpine</li>
+<li><strong>Si insistís en Gentoo</strong>: Usa 90% binarios precompilados</li>
+</ol>
+<h3 id="void-linux-alternativa-recomendada">Void Linux (alternativa recomendada):</h3>
+<ul>
+<li>Binarios precompilados</li>
+<li>xbps (gestor rápido)</li>
+<li>Runit init (más simple que OpenRC)</li>
+<li>Musl libc (más ligero)</li>
+<li>Instalación: 30 minutos</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Void Linux instalación típica</span>
+</span></span><span style="display:flex;"><span>xbps-install vim git lynx alsa-utils
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Total: ~5 minutos</span>
+</span></span></code></pre></div><p>vs Gentoo:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>emerge vim git lynx alsa-utils
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Total: 2-3 horas (con dependencias)</span>
+</span></span></code></pre></div><hr>
+<h2 id="-comandos-útiles">🔧 COMANDOS ÚTILES</h2>
+<h3 id="ver-qué-se-está-compilando">Ver qué se está compilando</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>genlop -c
+</span></span></code></pre></div><h3 id="estimar-tiempo-de-compilación">Estimar tiempo de compilación</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>genlop -pt llvm
+</span></span></code></pre></div><h3 id="ver-paquetes-que-tardan-más">Ver paquetes que tardan más</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>genlop -t | sort -k5 -n | tail -20
+</span></span></code></pre></div><h3 id="limpiar-sistema">Limpiar sistema</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>emerge --depclean
+</span></span><span style="display:flex;"><span>eclean-dist --deep
+</span></span><span style="display:flex;"><span>eclean-pkg --deep
+</span></span></code></pre></div><h3 id="actualizar-con-binarios">Actualizar con binarios</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>emerge --update --deep --newuse --getbinpkg @world
+</span></span></code></pre></div><hr>
+<h2 id="-checklist-final">📝 CHECKLIST FINAL</h2>
+<ul>
+<li><input disabled="" type="checkbox"> Cambiar profile a minimal (no desktop)</li>
+<li><input disabled="" type="checkbox"> Corregir VIDEO_CARDS (solo intel i965)</li>
+<li><input disabled="" type="checkbox"> Limpiar USE flags globales</li>
+<li><input disabled="" type="checkbox"> Forzar binarios para LLVM/Clang/Rust</li>
+<li><input disabled="" type="checkbox"> Instalar ccache</li>
+<li><input disabled="" type="checkbox"> Eliminar paquetes X11 innecesarios</li>
+<li><input disabled="" type="checkbox"> Configurar MAKEOPTS=&quot;-j2 -l2&quot;</li>
+<li><input disabled="" type="checkbox"> Usar &ndash;getbinpkg en emerge</li>
+<li><input disabled="" type="checkbox"> Considerar seriamente Void Linux</li>
+</ul>
+<p>¿Querés que te ayude con algún paso específico?</p>
 
 </div>
 
