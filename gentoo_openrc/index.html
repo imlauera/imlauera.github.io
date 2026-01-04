@@ -29,7 +29,7 @@ Con el comando emerge -pv obs-studio pude ver las banderas y leyendo la Wiki de 
 [ebuild R ] media-video/obs-studio-31.0.3-r2::gentoo USE=&#34;alsa truetype wayland -browser -decklink -fdk -jack -lua (-mpegts) -nvenc -pipewire -pulseaudio -python -qsv -sndio -speex -test-input -v4l -vlc -websocket&#34; LUA_SINGLE_TARGET=&#34;luajit&#34; PYTHON_SINGLE_TARGET=&#34;python3_13 -python3_11 -python3_12 -python3_14&#34; 0 KiB Ahí se pueden ver las banderas DESHABILITADAS (las que comienzan con un signo -)">
   <meta itemprop="datePublished" content="2025-06-22T22:25:52-03:00">
   <meta itemprop="dateModified" content="2025-06-22T22:25:52-03:00">
-  <meta itemprop="wordCount" content="4733">
+  <meta itemprop="wordCount" content="5466">
   <meta itemprop="keywords" content="Gentoo">
   
   <meta name="twitter:card" content="summary">
@@ -949,6 +949,136 @@ Me olvidé de agregar <code>&quot;dist-kernel&quot;</code>.</p>
 <li><input disabled="" type="checkbox"> Considerar seriamente Void Linux</li>
 </ul>
 <p>¿Querés que te ayude con algún paso específico?</p>
+<hr>
+<h3 id="mirar-de-openrc-a-systemd-por-los-binarios">Mirar de OpenRC a Systemd (por los binarios)</h3>
+<p>Tienes razón, déjame darte una guía más precisa y segura para migrar de OpenRC a systemd en Gentoo.</p>
+<h2 id="migración-de-openrc-a-systemd---guía-completa">Migración de OpenRC a systemd - Guía Completa</h2>
+<h3 id="paso-1-verifica-tu-perfil-actual-y-elige-uno-con-systemd">Paso 1: Verifica tu perfil actual y elige uno con systemd</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Ver perfil actual y opciones disponibles</span>
+</span></span><span style="display:flex;"><span>eselect profile list
+</span></span></code></pre></div><p>Busca un perfil que incluya &ldquo;systemd&rdquo; (ejemplo: <code>default/linux/amd64/23.0/desktop/systemd</code> o similar según tu arquitectura).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Cambia al perfil systemd apropiado</span>
+</span></span><span style="display:flex;"><span>eselect profile set &lt;número_del_perfil_systemd&gt;
+</span></span></code></pre></div><h3 id="paso-2-configura-use-flags-en-makeconf">Paso 2: Configura USE flags en make.conf</h3>
+<p>Edita <code>/etc/portage/make.conf</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Asegúrate de tener estos USE flags</span>
+</span></span><span style="display:flex;"><span>USE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;systemd -elogind -sysv-utils&#34;</span>
+</span></span></code></pre></div><p><strong>Importante</strong>: No añadas <code>-consolekit</code> a menos que lo tengas activo (está obsoleto).</p>
+<h3 id="paso-3-actualiza-world-con-los-nuevos-use-flags">Paso 3: Actualiza @world con los nuevos USE flags</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Esto reconstruirá paquetes con las nuevas dependencias</span>
+</span></span><span style="display:flex;"><span>emerge --ask --verbose --update --deep --newuse @world
+</span></span></code></pre></div><p>Este paso instalará systemd y reconstruirá paquetes que necesitan cambiar de elogind a systemd.</p>
+<h3 id="paso-4-elimina-los-paquetes-de-openrc-que-conflictúan">Paso 4: Elimina los paquetes de OpenRC que conflictúan</h3>
+<p><strong>IMPORTANTE</strong>: No hagas esto hasta después de que el paso 3 haya instalado systemd exitosamente.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Verifica que systemd esté instalado primero</span>
+</span></span><span style="display:flex;"><span>emerge --search sys-apps/systemd
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Luego desinstala los paquetes conflictivos</span>
+</span></span><span style="display:flex;"><span>emerge --deselect sys-apps/sysvinit
+</span></span><span style="display:flex;"><span>emerge --ask --depclean
+</span></span></code></pre></div><h3 id="paso-5-configura-el-bootloader-para-usar-systemd">Paso 5: Configura el bootloader para usar systemd</h3>
+<p><strong>Para GRUB:</strong></p>
+<p>Edita <code>/etc/default/grub</code> y modifica o añade:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>GRUB_CMDLINE_LINUX<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;init=/lib/systemd/systemd&#34;</span>
+</span></span></code></pre></div><p>Luego regenera la configuración:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>grub-mkconfig -o /boot/grub/grub.cfg
+</span></span></code></pre></div><p><strong>Para systemd-boot u otros</strong>: Consulta la documentación específica.</p>
+<h3 id="paso-6-configuración-básica-de-systemd">Paso 6: Configuración básica de systemd</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Establece el hostname</span>
+</span></span><span style="display:flex;"><span>hostnamectl set-hostname tu-hostname
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Configura la zona horaria</span>
+</span></span><span style="display:flex;"><span>timedatectl set-timezone America/Mexico_City  <span style="color:#75715e"># o tu zona</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Habilita servicios básicos que probablemente necesitas</span>
+</span></span><span style="display:flex;"><span>systemctl enable systemd-networkd    <span style="color:#75715e"># O NetworkManager si lo usas</span>
+</span></span><span style="display:flex;"><span>systemctl enable systemd-resolved    <span style="color:#75715e"># DNS</span>
+</span></span><span style="display:flex;"><span>systemctl enable systemd-timesyncd   <span style="color:#75715e"># NTP</span>
+</span></span></code></pre></div><h3 id="paso-7-migra-servicios-de-openrc-a-systemd">Paso 7: Migra servicios de OpenRC a systemd</h3>
+<p>Revisa qué servicios tenías habilitados en OpenRC:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Antes de reiniciar, lista servicios de OpenRC</span>
+</span></span><span style="display:flex;"><span>rc-update show
+</span></span></code></pre></div><p>Habilita los equivalentes en systemd. Ejemplos comunes:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Si usabas NetworkManager</span>
+</span></span><span style="display:flex;"><span>systemctl enable NetworkManager
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Si usabas dhcpcd</span>
+</span></span><span style="display:flex;"><span>systemctl enable dhcpcd
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Si usabas sshd</span>
+</span></span><span style="display:flex;"><span>systemctl enable sshd
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Para interfaz gráfica</span>
+</span></span><span style="display:flex;"><span>systemctl enable display-manager  <span style="color:#75715e"># o gdm, sddm, lightdm, etc.</span>
+</span></span></code></pre></div><h3 id="paso-8-limpieza-final-antes-de-reiniciar">Paso 8: Limpieza final (ANTES de reiniciar)</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Limpia paquetes huérfanos</span>
+</span></span><span style="display:flex;"><span>emerge --ask --depclean
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Verifica que no haya problemas</span>
+</span></span><span style="display:flex;"><span>revdep-rebuild
+</span></span></code></pre></div><h3 id="paso-9-reinicia">Paso 9: Reinicia</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>reboot
+</span></span></code></pre></div><h3 id="paso-10-verificación-post-reinicio">Paso 10: Verificación post-reinicio</h3>
+<p>Después de reiniciar, verifica:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Confirma que systemd está corriendo</span>
+</span></span><span style="display:flex;"><span>ps --no-headers -o comm <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Debería mostrar &#34;systemd&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Verifica servicios activos</span>
+</span></span><span style="display:flex;"><span>systemctl status
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Verifica logs</span>
+</span></span><span style="display:flex;"><span>journalctl -b
+</span></span></code></pre></div><h2 id="notas-importantes">Notas importantes:</h2>
+<ol>
+<li><strong>No desinstales OpenRC/sysvinit ANTES de tener systemd funcionando</strong> - podrías dejar tu sistema sin init</li>
+<li><strong>Haz un backup o snapshot</strong> antes de empezar</li>
+<li><strong>No reinicies hasta completar todos los pasos</strong> - especialmente la configuración del bootloader</li>
+<li>Si usas NetworkManager, asegúrate de habilitarlo en systemd antes de reiniciar o podrías perder conectividad de red</li>
+<li>El archivo <code>/etc/portage/package.use/</code> que creaste antes para elogind ya no será necesario, puedes eliminarlo después</li>
+</ol>
+<h2 id="si-algo-sale-mal">Si algo sale mal:</h2>
+<p>En el bootloader (GRUB), puedes agregar <code>init=/bin/bash</code> temporalmente para arrancar en modo emergencia y corregir problemas.</p>
+<p>¿Necesitas aclaración en algún paso específico?</p>
+<p>emerge &ndash;ask &ndash;verbose &ndash;update &ndash;deep &ndash;newuse @world &ndash;binpkg-respect-use=n</p>
+<p>Perfecto, el sistema está listo para la actualización. Aquí está lo que va a pasar:</p>
+<h2 id="análisis-de-la-salida">Análisis de la salida</h2>
+<p><strong>Buenas noticias:</strong></p>
+<ul>
+<li>✅ Se van a <strong>instalar 2 paquetes que resuelven conflictos</strong> (los &ldquo;uninstalls&rdquo;)</li>
+<li>✅ 45 paquetes binarios disponibles (instalación rápida)</li>
+<li>✅ Los conflictos están satisfechos</li>
+<li>✅ No hay errores de bloqueo críticos</li>
+</ul>
+<p><strong>Sobre los binarios ignorados:</strong>
+Los binarios ignorados son porque tienen USE flags diferentes a tu configuración actual. Esos paquetes se compilarán desde source en lugar de usar binarios - es normal.</p>
+<h2 id="qué-hacer">Qué hacer:</h2>
+<h3 id="opción-1-proceder-normalmente-recomendado">Opción 1: Proceder normalmente (Recomendado)</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>Yes
+</span></span></code></pre></div><p>Esto instalará los paquetes. Los binarios con USE flags incompatibles se compilarán desde source.</p>
+<h3 id="opción-2-forzar-uso-de-binarios-más-rápido-pero-menos-preciso">Opción 2: Forzar uso de binarios (más rápido pero menos preciso)</h3>
+<p>Si quieres usar los binarios aunque tengan USE flags diferentes:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>No  <span style="color:#75715e"># Cancela primero</span>
+</span></span></code></pre></div><p>Luego ejecuta:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>emerge --ask --verbose --update --deep --newuse --binpkg-respect-use<span style="color:#f92672">=</span>n @world
+</span></span></code></pre></div><p><strong>Recomiendo la Opción 1</strong> (simplemente responder <code>Yes</code>), porque:</p>
+<ul>
+<li>Compilará solo los paquetes necesarios con tus USE flags exactos</li>
+<li>Es más seguro para la transición a systemd</li>
+<li>Los 45 binarios compatibles se instalarán rápido de todas formas</li>
+</ul>
+<h2 id="después-de-que-termine">Después de que termine:</h2>
+<p>Una vez completado exitosamente, continúa con el <strong>Paso 4</strong> de la guía anterior:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Verifica que systemd esté instalado</span>
+</span></span><span style="display:flex;"><span>emerge --search sys-apps/systemd
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Limpia paquetes obsoletos</span>
+</span></span><span style="display:flex;"><span>emerge --ask --depclean
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Configura GRUB</span>
+</span></span><span style="display:flex;"><span>nano /etc/default/grub  <span style="color:#75715e"># Añade init=/lib/systemd/systemd</span>
+</span></span><span style="display:flex;"><span>grub-mkconfig -o /boot/grub/grub.cfg
+</span></span></code></pre></div><p>¿Procedo explicándote los siguientes pasos mientras se instala?</p>
 
 </div>
 
