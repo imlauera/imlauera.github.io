@@ -29,7 +29,7 @@ Con el comando emerge -pv obs-studio pude ver las banderas y leyendo la Wiki de 
 [ebuild R ] media-video/obs-studio-31.0.3-r2::gentoo USE=&#34;alsa truetype wayland -browser -decklink -fdk -jack -lua (-mpegts) -nvenc -pipewire -pulseaudio -python -qsv -sndio -speex -test-input -v4l -vlc -websocket&#34; LUA_SINGLE_TARGET=&#34;luajit&#34; PYTHON_SINGLE_TARGET=&#34;python3_13 -python3_11 -python3_12 -python3_14&#34; 0 KiB Ahí se pueden ver las banderas DESHABILITADAS (las que comienzan con un signo -)">
   <meta itemprop="datePublished" content="2025-06-22T22:25:52-03:00">
   <meta itemprop="dateModified" content="2025-06-22T22:25:52-03:00">
-  <meta itemprop="wordCount" content="5466">
+  <meta itemprop="wordCount" content="5933">
   <meta itemprop="keywords" content="Gentoo">
   
   <meta name="twitter:card" content="summary">
@@ -1039,7 +1039,6 @@ Me olvidé de agregar <code>&quot;dist-kernel&quot;</code>.</p>
 </ol>
 <h2 id="si-algo-sale-mal">Si algo sale mal:</h2>
 <p>En el bootloader (GRUB), puedes agregar <code>init=/bin/bash</code> temporalmente para arrancar en modo emergencia y corregir problemas.</p>
-<p>¿Necesitas aclaración en algún paso específico?</p>
 <p>emerge &ndash;ask &ndash;verbose &ndash;update &ndash;deep &ndash;newuse @world &ndash;binpkg-respect-use=n</p>
 <p>Perfecto, el sistema está listo para la actualización. Aquí está lo que va a pasar:</p>
 <h2 id="análisis-de-la-salida">Análisis de la salida</h2>
@@ -1061,13 +1060,7 @@ Los binarios ignorados son porque tienen USE flags diferentes a tu configuració
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>No  <span style="color:#75715e"># Cancela primero</span>
 </span></span></code></pre></div><p>Luego ejecuta:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>emerge --ask --verbose --update --deep --newuse --binpkg-respect-use<span style="color:#f92672">=</span>n @world
-</span></span></code></pre></div><p><strong>Recomiendo la Opción 1</strong> (simplemente responder <code>Yes</code>), porque:</p>
-<ul>
-<li>Compilará solo los paquetes necesarios con tus USE flags exactos</li>
-<li>Es más seguro para la transición a systemd</li>
-<li>Los 45 binarios compatibles se instalarán rápido de todas formas</li>
-</ul>
-<h2 id="después-de-que-termine">Después de que termine:</h2>
+</span></span></code></pre></div><h2 id="después-de-que-termine">Después de que termine:</h2>
 <p>Una vez completado exitosamente, continúa con el <strong>Paso 4</strong> de la guía anterior:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Verifica que systemd esté instalado</span>
 </span></span><span style="display:flex;"><span>emerge --search sys-apps/systemd
@@ -1076,9 +1069,88 @@ Los binarios ignorados son porque tienen USE flags diferentes a tu configuració
 </span></span><span style="display:flex;"><span>emerge --ask --depclean
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span><span style="color:#75715e"># Configura GRUB</span>
-</span></span><span style="display:flex;"><span>nano /etc/default/grub  <span style="color:#75715e"># Añade init=/lib/systemd/systemd</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Acá hay un problema. Yo ejecuto grub-mkconfig desde archlinux así que no me va a tomar <span style="color:#e6db74">`</span>GRUB_CMDLINE_LINUX<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;init=/usr/lib/systemd/systemd&#34;</span><span style="color:#e6db74">`</span> porque os-prober no detecta, vas a tener que escribirlo manualmente desde <span style="color:#e6db74">`</span>/etc/grub.d/40_custom<span style="color:#e6db74">`</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>En vez de hacer esto:
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">```</span>bash
+</span></span><span style="display:flex;"><span>vim /etc/default/grub  <span style="color:#75715e"># Añade init=/lib/systemd/systemd</span>
+</span></span></code></pre></div><p>Hace esto:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>vim /etc/grub.d/40_custom
+</span></span><span style="display:flex;"><span>menuentry <span style="color:#e6db74">&#39;Gentoo Linux&#39;</span> --class gentoo --class gnu-linux --class gnu --class os <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        insmod part_gpt
+</span></span><span style="display:flex;"><span>        insmod ext2
+</span></span><span style="display:flex;"><span>        set root<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;hd0,gpt3&#39;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> x$feature_platform_search_hint <span style="color:#f92672">=</span> xy <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>          search --no-floppy --fs-uuid --set<span style="color:#f92672">=</span>root --hint-bios<span style="color:#f92672">=</span>hd0,gpt3 --hint-efi<span style="color:#f92672">=</span>hd0,gpt3 --hint-baremetal<span style="color:#f92672">=</span>ahci0,gpt3  3fe2e015-ef10-4d2f-81b2-ba299be39370
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>          search --no-floppy --fs-uuid --set<span style="color:#f92672">=</span>root 3fe2e015-ef10-4d2f-81b2-ba299be39370
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>        linux <span style="color:#f92672">(</span>hd0,gpt1<span style="color:#f92672">)</span>/vmlinuz-6.18.2-p1-gentoo-dist root<span style="color:#f92672">=</span>UUID<span style="color:#f92672">=</span>3fe2e015-ef10-4d2f-81b2-ba299be39370 rw init<span style="color:#f92672">=</span>/usr/lib/systemd/systemd
+</span></span><span style="display:flex;"><span>        initrd <span style="color:#f92672">(</span>hd0,gpt1<span style="color:#f92672">)</span>/initramfs-6.18.2-p1-gentoo-dist.img
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Agregá al final de linux init<span style="color:#f92672">=</span>/usr/lib/systemd/systemd
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>grub-mkconfig -o /boot/grub/grub.cfg
-</span></span></code></pre></div><p>¿Procedo explicándote los siguientes pasos mientras se instala?</p>
+</span></span></code></pre></div><p>Despues de pasar a systemd intente instalar Falkon y me puteaba por &ldquo;Paquete bloqueado&rdquo;.</p>
+<p>I can see you&rsquo;re encountering a package conflict in Gentoo between <code>systemd</code> and <code>elogind</code>. This is a common issue when trying to install packages that depend on elogind while your system is configured to use systemd.</p>
+<p>The problem is:</p>
+<ul>
+<li>Your system currently has <strong>systemd</strong> installed (which provides init system and session management)</li>
+<li>You&rsquo;re trying to install <strong>falkon</strong> (a web browser), which pulls in dependencies that want <strong>elogind</strong> instead</li>
+</ul>
+<p><strong>Solution: Reconfigure pipewire and wireplumber to use systemd</strong></p>
+<p>Since your system uses systemd, you need to adjust the USE flags for the conflicting packages:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Add these lines to /etc/portage/package.use/pipewire</span>
+</span></span><span style="display:flex;"><span>media-video/pipewire -elogind systemd
+</span></span><span style="display:flex;"><span>media-video/wireplumber -elogind systemd
+</span></span><span style="display:flex;"><span>sys-auth/polkit -elogind systemd
+</span></span></code></pre></div><p>Then try the installation again:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>emerge --ask --verbose www-client/falkon
+</span></span></code></pre></div><p><strong>Alternative: If you prefer a simpler approach</strong></p>
+<p>You can also add this to your global USE flags in <code>/etc/portage/make.conf</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>USE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;systemd -elogind&#34;</span>
+</span></span></code></pre></div><p>This tells Portage to prefer systemd over elogind system-wide.</p>
+<p><strong>Why this happens:</strong></p>
+<ul>
+<li>Gentoo allows you to choose between systemd and elogind for session management</li>
+<li>Some packages can work with either one, but both cannot be installed simultaneously</li>
+<li>The binary packages you&rsquo;re trying to install were compiled with elogind support, but your system expects systemd</li>
+</ul>
+<p>After making these changes, the dependency resolver should be able to find a compatible solution without the blocking conflict.</p>
+<p>Option 2: Request different binaries
+If you&rsquo;re using Gentoo&rsquo;s official binpkgs or a custom binary host, you need binaries compiled with systemd -elogind instead. Check:</p>
+<p>What binary package repository are you using? (/etc/portage/binrepos.conf)
+Can you switch to a systemd-based binary repository?</p>
+<p>arch / # cat /etc/portage/binrepos.conf/gentoobinhost.conf</p>
+<h1 id="these-settings-were-set-by-the-catalyst-build-script-that-automatically">These settings were set by the catalyst build script that automatically</h1>
+<h1 id="built-this-stage">built this stage.</h1>
+<h1 id="please-consider-using-a-local-mirror">Please consider using a local mirror.</h1>
+<p>[gentoobinhost]
+priority = 1
+sync-uri = <a href="https://distfiles.gentoo.org/releases/amd64/binpackages/23.0/x86-64">https://distfiles.gentoo.org/releases/amd64/binpackages/23.0/x86-64</a>
+arch / #</p>
+<p>Ah, now I see the issue! You&rsquo;re using Gentoo&rsquo;s official binary package repository for the <strong>23.0/x86-64 profile</strong>, which is OpenRC-based (uses elogind), but your system is configured for systemd.</p>
+<p><strong>Solution: Switch to the systemd binary package repository</strong></p>
+<p>Edit <code>/etc/portage/binrepos.conf/gentoobinhost.conf</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#f92672">[</span>gentoobinhost<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>priority <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>sync-uri <span style="color:#f92672">=</span> https://distfiles.gentoo.org/releases/amd64/binpackages/23.0/x86-64-systemd
+</span></span></code></pre></div><p>Notice the change: <code>x86-64</code> → <code>x86-64-systemd</code></p>
+<p>Then update your binary package index:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>emaint binhost --fix
+</span></span><span style="display:flex;"><span>emerge --sync
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Or if using getuto:</span>
+</span></span><span style="display:flex;"><span>getuto
+</span></span></code></pre></div><p>Now try installing falkon again:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>emerge --ask --verbose www-client/falkon
+</span></span></code></pre></div><p>The systemd binary repository should have packages compiled with <code>systemd -elogind</code> USE flags that match your system configuration.</p>
+<p><strong>Note:</strong> Make sure your profile is also set to a systemd profile. Check with:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>eselect profile list
+</span></span></code></pre></div><p>You should be using something like <code>default/linux/amd64/23.0/systemd</code> rather than just <code>default/linux/amd64/23.0</code>.</p>
 
 </div>
 
