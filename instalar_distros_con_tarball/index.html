@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/instalar_distros_con_tarball/">
+  <meta property="og:site_name" content="Imlauer">
+  <meta property="og:title" content="Instalar GNU/Linux distros con Tarball">
+  <meta property="og:description" content="Anteriormente demostre como instalar Kiss Linux usando kiss-chroot.tar.xz , ahora intentare instalar debian.
+¡Sí! Varias distros tienen algo equivalente a ese tarball “chroot-ready”. Déjame mostrarte:
+Distros con tarballs chroot oficiales: 1. Alpine Linux (el más similar a KISS) # Minirootfs - equivalente exacto wget https://dl-cdn.alpinelinux.org/alpine/v3.19/releases/x86_64/alpine-minirootfs-3.19.0-x86_64.tar.gz # Extraer y usar tar xzf alpine-minirootfs-*.tar.gz -C /mnt 2. Void Linux # ROOTFS oficial wget https://repo-default.voidlinux.org/live/current/void-x86_64-ROOTFS-20240314.tar.xz # Musl version (como KISS) wget https://repo-default.voidlinux.org/live/current/void-x86_64-musl-ROOTFS-20240314.tar.xz 3. Gentoo # Stage3 - el clásico wget https://distfiles.gentoo.org/releases/amd64/autobuilds/current-stage3-amd64/stage3-amd64-20240101T170204Z.tar.xz 4. Arch Linux (no oficial pero existe) # archlinux-bootstrap (oficial) wget https://geo.mirror.pkgbuild.com/iso/latest/archlinux-bootstrap-x86_64.tar.zst # Extraer tar xf archlinux-bootstrap-x86_64.tar.zst # Crea un directorio root.x86_64/ con sistema base 5. Fedora/CentOS # Usando docker images docker export $(docker create fedora:39) &gt; fedora-rootfs.tar 6. Debian (no oficial) # Docker base images wget https://github.com/debuerreotype/docker-debian-artifacts/raw/dist-amd64/bookworm/rootfs.tar.xz 7. Artix Linux (Arch sin systemd) # Tiene tarballs como Arch wget https://iso.artixlinux.org/iso/artix-base-runit-20231119-x86_64.tar.gz Comparación de formato: Distro Nombre del tarball Tamaño aprox KISS kiss-chroot-*.tar.xz ~5-10MB Alpine alpine-minirootfs-*.tar.gz ~3-5MB Void void--ROOTFS-.tar.xz ~50-100MB Gentoo stage3-*.tar.xz ~200-300MB Arch archlinux-bootstrap-*.tar.zst ~150-200MB El más parecido a KISS: Alpine Linux es prácticamente idéntico en filosofía:">
+  <meta property="og:locale" content="es_es">
+  <meta property="og:type" content="article">
+    <meta property="article:published_time" content="2026-01-06T11:38:56-03:00">
+    <meta property="article:modified_time" content="2026-01-06T11:38:56-03:00">
+
+  
+  <meta itemprop="name" content="Instalar GNU/Linux distros con Tarball">
+  <meta itemprop="description" content="Anteriormente demostre como instalar Kiss Linux usando kiss-chroot.tar.xz , ahora intentare instalar debian.
+¡Sí! Varias distros tienen algo equivalente a ese tarball “chroot-ready”. Déjame mostrarte:
+Distros con tarballs chroot oficiales: 1. Alpine Linux (el más similar a KISS) # Minirootfs - equivalente exacto wget https://dl-cdn.alpinelinux.org/alpine/v3.19/releases/x86_64/alpine-minirootfs-3.19.0-x86_64.tar.gz # Extraer y usar tar xzf alpine-minirootfs-*.tar.gz -C /mnt 2. Void Linux # ROOTFS oficial wget https://repo-default.voidlinux.org/live/current/void-x86_64-ROOTFS-20240314.tar.xz # Musl version (como KISS) wget https://repo-default.voidlinux.org/live/current/void-x86_64-musl-ROOTFS-20240314.tar.xz 3. Gentoo # Stage3 - el clásico wget https://distfiles.gentoo.org/releases/amd64/autobuilds/current-stage3-amd64/stage3-amd64-20240101T170204Z.tar.xz 4. Arch Linux (no oficial pero existe) # archlinux-bootstrap (oficial) wget https://geo.mirror.pkgbuild.com/iso/latest/archlinux-bootstrap-x86_64.tar.zst # Extraer tar xf archlinux-bootstrap-x86_64.tar.zst # Crea un directorio root.x86_64/ con sistema base 5. Fedora/CentOS # Usando docker images docker export $(docker create fedora:39) &gt; fedora-rootfs.tar 6. Debian (no oficial) # Docker base images wget https://github.com/debuerreotype/docker-debian-artifacts/raw/dist-amd64/bookworm/rootfs.tar.xz 7. Artix Linux (Arch sin systemd) # Tiene tarballs como Arch wget https://iso.artixlinux.org/iso/artix-base-runit-20231119-x86_64.tar.gz Comparación de formato: Distro Nombre del tarball Tamaño aprox KISS kiss-chroot-*.tar.xz ~5-10MB Alpine alpine-minirootfs-*.tar.gz ~3-5MB Void void--ROOTFS-.tar.xz ~50-100MB Gentoo stage3-*.tar.xz ~200-300MB Arch archlinux-bootstrap-*.tar.zst ~150-200MB El más parecido a KISS: Alpine Linux es prácticamente idéntico en filosofía:">
+  <meta itemprop="datePublished" content="2026-01-06T11:38:56-03:00">
+  <meta itemprop="dateModified" content="2026-01-06T11:38:56-03:00">
+  <meta itemprop="wordCount" content="320">
+  
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Instalar GNU/Linux distros con Tarball">
+  <meta name="twitter:description" content="Anteriormente demostre como instalar Kiss Linux usando kiss-chroot.tar.xz , ahora intentare instalar debian.
+¡Sí! Varias distros tienen algo equivalente a ese tarball “chroot-ready”. Déjame mostrarte:
+Distros con tarballs chroot oficiales: 1. Alpine Linux (el más similar a KISS) # Minirootfs - equivalente exacto wget https://dl-cdn.alpinelinux.org/alpine/v3.19/releases/x86_64/alpine-minirootfs-3.19.0-x86_64.tar.gz # Extraer y usar tar xzf alpine-minirootfs-*.tar.gz -C /mnt 2. Void Linux # ROOTFS oficial wget https://repo-default.voidlinux.org/live/current/void-x86_64-ROOTFS-20240314.tar.xz # Musl version (como KISS) wget https://repo-default.voidlinux.org/live/current/void-x86_64-musl-ROOTFS-20240314.tar.xz 3. Gentoo # Stage3 - el clásico wget https://distfiles.gentoo.org/releases/amd64/autobuilds/current-stage3-amd64/stage3-amd64-20240101T170204Z.tar.xz 4. Arch Linux (no oficial pero existe) # archlinux-bootstrap (oficial) wget https://geo.mirror.pkgbuild.com/iso/latest/archlinux-bootstrap-x86_64.tar.zst # Extraer tar xf archlinux-bootstrap-x86_64.tar.zst # Crea un directorio root.x86_64/ con sistema base 5. Fedora/CentOS # Usando docker images docker export $(docker create fedora:39) &gt; fedora-rootfs.tar 6. Debian (no oficial) # Docker base images wget https://github.com/debuerreotype/docker-debian-artifacts/raw/dist-amd64/bookworm/rootfs.tar.xz 7. Artix Linux (Arch sin systemd) # Tiene tarballs como Arch wget https://iso.artixlinux.org/iso/artix-base-runit-20231119-x86_64.tar.gz Comparación de formato: Distro Nombre del tarball Tamaño aprox KISS kiss-chroot-*.tar.xz ~5-10MB Alpine alpine-minirootfs-*.tar.gz ~3-5MB Void void--ROOTFS-.tar.xz ~50-100MB Gentoo stage3-*.tar.xz ~200-300MB Arch archlinux-bootstrap-*.tar.zst ~150-200MB El más parecido a KISS: Alpine Linux es prácticamente idéntico en filosofía:">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Instalar GNU/Linux distros con Tarball
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/instalar_distros_con_tarball/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="Anteriormente demostre como instalar Kiss Linux usando kiss-chroot.tar.xz , ahora intentare instalar debian.
+¡Sí! Varias distros tienen algo equivalente a ese tarball &ldquo;chroot-ready&rdquo;. Déjame mostrarte:
+Distros con tarballs chroot oficiales:
+1. Alpine Linux (el más similar a KISS)
+# Minirootfs - equivalente exacto
+wget https://dl-cdn.alpinelinux.org/alpine/v3.19/releases/x86_64/alpine-minirootfs-3.19.0-x86_64.tar.gz
+
+# Extraer y usar
+tar xzf alpine-minirootfs-*.tar.gz -C /mnt
+2. Void Linux
+# ROOTFS oficial
+wget https://repo-default.voidlinux.org/live/current/void-x86_64-ROOTFS-20240314.tar.xz
+
+# Musl version (como KISS)
+wget https://repo-default.voidlinux.org/live/current/void-x86_64-musl-ROOTFS-20240314.tar.xz
+3. Gentoo
+# Stage3 - el clásico
+wget https://distfiles.gentoo.org/releases/amd64/autobuilds/current-stage3-amd64/stage3-amd64-20240101T170204Z.tar.xz
+4. Arch Linux (no oficial pero existe)
+# archlinux-bootstrap (oficial)
+wget https://geo.mirror.pkgbuild.com/iso/latest/archlinux-bootstrap-x86_64.tar.zst
+
+# Extraer
+tar xf archlinux-bootstrap-x86_64.tar.zst
+# Crea un directorio root.x86_64/ con sistema base
+5. Fedora/CentOS
+# Usando docker images
+docker export $(docker create fedora:39) &gt; fedora-rootfs.tar
+6. Debian (no oficial)
+# Docker base images
+wget https://github.com/debuerreotype/docker-debian-artifacts/raw/dist-amd64/bookworm/rootfs.tar.xz
+7. Artix Linux (Arch sin systemd)
+# Tiene tarballs como Arch
+wget https://iso.artixlinux.org/iso/artix-base-runit-20231119-x86_64.tar.gz
+Comparación de formato:
+
+  
+      
+          Distro
+          Nombre del tarball
+          Tamaño aprox
+      
+  
+  
+      
+          KISS
+          kiss-chroot-*.tar.xz
+          ~5-10MB
+      
+      
+          Alpine
+          alpine-minirootfs-*.tar.gz
+          ~3-5MB
+      
+      
+          Void
+          void--ROOTFS-.tar.xz
+          ~50-100MB
+      
+      
+          Gentoo
+          stage3-*.tar.xz
+          ~200-300MB
+      
+      
+          Arch
+          archlinux-bootstrap-*.tar.zst
+          ~150-200MB
+      
+  
+
+El más parecido a KISS:
+Alpine Linux es prácticamente idéntico en filosofía:">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Instalar GNU/Linux distros con Tarball
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2026-01-06T11:38:56-03:00'>
+      January 06, 2026
+    </time>
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <p>Anteriormente demostre como instalar Kiss Linux usando kiss-chroot.tar.xz , ahora intentare instalar debian.</p>
+<p>¡Sí! Varias distros tienen algo equivalente a ese tarball &ldquo;chroot-ready&rdquo;. Déjame mostrarte:</p>
+<h2 id="distros-con-tarballs-chroot-oficiales">Distros con tarballs chroot oficiales:</h2>
+<h3 id="1-alpine-linux-el-más-similar-a-kiss">1. <strong>Alpine Linux</strong> (el más similar a KISS)</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Minirootfs - equivalente exacto</span>
+</span></span><span style="display:flex;"><span>wget https://dl-cdn.alpinelinux.org/alpine/v3.19/releases/x86_64/alpine-minirootfs-3.19.0-x86_64.tar.gz
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Extraer y usar</span>
+</span></span><span style="display:flex;"><span>tar xzf alpine-minirootfs-*.tar.gz -C /mnt
+</span></span></code></pre></div><h3 id="2-void-linux">2. <strong>Void Linux</strong></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># ROOTFS oficial</span>
+</span></span><span style="display:flex;"><span>wget https://repo-default.voidlinux.org/live/current/void-x86_64-ROOTFS-20240314.tar.xz
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Musl version (como KISS)</span>
+</span></span><span style="display:flex;"><span>wget https://repo-default.voidlinux.org/live/current/void-x86_64-musl-ROOTFS-20240314.tar.xz
+</span></span></code></pre></div><h3 id="3-gentoo">3. <strong>Gentoo</strong></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Stage3 - el clásico</span>
+</span></span><span style="display:flex;"><span>wget https://distfiles.gentoo.org/releases/amd64/autobuilds/current-stage3-amd64/stage3-amd64-20240101T170204Z.tar.xz
+</span></span></code></pre></div><h3 id="4-arch-linux-no-oficial-pero-existe">4. <strong>Arch Linux</strong> (no oficial pero existe)</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># archlinux-bootstrap (oficial)</span>
+</span></span><span style="display:flex;"><span>wget https://geo.mirror.pkgbuild.com/iso/latest/archlinux-bootstrap-x86_64.tar.zst
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Extraer</span>
+</span></span><span style="display:flex;"><span>tar xf archlinux-bootstrap-x86_64.tar.zst
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Crea un directorio root.x86_64/ con sistema base</span>
+</span></span></code></pre></div><h3 id="5-fedoracentos">5. <strong>Fedora/CentOS</strong></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Usando docker images</span>
+</span></span><span style="display:flex;"><span>docker export <span style="color:#66d9ef">$(</span>docker create fedora:39<span style="color:#66d9ef">)</span> &gt; fedora-rootfs.tar
+</span></span></code></pre></div><h3 id="6-debian-no-oficial">6. <strong>Debian</strong> (no oficial)</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Docker base images</span>
+</span></span><span style="display:flex;"><span>wget https://github.com/debuerreotype/docker-debian-artifacts/raw/dist-amd64/bookworm/rootfs.tar.xz
+</span></span></code></pre></div><h3 id="7-artix-linux-arch-sin-systemd">7. <strong>Artix Linux</strong> (Arch sin systemd)</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Tiene tarballs como Arch</span>
+</span></span><span style="display:flex;"><span>wget https://iso.artixlinux.org/iso/artix-base-runit-20231119-x86_64.tar.gz
+</span></span></code></pre></div><h2 id="comparación-de-formato">Comparación de formato:</h2>
+<table>
+  <thead>
+      <tr>
+          <th>Distro</th>
+          <th>Nombre del tarball</th>
+          <th>Tamaño aprox</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>KISS</td>
+          <td>kiss-chroot-*.tar.xz</td>
+          <td>~5-10MB</td>
+      </tr>
+      <tr>
+          <td>Alpine</td>
+          <td>alpine-minirootfs-*.tar.gz</td>
+          <td>~3-5MB</td>
+      </tr>
+      <tr>
+          <td>Void</td>
+          <td>void-<em>-ROOTFS-</em>.tar.xz</td>
+          <td>~50-100MB</td>
+      </tr>
+      <tr>
+          <td>Gentoo</td>
+          <td>stage3-*.tar.xz</td>
+          <td>~200-300MB</td>
+      </tr>
+      <tr>
+          <td>Arch</td>
+          <td>archlinux-bootstrap-*.tar.zst</td>
+          <td>~150-200MB</td>
+      </tr>
+  </tbody>
+</table>
+<h2 id="el-más-parecido-a-kiss">El más parecido a KISS:</h2>
+<p><strong>Alpine Linux</strong> es prácticamente idéntico en filosofía:</p>
+<ul>
+<li>Musl libc (como KISS)</li>
+<li>Minimalista extremo</li>
+<li>Tarball de ~3-5MB</li>
+<li>Sistema completo funcional</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Instalación Alpine (idéntico a KISS)</span>
+</span></span><span style="display:flex;"><span>mount /dev/sda3 /mnt
+</span></span><span style="display:flex;"><span>mount /dev/sda1 /mnt/boot
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>cd /mnt
+</span></span><span style="display:flex;"><span>wget https://dl-cdn.alpinelinux.org/alpine/v3.19/releases/x86_64/alpine-minirootfs-3.19.0-x86_64.tar.gz
+</span></span><span style="display:flex;"><span>tar xzf alpine-minirootfs-*.tar.gz
+</span></span><span style="display:flex;"><span>rm alpine-minirootfs-*.tar.gz
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Chroot y configurar</span>
+</span></span><span style="display:flex;"><span>mount --bind /dev /mnt/dev
+</span></span><span style="display:flex;"><span>mount --bind /proc /mnt/proc
+</span></span><span style="display:flex;"><span>mount --bind /sys /mnt/sys
+</span></span><span style="display:flex;"><span>chroot /mnt /bin/sh
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Setup básico</span>
+</span></span><span style="display:flex;"><span>setup-timezone
+</span></span><span style="display:flex;"><span>setup-keymap
+</span></span><span style="display:flex;"><span>apk add openrc util-linux
+</span></span><span style="display:flex;"><span>rc-update add devfs boot
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># etc...</span>
+</span></span></code></pre></div><h2 id="por-qué-kissalpine-son-tan-pequeños">¿Por qué KISS/Alpine son tan pequeños?</h2>
+<ul>
+<li><strong>Musl libc</strong> en vez de glibc (más ligero)</li>
+<li><strong>Busybox</strong> en vez de GNU coreutils</li>
+<li>Sin extras innecesarios</li>
+<li>Compilados con optimizaciones de tamaño</li>
+</ul>
+<h2 id="mi-recomendación">Mi recomendación:</h2>
+<p>Si te gusta el enfoque de KISS:</p>
+<ol>
+<li><strong>Alpine</strong> - Producción, muy estable, similar filosofía</li>
+<li><strong>Void</strong> - Rolling release, runit, muy limpio</li>
+<li><strong>Gentoo</strong> - Source-based, máxima personalización</li>
+<li><strong>KISS</strong> - Ultra minimal, experimental</li>
+</ol>
+<p>¿Quieres que te muestre cómo instalar Alpine con su minirootfs? Es prácticamente idéntico al workflow de KISS.</p>
+
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+</footer>
+
+
+</body>
+</html>
