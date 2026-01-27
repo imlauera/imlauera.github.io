@@ -1,0 +1,2130 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/linuxfromscratch/">
+  <meta property="og:site_name" content="Imlauer">
+  <meta property="og:title" content="Linux from scratch">
+  <meta property="og:description" content="Scripts de Luis Mendes
+lfs-scripts :penguin: Instructions and scripts to build Linux From Scratch (LFS), version 11.2, as simply as possible (I know, not that simple, but anyway).
+Foreword First, this guide does not replace reading the whole LFS book. I highly recommend that you read it at least once. Only then you should use the automated scripts provided here.
+This build will be accomplished inside a virtual machine. I’ll be using Oracle VirtualBox, but you can use any tool of your personal preference. I’m running an Arch Linux VM, feel free to use your GNU/Linux distribution of choice. Just be sure to install the development tools available (base-devel package on Arch).">
+  <meta property="og:locale" content="es_es">
+  <meta property="og:type" content="article">
+    <meta property="article:published_time" content="2026-01-27T19:25:07-03:00">
+    <meta property="article:modified_time" content="2026-01-27T19:25:07-03:00">
+    <meta property="article:tag" content="Linux">
+
+  
+  <meta itemprop="name" content="Linux from scratch">
+  <meta itemprop="description" content="Scripts de Luis Mendes
+lfs-scripts :penguin: Instructions and scripts to build Linux From Scratch (LFS), version 11.2, as simply as possible (I know, not that simple, but anyway).
+Foreword First, this guide does not replace reading the whole LFS book. I highly recommend that you read it at least once. Only then you should use the automated scripts provided here.
+This build will be accomplished inside a virtual machine. I’ll be using Oracle VirtualBox, but you can use any tool of your personal preference. I’m running an Arch Linux VM, feel free to use your GNU/Linux distribution of choice. Just be sure to install the development tools available (base-devel package on Arch).">
+  <meta itemprop="datePublished" content="2026-01-27T19:25:07-03:00">
+  <meta itemprop="dateModified" content="2026-01-27T19:25:07-03:00">
+  <meta itemprop="wordCount" content="5092">
+  <meta itemprop="keywords" content="Linux">
+  
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Linux from scratch">
+  <meta name="twitter:description" content="Scripts de Luis Mendes
+lfs-scripts :penguin: Instructions and scripts to build Linux From Scratch (LFS), version 11.2, as simply as possible (I know, not that simple, but anyway).
+Foreword First, this guide does not replace reading the whole LFS book. I highly recommend that you read it at least once. Only then you should use the automated scripts provided here.
+This build will be accomplished inside a virtual machine. I’ll be using Oracle VirtualBox, but you can use any tool of your personal preference. I’m running an Arch Linux VM, feel free to use your GNU/Linux distribution of choice. Just be sure to install the development tools available (base-devel package on Arch).">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Linux from scratch
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/linuxfromscratch/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="Scripts de Luis Mendes
+lfs-scripts :penguin:
+Instructions and scripts to build Linux From Scratch (LFS), version 11.2, as simply as possible (I know, not that simple, but anyway).
+
+
+Foreword
+First, this guide does not replace reading the whole LFS book. I highly recommend that you read it at least once. Only then you should use the automated scripts provided here.
+This build will be accomplished inside a virtual machine. I&rsquo;ll be using Oracle VirtualBox, but you can use any tool of your personal preference. I&rsquo;m running an Arch Linux VM, feel free to use your GNU/Linux distribution of choice. Just be sure to install the development tools available (base-devel package on Arch).">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Linux from scratch
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2026-01-27T19:25:07-03:00'>
+      January 27, 2026
+    </time>
+    
+    <br>
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/linux/">Linux</a>
+    
+    
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <p>Scripts de Luis Mendes</p>
+<h1 id="lfs-scripts-penguin">lfs-scripts :penguin:</h1>
+<p>Instructions and scripts to build Linux From Scratch (LFS), version 11.2, as simply as possible (I know, not that simple, but anyway).</p>
+<p><img src="https://github.com/luisgbm/lfs-scripts/blob/master/img/uname.png?raw=true" alt="Output of uname -a"></p>
+<p><img src="https://github.com/luisgbm/lfs-scripts/blob/master/img/vim-smile.png?raw=true" alt="vim :smile"></p>
+<h1 id="foreword">Foreword</h1>
+<p>First, this guide does not replace reading the whole LFS book. I highly recommend that you read it at least once. Only then you should use the automated scripts provided here.</p>
+<p>This build will be accomplished inside a virtual machine. I&rsquo;ll be using Oracle VirtualBox, but you can use any tool of your personal preference. I&rsquo;m running an Arch Linux VM, feel free to use your GNU/Linux distribution of choice. Just be sure to install the development tools available (base-devel package on Arch).</p>
+<p>My VM has two virtual hard disks: one for the host (Arch Linux itself) and another for building LFS. You could also use a single hard disk with two partitions, that&rsquo;s also up to personal taste. I&rsquo;ve decided to use two separate hard disks so I can completely isolate LFS from the host after the build. At the end, you&rsquo;ll be able to create a separate VM and boot from it directly.</p>
+<p>The packages needed to build LFS were downloaded from <a href="http://ftp.osuosl.org/pub/lfs/lfs-packages/lfs-packages-11.2.tar">here</a> (474 MB), other mirrors are available <a href="http://linuxfromscratch.org/lfs/download.html">here</a> (look for the &ldquo;LFS HTTP/FTP Sites&rdquo; section at the bottom, the file you need is lfs-packages-11.0.tar).</p>
+<h1 id="build-instructions">Build instructions</h1>
+<p>:point_right: Run commands below as root.</p>
+<p>Create a partition and a filesystem in the virtual hard disk (/dev/sdb):</p>
+<pre tabindex="0"><code>fdisk /dev/sdb
+</code></pre><p>Use the following basic options: n- new partition, accept the default values, w- write changes</p>
+<p>Create a filesystem, a mount point, and mount it:</p>
+<pre tabindex="0"><code>mkfs.ext4 /dev/sdb1
+mkdir /mnt/lfs
+mount /dev/sdb1 /mnt/lfs
+</code></pre><p>Add the following line to root&rsquo;s .bashrc:</p>
+<pre tabindex="0"><code>export LFS=/mnt/lfs
+</code></pre><p>Source the file:</p>
+<pre tabindex="0"><code>source .bashrc
+</code></pre><p>Download all the packages and extract them to $LFS/sources.</p>
+<pre tabindex="0"><code>cd $LFS
+cp /&lt;location_of_the_package&gt;/lfs-packages-11.2.tar .
+tar xf lfs-packages-11.2.tar
+mv 11.2-rc1 sources
+chmod -v a+wt $LFS/sources
+</code></pre><p>Copy all the shell scripts from this repository to your $LFS directory:</p>
+<pre tabindex="0"><code>cp /&lt;location_of_the_scripts&gt;/*.sh $LFS
+</code></pre><p>Create the basic filesystem for LFS:</p>
+<pre tabindex="0"><code>mkdir -pv $LFS/{etc,var} $LFS/usr/{bin,lib,sbin}
+
+for i in bin lib sbin; do
+  ln -sv usr/$i $LFS/$i
+done
+
+case $(uname -m) in
+  x86_64) mkdir -pv $LFS/lib64 ;;
+esac
+
+mkdir -pv $LFS/tools
+</code></pre><p>Create the lfs user, used during the initial build process (you will have to type a password):</p>
+<pre tabindex="0"><code>groupadd lfs
+useradd -s /bin/bash -g lfs -m -k /dev/null lfs
+passwd lfs
+</code></pre><p>Make lfs own the entire filesystem:</p>
+<pre tabindex="0"><code>chown -R lfs:lfs $LFS/*
+chown lfs:lfs $LFS
+</code></pre><p>Login as the lfs user:</p>
+<pre tabindex="0"><code>su - lfs
+</code></pre><p>:point_right: Run commands below as lfs.</p>
+<p>Create a .bash_profile file:</p>
+<pre tabindex="0"><code>cat &gt; ~/.bash_profile &lt;&lt; &#34;EOF&#34;
+exec env -i HOME=$HOME TERM=$TERM PS1=&#39;\u:\w\$ &#39; /bin/bash
+EOF
+</code></pre><p>Create a .bashrc file:</p>
+<pre tabindex="0"><code>cat &gt; ~/.bashrc &lt;&lt; &#34;EOF&#34;
+set +h
+umask 022
+LFS=/mnt/lfs
+LC_ALL=POSIX
+LFS_TGT=$(uname -m)-lfs-linux-gnu
+PATH=/usr/bin
+if [ ! -L /bin ]; then PATH=/bin:$PATH; fi
+PATH=$LFS/tools/bin:$PATH
+CONFIG_SITE=$LFS/usr/share/config.site
+export LFS LC_ALL LFS_TGT PATH CONFIG_SITE
+EOF
+
+source ~/.bashrc
+</code></pre><p>Run the lfs-cross.sh script, which will build the cross toolchain and cross compiling temporary tools from chapters 5 and 6:</p>
+<p>Aca no pude construir m4 porque es del capitulo 6.</p>
+<pre tabindex="0"><code>sh $LFS/lfs-cross.sh | tee $LFS/lfs-cross.log
+</code></pre><p>Exit from the lfs user to become root again:</p>
+<pre tabindex="0"><code>exit
+</code></pre><p>:point_right: Run commands below as root.</p>
+<p>Make root own the entire filesystem again:</p>
+<pre tabindex="0"><code>chown -R root:root $LFS/*
+chown root:root $LFS
+</code></pre><p>Prepare virtual kernel file systems:</p>
+<pre tabindex="0"><code>mkdir -pv $LFS/{dev,proc,sys,run}
+mount -v --bind /dev $LFS/dev
+mount -v --bind /dev/pts $LFS/dev/pts
+mount -vt proc proc $LFS/proc
+mount -vt sysfs sysfs $LFS/sys
+mount -vt tmpfs tmpfs $LFS/run
+if [ -h $LFS/dev/shm ]; then
+  mkdir -pv $LFS/$(readlink $LFS/dev/shm)
+fi
+</code></pre><p>Enter the chroot environment:</p>
+<pre tabindex="0"><code>chroot &#34;$LFS&#34; /usr/bin/env -i   \
+    HOME=/root                  \
+    TERM=&#34;$TERM&#34;                \
+    PS1=&#39;(lfs chroot) \u:\w\$ &#39; \
+    PATH=/usr/bin:/usr/sbin     \
+    /bin/bash --login
+</code></pre><p>Create essential directories, files and symlinks:</p>
+<pre tabindex="0"><code>mkdir -pv /{boot,home,mnt,opt,srv}
+mkdir -pv /etc/{opt,sysconfig}
+mkdir -pv /lib/firmware
+mkdir -pv /media/{floppy,cdrom}
+mkdir -pv /usr/{,local/}{include,src}
+mkdir -pv /usr/local/{bin,lib,sbin}
+mkdir -pv /usr/{,local/}share/{color,dict,doc,info,locale,man}
+mkdir -pv /usr/{,local/}share/{misc,terminfo,zoneinfo}
+mkdir -pv /usr/{,local/}share/man/man{1..8}
+mkdir -pv /var/{cache,local,log,mail,opt,spool}
+mkdir -pv /var/lib/{color,misc,locate}
+ln -sfv /run /var/run
+ln -sfv /run/lock /var/lock
+install -dv -m 0750 /root
+install -dv -m 1777 /tmp /var/tmp
+ln -sv /proc/self/mounts /etc/mtab
+
+cat &gt; /etc/hosts &lt;&lt; EOF
+127.0.0.1  localhost $(hostname)
+::1        localhost
+EOF
+
+cat &gt; /etc/passwd &lt;&lt; &#34;EOF&#34;
+root:x:0:0:root:/root:/bin/bash
+bin:x:1:1:bin:/dev/null:/usr/bin/false
+daemon:x:6:6:Daemon User:/dev/null:/usr/bin/false
+messagebus:x:18:18:D-Bus Message Daemon User:/run/dbus:/usr/bin/false
+uuidd:x:80:80:UUID Generation Daemon User:/dev/null:/usr/bin/false
+nobody:x:65534:65534:Unprivileged User:/dev/null:/usr/bin/false
+EOF
+
+cat &gt; /etc/group &lt;&lt; &#34;EOF&#34;
+root:x:0:
+bin:x:1:daemon
+sys:x:2:
+kmem:x:3:
+tape:x:4:
+tty:x:5:
+daemon:x:6:
+floppy:x:7:
+disk:x:8:
+lp:x:9:
+dialout:x:10:
+audio:x:11:
+video:x:12:
+utmp:x:13:
+usb:x:14:
+cdrom:x:15:
+adm:x:16:
+messagebus:x:18:
+input:x:24:
+mail:x:34:
+kvm:x:61:
+uuidd:x:80:
+wheel:x:97:
+users:x:999:
+nogroup:x:65534:
+EOF
+
+echo &#34;tester:x:101:101::/home/tester:/bin/bash&#34; &gt;&gt; /etc/passwd
+echo &#34;tester:x:101:&#34; &gt;&gt; /etc/group
+install -o tester -d /home/tester
+touch /var/log/{btmp,lastlog,faillog,wtmp}
+chgrp -v utmp /var/log/lastlog
+chmod -v 664  /var/log/lastlog
+chmod -v 600  /var/log/btmp
+
+exec /usr/bin/bash --login
+</code></pre><p>Run the lfs-chroot.sh script, which will build additional temporary tools:</p>
+<pre tabindex="0"><code>sh /lfs-chroot.sh | tee /lfs-chroot.log
+</code></pre><p>Cleanup before the final build phase:</p>
+<pre tabindex="0"><code>rm -rf /usr/share/{info,man,doc}/*
+find /usr/{lib,libexec} -name \*.la -delete
+rm -rf /tools
+</code></pre><p>For the final build phase, run the lfs-system.sh script:</p>
+<pre tabindex="0"><code>sh /lfs-system.sh | tee /lfs-system.log
+</code></pre><p>You must now set a password for the root user (you will have to type a password):</p>
+<pre tabindex="0"><code>passwd root
+</code></pre><p>Run the final script to configure the rest of the system:</p>
+<pre tabindex="0"><code>sh /lfs-final.sh | tee /lfs-final.log
+</code></pre><h1 id="the-end">The end</h1>
+<p>You can now create a new VM using the virtual hard disk with the LFS build. It will be bootable and fully functional. Enjoy!</p>
+<h4 id="lfs-crosssh">LFS-CROSS.SH</h4>
+<pre tabindex="0"><code>#!/bin/bash
+# LFS 11.2 Build Script
+# Builds the cross-toolchain and cross compiling temporary tools from chapters 5 and 6
+# by Luís Mendes :)
+# 06/Sep/2022
+
+package_name=&#34;&#34;
+package_ext=&#34;&#34;
+
+# GCC LFS 11.2 cannot compile because you need gnu89
+#export CFLAGS=&#34;-std=gnu89&#34;
+#echo $CFLAGS
+
+begin() {
+	package_name=$1
+	package_ext=$2
+
+	echo &#34;[lfs-cross] Starting build of $package_name at $(date)&#34;
+
+	tar xf $package_name.$package_ext
+	cd $package_name
+}
+
+finish() {
+	echo &#34;[lfs-cross] Finishing build of $package_name at $(date)&#34;
+
+	cd $LFS/sources
+	rm -rf $package_name
+}
+
+cd $LFS/sources
+
+# 5.2. Binutils-2.39 - Pass 1
+begin binutils-2.39 tar.xz
+
+# tar xf binutils-2.39 tar.xz
+# cd binutils-2.39
+
+mkdir -v build
+cd       build
+../configure --prefix=$LFS/tools \
+             --with-sysroot=$LFS \
+             --target=$LFS_TGT   \
+             --disable-nls       \
+             --enable-gprofng=no \
+             --disable-werror
+make
+make install
+finish
+
+# 5.3. GCC-12.2.0 - Pass 1
+
+begin gcc-12.2.0 tar.xz # = tar xvf gcc-12.2.0.tar.xz &amp;&amp; cd gcc-12.2.0
+
+tar -xf ../mpfr-4.1.0.tar.xz
+mv -v mpfr-4.1.0 mpfr
+
+tar -xf ../gmp-6.2.1.tar.xz
+mv -v gmp-6.2.1 gmp
+
+tar -xf ../mpc-1.2.1.tar.gz
+mv -v mpc-1.2.1 mpc
+
+case $(uname -m) in
+  x86_64)
+    sed -e &#39;/m64=/s/lib64/lib/&#39; \
+        -i.orig gcc/config/i386/t-linux64
+ ;;
+esac
+
+mkdir -v build
+cd       build
+
+# To check glibc version run:
+#              #include &lt;stdio.h&gt;
+#              #include &lt;gnu/libc-version.h&gt;
+#              int main (void) { puts (gnu_get_libc_version ()); return 0; }
+
+
+
+../configure                  \
+    --target=$LFS_TGT         \
+    --prefix=$LFS/tools       \
+    --with-glibc-version=2.36 \
+    --with-sysroot=$LFS       \
+    --with-newlib             \
+    --without-headers         \
+    --disable-nls             \
+    --disable-shared          \
+    --disable-multilib        \
+    --disable-decimal-float   \
+    --disable-threads         \
+    --disable-libatomic       \
+    --disable-libgomp         \
+    --disable-libquadmath     \
+    --disable-libssp          \
+    --disable-libvtv          \
+    --disable-libstdcxx       \
+    --enable-languages=c,c++
+make
+make install
+cd ..
+cat gcc/limitx.h gcc/glimits.h gcc/limity.h &gt; \
+  `dirname $($LFS_TGT-gcc -print-libgcc-file-name)`/install-tools/include/limits.h
+finish
+
+# 5.4. Linux-5.19.2 API Headers
+begin linux-5.19.2 tar.xz
+make mrproper
+make headers
+find usr/include -type f ! -name &#39;*.h&#39; -delete
+cp -rv usr/include $LFS/usr
+finish
+
+# 5.5. Glibc-2.36
+begin glibc-2.36 tar.xz
+case $(uname -m) in
+    i?86)   ln -sfv ld-linux.so.2 $LFS/lib/ld-lsb.so.3
+    ;;
+    x86_64) ln -sfv ../lib/ld-linux-x86-64.so.2 $LFS/lib64
+            ln -sfv ../lib/ld-linux-x86-64.so.2 $LFS/lib64/ld-lsb-x86-64.so.3
+    ;;
+esac
+patch -Np1 -i ../glibc-2.36-fhs-1.patch
+mkdir -v build
+cd       build
+echo &#34;rootsbindir=/usr/sbin&#34; &gt; configparms
+../configure                             \
+      --prefix=/usr                      \
+      --host=$LFS_TGT                    \
+      --build=$(../scripts/config.guess) \
+      --enable-kernel=3.2                \
+      --with-headers=$LFS/usr/include    \
+      libc_cv_slibdir=/usr/lib
+make
+make DESTDIR=$LFS install
+sed &#39;/RTLDLIST=/s@/usr@@g&#39; -i $LFS/usr/bin/ldd
+echo &#39;int main(){}&#39; | gcc -xc -
+readelf -l a.out | grep ld-linux
+rm -v a.out
+$LFS/tools/libexec/gcc/$LFS_TGT/12.2.0/install-tools/mkheaders
+finish
+
+# 5.6. Libstdc++ from GCC-12.2.0
+begin gcc-12.2.0 tar.xz
+mkdir -v build
+cd       build
+../libstdc++-v3/configure           \
+    --host=$LFS_TGT                 \
+    --build=$(../config.guess)      \
+    --prefix=/usr                   \
+    --disable-multilib              \
+    --disable-nls                   \
+    --disable-libstdcxx-pch         \
+    --with-gxx-include-dir=/tools/$LFS_TGT/include/c++/12.2.0
+make
+make DESTDIR=$LFS install
+rm -v $LFS/usr/lib/lib{stdc++,stdc++fs,supc++}.la
+finish
+
+# 6.2. M4-1.4.19
+# No pude compilarlo.
+# /mnt/lfs/usr/include/bits/stdlib.h: In function &#39;wctomb&#39;:
+# /mnt/lfs/usr/include/bits/stdlib.h:98:3: error: #error &#34;Assumed value of MB_LEN_MAX wrong&#34;
+#    98 | # error &#34;Assumed value of MB_LEN_MAX wrong&#34;
+#       |   ^~~~~
+# make[3]: *** [Makefile:4128: libm4_a-openat-proc.o] Error 1
+# make[3]: *** Waiting for unfinished jobs....
+# make[3]: Leaving directory &#39;/mnt/lfs/sources/m4-1.4.20/lib&#39;
+# make[2]: *** [Makefile:3608: all] Error 2
+# make[2]: Leaving directory &#39;/mnt/lfs/sources/m4-1.4.20/lib&#39;
+# make[1]: *** [Makefile:2530: all-recursive] Error 1
+# make[1]: Leaving directory &#39;/mnt/lfs/sources/m4-1.4.20&#39;
+# make: *** [Makefile:2486: all] Error 2
+
+
+
+begin m4-1.4.19 tar.xz
+./configure --prefix=/usr   \
+            --host=$LFS_TGT \
+            --build=$(build-aux/config.guess)
+make
+# aca
+make DESTDIR=$LFS install
+finish
+
+# 6.3. Ncurses-6.3
+begin ncurses-6.3 tar.gz
+sed -i s/mawk// configure
+mkdir build
+pushd build
+  ../configure
+  make -C include
+  make -C progs tic
+popd
+./configure --prefix=/usr                \
+            --host=$LFS_TGT              \
+            --build=$(./config.guess)    \
+            --mandir=/usr/share/man      \
+            --with-manpage-format=normal \
+            --with-shared                \
+            --without-normal             \
+            --with-cxx-shared            \
+            --without-debug              \
+            --without-ada                \
+            --disable-stripping          \
+            --enable-widec
+make
+make DESTDIR=$LFS TIC_PATH=$(pwd)/build/progs/tic install
+echo &#34;INPUT(-lncursesw)&#34; &gt; $LFS/usr/lib/libncurses.so
+finish
+
+# 6.4. Bash-5.1.16
+begin bash-5.1.16 tar.gz
+./configure --prefix=/usr                   \
+            --build=$(support/config.guess) \
+            --host=$LFS_TGT                 \
+            --without-bash-malloc
+make
+make DESTDIR=$LFS install
+ln -sv bash $LFS/bin/sh
+finish
+
+# tampoco
+# 6.5. Coreutils-9.1
+begin coreutils-9.1 tar.xz
+./configure --prefix=/usr                     \
+            --host=$LFS_TGT                   \
+            --build=$(build-aux/config.guess) \
+            --enable-install-program=hostname \
+            --enable-no-install-program=kill,uptime
+make
+make DESTDIR=$LFS install
+mv -v $LFS/usr/bin/chroot              $LFS/usr/sbin
+mkdir -pv $LFS/usr/share/man/man8
+mv -v $LFS/usr/share/man/man1/chroot.1 $LFS/usr/share/man/man8/chroot.8
+sed -i &#39;s/&#34;1&#34;/&#34;8&#34;/&#39;                    $LFS/usr/share/man/man8/chroot.8
+finish
+
+# 6.6. Diffutils-3.8
+begin diffutils-3.8 tar.xz
+./configure --prefix=/usr --host=$LFS_TGT
+make
+make DESTDIR=$LFS install
+finish
+
+# 6.7. File-5.42
+begin file-5.42 tar.gz
+mkdir build
+pushd build
+  ../configure --disable-bzlib      \
+               --disable-libseccomp \
+               --disable-xzlib      \
+               --disable-zlib
+  make
+popd
+./configure --prefix=/usr --host=$LFS_TGT --build=$(./config.guess)
+make FILE_COMPILE=$(pwd)/build/src/file
+make DESTDIR=$LFS install
+rm -v $LFS/usr/lib/libmagic.la
+finish
+
+# no funcionoo
+# 6.8. Findutils-4.9.0
+begin findutils-4.9.0 tar.xz
+./configure --prefix=/usr                   \
+            --localstatedir=/var/lib/locate \
+            --host=$LFS_TGT                 \
+            --build=$(build-aux/config.guess)
+make
+make DESTDIR=$LFS install
+finish
+
+# 6.9. Gawk-5.1.1
+begin gawk-5.1.1 tar.xz
+sed -i &#39;s/extras//&#39; Makefile.in
+./configure --prefix=/usr   \
+            --host=$LFS_TGT \
+            --build=$(build-aux/config.guess)
+make
+make DESTDIR=$LFS install
+finish
+
+# 6.10. Grep-3.7
+begin grep-3.7 tar.xz
+./configure --prefix=/usr   \
+            --host=$LFS_TGT
+make
+make DESTDIR=$LFS install
+finish
+
+# 6.11. Gzip-1.12
+begin gzip-1.12 tar.xz
+./configure --prefix=/usr --host=$LFS_TGT
+make
+make DESTDIR=$LFS install
+finish
+
+# 6.12. Make-4.3
+begin make-4.3 tar.gz
+./configure --prefix=/usr   \
+            --without-guile \
+            --host=$LFS_TGT \
+            --build=$(build-aux/config.guess)
+make
+make DESTDIR=$LFS install
+finish
+
+# no funcionó
+# 6.13. Patch-2.7.6
+begin patch-2.7.6 tar.xz
+./configure --prefix=/usr   \
+            --host=$LFS_TGT \
+            --build=$(build-aux/config.guess)
+make
+make DESTDIR=$LFS install
+finish
+
+# no funcionó
+# 6.14. Sed-4.8
+begin sed-4.8 tar.xz
+./configure --prefix=/usr   \
+            --host=$LFS_TGT
+make
+make DESTDIR=$LFS install
+finish
+
+# no funcionó
+# 6.15. Tar-1.34
+begin tar-1.34 tar.xz
+./configure --prefix=/usr                     \
+            --host=$LFS_TGT                   \
+            --build=$(build-aux/config.guess)
+make
+make DESTDIR=$LFS install
+finish
+
+# 6.16. Xz-5.2.6
+begin xz-5.2.6 tar.xz
+./configure --prefix=/usr                     \
+            --host=$LFS_TGT                   \
+            --build=$(build-aux/config.guess) \
+            --disable-static                  \
+            --docdir=/usr/share/doc/xz-5.2.6
+make
+make DESTDIR=$LFS install
+rm -v $LFS/usr/lib/liblzma.la
+finish
+
+# 6.17. Binutils-2.39 - Pass 2
+begin binutils-2.39 tar.xz
+sed &#39;6009s/$add_dir//&#39; -i ltmain.sh
+mkdir -v build
+cd       build
+../configure                   \
+    --prefix=/usr              \
+    --build=$(../config.guess) \
+    --host=$LFS_TGT            \
+    --disable-nls              \
+    --enable-shared            \
+    --enable-gprofng=no        \
+    --disable-werror           \
+    --enable-64-bit-bfd
+make
+make DESTDIR=$LFS install
+rm -v $LFS/usr/lib/lib{bfd,ctf,ctf-nobfd,opcodes}.{a,la}
+finish
+
+# 6.18. GCC-12.2.0 - Pass 2
+begin gcc-12.2.0 tar.xz
+tar -xf ../mpfr-4.1.0.tar.xz
+mv -v mpfr-4.1.0 mpfr
+tar -xf ../gmp-6.2.1.tar.xz
+mv -v gmp-6.2.1 gmp
+tar -xf ../mpc-1.2.1.tar.gz
+mv -v mpc-1.2.1 mpc
+case $(uname -m) in
+  x86_64)
+    sed -e &#39;/m64=/s/lib64/lib/&#39; -i.orig gcc/config/i386/t-linux64
+  ;;
+esac
+sed &#39;/thread_header =/s/@.*@/gthr-posix.h/&#39; \
+    -i libgcc/Makefile.in libstdc++-v3/include/Makefile.in
+mkdir -v build
+cd       build
+../configure                                       \
+    --build=$(../config.guess)                     \
+    --host=$LFS_TGT                                \
+    --target=$LFS_TGT                              \
+    LDFLAGS_FOR_TARGET=-L$PWD/$LFS_TGT/libgcc      \
+    --prefix=/usr                                  \
+    --with-build-sysroot=$LFS                      \
+    --enable-initfini-array                        \
+    --disable-nls                                  \
+    --disable-multilib                             \
+    --disable-decimal-float                        \
+    --disable-libatomic                            \
+    --disable-libgomp                              \
+    --disable-libquadmath                          \
+    --disable-libssp                               \
+    --disable-libvtv                               \
+    --enable-languages=c,c++
+make
+make DESTDIR=$LFS install
+ln -sv gcc $LFS/usr/bin/cc
+finish
+</code></pre><h3 id="lfs-chroot">LFS-CHROOT</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/bash
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"># LFS 11.2 Build Script</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Builds the additional temporary tools from chapter 7</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># by Luís Mendes :)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 06/Sep/2022</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>package_name<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>package_ext<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>begin<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>	package_name<span style="color:#f92672">=</span>$1
+</span></span><span style="display:flex;"><span>	package_ext<span style="color:#f92672">=</span>$2
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	echo <span style="color:#e6db74">&#34;[lfs-chroot] Starting build of </span>$package_name<span style="color:#e6db74"> at </span><span style="color:#66d9ef">$(</span>date<span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	tar xf $package_name.$package_ext
+</span></span><span style="display:flex;"><span>	cd $package_name
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>finish<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>	echo <span style="color:#e6db74">&#34;[lfs-chroot] Finishing build of </span>$package_name<span style="color:#e6db74"> at </span><span style="color:#66d9ef">$(</span>date<span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	cd /sources
+</span></span><span style="display:flex;"><span>	rm -rf $package_name
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>cd /sources
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 7.7. Gettext-0.21</span>
+</span></span><span style="display:flex;"><span>begin gettext-0.21 tar.xz
+</span></span><span style="display:flex;"><span>./configure --disable-shared
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>cp -v gettext-tools/src/<span style="color:#f92672">{</span>msgfmt,msgmerge,xgettext<span style="color:#f92672">}</span> /usr/bin
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 7.8. Bison-3.8.2</span>
+</span></span><span style="display:flex;"><span>begin bison-3.8.2 tar.xz
+</span></span><span style="display:flex;"><span>./configure --prefix<span style="color:#f92672">=</span>/usr <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --docdir<span style="color:#f92672">=</span>/usr/share/doc/bison-3.8.2
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make install
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 7.9. Perl-5.36.0</span>
+</span></span><span style="display:flex;"><span>begin perl-5.36.0 tar.xz
+</span></span><span style="display:flex;"><span>sh Configure -des                                        <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>             -Dprefix<span style="color:#f92672">=</span>/usr                               <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>             -Dvendorprefix<span style="color:#f92672">=</span>/usr                         <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>             -Dprivlib<span style="color:#f92672">=</span>/usr/lib/perl5/5.36/core_perl     <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>             -Darchlib<span style="color:#f92672">=</span>/usr/lib/perl5/5.36/core_perl     <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>             -Dsitelib<span style="color:#f92672">=</span>/usr/lib/perl5/5.36/site_perl     <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>             -Dsitearch<span style="color:#f92672">=</span>/usr/lib/perl5/5.36/site_perl    <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>             -Dvendorlib<span style="color:#f92672">=</span>/usr/lib/perl5/5.36/vendor_perl <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>             -Dvendorarch<span style="color:#f92672">=</span>/usr/lib/perl5/5.36/vendor_perl
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make install
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 7.10. Python-3.10.6</span>
+</span></span><span style="display:flex;"><span>begin Python-3.10.6 tar.xz
+</span></span><span style="display:flex;"><span>./configure --prefix<span style="color:#f92672">=</span>/usr   <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --enable-shared <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --without-ensurepip
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make install
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 7.11. Texinfo-6.8</span>
+</span></span><span style="display:flex;"><span>begin texinfo-6.8 tar.xz
+</span></span><span style="display:flex;"><span>./configure --prefix<span style="color:#f92672">=</span>/usr
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make install
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 7.12. Util-linux-2.38.1</span>
+</span></span><span style="display:flex;"><span>begin util-linux-2.38.1 tar.xz
+</span></span><span style="display:flex;"><span>mkdir -pv /var/lib/hwclock
+</span></span><span style="display:flex;"><span>./configure ADJTIME_PATH<span style="color:#f92672">=</span>/var/lib/hwclock/adjtime    <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --libdir<span style="color:#f92672">=</span>/usr/lib    <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --docdir<span style="color:#f92672">=</span>/usr/share/doc/util-linux-2.38.1 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --disable-chfn-chsh  <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --disable-login      <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --disable-nologin    <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --disable-su         <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --disable-setpriv    <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --disable-runuser    <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --disable-pylibmount <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --disable-static     <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --without-python     <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            runstatedir<span style="color:#f92672">=</span>/run
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make install
+</span></span><span style="display:flex;"><span>finish
+</span></span></code></pre></div><h3 id="lfs-system">LFS system</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/bash
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"># LFS 11.2 Build Script</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Builds the basic system software from chapter 8</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># by Luís Mendes :)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 07/Sep/2022</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>package_name<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>package_ext<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>begin<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>	package_name<span style="color:#f92672">=</span>$1
+</span></span><span style="display:flex;"><span>	package_ext<span style="color:#f92672">=</span>$2
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	echo <span style="color:#e6db74">&#34;[lfs-system] Starting build of </span>$package_name<span style="color:#e6db74"> at </span><span style="color:#66d9ef">$(</span>date<span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	tar xf $package_name.$package_ext
+</span></span><span style="display:flex;"><span>	cd $package_name
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>finish<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>	echo <span style="color:#e6db74">&#34;[lfs-system] Finishing build of </span>$package_name<span style="color:#e6db74"> at </span><span style="color:#66d9ef">$(</span>date<span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	cd /sources
+</span></span><span style="display:flex;"><span>	rm -rf $package_name
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>cd /sources
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.3. Man-pages-5.13</span>
+</span></span><span style="display:flex;"><span>begin man-pages-5.13 tar.xz
+</span></span><span style="display:flex;"><span>make prefix<span style="color:#f92672">=</span>/usr install
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.4. Iana-Etc-20220812</span>
+</span></span><span style="display:flex;"><span>begin iana-etc-20220812 tar.gz
+</span></span><span style="display:flex;"><span>cp services protocols /etc
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.5. Glibc-2.36</span>
+</span></span><span style="display:flex;"><span>begin glibc-2.36 tar.xz
+</span></span><span style="display:flex;"><span>patch -Np1 -i ../glibc-2.36-fhs-1.patch
+</span></span><span style="display:flex;"><span>mkdir -v build
+</span></span><span style="display:flex;"><span>cd       build
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;rootsbindir=/usr/sbin&#34;</span> &gt; configparms
+</span></span><span style="display:flex;"><span>../configure --prefix<span style="color:#f92672">=</span>/usr                            <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>             --disable-werror                         <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>             --enable-kernel<span style="color:#f92672">=</span>3.2                      <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>             --enable-stack-protector<span style="color:#f92672">=</span>strong          <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>             --with-headers<span style="color:#f92672">=</span>/usr/include              <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>             libc_cv_slibdir<span style="color:#f92672">=</span>/usr/lib
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>touch /etc/ld.so.conf
+</span></span><span style="display:flex;"><span>sed <span style="color:#e6db74">&#39;/test-installation/s@$(PERL)@echo not running@&#39;</span> -i ../Makefile
+</span></span><span style="display:flex;"><span>make install
+</span></span><span style="display:flex;"><span>sed <span style="color:#e6db74">&#39;/RTLDLIST=/s@/usr@@g&#39;</span> -i /usr/bin/ldd
+</span></span><span style="display:flex;"><span>cp -v ../nscd/nscd.conf /etc/nscd.conf
+</span></span><span style="display:flex;"><span>mkdir -pv /var/cache/nscd
+</span></span><span style="display:flex;"><span>mkdir -pv /usr/lib/locale
+</span></span><span style="display:flex;"><span>localedef -i POSIX -f UTF-8 C.UTF-8 2&gt; /dev/null <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span>localedef -i en_US -f ISO-8859-1 en_US
+</span></span><span style="display:flex;"><span>localedef -i en_US -f UTF-8 en_US.UTF-8
+</span></span><span style="display:flex;"><span>make localedata/install-locales
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>cat &gt; /etc/nsswitch.conf &lt;&lt; <span style="color:#e6db74">&#34;EOF&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Begin /etc/nsswitch.conf</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>passwd: files
+</span></span><span style="display:flex;"><span>group: files
+</span></span><span style="display:flex;"><span>shadow: files
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>hosts: files dns
+</span></span><span style="display:flex;"><span>networks: files
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>protocols: files
+</span></span><span style="display:flex;"><span>services: files
+</span></span><span style="display:flex;"><span>ethers: files
+</span></span><span style="display:flex;"><span>rpc: files
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># End /etc/nsswitch.conf</span>
+</span></span><span style="display:flex;"><span>EOF
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>tar -xf ../../tzdata2022c.tar.gz
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>ZONEINFO<span style="color:#f92672">=</span>/usr/share/zoneinfo
+</span></span><span style="display:flex;"><span>mkdir -pv $ZONEINFO/<span style="color:#f92672">{</span>posix,right<span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> tz in etcetera southamerica northamerica europe africa antarctica  <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>          asia australasia backward; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>    zic -L /dev/null   -d $ZONEINFO       <span style="color:#e6db74">${</span>tz<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>    zic -L /dev/null   -d $ZONEINFO/posix <span style="color:#e6db74">${</span>tz<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>    zic -L leapseconds -d $ZONEINFO/right <span style="color:#e6db74">${</span>tz<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>cp -v zone.tab zone1970.tab iso3166.tab $ZONEINFO
+</span></span><span style="display:flex;"><span>zic -d $ZONEINFO -p America/New_York
+</span></span><span style="display:flex;"><span>unset ZONEINFO
+</span></span><span style="display:flex;"><span>ln -sfv /usr/share/zoneinfo/America/Sao_Paulo /etc/localtime
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>cat &gt; /etc/ld.so.conf &lt;&lt; <span style="color:#e6db74">&#34;EOF&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Begin /etc/ld.so.conf</span>
+</span></span><span style="display:flex;"><span>/usr/local/lib
+</span></span><span style="display:flex;"><span>/opt/lib
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>EOF
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>cat &gt;&gt; /etc/ld.so.conf &lt;&lt; <span style="color:#e6db74">&#34;EOF&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Add an include directory</span>
+</span></span><span style="display:flex;"><span>include /etc/ld.so.conf.d/*.conf
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>EOF
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>mkdir -pv /etc/ld.so.conf.d
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.6. Zlib-1.2.12</span>
+</span></span><span style="display:flex;"><span>begin zlib-1.2.12 tar.xz
+</span></span><span style="display:flex;"><span>./configure --prefix<span style="color:#f92672">=</span>/usr
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make install
+</span></span><span style="display:flex;"><span>rm -fv /usr/lib/libz.a
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.7. Bzip2-1.0.8</span>
+</span></span><span style="display:flex;"><span>begin bzip2-1.0.8 tar.gz
+</span></span><span style="display:flex;"><span>patch -Np1 -i ../bzip2-1.0.8-install_docs-1.patch
+</span></span><span style="display:flex;"><span>sed -i <span style="color:#e6db74">&#39;s@\(ln -s -f \)$(PREFIX)/bin/@\1@&#39;</span> Makefile
+</span></span><span style="display:flex;"><span>sed -i <span style="color:#e6db74">&#34;s@(PREFIX)/man@(PREFIX)/share/man@g&#34;</span> Makefile
+</span></span><span style="display:flex;"><span>make -f Makefile-libbz2_so
+</span></span><span style="display:flex;"><span>make clean
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make PREFIX<span style="color:#f92672">=</span>/usr install
+</span></span><span style="display:flex;"><span>cp -av libbz2.so.* /usr/lib
+</span></span><span style="display:flex;"><span>ln -sv libbz2.so.1.0.8 /usr/lib/libbz2.so
+</span></span><span style="display:flex;"><span>cp -v bzip2-shared /usr/bin/bzip2
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> i in /usr/bin/<span style="color:#f92672">{</span>bzcat,bunzip2<span style="color:#f92672">}</span>; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>  ln -sfv bzip2 $i
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span>rm -fv /usr/lib/libbz2.a
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.8. Xz-5.2.6</span>
+</span></span><span style="display:flex;"><span>begin xz-5.2.6 tar.xz
+</span></span><span style="display:flex;"><span>./configure --prefix<span style="color:#f92672">=</span>/usr    <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --disable-static <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --docdir<span style="color:#f92672">=</span>/usr/share/doc/xz-5.2.6
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make install
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.9. Zstd-1.5.2</span>
+</span></span><span style="display:flex;"><span>begin zstd-1.5.2 tar.gz
+</span></span><span style="display:flex;"><span>patch -Np1 -i ../zstd-1.5.2-upstream_fixes-1.patch
+</span></span><span style="display:flex;"><span>make prefix<span style="color:#f92672">=</span>/usr
+</span></span><span style="display:flex;"><span>make prefix<span style="color:#f92672">=</span>/usr install
+</span></span><span style="display:flex;"><span>rm -v /usr/lib/libzstd.a
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.10. File-5.42</span>
+</span></span><span style="display:flex;"><span>begin file-5.42 tar.gz
+</span></span><span style="display:flex;"><span>./configure --prefix<span style="color:#f92672">=</span>/usr
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make install
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.11. Readline-8.1.2</span>
+</span></span><span style="display:flex;"><span>begin readline-8.1.2 tar.gz
+</span></span><span style="display:flex;"><span>sed -i <span style="color:#e6db74">&#39;/MV.*old/d&#39;</span> Makefile.in
+</span></span><span style="display:flex;"><span>sed -i <span style="color:#e6db74">&#39;/{OLDSUFF}/c:&#39;</span> support/shlib-install
+</span></span><span style="display:flex;"><span>./configure --prefix<span style="color:#f92672">=</span>/usr    <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --disable-static <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --with-curses    <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --docdir<span style="color:#f92672">=</span>/usr/share/doc/readline-8.1.2
+</span></span><span style="display:flex;"><span>make SHLIB_LIBS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;-lncursesw&#34;</span>
+</span></span><span style="display:flex;"><span>make SHLIB_LIBS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;-lncursesw&#34;</span> install
+</span></span><span style="display:flex;"><span>install -v -m644 doc/*.<span style="color:#f92672">{</span>ps,pdf,html,dvi<span style="color:#f92672">}</span> /usr/share/doc/readline-8.1.2
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.12. M4-1.4.19</span>
+</span></span><span style="display:flex;"><span>begin m4-1.4.19 tar.xz
+</span></span><span style="display:flex;"><span>./configure --prefix<span style="color:#f92672">=</span>/usr
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make install
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.13. Bc-6.0.1</span>
+</span></span><span style="display:flex;"><span>begin bc-6.0.1 tar.xz
+</span></span><span style="display:flex;"><span>CC<span style="color:#f92672">=</span>gcc ./configure --prefix<span style="color:#f92672">=</span>/usr -G -O3 -r
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make install
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.14. Flex-2.6.4</span>
+</span></span><span style="display:flex;"><span>begin flex-2.6.4 tar.gz
+</span></span><span style="display:flex;"><span>./configure --prefix<span style="color:#f92672">=</span>/usr <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --docdir<span style="color:#f92672">=</span>/usr/share/doc/flex-2.6.4 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --disable-static
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make install
+</span></span><span style="display:flex;"><span>ln -sv flex /usr/bin/lex
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.15. Tcl-8.6.12</span>
+</span></span><span style="display:flex;"><span>mv tcl8.6.12-src.tar.gz tcl8.6.12.tar.gz
+</span></span><span style="display:flex;"><span>begin tcl8.6.12 tar.gz
+</span></span><span style="display:flex;"><span>tar -xf ../tcl8.6.12-html.tar.gz --strip-components<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>SRCDIR<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>pwd<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>cd unix
+</span></span><span style="display:flex;"><span>./configure --prefix<span style="color:#f92672">=</span>/usr           <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --mandir<span style="color:#f92672">=</span>/usr/share/man
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>sed -e <span style="color:#e6db74">&#34;s|</span>$SRCDIR<span style="color:#e6db74">/unix|/usr/lib|&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    -e <span style="color:#e6db74">&#34;s|</span>$SRCDIR<span style="color:#e6db74">|/usr/include|&#34;</span>  <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    -i tclConfig.sh
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>sed -e <span style="color:#e6db74">&#34;s|</span>$SRCDIR<span style="color:#e6db74">/unix/pkgs/tdbc1.1.3|/usr/lib/tdbc1.1.3|&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    -e <span style="color:#e6db74">&#34;s|</span>$SRCDIR<span style="color:#e6db74">/pkgs/tdbc1.1.3/generic|/usr/include|&#34;</span>    <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    -e <span style="color:#e6db74">&#34;s|</span>$SRCDIR<span style="color:#e6db74">/pkgs/tdbc1.1.3/library|/usr/lib/tcl8.6|&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    -e <span style="color:#e6db74">&#34;s|</span>$SRCDIR<span style="color:#e6db74">/pkgs/tdbc1.1.3|/usr/include|&#34;</span>            <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    -i pkgs/tdbc1.1.3/tdbcConfig.sh
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>sed -e <span style="color:#e6db74">&#34;s|</span>$SRCDIR<span style="color:#e6db74">/unix/pkgs/itcl4.2.2|/usr/lib/itcl4.2.2|&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    -e <span style="color:#e6db74">&#34;s|</span>$SRCDIR<span style="color:#e6db74">/pkgs/itcl4.2.2/generic|/usr/include|&#34;</span>    <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    -e <span style="color:#e6db74">&#34;s|</span>$SRCDIR<span style="color:#e6db74">/pkgs/itcl4.2.2|/usr/include|&#34;</span>            <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    -i pkgs/itcl4.2.2/itclConfig.sh
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>unset SRCDIR
+</span></span><span style="display:flex;"><span>make install
+</span></span><span style="display:flex;"><span>chmod -v u+w /usr/lib/libtcl8.6.so
+</span></span><span style="display:flex;"><span>make install-private-headers
+</span></span><span style="display:flex;"><span>ln -sfv tclsh8.6 /usr/bin/tclsh
+</span></span><span style="display:flex;"><span>mv /usr/share/man/man3/<span style="color:#f92672">{</span>Thread,Tcl_Thread<span style="color:#f92672">}</span>.3
+</span></span><span style="display:flex;"><span>mkdir -v -p /usr/share/doc/tcl-8.6.12
+</span></span><span style="display:flex;"><span>cp -v -r  ../html/* /usr/share/doc/tcl-8.6.12
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.16. Expect-5.45.4</span>
+</span></span><span style="display:flex;"><span>begin expect5.45.4 tar.gz
+</span></span><span style="display:flex;"><span>./configure --prefix<span style="color:#f92672">=</span>/usr           <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --with-tcl<span style="color:#f92672">=</span>/usr/lib     <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --enable-shared         <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --mandir<span style="color:#f92672">=</span>/usr/share/man <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --with-tclinclude<span style="color:#f92672">=</span>/usr/include
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make install
+</span></span><span style="display:flex;"><span>ln -svf expect5.45.4/libexpect5.45.4.so /usr/lib
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.17. DejaGNU-1.6.3</span>
+</span></span><span style="display:flex;"><span>begin dejagnu-1.6.3 tar.gz
+</span></span><span style="display:flex;"><span>mkdir -v build
+</span></span><span style="display:flex;"><span>cd       build
+</span></span><span style="display:flex;"><span>../configure --prefix<span style="color:#f92672">=</span>/usr
+</span></span><span style="display:flex;"><span>makeinfo --html --no-split -o doc/dejagnu.html ../doc/dejagnu.texi
+</span></span><span style="display:flex;"><span>makeinfo --plaintext       -o doc/dejagnu.txt  ../doc/dejagnu.texi
+</span></span><span style="display:flex;"><span>make install
+</span></span><span style="display:flex;"><span>install -v -dm755  /usr/share/doc/dejagnu-1.6.3
+</span></span><span style="display:flex;"><span>install -v -m644   doc/dejagnu.<span style="color:#f92672">{</span>html,txt<span style="color:#f92672">}</span> /usr/share/doc/dejagnu-1.6.3
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.18. Binutils-2.39</span>
+</span></span><span style="display:flex;"><span>begin binutils-2.39 tar.xz
+</span></span><span style="display:flex;"><span>expect -c <span style="color:#e6db74">&#34;spawn ls&#34;</span>
+</span></span><span style="display:flex;"><span>mkdir -v build
+</span></span><span style="display:flex;"><span>cd       build
+</span></span><span style="display:flex;"><span>../configure --prefix<span style="color:#f92672">=</span>/usr       <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>             --sysconfdir<span style="color:#f92672">=</span>/etc   <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>             --enable-gold       <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>             --enable-ld<span style="color:#f92672">=</span>default <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>             --enable-plugins    <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>             --enable-shared     <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>             --disable-werror    <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>             --enable-64-bit-bfd <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>             --with-system-zlib
+</span></span><span style="display:flex;"><span>make tooldir<span style="color:#f92672">=</span>/usr
+</span></span><span style="display:flex;"><span>make tooldir<span style="color:#f92672">=</span>/usr install
+</span></span><span style="display:flex;"><span>rm -fv /usr/lib/lib<span style="color:#f92672">{</span>bfd,ctf,ctf-nobfd,opcodes<span style="color:#f92672">}</span>.a
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.19. GMP-6.2.1</span>
+</span></span><span style="display:flex;"><span>begin gmp-6.2.1 tar.xz
+</span></span><span style="display:flex;"><span>./configure --prefix<span style="color:#f92672">=</span>/usr    <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --enable-cxx     <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --disable-static <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --docdir<span style="color:#f92672">=</span>/usr/share/doc/gmp-6.2.1
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make html
+</span></span><span style="display:flex;"><span>make install
+</span></span><span style="display:flex;"><span>make install-html
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.20. MPFR-4.1.0</span>
+</span></span><span style="display:flex;"><span>begin mpfr-4.1.0 tar.xz
+</span></span><span style="display:flex;"><span>./configure --prefix<span style="color:#f92672">=</span>/usr        <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --disable-static     <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --enable-thread-safe <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --docdir<span style="color:#f92672">=</span>/usr/share/doc/mpfr-4.1.0
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make html
+</span></span><span style="display:flex;"><span>make install
+</span></span><span style="display:flex;"><span>make install-html
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.21. MPC-1.2.1</span>
+</span></span><span style="display:flex;"><span>begin mpc-1.2.1 tar.gz
+</span></span><span style="display:flex;"><span>./configure --prefix<span style="color:#f92672">=</span>/usr    <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --disable-static <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --docdir<span style="color:#f92672">=</span>/usr/share/doc/mpc-1.2.1
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make html
+</span></span><span style="display:flex;"><span>make install
+</span></span><span style="display:flex;"><span>make install-html
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.22. Attr-2.5.1</span>
+</span></span><span style="display:flex;"><span>begin attr-2.5.1 tar.gz
+</span></span><span style="display:flex;"><span>./configure --prefix<span style="color:#f92672">=</span>/usr     <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --disable-static  <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --sysconfdir<span style="color:#f92672">=</span>/etc <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --docdir<span style="color:#f92672">=</span>/usr/share/doc/attr-2.5.1
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make install
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.23. Acl-2.3.1</span>
+</span></span><span style="display:flex;"><span>begin acl-2.3.1 tar.xz
+</span></span><span style="display:flex;"><span>./configure --prefix<span style="color:#f92672">=</span>/usr         <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --disable-static      <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --docdir<span style="color:#f92672">=</span>/usr/share/doc/acl-2.3.1
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make install
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.24. Libcap-2.65</span>
+</span></span><span style="display:flex;"><span>begin libcap-2.65 tar.xz
+</span></span><span style="display:flex;"><span>sed -i <span style="color:#e6db74">&#39;/install -m.*STA/d&#39;</span> libcap/Makefile
+</span></span><span style="display:flex;"><span>make prefix<span style="color:#f92672">=</span>/usr lib<span style="color:#f92672">=</span>lib
+</span></span><span style="display:flex;"><span>make prefix<span style="color:#f92672">=</span>/usr lib<span style="color:#f92672">=</span>lib install
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.25. Shadow-4.12.2</span>
+</span></span><span style="display:flex;"><span>begin shadow-4.12.2 tar.xz
+</span></span><span style="display:flex;"><span>sed -i <span style="color:#e6db74">&#39;s/groups$(EXEEXT) //&#39;</span> src/Makefile.in
+</span></span><span style="display:flex;"><span>find man -name Makefile.in -exec sed -i <span style="color:#e6db74">&#39;s/groups\.1 / /&#39;</span>   <span style="color:#f92672">{}</span> <span style="color:#ae81ff">\;</span>
+</span></span><span style="display:flex;"><span>find man -name Makefile.in -exec sed -i <span style="color:#e6db74">&#39;s/getspnam\.3 / /&#39;</span> <span style="color:#f92672">{}</span> <span style="color:#ae81ff">\;</span>
+</span></span><span style="display:flex;"><span>find man -name Makefile.in -exec sed -i <span style="color:#e6db74">&#39;s/passwd\.5 / /&#39;</span>   <span style="color:#f92672">{}</span> <span style="color:#ae81ff">\;</span>
+</span></span><span style="display:flex;"><span>sed -e <span style="color:#e6db74">&#39;s:#ENCRYPT_METHOD DES:ENCRYPT_METHOD SHA512:&#39;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    -e <span style="color:#e6db74">&#39;s:/var/spool/mail:/var/mail:&#39;</span>                 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    -e <span style="color:#e6db74">&#39;/PATH=/{s@/sbin:@@;s@/bin:@@}&#39;</span>                <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    -i etc/login.defs
+</span></span><span style="display:flex;"><span>touch /usr/bin/passwd
+</span></span><span style="display:flex;"><span>./configure --sysconfdir<span style="color:#f92672">=</span>/etc <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --disable-static  <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --with-group-name-max-length<span style="color:#f92672">=</span><span style="color:#ae81ff">32</span>
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make exec_prefix<span style="color:#f92672">=</span>/usr install
+</span></span><span style="display:flex;"><span>make -C man install-man
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.26. GCC-12.2.0</span>
+</span></span><span style="display:flex;"><span>begin gcc-12.2.0 tar.xz
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">case</span> <span style="color:#66d9ef">$(</span>uname -m<span style="color:#66d9ef">)</span> in
+</span></span><span style="display:flex;"><span>  x86_64<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    sed -e <span style="color:#e6db74">&#39;/m64=/s/lib64/lib/&#39;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>        -i.orig gcc/config/i386/t-linux64
+</span></span><span style="display:flex;"><span>  ;;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">esac</span>
+</span></span><span style="display:flex;"><span>mkdir -v build
+</span></span><span style="display:flex;"><span>cd       build
+</span></span><span style="display:flex;"><span>../configure --prefix<span style="color:#f92672">=</span>/usr            <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>             LD<span style="color:#f92672">=</span>ld                    <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>             --enable-languages<span style="color:#f92672">=</span>c,c++ <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>             --disable-multilib       <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>             --disable-bootstrap      <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>             --with-system-zlib
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make install
+</span></span><span style="display:flex;"><span>chown -v -R root:root <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    /usr/lib/gcc/<span style="color:#66d9ef">$(</span>gcc -dumpmachine<span style="color:#66d9ef">)</span>/12.2.0/include<span style="color:#f92672">{</span>,-fixed<span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>ln -svr /usr/bin/cpp /usr/lib
+</span></span><span style="display:flex;"><span>ln -sfv ../../libexec/gcc/<span style="color:#66d9ef">$(</span>gcc -dumpmachine<span style="color:#66d9ef">)</span>/12.2.0/liblto_plugin.so <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>        /usr/lib/bfd-plugins/
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#39;int main(){}&#39;</span> &gt; dummy.c
+</span></span><span style="display:flex;"><span>cc dummy.c -v -Wl,--verbose &amp;&gt; dummy.log
+</span></span><span style="display:flex;"><span>readelf -l a.out | grep <span style="color:#e6db74">&#39;: /lib&#39;</span>
+</span></span><span style="display:flex;"><span>grep -o <span style="color:#e6db74">&#39;/usr/lib.*/crt[1in].*succeeded&#39;</span> dummy.log
+</span></span><span style="display:flex;"><span>grep -B4 <span style="color:#e6db74">&#39;^ /usr/include&#39;</span> dummy.log
+</span></span><span style="display:flex;"><span>grep <span style="color:#e6db74">&#39;SEARCH.*/usr/lib&#39;</span> dummy.log |sed <span style="color:#e6db74">&#39;s|; |\n|g&#39;</span>
+</span></span><span style="display:flex;"><span>grep <span style="color:#e6db74">&#34;/lib.*/libc.so.6 &#34;</span> dummy.log
+</span></span><span style="display:flex;"><span>grep found dummy.log
+</span></span><span style="display:flex;"><span>rm -v dummy.c a.out dummy.log
+</span></span><span style="display:flex;"><span>mkdir -pv /usr/share/gdb/auto-load/usr/lib
+</span></span><span style="display:flex;"><span>mv -v /usr/lib/*gdb.py /usr/share/gdb/auto-load/usr/lib
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.27. Pkg-config-0.29.2</span>
+</span></span><span style="display:flex;"><span>begin pkg-config-0.29.2 tar.gz
+</span></span><span style="display:flex;"><span>./configure --prefix<span style="color:#f92672">=</span>/usr              <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --with-internal-glib       <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --disable-host-tool        <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --docdir<span style="color:#f92672">=</span>/usr/share/doc/pkg-config-0.29.2
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make install
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.28. Ncurses-6.3</span>
+</span></span><span style="display:flex;"><span>begin ncurses-6.3 tar.gz
+</span></span><span style="display:flex;"><span>./configure --prefix<span style="color:#f92672">=</span>/usr           <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --mandir<span style="color:#f92672">=</span>/usr/share/man <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --with-shared           <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --without-debug         <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --without-normal        <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --with-cxx-shared       <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --enable-pc-files       <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --enable-widec          <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --with-pkg-config-libdir<span style="color:#f92672">=</span>/usr/lib/pkgconfig
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make DESTDIR<span style="color:#f92672">=</span>$PWD/dest install
+</span></span><span style="display:flex;"><span>install -vm755 dest/usr/lib/libncursesw.so.6.3 /usr/lib
+</span></span><span style="display:flex;"><span>rm -v  dest/usr/lib/libncursesw.so.6.3
+</span></span><span style="display:flex;"><span>cp -av dest/* /
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> lib in ncurses form panel menu ; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>    rm -vf                    /usr/lib/lib<span style="color:#e6db74">${</span>lib<span style="color:#e6db74">}</span>.so
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;INPUT(-l</span><span style="color:#e6db74">${</span>lib<span style="color:#e6db74">}</span><span style="color:#e6db74">w)&#34;</span> &gt; /usr/lib/lib<span style="color:#e6db74">${</span>lib<span style="color:#e6db74">}</span>.so
+</span></span><span style="display:flex;"><span>    ln -sfv <span style="color:#e6db74">${</span>lib<span style="color:#e6db74">}</span>w.pc        /usr/lib/pkgconfig/<span style="color:#e6db74">${</span>lib<span style="color:#e6db74">}</span>.pc
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span>rm -vf                     /usr/lib/libcursesw.so
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;INPUT(-lncursesw)&#34;</span> &gt; /usr/lib/libcursesw.so
+</span></span><span style="display:flex;"><span>ln -sfv libncurses.so      /usr/lib/libcurses.so
+</span></span><span style="display:flex;"><span>mkdir -pv      /usr/share/doc/ncurses-6.3
+</span></span><span style="display:flex;"><span>cp -v -R doc/* /usr/share/doc/ncurses-6.3
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.29. Sed-4.8</span>
+</span></span><span style="display:flex;"><span>begin sed-4.8 tar.xz
+</span></span><span style="display:flex;"><span>./configure --prefix<span style="color:#f92672">=</span>/usr
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make html
+</span></span><span style="display:flex;"><span>make install
+</span></span><span style="display:flex;"><span>install -d -m755           /usr/share/doc/sed-4.8
+</span></span><span style="display:flex;"><span>install -m644 doc/sed.html /usr/share/doc/sed-4.8
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.30. Psmisc-23.5</span>
+</span></span><span style="display:flex;"><span>begin psmisc-23.5 tar.xz
+</span></span><span style="display:flex;"><span>./configure --prefix<span style="color:#f92672">=</span>/usr
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make install
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.31. Gettext-0.21</span>
+</span></span><span style="display:flex;"><span>begin gettext-0.21 tar.xz
+</span></span><span style="display:flex;"><span>./configure --prefix<span style="color:#f92672">=</span>/usr    <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --disable-static <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --docdir<span style="color:#f92672">=</span>/usr/share/doc/gettext-0.21
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make install
+</span></span><span style="display:flex;"><span>chmod -v <span style="color:#ae81ff">0755</span> /usr/lib/preloadable_libintl.so
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.32. Bison-3.8.2</span>
+</span></span><span style="display:flex;"><span>begin bison-3.8.2 tar.xz
+</span></span><span style="display:flex;"><span>./configure --prefix<span style="color:#f92672">=</span>/usr --docdir<span style="color:#f92672">=</span>/usr/share/doc/bison-3.8.2
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make install
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.33. Grep-3.7</span>
+</span></span><span style="display:flex;"><span>begin grep-3.7 tar.xz
+</span></span><span style="display:flex;"><span>./configure --prefix<span style="color:#f92672">=</span>/usr
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make install
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.34. Bash-5.1.16</span>
+</span></span><span style="display:flex;"><span>begin bash-5.1.16 tar.gz
+</span></span><span style="display:flex;"><span>./configure --prefix<span style="color:#f92672">=</span>/usr                      <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --docdir<span style="color:#f92672">=</span>/usr/share/doc/bash-5.1.16 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --without-bash-malloc              <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --with-installed-readline
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make install
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.35. Libtool-2.4.7</span>
+</span></span><span style="display:flex;"><span>begin libtool-2.4.7 tar.xz
+</span></span><span style="display:flex;"><span>./configure --prefix<span style="color:#f92672">=</span>/usr
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make install
+</span></span><span style="display:flex;"><span>rm -fv /usr/lib/libltdl.a
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.36. GDBM-1.23</span>
+</span></span><span style="display:flex;"><span>begin gdbm-1.23 tar.gz
+</span></span><span style="display:flex;"><span>./configure --prefix<span style="color:#f92672">=</span>/usr    <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --disable-static <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --enable-libgdbm-compat
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make install
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.37. Gperf-3.1</span>
+</span></span><span style="display:flex;"><span>begin gperf-3.1 tar.gz
+</span></span><span style="display:flex;"><span>./configure --prefix<span style="color:#f92672">=</span>/usr --docdir<span style="color:#f92672">=</span>/usr/share/doc/gperf-3.1
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make install
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.38. Expat-2.4.8</span>
+</span></span><span style="display:flex;"><span>begin expat-2.4.8 tar.xz
+</span></span><span style="display:flex;"><span>./configure --prefix<span style="color:#f92672">=</span>/usr    <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --disable-static <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --docdir<span style="color:#f92672">=</span>/usr/share/doc/expat-2.4.8
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make install
+</span></span><span style="display:flex;"><span>install -v -m644 doc/*.<span style="color:#f92672">{</span>html,css<span style="color:#f92672">}</span> /usr/share/doc/expat-2.4.8
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.39. Inetutils-2.3</span>
+</span></span><span style="display:flex;"><span>begin inetutils-2.3 tar.xz
+</span></span><span style="display:flex;"><span>./configure --prefix<span style="color:#f92672">=</span>/usr        <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --bindir<span style="color:#f92672">=</span>/usr/bin    <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --localstatedir<span style="color:#f92672">=</span>/var <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --disable-logger     <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --disable-whois      <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --disable-rcp        <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --disable-rexec      <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --disable-rlogin     <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --disable-rsh        <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --disable-servers
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make install
+</span></span><span style="display:flex;"><span>mv -v /usr/<span style="color:#f92672">{</span>,s<span style="color:#f92672">}</span>bin/ifconfig
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.40. Less-590</span>
+</span></span><span style="display:flex;"><span>begin less-590 tar.gz
+</span></span><span style="display:flex;"><span>./configure --prefix<span style="color:#f92672">=</span>/usr --sysconfdir<span style="color:#f92672">=</span>/etc
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make install
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.41. Perl-5.36.0</span>
+</span></span><span style="display:flex;"><span>begin perl-5.36.0 tar.xz
+</span></span><span style="display:flex;"><span>export BUILD_ZLIB<span style="color:#f92672">=</span>False
+</span></span><span style="display:flex;"><span>export BUILD_BZIP2<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>sh Configure -des                                         <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>             -Dprefix<span style="color:#f92672">=</span>/usr                                <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>             -Dvendorprefix<span style="color:#f92672">=</span>/usr                          <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>             -Dprivlib<span style="color:#f92672">=</span>/usr/lib/perl5/5.36/core_perl      <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>             -Darchlib<span style="color:#f92672">=</span>/usr/lib/perl5/5.36/core_perl      <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>             -Dsitelib<span style="color:#f92672">=</span>/usr/lib/perl5/5.36/site_perl      <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>             -Dsitearch<span style="color:#f92672">=</span>/usr/lib/perl5/5.36/site_perl     <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>             -Dvendorlib<span style="color:#f92672">=</span>/usr/lib/perl5/5.36/vendor_perl  <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>             -Dvendorarch<span style="color:#f92672">=</span>/usr/lib/perl5/5.36/vendor_perl <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>             -Dman1dir<span style="color:#f92672">=</span>/usr/share/man/man1                <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>             -Dman3dir<span style="color:#f92672">=</span>/usr/share/man/man3                <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>             -Dpager<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/usr/bin/less -isR&#34;</span>                 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>             -Duseshrplib                                 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>             -Dusethreads
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make install
+</span></span><span style="display:flex;"><span>unset BUILD_ZLIB BUILD_BZIP2
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.42. XML::Parser-2.46</span>
+</span></span><span style="display:flex;"><span>begin XML-Parser-2.46 tar.gz
+</span></span><span style="display:flex;"><span>perl Makefile.PL
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make install
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.43. Intltool-0.51.0</span>
+</span></span><span style="display:flex;"><span>begin intltool-0.51.0 tar.gz
+</span></span><span style="display:flex;"><span>sed -i <span style="color:#e6db74">&#39;s:\\\${:\\\$\\{:&#39;</span> intltool-update.in
+</span></span><span style="display:flex;"><span>./configure --prefix<span style="color:#f92672">=</span>/usr
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make install
+</span></span><span style="display:flex;"><span>install -v -Dm644 doc/I18N-HOWTO /usr/share/doc/intltool-0.51.0/I18N-HOWTO
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.44. Autoconf-2.71</span>
+</span></span><span style="display:flex;"><span>begin autoconf-2.71 tar.xz
+</span></span><span style="display:flex;"><span>./configure --prefix<span style="color:#f92672">=</span>/usr
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make install
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.45. Automake-1.16.5</span>
+</span></span><span style="display:flex;"><span>begin automake-1.16.5 tar.xz
+</span></span><span style="display:flex;"><span>./configure --prefix<span style="color:#f92672">=</span>/usr --docdir<span style="color:#f92672">=</span>/usr/share/doc/automake-1.16.5
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make install
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.46. OpenSSL-3.0.5</span>
+</span></span><span style="display:flex;"><span>begin openssl-3.0.5 tar.gz
+</span></span><span style="display:flex;"><span>./config --prefix<span style="color:#f92672">=</span>/usr         <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>         --openssldir<span style="color:#f92672">=</span>/etc/ssl <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>         --libdir<span style="color:#f92672">=</span>lib          <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>         shared                <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>         zlib-dynamic
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>sed -i <span style="color:#e6db74">&#39;/INSTALL_LIBS/s/libcrypto.a libssl.a//&#39;</span> Makefile
+</span></span><span style="display:flex;"><span>make MANSUFFIX<span style="color:#f92672">=</span>ssl install
+</span></span><span style="display:flex;"><span>mv -v /usr/share/doc/openssl /usr/share/doc/openssl-3.0.5
+</span></span><span style="display:flex;"><span>cp -vfr doc/* /usr/share/doc/openssl-3.0.5
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.47. Kmod-30</span>
+</span></span><span style="display:flex;"><span>begin kmod-30 tar.xz
+</span></span><span style="display:flex;"><span>./configure --prefix<span style="color:#f92672">=</span>/usr          <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --sysconfdir<span style="color:#f92672">=</span>/etc      <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --with-openssl         <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --with-xz              <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --with-zstd            <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --with-zlib
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make install
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> target in depmod insmod modinfo modprobe rmmod; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>  ln -sfv ../bin/kmod /usr/sbin/$target
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span>ln -sfv kmod /usr/bin/lsmod
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.48. Libelf from Elfutils-0.187</span>
+</span></span><span style="display:flex;"><span>begin elfutils-0.187 tar.bz2
+</span></span><span style="display:flex;"><span>./configure --prefix<span style="color:#f92672">=</span>/usr                <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --disable-debuginfod         <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --enable-libdebuginfod<span style="color:#f92672">=</span>dummy
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make -C libelf install
+</span></span><span style="display:flex;"><span>install -vm644 config/libelf.pc /usr/lib/pkgconfig
+</span></span><span style="display:flex;"><span>rm /usr/lib/libelf.a
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.49. Libffi-3.4.2</span>
+</span></span><span style="display:flex;"><span>begin libffi-3.4.2 tar.gz
+</span></span><span style="display:flex;"><span>./configure --prefix<span style="color:#f92672">=</span>/usr          <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --disable-static       <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --with-gcc-arch<span style="color:#f92672">=</span>native <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --disable-exec-static-tramp
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make install
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.50. Python-3.10.6</span>
+</span></span><span style="display:flex;"><span>begin Python-3.10.6 tar.xz
+</span></span><span style="display:flex;"><span>./configure --prefix<span style="color:#f92672">=</span>/usr        <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --enable-shared      <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --with-system-expat  <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --with-system-ffi    <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --enable-optimizations
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make install
+</span></span><span style="display:flex;"><span>cat &gt; /etc/pip.conf <span style="color:#e6db74">&lt;&lt; EOF
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">[global]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">root-user-action = ignore
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">disable-pip-version-check = true
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOF</span>
+</span></span><span style="display:flex;"><span>install -v -dm755 /usr/share/doc/python-3.10.6/html
+</span></span><span style="display:flex;"><span>tar --strip-components<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>  <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    --no-same-owner       <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    --no-same-permissions <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    -C /usr/share/doc/python-3.10.6/html <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    -xvf ../python-3.10.6-docs-html.tar.bz2
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.51. Wheel-0.37.1</span>
+</span></span><span style="display:flex;"><span>begin wheel-0.37.1 tar.gz
+</span></span><span style="display:flex;"><span>pip3 install --no-index $PWD
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.52. Ninja-1.11.0</span>
+</span></span><span style="display:flex;"><span>begin ninja-1.11.0 tar.gz
+</span></span><span style="display:flex;"><span>sed -i <span style="color:#e6db74">&#39;/int Guess/a \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  int   j = 0;\
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  char* jobs = getenv( &#34;NINJAJOBS&#34; );\
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  if ( jobs != NULL ) j = atoi( jobs );\
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  if ( j &gt; 0 ) return j;\
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#39;</span> src/ninja.cc
+</span></span><span style="display:flex;"><span>python3 configure.py --bootstrap
+</span></span><span style="display:flex;"><span>install -vm755 ninja /usr/bin/
+</span></span><span style="display:flex;"><span>install -vDm644 misc/bash-completion /usr/share/bash-completion/completions/ninja
+</span></span><span style="display:flex;"><span>install -vDm644 misc/zsh-completion  /usr/share/zsh/site-functions/_ninja
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.53. Meson-0.63.1</span>
+</span></span><span style="display:flex;"><span>begin meson-0.63.1 tar.gz
+</span></span><span style="display:flex;"><span>pip3 wheel -w dist --no-build-isolation --no-deps $PWD
+</span></span><span style="display:flex;"><span>pip3 install --no-index --find-links dist meson
+</span></span><span style="display:flex;"><span>install -vDm644 data/shell-completions/bash/meson /usr/share/bash-completion/completions/meson
+</span></span><span style="display:flex;"><span>install -vDm644 data/shell-completions/zsh/_meson /usr/share/zsh/site-functions/_meson
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.54. Coreutils-9.1</span>
+</span></span><span style="display:flex;"><span>begin coreutils-9.1 tar.xz
+</span></span><span style="display:flex;"><span>patch -Np1 -i ../coreutils-9.1-i18n-1.patch
+</span></span><span style="display:flex;"><span>autoreconf -fiv
+</span></span><span style="display:flex;"><span>FORCE_UNSAFE_CONFIGURE<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span> ./configure <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --prefix<span style="color:#f92672">=</span>/usr            <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --enable-no-install-program<span style="color:#f92672">=</span>kill,uptime
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make install
+</span></span><span style="display:flex;"><span>mv -v /usr/bin/chroot /usr/sbin
+</span></span><span style="display:flex;"><span>mv -v /usr/share/man/man1/chroot.1 /usr/share/man/man8/chroot.8
+</span></span><span style="display:flex;"><span>sed -i <span style="color:#e6db74">&#39;s/&#34;1&#34;/&#34;8&#34;/&#39;</span> /usr/share/man/man8/chroot.8
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.55. Check-0.15.2</span>
+</span></span><span style="display:flex;"><span>begin check-0.15.2 tar.gz
+</span></span><span style="display:flex;"><span>./configure --prefix<span style="color:#f92672">=</span>/usr --disable-static
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make docdir<span style="color:#f92672">=</span>/usr/share/doc/check-0.15.2 install
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.56. Diffutils-3.8</span>
+</span></span><span style="display:flex;"><span>begin diffutils-3.8 tar.xz
+</span></span><span style="display:flex;"><span>./configure --prefix<span style="color:#f92672">=</span>/usr
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make install
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.57. Gawk-5.1.1</span>
+</span></span><span style="display:flex;"><span>begin gawk-5.1.1 tar.xz
+</span></span><span style="display:flex;"><span>sed -i <span style="color:#e6db74">&#39;s/extras//&#39;</span> Makefile.in
+</span></span><span style="display:flex;"><span>./configure --prefix<span style="color:#f92672">=</span>/usr
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make install
+</span></span><span style="display:flex;"><span>mkdir -pv                                   /usr/share/doc/gawk-5.1.1
+</span></span><span style="display:flex;"><span>cp    -v doc/<span style="color:#f92672">{</span>awkforai.txt,*.<span style="color:#f92672">{</span>eps,pdf,jpg<span style="color:#f92672">}}</span> /usr/share/doc/gawk-5.1.1
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.58. Findutils-4.9.0</span>
+</span></span><span style="display:flex;"><span>begin findutils-4.9.0 tar.xz
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">case</span> <span style="color:#66d9ef">$(</span>uname -m<span style="color:#66d9ef">)</span> in
+</span></span><span style="display:flex;"><span>    i?86<span style="color:#f92672">)</span>   TIME_T_32_BIT_OK<span style="color:#f92672">=</span>yes ./configure --prefix<span style="color:#f92672">=</span>/usr --localstatedir<span style="color:#f92672">=</span>/var/lib/locate ;;
+</span></span><span style="display:flex;"><span>    x86_64<span style="color:#f92672">)</span> ./configure --prefix<span style="color:#f92672">=</span>/usr --localstatedir<span style="color:#f92672">=</span>/var/lib/locate ;;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">esac</span>
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make install
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.59. Groff-1.22.4</span>
+</span></span><span style="display:flex;"><span>begin groff-1.22.4 tar.gz
+</span></span><span style="display:flex;"><span>PAGE<span style="color:#f92672">=</span>A4 ./configure --prefix<span style="color:#f92672">=</span>/usr
+</span></span><span style="display:flex;"><span>make -j1
+</span></span><span style="display:flex;"><span>make install
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.60. GRUB-2.06</span>
+</span></span><span style="display:flex;"><span>begin grub-2.06 tar.xz
+</span></span><span style="display:flex;"><span>./configure --prefix<span style="color:#f92672">=</span>/usr          <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --sysconfdir<span style="color:#f92672">=</span>/etc      <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --disable-efiemu       <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            --disable-werror
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make install
+</span></span><span style="display:flex;"><span>mv -v /etc/bash_completion.d/grub /usr/share/bash-completion/completions
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.61. Gzip-1.12</span>
+</span></span><span style="display:flex;"><span>begin gzip-1.12 tar.xz
+</span></span><span style="display:flex;"><span>./configure --prefix<span style="color:#f92672">=</span>/usr
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make install
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.62. IPRoute2-5.19.0</span>
+</span></span><span style="display:flex;"><span>begin iproute2-5.19.0 tar.xz
+</span></span><span style="display:flex;"><span>sed -i /ARPD/d Makefile
+</span></span><span style="display:flex;"><span>rm -fv man/man8/arpd.8
+</span></span><span style="display:flex;"><span>make NETNS_RUN_DIR<span style="color:#f92672">=</span>/run/netns
+</span></span><span style="display:flex;"><span>make SBINDIR<span style="color:#f92672">=</span>/usr/sbin install
+</span></span><span style="display:flex;"><span>mkdir -pv             /usr/share/doc/iproute2-5.19.0
+</span></span><span style="display:flex;"><span>cp -v COPYING README* /usr/share/doc/iproute2-5.19.0
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.63. Kbd-2.5.1</span>
+</span></span><span style="display:flex;"><span>begin kbd-2.5.1 tar.xz
+</span></span><span style="display:flex;"><span>patch -Np1 -i ../kbd-2.5.1-backspace-1.patch
+</span></span><span style="display:flex;"><span>sed -i <span style="color:#e6db74">&#39;/RESIZECONS_PROGS=/s/yes/no/&#39;</span> configure
+</span></span><span style="display:flex;"><span>sed -i <span style="color:#e6db74">&#39;s/resizecons.8 //&#39;</span> docs/man/man8/Makefile.in
+</span></span><span style="display:flex;"><span>./configure --prefix<span style="color:#f92672">=</span>/usr --disable-vlock
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.64. Libpipeline-1.5.6</span>
+</span></span><span style="display:flex;"><span>begin libpipeline-1.5.6 tar.gz
+</span></span><span style="display:flex;"><span>./configure --prefix<span style="color:#f92672">=</span>/usr
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make install
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.65. Make-4.3</span>
+</span></span><span style="display:flex;"><span>begin make-4.3 tar.gz
+</span></span><span style="display:flex;"><span>./configure --prefix<span style="color:#f92672">=</span>/usr
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make install
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.66. Patch-2.7.6</span>
+</span></span><span style="display:flex;"><span>begin patch-2.7.6 tar.xz
+</span></span><span style="display:flex;"><span>./configure --prefix<span style="color:#f92672">=</span>/usr
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make install
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.67. Tar-1.34</span>
+</span></span><span style="display:flex;"><span>begin tar-1.34 tar.xz
+</span></span><span style="display:flex;"><span>FORCE_UNSAFE_CONFIGURE<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>  <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>./configure --prefix<span style="color:#f92672">=</span>/usr
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make install
+</span></span><span style="display:flex;"><span>make -C doc install-html docdir<span style="color:#f92672">=</span>/usr/share/doc/tar-1.34
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.68. Texinfo-6.8</span>
+</span></span><span style="display:flex;"><span>begin texinfo-6.8 tar.xz
+</span></span><span style="display:flex;"><span>./configure --prefix<span style="color:#f92672">=</span>/usr
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make install
+</span></span><span style="display:flex;"><span>make TEXMF<span style="color:#f92672">=</span>/usr/share/texmf install-tex
+</span></span><span style="display:flex;"><span>pushd /usr/share/info
+</span></span><span style="display:flex;"><span>  rm -v dir
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">for</span> f in *
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">do</span> install-info $f dir 2&gt;/dev/null
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span>popd
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.69. Vim-9.0.0228</span>
+</span></span><span style="display:flex;"><span>begin vim-9.0.0228 tar.gz
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#39;#define SYS_VIMRC_FILE &#34;/etc/vimrc&#34;&#39;</span> &gt;&gt; src/feature.h
+</span></span><span style="display:flex;"><span>./configure --prefix<span style="color:#f92672">=</span>/usr
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make install
+</span></span><span style="display:flex;"><span>ln -sv vim /usr/bin/vi
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> L in  /usr/share/man/<span style="color:#f92672">{</span>,*/<span style="color:#f92672">}</span>man1/vim.1; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>    ln -sv vim.1 <span style="color:#66d9ef">$(</span>dirname $L<span style="color:#66d9ef">)</span>/vi.1
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span>ln -sv ../vim/vim90/doc /usr/share/doc/vim-9.0.0228
+</span></span><span style="display:flex;"><span>cat &gt; /etc/vimrc &lt;&lt; <span style="color:#e6db74">&#34;EOF&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34; Begin /etc/vimrc
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;</span> Ensure defaults are set before customizing settings, not after
+</span></span><span style="display:flex;"><span>source $VIMRUNTIME/defaults.vim
+</span></span><span style="display:flex;"><span>let skip_defaults_vim<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>set nocompatible
+</span></span><span style="display:flex;"><span>set backspace<span style="color:#f92672">=</span><span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>set mouse<span style="color:#f92672">=</span>
+</span></span><span style="display:flex;"><span>syntax on
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">(</span>&amp;term <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;xterm&#34;</span><span style="color:#f92672">)</span> <span style="color:#f92672">||</span> <span style="color:#f92672">(</span>&amp;term <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;putty&#34;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>  set background<span style="color:#f92672">=</span>dark
+</span></span><span style="display:flex;"><span>endif
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34; End /etc/vimrc
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOF
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">finish
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># 8.70. Eudev-3.2.11
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">begin eudev-3.2.11 tar.gz
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">./configure --prefix=/usr           \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            --bindir=/usr/sbin      \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            --sysconfdir=/etc       \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            --enable-manpages       \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            --disable-static
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">make
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">mkdir -pv /usr/lib/udev/rules.d
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">mkdir -pv /etc/udev/rules.d
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">make install
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">tar -xvf ../udev-lfs-20171102.tar.xz
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">make -f udev-lfs-20171102/Makefile.lfs install
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">udevadm hwdb --update
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">finish
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># 8.71. Man-DB-2.10.2
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">begin man-db-2.10.2 tar.xz
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">./configure --prefix=/usr                         \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            --docdir=/usr/share/doc/man-db-2.10.2 \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            --sysconfdir=/etc                     \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            --disable-setuid                      \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            --enable-cache-owner=bin              \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            --with-browser=/usr/bin/lynx          \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            --with-vgrind=/usr/bin/vgrind         \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            --with-grap=/usr/bin/grap             \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            --with-systemdtmpfilesdir=            \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            --with-systemdsystemunitdir=
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">make
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">make install
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">finish
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># 8.72. Procps-ng-4.0.0
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">begin procps-ng-4.0.0 tar.xz
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">./configure --prefix=/usr                            \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            --docdir=/usr/share/doc/procps-ng-4.0.0 \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            --disable-static                         \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            --disable-kill
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">make
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">make install
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">finish
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># 8.73. Util-linux-2.38.1
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">begin util-linux-2.38.1 tar.xz
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">./configure ADJTIME_PATH=/var/lib/hwclock/adjtime   \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            --bindir=/usr/bin    \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            --libdir=/usr/lib    \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            --sbindir=/usr/sbin  \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            --docdir=/usr/share/doc/util-linux-2.38.1 \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            --disable-chfn-chsh  \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            --disable-login      \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            --disable-nologin    \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            --disable-su         \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            --disable-setpriv    \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            --disable-runuser    \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            --disable-pylibmount \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            --disable-static     \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            --without-python     \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            --without-systemd    \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            --without-systemdsystemunitdir
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">make
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">make install
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">finish
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># 8.74. E2fsprogs-1.46.5
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">begin e2fsprogs-1.46.5 tar.gz
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">mkdir -v build
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">cd       build
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">../configure --prefix=/usr           \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">             --sysconfdir=/etc       \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">             --enable-elf-shlibs     \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">             --disable-libblkid      \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">             --disable-libuuid       \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">             --disable-uuidd         \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">             --disable-fsck
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">make
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">make install
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">rm -fv /usr/lib/{libcom_err,libe2p,libext2fs,libss}.a
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">gunzip -v /usr/share/info/libext2fs.info.gz
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">install-info --dir-file=/usr/share/info/dir /usr/share/info/libext2fs.info
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">makeinfo -o      doc/com_err.info ../lib/et/com_err.texinfo
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">install -v -m644 doc/com_err.info /usr/share/info
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">install-info --dir-file=/usr/share/info/dir /usr/share/info/com_err.info
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">finish
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># 8.75. Sysklogd-1.5.1
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">begin sysklogd-1.5.1 tar.gz
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">sed -i &#39;/Error loading kernel symbols/{n;n;d}&#39; ksym_mod.c
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">sed -i &#39;s/union wait/int/&#39; syslogd.c
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">make
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">make BINDIR=/sbin install
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">cat &gt; /etc/syslog.conf &lt;&lt; &#34;</span>EOF<span style="color:#e6db74">&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># Begin /etc/syslog.conf
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">auth,authpriv.* -/var/log/auth.log
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">*.*;auth,authpriv.none -/var/log/sys.log
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">daemon.* -/var/log/daemon.log
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">kern.* -/var/log/kern.log
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">mail.* -/var/log/mail.log
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">user.* -/var/log/user.log
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">*.emerg *
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># End /etc/syslog.conf
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOF
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">finish
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># 8.76. Sysvinit-3.04
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">begin sysvinit-3.04 tar.xz
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">patch -Np1 -i ../sysvinit-3.04-consolidated-1.patch
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">make
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">make install
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">finish
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># 8.78. Stripping
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">save_usrlib=&#34;</span><span style="color:#66d9ef">$(</span>cd /usr/lib; ls ld-linux*<span style="color:#f92672">[</span>^g<span style="color:#f92672">]</span><span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>             libc.so.6
+</span></span><span style="display:flex;"><span>             libthread_db.so.1
+</span></span><span style="display:flex;"><span>             libquadmath.so.0.0.0
+</span></span><span style="display:flex;"><span>             libstdc++.so.6.0.30
+</span></span><span style="display:flex;"><span>             libitm.so.1.0.0
+</span></span><span style="display:flex;"><span>             libatomic.so.1.2.0<span style="color:#e6db74">&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">cd /usr/lib
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">for LIB in </span>$save_usrlib<span style="color:#e6db74">; do
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    objcopy --only-keep-debug </span>$LIB<span style="color:#e6db74"> </span>$LIB<span style="color:#e6db74">.dbg
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    cp </span>$LIB<span style="color:#e6db74"> /tmp/</span>$LIB<span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    strip --strip-unneeded /tmp/</span>$LIB<span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    objcopy --add-gnu-debuglink=</span>$LIB<span style="color:#e6db74">.dbg /tmp/</span>$LIB<span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    install -vm755 /tmp/</span>$LIB<span style="color:#e6db74"> /usr/lib
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    rm /tmp/</span>$LIB<span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">done
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">online_usrbin=&#34;</span>bash find strip<span style="color:#e6db74">&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">online_usrlib=&#34;</span>libbfd-2.39.so
+</span></span><span style="display:flex;"><span>               libhistory.so.8.1
+</span></span><span style="display:flex;"><span>               libncursesw.so.6.3
+</span></span><span style="display:flex;"><span>               libm.so.6
+</span></span><span style="display:flex;"><span>               libreadline.so.8.1
+</span></span><span style="display:flex;"><span>               libz.so.1.2.12
+</span></span><span style="display:flex;"><span>               <span style="color:#66d9ef">$(</span>cd /usr/lib; find libnss*.so* -type f<span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">for BIN in </span>$online_usrbin<span style="color:#e6db74">; do
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    cp /usr/bin/</span>$BIN<span style="color:#e6db74"> /tmp/</span>$BIN<span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    strip --strip-unneeded /tmp/</span>$BIN<span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    install -vm755 /tmp/</span>$BIN<span style="color:#e6db74"> /usr/bin
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    rm /tmp/</span>$BIN<span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">done
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">for LIB in </span>$online_usrlib<span style="color:#e6db74">; do
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    cp /usr/lib/</span>$LIB<span style="color:#e6db74"> /tmp/</span>$LIB<span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    strip --strip-unneeded /tmp/</span>$LIB<span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    install -vm755 /tmp/</span>$LIB<span style="color:#e6db74"> /usr/lib
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    rm /tmp/</span>$LIB<span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">done
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">for i in </span><span style="color:#66d9ef">$(</span>find /usr/lib -type f -name <span style="color:#ae81ff">\*</span>.so* ! -name <span style="color:#ae81ff">\*</span>dbg<span style="color:#66d9ef">)</span><span style="color:#e6db74"> \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">         </span><span style="color:#66d9ef">$(</span>find /usr/lib -type f -name <span style="color:#ae81ff">\*</span>.a<span style="color:#66d9ef">)</span><span style="color:#e6db74">                 \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">         </span><span style="color:#66d9ef">$(</span>find /usr/<span style="color:#f92672">{</span>bin,sbin,libexec<span style="color:#f92672">}</span> -type f<span style="color:#66d9ef">)</span><span style="color:#e6db74">; do
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    case &#34;</span>$online_usrbin $online_usrlib $save_usrlib<span style="color:#e6db74">&#34; in
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        *</span><span style="color:#66d9ef">$(</span>basename $i<span style="color:#66d9ef">)</span><span style="color:#e6db74">* )
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            ;;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        * ) strip --strip-unneeded </span>$i<span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            ;;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    esac
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">done
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">unset BIN LIB save_usrlib online_usrbin online_usrlib
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># 8.78. Cleaning Up rm -rf /tmp/*
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">find /usr/lib /usr/libexec -name \*.la -delete
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">find /usr -depth -name </span><span style="color:#66d9ef">$(</span>uname -m<span style="color:#66d9ef">)</span><span style="color:#e6db74">-lfs-linux-gnu\* | xargs rm -rf
+</span></span></span></code></pre></div><h3 id="lfs-finalsh">lfs-final.sh</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/bash
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"># LFS 11.2 Build Script</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Final steps to configure the system</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># by Luís Mendes :)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 07/Sep/2022</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>package_name<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>package_ext<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>begin<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>	package_name<span style="color:#f92672">=</span>$1
+</span></span><span style="display:flex;"><span>	package_ext<span style="color:#f92672">=</span>$2
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	echo <span style="color:#e6db74">&#34;[lfs-final] Starting build of </span>$package_name<span style="color:#e6db74"> at </span><span style="color:#66d9ef">$(</span>date<span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	tar xf $package_name.$package_ext
+</span></span><span style="display:flex;"><span>	cd $package_name
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>finish<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>	echo <span style="color:#e6db74">&#34;[lfs-final] Finishing build of </span>$package_name<span style="color:#e6db74"> at </span><span style="color:#66d9ef">$(</span>date<span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	cd /sources
+</span></span><span style="display:flex;"><span>	rm -rf $package_name
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>cd /sources
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 9.2. LFS-Bootscripts-20220723</span>
+</span></span><span style="display:flex;"><span>begin lfs-bootscripts-20220723 tar.xz
+</span></span><span style="display:flex;"><span>make install
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 9.4.1.2. Creating Custom Udev Rules</span>
+</span></span><span style="display:flex;"><span>bash /usr/lib/udev/init-net-rules.sh
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 9.5.1. Creating Network Interface Configuration Files</span>
+</span></span><span style="display:flex;"><span>cd /etc/sysconfig/
+</span></span><span style="display:flex;"><span>cat &gt; ifconfig.eth0 &lt;&lt; <span style="color:#e6db74">&#34;EOF&#34;</span>
+</span></span><span style="display:flex;"><span>ONBOOT<span style="color:#f92672">=</span>yes
+</span></span><span style="display:flex;"><span>IFACE<span style="color:#f92672">=</span>eth0
+</span></span><span style="display:flex;"><span>SERVICE<span style="color:#f92672">=</span>ipv4-static
+</span></span><span style="display:flex;"><span>IP<span style="color:#f92672">=</span>192.168.1.2
+</span></span><span style="display:flex;"><span>GATEWAY<span style="color:#f92672">=</span>192.168.1.1
+</span></span><span style="display:flex;"><span>PREFIX<span style="color:#f92672">=</span><span style="color:#ae81ff">24</span>
+</span></span><span style="display:flex;"><span>BROADCAST<span style="color:#f92672">=</span>192.168.1.255
+</span></span><span style="display:flex;"><span>EOF
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 9.5.2. Creating the /etc/resolv.conf File</span>
+</span></span><span style="display:flex;"><span>cat &gt; /etc/resolv.conf &lt;&lt; <span style="color:#e6db74">&#34;EOF&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Begin /etc/resolv.conf</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>nameserver 8.8.8.8
+</span></span><span style="display:flex;"><span>nameserver 8.8.4.4
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># End /etc/resolv.conf</span>
+</span></span><span style="display:flex;"><span>EOF
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 9.5.3. Configuring the system hostname</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;lfs&#34;</span> &gt; /etc/hostname
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 9.5.4. Customizing the /etc/hosts File</span>
+</span></span><span style="display:flex;"><span>cat &gt; /etc/hosts &lt;&lt; <span style="color:#e6db74">&#34;EOF&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Begin /etc/hosts</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>127.0.0.1 localhost.localdomain localhost
+</span></span><span style="display:flex;"><span>::1       localhost ip6-localhost ip6-loopback
+</span></span><span style="display:flex;"><span>ff02::1   ip6-allnodes
+</span></span><span style="display:flex;"><span>ff02::2   ip6-allrouters
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># End /etc/hosts</span>
+</span></span><span style="display:flex;"><span>EOF
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 9.6.2. Configuring Sysvinit</span>
+</span></span><span style="display:flex;"><span>cat &gt; /etc/inittab &lt;&lt; <span style="color:#e6db74">&#34;EOF&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Begin /etc/inittab</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>id:3:initdefault:
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>si::sysinit:/etc/rc.d/init.d/rc S
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>l0:0:wait:/etc/rc.d/init.d/rc <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>l1:S1:wait:/etc/rc.d/init.d/rc <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>l2:2:wait:/etc/rc.d/init.d/rc <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>l3:3:wait:/etc/rc.d/init.d/rc <span style="color:#ae81ff">3</span>
+</span></span><span style="display:flex;"><span>l4:4:wait:/etc/rc.d/init.d/rc <span style="color:#ae81ff">4</span>
+</span></span><span style="display:flex;"><span>l5:5:wait:/etc/rc.d/init.d/rc <span style="color:#ae81ff">5</span>
+</span></span><span style="display:flex;"><span>l6:6:wait:/etc/rc.d/init.d/rc <span style="color:#ae81ff">6</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>ca:12345:ctrlaltdel:/sbin/shutdown -t1 -a -r now
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>su:S016:once:/sbin/sulogin
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>1:2345:respawn:/sbin/agetty --noclear tty1 <span style="color:#ae81ff">9600</span>
+</span></span><span style="display:flex;"><span>2:2345:respawn:/sbin/agetty tty2 <span style="color:#ae81ff">9600</span>
+</span></span><span style="display:flex;"><span>3:2345:respawn:/sbin/agetty tty3 <span style="color:#ae81ff">9600</span>
+</span></span><span style="display:flex;"><span>4:2345:respawn:/sbin/agetty tty4 <span style="color:#ae81ff">9600</span>
+</span></span><span style="display:flex;"><span>5:2345:respawn:/sbin/agetty tty5 <span style="color:#ae81ff">9600</span>
+</span></span><span style="display:flex;"><span>6:2345:respawn:/sbin/agetty tty6 <span style="color:#ae81ff">9600</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># End /etc/inittab</span>
+</span></span><span style="display:flex;"><span>EOF
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 9.6.4. Configuring the System Clock</span>
+</span></span><span style="display:flex;"><span>cat &gt; /etc/sysconfig/clock &lt;&lt; <span style="color:#e6db74">&#34;EOF&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Begin /etc/sysconfig/clock</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>UTC<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Set this to any options you might need to give to hwclock,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># such as machine hardware clock type for Alphas.</span>
+</span></span><span style="display:flex;"><span>CLOCKPARAMS<span style="color:#f92672">=</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># End /etc/sysconfig/clock</span>
+</span></span><span style="display:flex;"><span>EOF
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 9.7. The Bash Shell Startup Files</span>
+</span></span><span style="display:flex;"><span>cat &gt; /etc/profile &lt;&lt; <span style="color:#e6db74">&#34;EOF&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Begin /etc/profile</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>export LANG<span style="color:#f92672">=</span>en_US.UTF-8
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># End /etc/profile</span>
+</span></span><span style="display:flex;"><span>EOF
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 9.8. Creating the /etc/inputrc File</span>
+</span></span><span style="display:flex;"><span>cat &gt; /etc/inputrc &lt;&lt; <span style="color:#e6db74">&#34;EOF&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Begin /etc/inputrc</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Modified by Chris Lynn &lt;roryo@roryo.dynup.net&gt;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Allow the command prompt to wrap to the next line</span>
+</span></span><span style="display:flex;"><span>set horizontal-scroll-mode Off
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Enable 8bit input</span>
+</span></span><span style="display:flex;"><span>set meta-flag On
+</span></span><span style="display:flex;"><span>set input-meta On
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Turns off 8th bit stripping</span>
+</span></span><span style="display:flex;"><span>set convert-meta Off
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Keep the 8th bit for display</span>
+</span></span><span style="display:flex;"><span>set output-meta On
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># none, visible or audible</span>
+</span></span><span style="display:flex;"><span>set bell-style none
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># All of the following map the escape sequence of the value</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># contained in the 1st argument to the readline specific functions</span>
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;\eOd&#34;</span>: backward-word
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;\eOc&#34;</span>: forward-word
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># for linux console</span>
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;\e[1~&#34;</span>: beginning-of-line
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;\e[4~&#34;</span>: end-of-line
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;\e[5~&#34;</span>: beginning-of-history
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;\e[6~&#34;</span>: end-of-history
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;\e[3~&#34;</span>: delete-char
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;\e[2~&#34;</span>: quoted-insert
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># for xterm</span>
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;\eOH&#34;</span>: beginning-of-line
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;\eOF&#34;</span>: end-of-line
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># for Konsole</span>
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;\e[H&#34;</span>: beginning-of-line
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;\e[F&#34;</span>: end-of-line
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># End /etc/inputrc</span>
+</span></span><span style="display:flex;"><span>EOF
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 9.9. Creating the /etc/shells File</span>
+</span></span><span style="display:flex;"><span>cat &gt; /etc/shells &lt;&lt; <span style="color:#e6db74">&#34;EOF&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Begin /etc/shells</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>/bin/sh
+</span></span><span style="display:flex;"><span>/bin/bash
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># End /etc/shells</span>
+</span></span><span style="display:flex;"><span>EOF
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 10.2. Creating the /etc/fstab File</span>
+</span></span><span style="display:flex;"><span>cat &gt; /etc/fstab &lt;&lt; <span style="color:#e6db74">&#34;EOF&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Begin /etc/fstab</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># file system  mount-point  type     options             dump  fsck</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#                                                              order</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>/dev/sda1      /            ext4     defaults            <span style="color:#ae81ff">1</span>     <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>proc           /proc        proc     nosuid,noexec,nodev <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>sysfs          /sys         sysfs    nosuid,noexec,nodev <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>devpts         /dev/pts     devpts   gid<span style="color:#f92672">=</span>5,mode<span style="color:#f92672">=</span><span style="color:#ae81ff">620</span>      <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>tmpfs          /run         tmpfs    defaults            <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>devtmpfs       /dev         devtmpfs mode<span style="color:#f92672">=</span>0755,nosuid    <span style="color:#ae81ff">0</span>     <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># End /etc/fstab</span>
+</span></span><span style="display:flex;"><span>EOF
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>cd /sources
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 10.3. Linux-5.19.2</span>
+</span></span><span style="display:flex;"><span>begin linux-5.19.2 tar.xz
+</span></span><span style="display:flex;"><span>make mrproper
+</span></span><span style="display:flex;"><span>make defconfig
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>make modules_install
+</span></span><span style="display:flex;"><span>cp -iv arch/x86/boot/bzImage /boot/vmlinuz-5.19.2-lfs-11.2
+</span></span><span style="display:flex;"><span>cp -iv System.map /boot/System.map-5.19.2
+</span></span><span style="display:flex;"><span>cp -iv .config /boot/config-5.19.2
+</span></span><span style="display:flex;"><span>install -d /usr/share/doc/linux-5.19.2
+</span></span><span style="display:flex;"><span>cp -r Documentation/* /usr/share/doc/linux-5.19.2
+</span></span><span style="display:flex;"><span>finish
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 10.3.2. Configuring Linux Module Load Order</span>
+</span></span><span style="display:flex;"><span>install -v -m755 -d /etc/modprobe.d
+</span></span><span style="display:flex;"><span>cat &gt; /etc/modprobe.d/usb.conf &lt;&lt; <span style="color:#e6db74">&#34;EOF&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Begin /etc/modprobe.d/usb.conf</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>install ohci_hcd /sbin/modprobe ehci_hcd ; /sbin/modprobe -i ohci_hcd ; true
+</span></span><span style="display:flex;"><span>install uhci_hcd /sbin/modprobe ehci_hcd ; /sbin/modprobe -i uhci_hcd ; true
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># End /etc/modprobe.d/usb.conf</span>
+</span></span><span style="display:flex;"><span>EOF
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 10.4. Using GRUB to Set Up the Boot Process</span>
+</span></span><span style="display:flex;"><span>grub-install /dev/sdb
+</span></span><span style="display:flex;"><span>cat &gt; /boot/grub/grub.cfg &lt;&lt; <span style="color:#e6db74">&#34;EOF&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Begin /boot/grub/grub.cfg</span>
+</span></span><span style="display:flex;"><span>set default<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>set timeout<span style="color:#f92672">=</span><span style="color:#ae81ff">5</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>insmod ext2
+</span></span><span style="display:flex;"><span>set root<span style="color:#f92672">=(</span>hd0,1<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>menuentry <span style="color:#e6db74">&#34;GNU/Linux, Linux 5.19.2-lfs-11.2&#34;</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        linux   /boot/vmlinuz-5.19.2-lfs-11.2 root<span style="color:#f92672">=</span>/dev/sda1 ro
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>EOF
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 11.1. The End</span>
+</span></span><span style="display:flex;"><span>echo 11.2 &gt; /etc/lfs-release
+</span></span><span style="display:flex;"><span>cat &gt; /etc/lsb-release &lt;&lt; <span style="color:#e6db74">&#34;EOF&#34;</span>
+</span></span><span style="display:flex;"><span>DISTRIB_ID<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;Linux From Scratch&#34;</span>
+</span></span><span style="display:flex;"><span>DISTRIB_RELEASE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;11.2&#34;</span>
+</span></span><span style="display:flex;"><span>DISTRIB_CODENAME<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;Linux From Scratch&#34;</span>
+</span></span><span style="display:flex;"><span>DISTRIB_DESCRIPTION<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;Linux From Scratch&#34;</span>
+</span></span><span style="display:flex;"><span>EOF
+</span></span><span style="display:flex;"><span>cat &gt; /etc/os-release &lt;&lt; <span style="color:#e6db74">&#34;EOF&#34;</span>
+</span></span><span style="display:flex;"><span>NAME<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;Linux From Scratch&#34;</span>
+</span></span><span style="display:flex;"><span>VERSION<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;11.2
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">ID=lfs
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">PRETTY_NAME=&#34;</span>Linux From Scratch 11.2<span style="color:#e6db74">&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">VERSION_CODENAME=&#34;</span>Linux From Scratch<span style="color:#e6db74">&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOF
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">echo &#34;</span><span style="color:#f92672">[</span>lfs-final<span style="color:#f92672">]</span> The end<span style="color:#e6db74">&#34;
+</span></span></span></code></pre></div>
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+</footer>
+
+
+</body>
+</html>
