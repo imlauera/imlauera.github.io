@@ -102,7 +102,7 @@ Como siempre Cloudflare arruinando Internet y bloqueando todo.</p>
 <p>The issue you&rsquo;re facing is that Cloudflare is detecting your headless browser and blocking it. Here are several solutions:</p>
 <h2 id="quick-fixes">Quick Fixes</h2>
 <p><strong>1. Add user agent and disable headless detection:</strong></p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>chromium --headless<span style="color:#f92672">=</span>new --user-data-dir<span style="color:#f92672">=</span>$HOME/.config/chromium-headless --disable-gpu --disable-blink-features<span style="color:#f92672">=</span>AutomationControlled --user-agent<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36&#34;</span> --dump-dom --virtual-time-budget<span style="color:#f92672">=</span><span style="color:#ae81ff">10000</span> <span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span> | sed <span style="color:#e6db74">&#34;s|&lt;head&gt;|&lt;head&gt;&lt;base href=</span>$1<span style="color:#e6db74">&gt;|g&#34;</span> | w3m -T text/html
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>chromium --headless<span style="color:#f92672">=</span>new --user-data-dir<span style="color:#f92672">=</span>$HOME/.config/chromium-headless --disable-gpu --disable-blink-features<span style="color:#f92672">=</span>AutomationControlled --user-agent<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36&#34;</span> --dump-dom --virtual-time-budget<span style="color:#f92672">=</span><span style="color:#ae81ff">10000</span> <span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span> | sed <span style="color:#e6db74">&#34;s|&lt;head&gt;|&lt;head&gt;&lt;base href=</span>$1<span style="color:#e6db74">&gt;|g&#34;</span> | w3m -T text/html
 </span></span></code></pre></div><p>Key changes:</p>
 <ul>
 <li><code>--headless=new</code> - Uses newer headless mode that&rsquo;s harder to detect</li>
@@ -111,13 +111,13 @@ Como siempre Cloudflare arruinando Internet y bloqueando todo.</p>
 <li><strong>Different user-data-dir</strong> to avoid conflicts with your open Chromium</li>
 </ul>
 <p><strong>2. Increase wait time for JavaScript execution:</strong></p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>chromium --headless<span style="color:#f92672">=</span>new --user-data-dir<span style="color:#f92672">=</span>$HOME/.config/chromium-headless --disable-gpu --disable-blink-features<span style="color:#f92672">=</span>AutomationControlled --virtual-time-budget<span style="color:#f92672">=</span><span style="color:#ae81ff">30000</span> --dump-dom <span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span> | sed <span style="color:#e6db74">&#34;s|&lt;head&gt;|&lt;head&gt;&lt;base href=</span>$1<span style="color:#e6db74">&gt;|g&#34;</span> | w3m -T text/html
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>chromium --headless<span style="color:#f92672">=</span>new --user-data-dir<span style="color:#f92672">=</span>$HOME/.config/chromium-headless --disable-gpu --disable-blink-features<span style="color:#f92672">=</span>AutomationControlled --virtual-time-budget<span style="color:#f92672">=</span><span style="color:#ae81ff">30000</span> --dump-dom <span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span> | sed <span style="color:#e6db74">&#34;s|&lt;head&gt;|&lt;head&gt;&lt;base href=</span>$1<span style="color:#e6db74">&gt;|g&#34;</span> | w3m -T text/html
 </span></span></code></pre></div><p>Increase <code>--virtual-time-budget</code> to 30000 (30 seconds) or more.</p>
 <p><strong>3. Use a separate profile (fixes the conflict with open Chromium):</strong></p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>chromium --headless<span style="color:#f92672">=</span>new --user-data-dir<span style="color:#f92672">=</span>/tmp/chromium-w3m --disable-gpu --disable-blink-features<span style="color:#f92672">=</span>AutomationControlled --dump-dom --virtual-time-budget<span style="color:#f92672">=</span><span style="color:#ae81ff">15000</span> <span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span> | sed <span style="color:#e6db74">&#34;s|&lt;head&gt;|&lt;head&gt;&lt;base href=</span>$1<span style="color:#e6db74">&gt;|g&#34;</span> | w3m -T text/html
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>chromium --headless<span style="color:#f92672">=</span>new --user-data-dir<span style="color:#f92672">=</span>/tmp/chromium-w3m --disable-gpu --disable-blink-features<span style="color:#f92672">=</span>AutomationControlled --dump-dom --virtual-time-budget<span style="color:#f92672">=</span><span style="color:#ae81ff">15000</span> <span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span> | sed <span style="color:#e6db74">&#34;s|&lt;head&gt;|&lt;head&gt;&lt;base href=</span>$1<span style="color:#e6db74">&gt;|g&#34;</span> | w3m -T text/html
 </span></span></code></pre></div><h2 id="alternative-approaches">Alternative Approaches</h2>
 <p><strong>Use Playwright or Puppeteer with stealth plugins</strong> (more reliable for Cloudflare):</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Install playwright</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Install playwright</span>
 </span></span><span style="display:flex;"><span>pip install playwright
 </span></span><span style="display:flex;"><span>playwright install chromium
 </span></span><span style="display:flex;"><span>
@@ -138,9 +138,9 @@ Some sites offer APIs that render JavaScript, though this depends on your use ca
 <h4 id="para-scrollear-la-pagina">Para scrollear la pagina:</h4>
 <p>Para hacer scroll en la página antes de hacer el dump del DOM, necesitas usar un script. Aquí tienes varias opciones:</p>
 <h2 id="opción-1-script-simple-de-nodejs-con-puppeteer">Opción 1: Script simple de Node.js con Puppeteer</h2>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>npm install puppeteer puppeteer-extra puppeteer-extra-plugin-stealth
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>npm install puppeteer puppeteer-extra puppeteer-extra-plugin-stealth
 </span></span></code></pre></div><p>Crea un archivo <code>scroll-fetch.js</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">puppeteer</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;puppeteer-extra&#39;</span>);
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-javascript" data-lang="javascript"><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">puppeteer</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;puppeteer-extra&#39;</span>);
 </span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">StealthPlugin</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;puppeteer-extra-plugin-stealth&#39;</span>);
 </span></span><span style="display:flex;"><span><span style="color:#a6e22e">puppeteer</span>.<span style="color:#a6e22e">use</span>(<span style="color:#a6e22e">StealthPlugin</span>());
 </span></span><span style="display:flex;"><span>
@@ -180,10 +180,10 @@ Some sites offer APIs that render JavaScript, though this depends on your use ca
 </span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">browser</span>.<span style="color:#a6e22e">close</span>();
 </span></span><span style="display:flex;"><span>})();
 </span></span></code></pre></div><p>Úsalo así:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>node scroll-fetch.js <span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span> | w3m -T text/html
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>node scroll-fetch.js <span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span> | w3m -T text/html
 </span></span></code></pre></div><h2 id="opción-2-script-python-con-playwright">Opción 2: Script Python con Playwright</h2>
 <p>Crea <code>scroll-fetch.py</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">from</span> playwright.sync_api <span style="color:#f92672">import</span> sync_playwright
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">from</span> playwright.sync_api <span style="color:#f92672">import</span> sync_playwright
 </span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> sys
 </span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> time
 </span></span><span style="display:flex;"><span>
@@ -215,10 +215,10 @@ Some sites offer APIs that render JavaScript, though this depends on your use ca
 </span></span><span style="display:flex;"><span>    print(page<span style="color:#f92672">.</span>content())
 </span></span><span style="display:flex;"><span>    browser<span style="color:#f92672">.</span>close()
 </span></span></code></pre></div><p>Úsalo así:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>python scroll-fetch.py <span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span> | w3m -T text/html
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>python scroll-fetch.py <span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span> | w3m -T text/html
 </span></span></code></pre></div><h2 id="opción-3-con-chrome-devtools-protocol-directamente">Opción 3: Con Chrome DevTools Protocol directamente</h2>
 <p>Si prefieres seguir usando chromium directamente, puedes crear un script que use CDP:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/bash
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/bash
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e"># scroll-chrome.sh</span>
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>URL<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span>
@@ -246,7 +246,7 @@ Some sites offer APIs that render JavaScript, though this depends on your use ca
 </span></span><span style="display:flex;"><span>kill $CHROME_PID
 </span></span></code></pre></div><h2 id="opción-4-solución-más-simple-con-delay">Opción 4: Solución más simple con delay</h2>
 <p>Si solo necesitas que cargue más contenido lazy-load:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>chromium --headless<span style="color:#f92672">=</span>new <span style="color:#ae81ff">\
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>chromium --headless<span style="color:#f92672">=</span>new <span style="color:#ae81ff">\
 </span></span></span><span style="display:flex;"><span>  --user-data-dir<span style="color:#f92672">=</span>/tmp/chromium-w3m <span style="color:#ae81ff">\
 </span></span></span><span style="display:flex;"><span>  --disable-gpu <span style="color:#ae81ff">\
 </span></span></span><span style="display:flex;"><span>  --disable-blink-features<span style="color:#f92672">=</span>AutomationControlled <span style="color:#ae81ff">\
@@ -255,7 +255,7 @@ Some sites offer APIs that render JavaScript, though this depends on your use ca
 </span></span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span> | sed <span style="color:#e6db74">&#34;s|&lt;head&gt;|&lt;head&gt;&lt;base href=</span>$1<span style="color:#e6db74">&gt;|g&#34;</span> | w3m -T text/html
 </span></span></code></pre></div><p>Aumenta <code>--virtual-time-budget</code> a 30000-60000 ms.</p>
 <p><strong>Recomendación:</strong> La opción con Puppeteer o Playwright (opciones 1 y 2) es la más confiable para Cloudflare y te da control total sobre el scroll. ¿Cuál prefieres probar?</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#chromium --headless $1 --disable-gpu --run-all-compositor-stages-before-draw --dump-dom --virtual-time-budget=10000 | sed &#34;s|&lt;head&gt;|&lt;head&gt;&lt;base href=$1&gt;|g&#34; | w3m -T text/html</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#chromium --headless $1 --disable-gpu --run-all-compositor-stages-before-draw --dump-dom --virtual-time-budget=10000 | sed &#34;s|&lt;head&gt;|&lt;head&gt;&lt;base href=$1&gt;|g&#34; | w3m -T text/html</span>
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span><span style="color:#75715e">#chromium --headless --user-data-dir=$HOME/.config/chromium --profile-directory=Default --disable-gpu --run-all-compositor-stages-before-draw --dump-dom --virtual-time-budget=10000 &#34;$1&#34; | sed &#34;s|&lt;head&gt;|&lt;head&gt;&lt;base href=$1&gt;|g&#34; | w3m -T text/html</span>
 </span></span><span style="display:flex;"><span>
@@ -270,7 +270,7 @@ Some sites offer APIs that render JavaScript, though this depends on your use ca
 </span></span><span style="display:flex;"><span>python $HOME/playwright/fetch.py <span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span> | w3m -T text/html
 </span></span></code></pre></div><p>Perfecto. Aquí tienes la solución completa con Playwright para usar las cookies de tu Chromium:</p>
 <h2 id="opción-1-usar-tu-perfil-de-chromium-directamente-chromium-cerrado">Opción 1: Usar tu perfil de Chromium directamente (Chromium cerrado)</h2>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">from</span> playwright.sync_api <span style="color:#f92672">import</span> sync_playwright
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">from</span> playwright.sync_api <span style="color:#f92672">import</span> sync_playwright
 </span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> sys
 </span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> os
 </span></span><span style="display:flex;"><span>
@@ -313,7 +313,7 @@ Some sites offer APIs that render JavaScript, though this depends on your use ca
 </span></span><span style="display:flex;"><span>    browser<span style="color:#f92672">.</span>close()
 </span></span></code></pre></div><p><strong>Nota:</strong> Chromium debe estar cerrado para usar esto.</p>
 <h2 id="opción-2-exportar-e-importar-cookies-automáticamente">Opción 2: Exportar e importar cookies automáticamente</h2>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">from</span> playwright.sync_api <span style="color:#f92672">import</span> sync_playwright
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">from</span> playwright.sync_api <span style="color:#f92672">import</span> sync_playwright
 </span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> sys
 </span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> os
 </span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> sqlite3
@@ -413,7 +413,7 @@ Some sites offer APIs that render JavaScript, though this depends on your use ca
 </span></span></code></pre></div><h2 id="opción-3-método-manual-más-confiable">Opción 3: Método manual (más confiable)</h2>
 <p><strong>Paso 1:</strong> Exportar cookies manualmente con una extensión de Chromium</p>
 <p><strong>Paso 2:</strong> Crear el script:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">from</span> playwright.sync_api <span style="color:#f92672">import</span> sync_playwright
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">from</span> playwright.sync_api <span style="color:#f92672">import</span> sync_playwright
 </span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> sys
 </span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> json
 </span></span><span style="display:flex;"><span>
@@ -459,8 +459,8 @@ Some sites offer APIs that render JavaScript, though this depends on your use ca
 </span></span><span style="display:flex;"><span>    print(page<span style="color:#f92672">.</span>content())
 </span></span><span style="display:flex;"><span>    browser<span style="color:#f92672">.</span>close()
 </span></span></code></pre></div><h2 id="opción-4-con-desencriptación-de-cookies-requiere-pycryptodome">Opción 4: Con desencriptación de cookies (requiere pycryptodome)</h2>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pip install pycryptodome secretstorage
-</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">from</span> playwright.sync_api <span style="color:#f92672">import</span> sync_playwright
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pip install pycryptodome secretstorage
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">from</span> playwright.sync_api <span style="color:#f92672">import</span> sync_playwright
 </span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> sys
 </span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> os
 </span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> sqlite3
@@ -582,7 +582,7 @@ Some sites offer APIs that render JavaScript, though this depends on your use ca
 </span></span></code></pre></div><p><strong>Recomendación:</strong> Empieza con la <strong>Opción 1</strong> (cierra Chromium temporalmente) o la <strong>Opción 4</strong> (desencriptación completa). ¿Cuál prefieres?</p>
 <p>El error indica que el perfil de Chromium está siendo usado o hay un problema de permisos. Aquí está la solución:</p>
 <h2 id="opción-1-usar-un-perfil-temporal-copiando-las-cookies">Opción 1: Usar un perfil temporal copiando las cookies</h2>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">from</span> playwright.sync_api <span style="color:#f92672">import</span> sync_playwright
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">from</span> playwright.sync_api <span style="color:#f92672">import</span> sync_playwright
 </span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> sys
 </span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> os
 </span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> shutil
@@ -634,7 +634,7 @@ Some sites offer APIs that render JavaScript, though this depends on your use ca
 </span></span><span style="display:flex;"><span>    print(page<span style="color:#f92672">.</span>content())
 </span></span><span style="display:flex;"><span>    browser<span style="color:#f92672">.</span>close()
 </span></span></code></pre></div><h2 id="opción-2-usar-la-desencriptación-de-cookies-más-limpio">Opción 2: Usar la desencriptación de cookies (más limpio)</h2>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">from</span> playwright.sync_api <span style="color:#f92672">import</span> sync_playwright
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">from</span> playwright.sync_api <span style="color:#f92672">import</span> sync_playwright
 </span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> sys
 </span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> os
 </span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> sqlite3
@@ -737,8 +737,8 @@ Some sites offer APIs that render JavaScript, though this depends on your use ca
 </span></span><span style="display:flex;"><span>    print(page<span style="color:#f92672">.</span>content())
 </span></span><span style="display:flex;"><span>    browser<span style="color:#f92672">.</span>close()
 </span></span></code></pre></div><h2 id="opción-3-si-las-cookies-están-encriptadas-usa-esto">Opción 3: Si las cookies están encriptadas, usa esto</h2>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pip install pycryptodome
-</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">from</span> playwright.sync_api <span style="color:#f92672">import</span> sync_playwright
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pip install pycryptodome
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">from</span> playwright.sync_api <span style="color:#f92672">import</span> sync_playwright
 </span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> sys
 </span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> os
 </span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> sqlite3
@@ -856,7 +856,7 @@ Some sites offer APIs that render JavaScript, though this depends on your use ca
 </span></span><span style="display:flex;"><span>    browser<span style="color:#f92672">.</span>close()
 </span></span></code></pre></div><p><strong>Prueba primero la Opción 2</strong> (la más simple). Si las cookies no funcionan porque están encriptadas, usa la Opción 3.</p>
 <p>Usa así:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>python fetch.py <span style="color:#e6db74">&#34;https://www.upwork.com/tu-url&#34;</span> | w3m -T text/html
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>python fetch.py <span style="color:#e6db74">&#34;https://www.upwork.com/tu-url&#34;</span> | w3m -T text/html
 </span></span></code></pre></div>
 </div>
 

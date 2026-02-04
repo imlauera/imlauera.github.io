@@ -102,11 +102,11 @@ Tengo un teclado ANSI y uso distribución español con Ñ así que no puedo hacr
 <p>Tengo un teclado ANSI y uso distribución español con Ñ así que no puedo hacre el signo mayor ni menor (&lt; &gt;) y encima es un teclado 75% o sea no tengo teclado numérico y estoy desde la TTY linux la única solución que encontré es ejecutando <code>sudo loadkeys us</code> y luego <code>sudo loadkeys es</code> para hacer el signo mayor y menor, ¿existe hay alguna otra forma para que no tenga que hacer eso?</p>
 </blockquote>
 <p>Le pregunté a ChatGPT como resolverlo y me dijo que haga lo siguiente</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>dumpkeys | tee mi_mapa.kmap
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>dumpkeys | tee mi_mapa.kmap
 </span></span></code></pre></div><p>Y después me dijo que agregue lo siguiente en <code>mi_mapa.kmap</code>.</p>
 <p><code>vim mi_mapa.kmap</code></p>
 <h2 id="ojo-fijate-que-el-código-120-121-no-pise-los-demás">OJO!!! Fijate que el código (120 121) no pise los demás.</h2>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-console" data-lang="console"><span style="display:flex;"><span>keycode 120 = period greater
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-console" data-lang="console"><span style="display:flex;"><span>keycode 120 = period greater
 </span></span><span style="display:flex;"><span>    altgr keycode 51 = less
 </span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">
 </span></span></span><span style="display:flex;"><span>keycode 121 = comma less
@@ -120,7 +120,7 @@ The file <code>es</code> is the <strong>Spanish layout definition</strong>. You 
 <hr>
 <h3 id="-example-add--and--to-altgr--commaperiod">🔹 Example: Add <code>&lt;</code> and <code>&gt;</code> to AltGr + comma/period</h3>
 <p>Open the file:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo nano /usr/share/X11/xkb/symbols/es
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo nano /usr/share/X11/xkb/symbols/es
 </span></span></code></pre></div><p>At the bottom, you can add a <strong>variant</strong> like this:</p>
 <p>############ Agregá esto en &ldquo;nodeadkeys&rdquo; al comienzo no al final del archivo
 solo agregá las lineas <code>key</code>.</p>
@@ -149,15 +149,15 @@ xkb_symbols &#34;nodeadkeys&#34; {
 <hr>
 <h3 id="-test-the-new-variant">🔹 Test the new variant</h3>
 <p>En mi caso yo uso EGLFS así que agregué a <code>.config/fish/config.fish</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>export XKB_DEFAULT_LAYOUT<span style="color:#f92672">=</span>es
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>export XKB_DEFAULT_LAYOUT<span style="color:#f92672">=</span>es
 </span></span><span style="display:flex;"><span>export XKB_DEFAULT_VARIANT<span style="color:#f92672">=</span>ansi75
 </span></span></code></pre></div><p>Run:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>setxkbmap -layout es -variant ansi75
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>setxkbmap -layout es -variant ansi75
 </span></span></code></pre></div><p>Now try typing with <code>AltGr + ,</code> and <code>AltGr + .</code> → you should get <code>&lt;</code> and <code>&gt;</code>.</p>
 <hr>
 <h3 id="-make-it-permanent">🔹 Make it permanent</h3>
 <p>Edit <code>/etc/X11/xorg.conf.d/00-keyboard.conf</code> (create if missing):</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo nano /etc/X11/xorg.conf.d/00-keyboard.conf
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo nano /etc/X11/xorg.conf.d/00-keyboard.conf
 </span></span></code></pre></div><p>Add:</p>
 <pre tabindex="0"><code class="language-conf" data-lang="conf">Section &#34;InputClass&#34;
     Identifier &#34;system-keyboard&#34;

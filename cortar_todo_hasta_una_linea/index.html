@@ -109,37 +109,37 @@ sed will still read the input until the end of the file, which is unnecessary.">
       <div class="container">
 <div class="content is-medium">
   <p>You can use GNU sed:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sed -i <span style="color:#e6db74">&#39;5,$d&#39;</span> file.txt
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sed -i <span style="color:#e6db74">&#39;5,$d&#39;</span> file.txt
 </span></span></code></pre></div><p>That is, 5,$ means the range line 5 until the end, and d means to delete. Only the
 first 4 lines will remain. The -i flag tells sed to edit the file in-place.</p>
 <p>If you have only BSD sed, then the -i flag requires a backup file suffix:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sed -i.bak <span style="color:#e6db74">&#39;5,$d&#39;</span> file.txt
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sed -i.bak <span style="color:#e6db74">&#39;5,$d&#39;</span> file.txt
 </span></span></code></pre></div><p>As @ephemient pointed out, while this solution is simple, it&rsquo;s inefficient because
 sed will still read the input until the end of the file, which is unnecessary.</p>
 <p>As @agc pointed out, the inverse logic of my first proposal might be actually more
 intuitive. That is, do not print by default (-n flag), and explicitly print range
 1,4:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sed -ni.bak 1,4p file.txt
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sed -ni.bak 1,4p file.txt
 </span></span></code></pre></div><p>Another simple alternative, assuming that the first 4 lines are not excessively long
 and so they easily fit in memory, and also assuming that the 4th line ends with a
 newline character, you can read the first 4 lines into memory and then overwrite the
 file:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>lines<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>head -n <span style="color:#ae81ff">4</span> file.txt<span style="color:#66d9ef">)</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>lines<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>head -n <span style="color:#ae81ff">4</span> file.txt<span style="color:#66d9ef">)</span>
 </span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;</span>$lines<span style="color:#e6db74">&#34;</span> &gt; file.txt
 </span></span></code></pre></div><hr>
 <p>Minor refinements on Janos&rsquo; answer, ephemient&rsquo;s answer, and cdark&rsquo;s comment:</p>
 <ol>
 <li>Simpler (and faster) sed code:</li>
 </ol>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sed -i 4q file
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sed -i 4q file
 </span></span></code></pre></div><ol start="2">
 <li>When a filter util can&rsquo;t directly edit a file, there&rsquo;s sponge:</li>
 </ol>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>    head -4 file | sponge file
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>    head -4 file | sponge file
 </span></span></code></pre></div><ol start="3">
 <li>Most efficient for Linux might be truncate &ndash; coreutils sibling util to fallocate, which offers the same minimal I/O of ephemient&rsquo;s more portable, (but more complex), dd-based answer:</li>
 </ol>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>truncate -s <span style="color:#e6db74">`</span>head -4 file | wc -c<span style="color:#e6db74">`</span> file
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>truncate -s <span style="color:#e6db74">`</span>head -4 file | wc -c<span style="color:#e6db74">`</span> file
 </span></span></code></pre></div>
 </div>
 

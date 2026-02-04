@@ -127,8 +127,8 @@ Resolved for me (with an ubuntu 18.04 host and 14.04 guest) by adding theses mod
     <section class="section">
       <div class="container">
 <div class="content is-medium">
-  <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo qemu-img resize /var/lib/libvirt/images/artix.qcow2 +10G
-</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo apt install spice-vdagent
+  <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo qemu-img resize /var/lib/libvirt/images/artix.qcow2 +10G
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo apt install spice-vdagent
 </span></span></code></pre></div><h3 id="agregar-carpeta-compartida">Agregar carpeta compartida.</h3>
 <p>Graficamente: <a href="https://ostechnix.com/setup-a-shared-folder-between-kvm-host-and-guest/">https://ostechnix.com/setup-a-shared-folder-between-kvm-host-and-guest/</a></p>
 <p><a href="https://libvirt.org/kbase/virtiofs.html">https://libvirt.org/kbase/virtiofs.html</a></p>
@@ -139,12 +139,12 @@ Resolved for me (with an ubuntu 18.04 host and 14.04 guest) by adding theses mod
 <pre tabindex="0"><code>cd /etc/libvirt/qemu/
 sudo vim debian12.xml
 </code></pre><p>Agregá antes de <code>&lt;/domain&gt;</code> y dentro de <code>&lt;devices&gt;</code></p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>&lt;filesystem type<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;mount&#39;</span> accessmode<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;passthrough&#39;</span>&gt;
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>&lt;filesystem type<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;mount&#39;</span> accessmode<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;passthrough&#39;</span>&gt;
 </span></span><span style="display:flex;"><span> &lt;source dir<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;/tu/carpeta/host&#39;</span>/&gt;
 </span></span><span style="display:flex;"><span> &lt;target dir<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;share&#39;</span>/&gt;
 </span></span><span style="display:flex;"><span>&lt;/filesystem&gt;
 </span></span></code></pre></div><p>En el guest:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mount -t 9p -o trans<span style="color:#f92672">=</span>virtio share /mnt/shared
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mount -t 9p -o trans<span style="color:#f92672">=</span>virtio share /mnt/shared
 </span></span></code></pre></div><p>Si no te funcioná tenés que habilitar módulos.</p>
 <p>Resolved for me (with an ubuntu 18.04 host and 14.04 guest) by adding theses modules:</p>
 <ul>
@@ -154,13 +154,13 @@ sudo vim debian12.xml
 </ul>
 <p>into guest file <code>/etc/initramfs-tools/modules</code>.</p>
 <p><strong>Don&rsquo;t forget</strong> to upadate initramfs for your kernel(s) after add:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>update-initramfs -uk &lt;kernel|all&gt;
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>update-initramfs -uk &lt;kernel|all&gt;
 </span></span><span style="display:flex;"><span>modprobe virtio_pci
 </span></span></code></pre></div><p><a href="https://www.guyrutenberg.com/2018/10/25/sharing-a-folder-a-windows-guest-under-virt-manager/">https://www.guyrutenberg.com/2018/10/25/sharing-a-folder-a-windows-guest-under-virt-manager/</a></p>
 <p><a href="https://superuser.com/questions/1317119/qemu-share-folder-9pnet-virtio-no-channels-available-for-device">https://superuser.com/questions/1317119/qemu-share-folder-9pnet-virtio-no-channels-available-for-device</a></p>
 <h3 id="otra-forma-no-es-necesario">Otra forma (no es necesario)</h3>
 <p><a href="https://libvirt.org/kbase/virtiofs.html">https://libvirt.org/kbase/virtiofs.html</a></p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-xml" data-lang="xml"><span style="display:flex;"><span><span style="color:#f92672">&lt;domain&gt;</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-xml" data-lang="xml"><span style="display:flex;"><span><span style="color:#f92672">&lt;domain&gt;</span>
 </span></span><span style="display:flex;"><span>  ...
 </span></span><span style="display:flex;"><span>  <span style="color:#f92672">&lt;memoryBacking&gt;</span>
 </span></span><span style="display:flex;"><span>    <span style="color:#f92672">&lt;source</span> <span style="color:#a6e22e">type=</span><span style="color:#e6db74">&#39;memfd&#39;</span><span style="color:#f92672">/&gt;</span>
@@ -178,7 +178,7 @@ sudo vim debian12.xml
 </span></span><span style="display:flex;"><span>  <span style="color:#f92672">&lt;/devices&gt;</span>
 </span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;/domain&gt;</span>
 </span></span></code></pre></div><h4 id="montá-el-directorio-en-el-guest">Montá el directorio en el guest.</h4>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># mount -t virtiofs mount_tag /mnt/mount/path</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># mount -t virtiofs mount_tag /mnt/mount/path</span>
 </span></span></code></pre></div>
 </div>
 

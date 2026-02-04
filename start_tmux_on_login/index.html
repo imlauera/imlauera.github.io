@@ -115,14 +115,14 @@ No deberías envolver a tmux con exec, esto causará que la conexión se cierre 
 <p>No deberías envolver a tmux con exec, esto causará que la conexión se cierre cuando no haya sessiones de tmux para unir (attach).</p>
 <hr>
 <h3 id="así-lo-terminé-configurando-en-fish-configfishconfigfish">Así lo terminé configurando en fish: <code>.config/fish/config.fish</code>:</h3>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-console" data-lang="console"><span style="display:flex;"><span>if test -z &#34;$TMUX&#34; -a $XDG_VTNR = 1
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-console" data-lang="console"><span style="display:flex;"><span>if test -z &#34;$TMUX&#34; -a $XDG_VTNR = 1
 </span></span><span style="display:flex;"><span>  tmux attach || exec tmux new-session
 </span></span><span style="display:flex;"><span>end
 </span></span></code></pre></div><p>Con el <code>$XDG_VTNR</code> hago que solo me abra TMUX en la 1er TTY.</p>
 <h2 id="esto-funciona-pero-me-dió-este-problema-sessions-should-be-nested-with-care-unset-tmux-to-force">Esto funciona pero me dió este problema: <code>sessions should be nested with care, unset $TMUX to force</code></h2>
 <h4 id="con-fish">Con fish</h4>
 <p>En el <code>.config/fish/fish.conf</code> agregá:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#66d9ef">if</span> status --is-login
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#66d9ef">if</span> status --is-login
 </span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> test -z <span style="color:#e6db74">&#34;</span>$DISPLAY<span style="color:#e6db74">&#34;</span> -a $XDG_VTNR <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>
 </span></span><span style="display:flex;"><span>    tmux attach-session -t mysession 2&gt;/dev/null <span style="color:#f92672">||</span> tmux new-session -s mysession
 </span></span><span style="display:flex;"><span>  end
@@ -132,12 +132,12 @@ No deberías envolver a tmux con exec, esto causará que la conexión se cierre 
   tmux attach-session -t mysession 2&gt;/dev/null || tmux new-session -s mysession
 fi
 </code></pre><h3 id="al-final-terminé-agregando-mbsync--a-para-que-descargue-mis-nuevos-correos-cuando-estoy-usando-neomutt">Al final terminé agregando <code>mbsync -a</code> para que descargue mis nuevos correos cuando estoy usando neomutt.</h3>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#66d9ef">if</span> test -z <span style="color:#e6db74">&#34;</span>$TMUX<span style="color:#e6db74">&#34;</span> -a $XDG_VTNR <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#66d9ef">if</span> test -z <span style="color:#e6db74">&#34;</span>$TMUX<span style="color:#e6db74">&#34;</span> -a $XDG_VTNR <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>
 </span></span><span style="display:flex;"><span>  mbsync -a &gt; /dev/null &amp;
 </span></span><span style="display:flex;"><span>  tmux attach <span style="color:#f92672">||</span> exec tmux new-session
 </span></span><span style="display:flex;"><span>end
 </span></span></code></pre></div><p>Para hacer que inicie programas al arrancar tmux:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#66d9ef">if</span> test -z <span style="color:#e6db74">&#34;</span>$TMUX<span style="color:#e6db74">&#34;</span> -a $XDG_VTNR <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#66d9ef">if</span> test -z <span style="color:#e6db74">&#34;</span>$TMUX<span style="color:#e6db74">&#34;</span> -a $XDG_VTNR <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>
 </span></span><span style="display:flex;"><span>  tmux attach-session -t mysession <span style="color:#f92672">||</span> tmux new-session -d -s mysession
 </span></span><span style="display:flex;"><span>  tmux send-keys -t mysession <span style="color:#e6db74">&#34;falkon&#34;</span> Enter
 </span></span><span style="display:flex;"><span>  tmux send-keys -t mysession <span style="color:#e6db74">&#34;duolingo&#34;</span> Enter
