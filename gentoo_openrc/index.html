@@ -29,7 +29,7 @@ Con el comando emerge -pv obs-studio pude ver las banderas y leyendo la Wiki de 
 [ebuild R ] media-video/obs-studio-31.0.3-r2::gentoo USE=&#34;alsa truetype wayland -browser -decklink -fdk -jack -lua (-mpegts) -nvenc -pipewire -pulseaudio -python -qsv -sndio -speex -test-input -v4l -vlc -websocket&#34; LUA_SINGLE_TARGET=&#34;luajit&#34; PYTHON_SINGLE_TARGET=&#34;python3_13 -python3_11 -python3_12 -python3_14&#34; 0 KiB Ahí se pueden ver las banderas DESHABILITADAS (las que comienzan con un signo -)">
   <meta itemprop="datePublished" content="2025-06-22T22:25:52-03:00">
   <meta itemprop="dateModified" content="2025-06-22T22:25:52-03:00">
-  <meta itemprop="wordCount" content="7426">
+  <meta itemprop="wordCount" content="7436">
   <meta itemprop="keywords" content="Gentoo">
   
   <meta name="twitter:card" content="summary">
@@ -194,7 +194,9 @@ Es decir los binarios vienen con la mínima cantidad de banderas posibles, a dif
 </span></span><span style="display:flex;"><span>Descargué OpenRC: current-stage3-amd64-desktop-openrc/   
 </span></span><span style="display:flex;"><span>tar xpvf stage3-*.tar.xz --xattrs-include<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;*.*&#39;</span> --numeric-owner -C /mnt/gentoo   
 </span></span></code></pre></div><p>nano <code>/mnt/gentoo/etc/portage/make.conf</code></p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>COMMON_FLAGS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;-march=native -O2&#34;</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>EMERGE_DEFAULT_OPTS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;--quiet&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>COMMON_FLAGS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;-march=native -O2&#34;</span>
 </span></span><span style="display:flex;"><span>CFLAGS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>COMMON_FLAGS<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
 </span></span><span style="display:flex;"><span>CXXFLAGS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>COMMON_FLAGS<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
 </span></span><span style="display:flex;"><span>RUSTFLAGS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>RUSTFLAGS<span style="color:#e6db74">}</span><span style="color:#e6db74"> -C target-cpu=native&#34;</span>
@@ -216,13 +218,6 @@ Es decir los binarios vienen con la mínima cantidad de banderas posibles, a dif
 </span></span><span style="display:flex;"><span>ACCEPT_LICENSE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;*&#34;</span>
 </span></span><span style="display:flex;"><span>USE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;dist-kernel -X -gtk -qt5 -gnome -kde minimal &#34;</span> <span style="color:#75715e"># Importantisimo porque sino no te carga los módulos no te funcionará nada ni carga las interfaces de red.</span>
 </span></span><span style="display:flex;"><span>ACCEPT_KEYWORDS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;~amd64&#34;</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>ln -sf /usr/share/zoneinfo/America/Buenos_Aires /etc/localtime
-</span></span><span style="display:flex;"><span>hwclock --systohc
-</span></span><span style="display:flex;"><span>nano /etc/locale.gen <span style="color:#75715e"># en_US.UTF-8</span>
-</span></span><span style="display:flex;"><span>locale-gen
 </span></span></code></pre></div><p>nano /etc/resolv.conf</p>
 <p><strong>Borrá todo y poné las DNS de Cloudflare o Quad9</strong>. Las DNS de Personal, Claro, Movistar bloquean sitios como: <a href="https://librefutbol.su">https://librefutbol.su</a>, <a href="https://thepiratebay.org">https://thepiratebay.org</a>, <a href="https://example.com">https://example.com</a>, etc</p>
 <pre tabindex="0"><code># Cloudflare (no uso porque reporta como Malware sitios para aprender reversing)  
@@ -235,7 +230,19 @@ nameserver 1.0.0.1
 nameserver 9.9.9.11
 nameserver 149.112.112.11
 </code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cp --dereference /etc/resolv.conf /mnt/gentoo/etc<span style="color:#e6db74">`</span> <span style="color:#75715e"># se usa --dereference para que copie el archivo y no el link simbólico   </span>
+</span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>arch-chroot /mnt/gentoo<span style="color:#e6db74">`</span> o podes montar uno por uno como está en el Handbook   
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>ln -sf /usr/share/zoneinfo/America/Buenos_Aires /etc/localtime
+</span></span><span style="display:flex;"><span>hwclock --systohc
+</span></span><span style="display:flex;"><span>nano /etc/locale.gen <span style="color:#75715e"># en_US.UTF-8</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>locale-gen
+</span></span><span style="display:flex;"><span>eselect locale list
+</span></span><span style="display:flex;"><span>eselect locale set <span style="color:#ae81ff">4</span> <span style="color:#f92672">(</span>en_US.utf8<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>locale-gen
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>source /etc/profile   
 </span></span><span style="display:flex;"><span>export PS1<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;(chroot) </span><span style="color:#e6db74">${</span>PS1<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>   
 </span></span><span style="display:flex;"><span>emerge-webrsync <span style="color:#75715e"># Baja una snapshot de los títulos de los paquetes disponibles, sirve si estás detrás de un firewall (se actualiza cada 24 horas)</span>
@@ -288,7 +295,7 @@ Para actualizar: <code>emerge --ask --verbose --update --deep --newuse --getbinp
 </span></span><span style="display:flex;"><span>emerge -G sys-firmware/sof-firmware   
 </span></span><span style="display:flex;"><span>emerge -G sys-firmware/intel-microcode   
 </span></span></code></pre></div><h5 id="instalando-el-grub">Instalando el GRUB:</h5>
-<p><strong>Para mi esto no lo necesito pero igual lo hice así</strong>:<br>
+<p><strong>Para mi esto no lo necesito pero igual lo hice así</strong>
 En el archivo <code>/etc/portage/package.use/installkernel</code> agregá:<br>
 <code>sys-kernel/installkernel grub dracut</code></p>
 <p>En el archivo <code>/etc/portage/package.use/uki</code> <strong>(Creo que no necesito hacer esto si vas a usar gentoo-kernel-bin)</strong>:</p>
