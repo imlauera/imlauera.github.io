@@ -9,10 +9,7 @@
   <meta property="og:url" content="https://imlauera.github.io/post/gentoo_installation/">
   <meta property="og:site_name" content="Imlauer">
   <meta property="og:title" content="Gentoo basic installation">
-  <meta property="og:description" content="NO USES NETWORKMANAGER ES DEMASIADO BLOAT, USA WPA_SUPPLICANT CON DHCPCD
-Para instalar rápido usá binarios y quiet emerge -qavG
-Yo hice la instlación de binarios de gentoo_openrc y instalé emerge -G gentoo-kernel no instalé el gentoo-kernel-bin no funcionó.
-Observación: Intenté instalar jackett-bin pero me quedó compilando wxGTK por un tiempo largo con emerge -g jackett-bin luego cancelé e intenté emerge -G jackett pero no había binarios, entonces lo que hice fue instalar el binario de wxGTK así: emerge -G wxGTK y luego emerge -g jackett-bin (anteriormente configuré el repositorio de binarios por defecto como está en openrc gentoo). No entiendo por qué no tomó el binario de wxGTK, por las flags (banderas) será?">
+  <meta property="og:description" content="NO USES LA MISMA PARTICIÓN DE EFI PARA INSTALAR 2 SISTEMAS OPERATIVOS OS-PROBER NO DETECTA BIEN. Y SI NO DETECTA BIEN VAS A TENER QUE GENERAR EL GRUB CON MKCONFIG DESDE GENTOO COPIAR LA CONFIGURACION A A /etc/grub/40_custom VAS A TENER QUE BORRAR EL MENUENTRY QUE USE EL KERNEL DE ARCHLINUX (VMLINUZ) Y VAS A TENER QUE QUEDARTE CON EL MENUENTRY DE AVANZADO QUE USA EL KERNEL DE GENTOO (kernel-6.18.9-gentoo-dist) Y CADA VEZ QUE LO ACTUALICES VAS A TENER Q HACER ESO xd">
   <meta property="og:locale" content="es_es">
   <meta property="og:type" content="article">
     <meta property="article:section" content="post">
@@ -23,21 +20,15 @@ Observación: Intenté instalar jackett-bin pero me quedó compilando wxGTK por 
 
   
   <meta itemprop="name" content="Gentoo basic installation">
-  <meta itemprop="description" content="NO USES NETWORKMANAGER ES DEMASIADO BLOAT, USA WPA_SUPPLICANT CON DHCPCD
-Para instalar rápido usá binarios y quiet emerge -qavG
-Yo hice la instlación de binarios de gentoo_openrc y instalé emerge -G gentoo-kernel no instalé el gentoo-kernel-bin no funcionó.
-Observación: Intenté instalar jackett-bin pero me quedó compilando wxGTK por un tiempo largo con emerge -g jackett-bin luego cancelé e intenté emerge -G jackett pero no había binarios, entonces lo que hice fue instalar el binario de wxGTK así: emerge -G wxGTK y luego emerge -g jackett-bin (anteriormente configuré el repositorio de binarios por defecto como está en openrc gentoo). No entiendo por qué no tomó el binario de wxGTK, por las flags (banderas) será?">
+  <meta itemprop="description" content="NO USES LA MISMA PARTICIÓN DE EFI PARA INSTALAR 2 SISTEMAS OPERATIVOS OS-PROBER NO DETECTA BIEN. Y SI NO DETECTA BIEN VAS A TENER QUE GENERAR EL GRUB CON MKCONFIG DESDE GENTOO COPIAR LA CONFIGURACION A A /etc/grub/40_custom VAS A TENER QUE BORRAR EL MENUENTRY QUE USE EL KERNEL DE ARCHLINUX (VMLINUZ) Y VAS A TENER QUE QUEDARTE CON EL MENUENTRY DE AVANZADO QUE USA EL KERNEL DE GENTOO (kernel-6.18.9-gentoo-dist) Y CADA VEZ QUE LO ACTUALICES VAS A TENER Q HACER ESO xd">
   <meta itemprop="datePublished" content="2023-11-29T08:39:16-03:00">
   <meta itemprop="dateModified" content="2023-11-29T08:39:16-03:00">
-  <meta itemprop="wordCount" content="3225">
+  <meta itemprop="wordCount" content="3442">
   <meta itemprop="keywords" content="Gentoo,Install">
   
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="Gentoo basic installation">
-  <meta name="twitter:description" content="NO USES NETWORKMANAGER ES DEMASIADO BLOAT, USA WPA_SUPPLICANT CON DHCPCD
-Para instalar rápido usá binarios y quiet emerge -qavG
-Yo hice la instlación de binarios de gentoo_openrc y instalé emerge -G gentoo-kernel no instalé el gentoo-kernel-bin no funcionó.
-Observación: Intenté instalar jackett-bin pero me quedó compilando wxGTK por un tiempo largo con emerge -g jackett-bin luego cancelé e intenté emerge -G jackett pero no había binarios, entonces lo que hice fue instalar el binario de wxGTK así: emerge -G wxGTK y luego emerge -g jackett-bin (anteriormente configuré el repositorio de binarios por defecto como está en openrc gentoo). No entiendo por qué no tomó el binario de wxGTK, por las flags (banderas) será?">
+  <meta name="twitter:description" content="NO USES LA MISMA PARTICIÓN DE EFI PARA INSTALAR 2 SISTEMAS OPERATIVOS OS-PROBER NO DETECTA BIEN. Y SI NO DETECTA BIEN VAS A TENER QUE GENERAR EL GRUB CON MKCONFIG DESDE GENTOO COPIAR LA CONFIGURACION A A /etc/grub/40_custom VAS A TENER QUE BORRAR EL MENUENTRY QUE USE EL KERNEL DE ARCHLINUX (VMLINUZ) Y VAS A TENER QUE QUEDARTE CON EL MENUENTRY DE AVANZADO QUE USA EL KERNEL DE GENTOO (kernel-6.18.9-gentoo-dist) Y CADA VEZ QUE LO ACTUALICES VAS A TENER Q HACER ESO xd">
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -55,20 +46,15 @@ Observación: Intenté instalar jackett-bin pero me quedó compilando wxGTK por 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="referrer" content="no-referrer">
   <meta name="author" content="Imlauer.">
-  <meta name="description" content="NO USES NETWORKMANAGER ES DEMASIADO BLOAT,
-USA WPA_SUPPLICANT CON DHCPCD
-Para instalar rápido usá binarios y quiet emerge -qavG
-Yo hice la instlación de binarios de gentoo_openrc
-y instalé emerge -G gentoo-kernel no instalé el
-gentoo-kernel-bin no funcionó.
-Observación: Intenté instalar jackett-bin pero me quedó
-compilando wxGTK por un tiempo largo con emerge -g jackett-bin
-luego cancelé e intenté emerge -G jackett pero no había binarios,
-entonces lo que hice fue instalar el binario de wxGTK así:
-emerge -G wxGTK y luego emerge -g jackett-bin (anteriormente
-configuré el repositorio de binarios por defecto como está
-en openrc gentoo). No entiendo por qué no tomó el binario
-de wxGTK, por las flags (banderas) será?">
+  <meta name="description" content="NO USES LA MISMA PARTICIÓN DE EFI PARA INSTALAR
+2 SISTEMAS OPERATIVOS OS-PROBER NO DETECTA BIEN.
+Y SI NO DETECTA BIEN VAS A TENER QUE GENERAR
+EL GRUB CON MKCONFIG DESDE GENTOO COPIAR LA CONFIGURACION
+A A /etc/grub/40_custom VAS A TENER QUE BORRAR
+EL MENUENTRY QUE USE EL KERNEL DE ARCHLINUX (VMLINUZ)
+Y VAS A TENER QUE QUEDARTE CON EL MENUENTRY DE AVANZADO
+QUE USA EL KERNEL DE GENTOO (kernel-6.18.9-gentoo-dist)
+Y CADA VEZ QUE LO ACTUALICES VAS A TENER Q HACER ESO xd">
 </head>
 <body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
   <div class="navbar-brand">
@@ -121,13 +107,25 @@ de wxGTK, por las flags (banderas) será?">
     <section class="section">
       <div class="container">
 <div class="content is-medium">
-  <p>NO USES NETWORKMANAGER ES DEMASIADO BLOAT,
+  <p>NO USES LA MISMA PARTICIÓN DE EFI PARA INSTALAR
+2 SISTEMAS OPERATIVOS OS-PROBER NO DETECTA BIEN.
+Y SI NO DETECTA BIEN VAS A TENER QUE GENERAR
+EL GRUB CON MKCONFIG DESDE GENTOO COPIAR LA CONFIGURACION
+A A /etc/grub/40_custom VAS A TENER QUE BORRAR
+EL MENUENTRY QUE USE EL KERNEL DE ARCHLINUX (VMLINUZ)
+Y VAS A TENER QUE QUEDARTE CON EL MENUENTRY DE AVANZADO
+QUE USA EL KERNEL DE GENTOO (kernel-6.18.9-gentoo-dist)
+Y CADA VEZ QUE LO ACTUALICES VAS A TENER Q HACER ESO xd</p>
+<p>NO USES NETWORKMANAGER ES DEMASIADO BLOAT,
 USA <code>WPA_SUPPLICANT</code> CON <code>DHCPCD</code></p>
 <p>Para instalar rápido usá binarios y quiet <code>emerge -qavG</code></p>
 <p>Yo hice la instlación de binarios de <code>gentoo_openrc</code>
 y instalé <code>emerge -G gentoo-kernel</code> no instalé el
 <code>gentoo-kernel-bin</code> no funcionó.</p>
-<p>Observación: Intenté instalar jackett-bin pero me quedó
+<p>TENES QUE USAR <code>--binpkg-respect-use=n</code> para instalar
+binarios sin respetar las USE FLAGS y <code>--autounmask-backtrack=y</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>emerge -aqvg --autounmask-backtrack<span style="color:#f92672">=</span>y --binpkg-respect-use<span style="color:#f92672">=</span>n jackett-bin
+</span></span></code></pre></div><p>Observación: Intenté instalar jackett-bin pero me quedó
 compilando wxGTK por un tiempo largo con <code>emerge -g jackett-bin</code>
 luego cancelé e intenté <code>emerge -G jackett</code> pero no había binarios,
 entonces lo que hice fue instalar el binario de wxGTK así:
@@ -135,7 +133,23 @@ entonces lo que hice fue instalar el binario de wxGTK así:
 configuré el repositorio de binarios por defecto como está
 en openrc gentoo). No entiendo por qué no tomó el binario
 de wxGTK, por las flags (banderas) será?</p>
-<h2 id="usé-el-use-flag-agregué-xinerama-para-el-dwm">Usé el USE FLAG (agregué xinerama para el dwm)</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>arch / <span style="color:#75715e"># emerge -avG x11-libs/wxGTK</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span> * IMPORTANT: <span style="color:#ae81ff">27</span> news items need reading <span style="color:#66d9ef">for</span> repository <span style="color:#e6db74">&#39;gentoo&#39;</span>.
+</span></span><span style="display:flex;"><span> * Use eselect news read to view new items.
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>binary   R   <span style="color:#f92672">]</span> x11-libs/wxGTK-3.2.8.1-r2-10  USE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;X gstreamer keyring libnotify lzma opengl sdl spell tiff -curl -debug -doc (-pch) -test -wayland -webkit&#34;</span> ABI_X86<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;(64) -32 (-x32)&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Would you like to merge these packages? <span style="color:#f92672">[</span>Yes/No<span style="color:#f92672">]</span> ^CInterrupted.
+</span></span><span style="display:flex;"><span>arch / <span style="color:#75715e"># emerge -av x11-libs/wxGTK</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span> * IMPORTANT: <span style="color:#ae81ff">27</span> news items need reading <span style="color:#66d9ef">for</span> repository <span style="color:#e6db74">&#39;gentoo&#39;</span>.
+</span></span><span style="display:flex;"><span> * Use eselect news read to view new items.
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>ebuild   R   <span style="color:#f92672">]</span> x11-libs/wxGTK-3.2.8.1-r2  USE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;X libnotify lzma opengl sdl spell tiff -curl -debug -doc -gstreamer* -keyring* (-pch) -test -wayland -webkit&#34;</span> ABI_X86<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;(64) -32 (-x32)&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Would you like to merge these packages? <span style="color:#f92672">[</span>Yes/No<span style="color:#f92672">]</span>
+</span></span></code></pre></div><h2 id="usé-el-use-flag-agregué-xinerama-para-el-dwm">Usé el USE FLAG (agregué xinerama para el dwm)</h2>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>USE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;dist-kernel X -wayland -gtk -qt5 -gnome -kde minimal xinerama&#34;</span>
 </span></span></code></pre></div><h3 id="este-comando-me-tomo-8-horas-por-aproximadamente-en-una-netbook-del-gobierno-g5">Este comando me tomo 8 horas por aproximadamente en una netbook del gobierno G5.</h3>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>emerge --quiet yt-dlp mpv irssi net-fs/samba imagemagick tmux
@@ -304,7 +318,7 @@ el bootloader a la ubicación de respaldo “fallback” porque sino se borra s�
 </span></span><span style="display:flex;"><span>sudo vim /etc/portage/make.conf
 </span></span><span style="display:flex;"><span>FEATURES<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>FEATURES<span style="color:#e6db74">}</span><span style="color:#e6db74"> binpkg-request-signature&#34;</span>
 </span></span><span style="display:flex;"><span><span style="color:#75715e">### Esto es para que siempre baje los binarios si es que los tiene. O sea no necesitas usar la opcion -G o g</span>
-</span></span><span style="display:flex;"><span>EMERGE_DEFAULT_OPTS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>EMERGE_DEFAULT_OPTS<span style="color:#e6db74">}</span><span style="color:#e6db74"> --getbinpkg&#34;</span>
+</span></span><span style="display:flex;"><span>EMERGE_DEFAULT_OPTS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>EMERGE_DEFAULT_OPTS<span style="color:#e6db74">}</span><span style="color:#e6db74"> --quiet --getbinpkg --binpkg-respect-use=n&#34;</span>
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>sudo emerge --getbinpkg -vauDU @world
 </span></span></code></pre></div><p>Para instalar un binario: <code>emerge -vag falkon</code> o si solo queres todos los paquetes binarios <code>sudo -vaG falkon</code></p>
