@@ -29,7 +29,7 @@ emerge -avG bluez y no tenía la bandera systemd activada cuando lo instalé as�
 emerge -avg bluez me instaló el binario con la bandera systemd activada :) Y pude ejecutar systemctl start bluetooth [gentoo@tux ~]$ ls /lib/systemd/system/*blue* /lib/systemd/system/bluetooth.target [gentoo@tux ~]$ emerge -pv bluez [binary R ] net-wireless/bluez-5.85-4 USE=&#34;cups mesh obex readline systemd* udev -btpclient -debug -deprecated -doc -experimental -extra-tools -man -midi (-selinux) -test -test-programs&#34; ABI_X86=&#34;(64) -32 (-x32)&#34; PYTHON_SINGLE_TARGET=&#34;python3_13 -python3_11 -python3_12&#34; No tengo el service pero instalé bluez y bluez-tools.">
   <meta itemprop="datePublished" content="2023-11-29T08:39:16-03:00">
   <meta itemprop="dateModified" content="2023-11-29T08:39:16-03:00">
-  <meta itemprop="wordCount" content="3919">
+  <meta itemprop="wordCount" content="3945">
   <meta itemprop="keywords" content="Gentoo,Install">
   
   <meta name="twitter:card" content="summary">
@@ -321,11 +321,14 @@ La verdad es que Gentoo es un meme pero a mi me divierte.</p>
 </span></span><span style="display:flex;"><span>sudo make clean install
 </span></span></code></pre></div><p>Si querés tener íconos tenés que <strong>COMPILAR UN PARCHE XDDD</strong>.</p>
 <h4 id="saber-que-banderas-usa-un-programa">Saber que banderas usa un programa</h4>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo emerge -va app-portage/gentoolkit
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>emerge --info falkon
+</span></span><span style="display:flex;"><span>sudo emerge -va app-portage/gentoolkit
 </span></span><span style="display:flex;"><span>equery uses dwm
 </span></span></code></pre></div><h3 id="ahora-instalá-todos-estos-paquetes-si-usaste-dwm-borrá-sway">Ahora instalá todos estos paquetes (si usaste dwm borrá sway):</h3>
 <p>Para instalar OBS tenes que habilitar las banderas antes sino no funcionará cámara.</p>
-<p>Actualización: No uses networkmanager usa wpa_supplicant con dhcpcd</p>
+<p>Actualización: No uses networkmanager usa wpa_supplicant con dhcpcd, netifrc y usa emerge &ndash;ask net-wireless/wireless-tools para tener el comando iwlist para escanear las redes.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>iwlist wlan0 scan 
+</span></span></code></pre></div><hr>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>emerge -va gentoo-kernel-bin grub networkmanager pipewire tmux fastfetch os-prober sudo fish sway wmenu foot alsa-utils firefox-bin mpv php apulse imagemagick sys-kernel/linux-firmware wpa_supplicant translate-shell dev-vcs/git hugo dev-python/pip wl-clipboard grim btop feh yt-dlp neomutt aircrack-ng falkon irssi w3m net-fs/samba vim links obs-studio gimp
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>Agregá --autounmask-write y luego dispatch-conf
@@ -874,6 +877,8 @@ country=AR
 </code></pre><hr>
 <h2 id="conectar">Conectar</h2>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ip link        <span style="color:#75715e"># ver interfaz (ej: wlp3s0)</span>
+</span></span><span style="display:flex;"><span>ip link set wlan0 up
+</span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>wpa_supplicant -B -i wlp3s0 -c /etc/wpa_supplicant/wpa_supplicant.conf
 </span></span><span style="display:flex;"><span>dhcpcd wlp3s0
