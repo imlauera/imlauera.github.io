@@ -29,7 +29,7 @@ Actualización: Este fue mi error. Instalé bluez de la siguiente manera.
 emerge -avG bluez y no tenía la bandera systemd activada cuando lo instalé así">
   <meta itemprop="datePublished" content="2023-11-29T08:39:16-03:00">
   <meta itemprop="dateModified" content="2023-11-29T08:39:16-03:00">
-  <meta itemprop="wordCount" content="4312">
+  <meta itemprop="wordCount" content="4397">
   <meta itemprop="keywords" content="Gentoo,Install">
   
   <meta name="twitter:card" content="summary">
@@ -325,6 +325,16 @@ La verdad es que Gentoo es un meme pero a mi me divierte.</p>
 <p>Para instalar OBS tenes que habilitar las banderas antes sino no funcionará cámara.</p>
 <p>Actualización: No uses networkmanager usa wpa_supplicant con dhcpcd, netifrc y usa emerge &ndash;ask net-wireless/wireless-tools para tener el comando iwlist para escanear las redes.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>iwlist wlan0 scan 
+</span></span></code></pre></div><h4 id="no-me-podía-conectar-a-wifis-puntos-de-acceso-con-wpa-tkip-y-era-porque-está-deprecado-tenés-que-activar-la-bandera-tkip-en-wpa_supplicant">No me podía conectar a WiFis puntos de acceso con WPA TKIP y era porque está deprecado tenés que activar la bandera <code>tkip</code> en <code>wpa_supplicant</code>:</h4>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>tkip               : Add support <span style="color:#66d9ef">for</span> WPA TKIP <span style="color:#f92672">(</span>deprecated due to security flaws
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>gentoo@tux ~<span style="color:#f92672">]</span>$ cat /etc/portage/package.use/wpa_supplicant
+</span></span><span style="display:flex;"><span>net-wireless/wpa_supplicant tkip
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>gentoo@tux ~<span style="color:#f92672">]</span>$ sudo emerge -vaqg wpa_supplicant
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>gentoo@tux ~<span style="color:#f92672">]</span>$ sudo systemctl restart wpa_supplicant dhcpcd
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>gentoo@tux ~<span style="color:#f92672">]</span>$ sudo systemctl daemon-reload
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>gentoo@tux ~<span style="color:#f92672">]</span>$ sudo wpa_supplicant -B -i wlp1s0 -c  /etc/wpa_supplicant/wpa_supplicant.conf
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>gentoo@tux ~<span style="color:#f92672">]</span>$ sudo dhcpcd wlp1s0
 </span></span></code></pre></div><hr>
 <p>OJO. Si instalás w3m sin imlib no vas a poder ver las imágenes en la tty.</p>
 <p>Esta es la forma más rápida de hacerlo:</p>
@@ -337,7 +347,7 @@ La verdad es que Gentoo es un meme pero a mi me divierte.</p>
 </span></span><span style="display:flex;"><span>emerge -agv --autounmask-backtrack<span style="color:#f92672">=</span>y --binpkg-respect-use<span style="color:#f92672">=</span>n netsurf
 </span></span></code></pre></div><p>NO USES NETWORKMANAGER ES DEMASIADO BLOAT,
 USA <code>WPA_SUPPLICANT</code> CON <code>DHCPCD</code></p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>emerge -va gentoo-kernel-bin grub networkmanager pipewire tmux fastfetch os-prober sudo fish sway wmenu foot alsa-utils firefox-bin mpv php apulse imagemagick sys-kernel/linux-firmware wpa_supplicant translate-shell dev-vcs/git hugo dev-python/pip wl-clipboard grim btop feh yt-dlp neomutt aircrack-ng falkon irssi w3m net-fs/samba vim links obs-studio gimp app-arch/unzip  app-arch/unrar
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>emerge -va gentoo-kernel-bin grub networkmanager pipewire tmux fastfetch os-prober sudo fish sway wmenu foot alsa-utils firefox-bin mpv php apulse imagemagick sys-kernel/linux-firmware wpa_supplicant translate-shell dev-vcs/git hugo dev-python/pip wl-clipboard grim btop feh yt-dlp neomutt aircrack-ng falkon irssi w3m net-fs/samba vim links obs-studio gimp app-arch/unzip  app-arch/unrar net-im/pidgin net-irc/irssi-xmpp
 </span></span></code></pre></div><p>Agregá <code>--autounmask-write</code> y luego <code>dispatch-conf</code></p>
 <p>NO USES NETWORKMANAGER ES DEMASIADO BLOAT,
 USA <code>WPA_SUPPLICANT</code> CON <code>DHCPCD</code></p>
@@ -420,8 +430,11 @@ el bootloader a la ubicación de respaldo “fallback” porque sino se borra s�
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo emerge -vag lm-sensors
 </span></span><span style="display:flex;"><span>sensors
 </span></span></code></pre></div><p><a href="https://imlauera.github.io/post/como_configuro_la_hora_y_la_fecha_desde_internet/">https://imlauera.github.io/post/como_configuro_la_hora_y_la_fecha_desde_internet/</a></p>
-<p>Para actualizar todos los paquetes: <code>emerge --ask --verbose --update --deep --newuse @world</code>
-Las noticias se leen con <code>sudo eselect news list</code> y <code>sudo eselect news read 1</code></p>
+<h1 id="actualizar">Actualizar.</h1>
+<p>Para actualizar todos los paquetes: <code>emerge --ask --verbose --update --deep --newuse @world</code></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo emerge --sync
+</span></span><span style="display:flex;"><span>sudo emerge -avuDN @world
+</span></span></code></pre></div><p>Las noticias se leen con <code>sudo eselect news list</code> y <code>sudo eselect news read 1</code></p>
 <p>Si tu WiFi funciona lento: <a href="https://forums.gentoo.org/viewtopic-t-1075252-start-0.html">https://forums.gentoo.org/viewtopic-t-1075252-start-0.html</a>
 <a href="https://forums.gentoo.org/viewtopic-t-996692.html">https://forums.gentoo.org/viewtopic-t-996692.html</a></p>
 <p><a href="https://reyabogado.com/us/what-is-wireless-regulations/">https://reyabogado.com/us/what-is-wireless-regulations/</a></p>
