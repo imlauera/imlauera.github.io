@@ -29,7 +29,7 @@ Actualización: Este fue mi error. Instalé bluez de la siguiente manera.
 emerge -avG bluez y no tenía la bandera systemd activada cuando lo instalé así">
   <meta itemprop="datePublished" content="2023-11-29T08:39:16-03:00">
   <meta itemprop="dateModified" content="2023-11-29T08:39:16-03:00">
-  <meta itemprop="wordCount" content="4496">
+  <meta itemprop="wordCount" content="4508">
   <meta itemprop="keywords" content="Gentoo,Install">
   
   <meta name="twitter:card" content="summary">
@@ -302,13 +302,14 @@ La verdad es que Gentoo es un meme pero a mi me divierte.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo emerge -va xsetroot
 </span></span></code></pre></div><h5 id="agregá-a-tu-xinitrc">Agregá a tu <code>.xinitrc</code>:</h5>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#66d9ef">while</span> true ; <span style="color:#66d9ef">do</span>
-</span></span><span style="display:flex;"><span>	TEMPERATURE<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>echo <span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>cat /sys/class/thermal/thermal_zone4/temp<span style="color:#66d9ef">)</span><span style="color:#e6db74">/1000&#34;</span>|bc<span style="color:#66d9ef">)</span>
-</span></span><span style="display:flex;"><span>	xsetroot -name <span style="color:#e6db74">&#34;</span>$TEMPERATURE<span style="color:#e6db74"> ºC | `date`&#34;</span>;
-</span></span><span style="display:flex;"><span>	sleep 20;
+</span></span><span style="display:flex;"><span>        TEMP<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>cat /sys/class/thermal/thermal_zone4/temp<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>        TEMPERATURE<span style="color:#f92672">=</span><span style="color:#66d9ef">$((</span>TEMP/1000<span style="color:#66d9ef">))</span>
+</span></span><span style="display:flex;"><span>        xsetroot -name <span style="color:#e6db74">&#34;T:</span>$TEMPERATURE<span style="color:#e6db74"> C | `date`&#34;</span>;
+</span></span><span style="display:flex;"><span>        sleep 20;
 </span></span><span style="display:flex;"><span><span style="color:#66d9ef">done</span> &amp;
 </span></span><span style="display:flex;"><span>keynav &amp;
 </span></span><span style="display:flex;"><span>falkon &amp;
-</span></span><span style="display:flex;"><span>feh --bg-max $HOME/img_2806.jpg &amp; 
+</span></span><span style="display:flex;"><span>feh --bg-max $HOME/img_2806.jpg &amp;
 </span></span><span style="display:flex;"><span>exec dwm
 </span></span></code></pre></div><h4 id="esa-configuración-es-muy-básica-lee-todo-esto-xdd">Esa configuración es muy básica lee todo esto XDD: <a href="https://wiki.gentoo.org/wiki/Dwm">https://wiki.gentoo.org/wiki/Dwm</a></h4>
 <p>INSTALÁ KEYNAV ASÍ PODES MANEJAR EL MOUSE CON EL TECLADO (VIM KEYBINDINGS)</p>
@@ -335,13 +336,18 @@ La verdad es que Gentoo es un meme pero a mi me divierte.</p>
 </span></span></code></pre></div><h4 id="no-me-podía-conectar-a-wifis-puntos-de-acceso-con-wpa-tkip-y-era-porque-está-deprecado-tenés-que-activar-la-bandera-tkip-en-wpa_supplicant">No me podía conectar a WiFis puntos de acceso con WPA TKIP y era porque está deprecado tenés que activar la bandera <code>tkip</code> en <code>wpa_supplicant</code>:</h4>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>tkip               : Add support <span style="color:#66d9ef">for</span> WPA TKIP <span style="color:#f92672">(</span>deprecated due to security flaws
 </span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>gentoo@tux ~<span style="color:#f92672">]</span>$ cat /etc/portage/package.use/wpa_supplicant
+</span></span><span style="display:flex;"><span>$ cat /etc/portage/package.use/wpa_supplicant
 </span></span><span style="display:flex;"><span>net-wireless/wpa_supplicant tkip
-</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>gentoo@tux ~<span style="color:#f92672">]</span>$ sudo emerge -vaqg wpa_supplicant
-</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>gentoo@tux ~<span style="color:#f92672">]</span>$ sudo systemctl restart wpa_supplicant dhcpcd
-</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>gentoo@tux ~<span style="color:#f92672">]</span>$ sudo systemctl daemon-reload
-</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>gentoo@tux ~<span style="color:#f92672">]</span>$ sudo wpa_supplicant -B -i wlp1s0 -c  /etc/wpa_supplicant/wpa_supplicant.conf
-</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span>gentoo@tux ~<span style="color:#f92672">]</span>$ sudo dhcpcd wlp1s0
+</span></span><span style="display:flex;"><span>$ sudo emerge -vaqg wpa_supplicant
+</span></span><span style="display:flex;"><span>$ sudo systemctl restart wpa_supplicant dhcpcd
+</span></span><span style="display:flex;"><span>$ sudo systemctl daemon-reload
+</span></span><span style="display:flex;"><span>$ sudo wpa_supplicant -B -i wlp1s0 -c  /etc/wpa_supplicant/wpa_supplicant.conf
+</span></span><span style="display:flex;"><span>$ sudo dhcpcd wlp1s0
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Para que lo haga en el boot</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>$ sudo systemctl enable wpa_supplicant@wlp1s0.service
+</span></span><span style="display:flex;"><span>$ sudo systemctl enable dhcpcd@wlp1s0.service
 </span></span></code></pre></div><hr>
 <p>OJO. Si instalás w3m sin imlib no vas a poder ver las imágenes en la tty.</p>
 <p>Esta es la forma más rápida de hacerlo:</p>

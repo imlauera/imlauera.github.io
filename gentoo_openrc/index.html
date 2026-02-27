@@ -29,7 +29,7 @@ Instalé OBS Studio en Gentoo sin mirar las banderas (USE Flags) cuando ejecuté
 Con el comando emerge -pv obs-studio pude ver las banderas y leyendo la Wiki de Gentoo de OBS me dí cuenta que tengo que habilitar las siguientes banderas para tener esas funcionalidades:">
   <meta itemprop="datePublished" content="2025-06-22T22:25:52-03:00">
   <meta itemprop="dateModified" content="2025-06-22T22:25:52-03:00">
-  <meta itemprop="wordCount" content="5978">
+  <meta itemprop="wordCount" content="6421">
   <meta itemprop="keywords" content="Gentoo">
   
   <meta name="twitter:card" content="summary">
@@ -1167,7 +1167,66 @@ arch / #</p>
 </span></span></code></pre></div><p>The systemd binary repository should have packages compiled with <code>systemd -elogind</code> USE flags that match your system configuration.</p>
 <p><strong>Note:</strong> Make sure your profile is also set to a systemd profile. Check with:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>eselect profile list
-</span></span></code></pre></div>
+</span></span></code></pre></div><h4 id="wpa-supplicant-y-dhcpcd-en-el-boot">wpa supplicant y dhcpcd en el boot</h4>
+<p>Since you mentioned using <code>systemctl</code>, you are likely using the <strong>systemd</strong> init system. The reason your current enable commands didn&rsquo;t work is that <code>wpa_supplicant</code> and <code>dhcpcd</code> need to be tied to your specific network interface (<code>wlp1s0</code>).</p>
+<p>Here is how to fix this for both init systems (Systemd and OpenRC), as Gentoo users often switch between them.</p>
+<h3 id="option-a-if-you-are-using-systemd">Option A: If you are using Systemd</h3>
+<p>You need to enable the service instances specifically for your wireless interface.</p>
+<ol>
+<li>
+<p><strong>Enable wpa_supplicant for your interface:</strong>
+Instead of just <code>wpa_supplicant</code>, enable the template service that includes your interface name.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo systemctl enable wpa_supplicant@wlp1s0.service
+</span></span></code></pre></div></li>
+<li>
+<p><strong>Enable dhcpcd:</strong>
+The standard <code>dhcpcd.service</code> usually works, but to be specific to your interface (and avoid it trying to manage other interfaces like ethernet if you don&rsquo;t want it to), you can often rely on the global service. If you previously enabled the generic one, disable it first to be clean, then ensure it&rsquo;s running:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo systemctl enable dhcpcd.service
+</span></span></code></pre></div><p><em>(Note: If <code>dhcpcd</code> still fails to pick up the interface, it is because <code>wpa_supplicant</code> hasn&rsquo;t associated with the Wi-Fi yet. Systemd handles these dependencies automatically if configured correctly, but sometimes it is cleaner to let the <code>networkmanager</code> handle both, or stick to the manual binding below.)</em></p>
+</li>
+</ol>
+<p><strong>A common Systemd alternative (Cleaner):</strong>
+If the above gives you trouble, the most reliable &ldquo;manual&rdquo; method on systemd is to bind them together.</p>
+<ol>
+<li>Run <code>sudo systemctl disable dhcpcd.service</code> (to stop the global one).</li>
+<li>Enable the interface-specific dhcpcd: <code>sudo systemctl enable dhcpcd@wlp1s0.service</code>.</li>
+<li>Ensure wpa_supplicant is enabled as shown in step 1 above.</li>
+</ol>
+<p><strong>Reboot to test.</strong></p>
+<hr>
+<h3 id="option-b-if-you-are-using-openrc-gentoo-default">Option B: If you are using OpenRC (Gentoo Default)</h3>
+<p>If you are actually using OpenRC (which uses <code>rc-update</code>, not <code>systemctl</code>) but installed <code>systemd</code> tools by mistake, here is the correct OpenRC way to do this. This is the &ldquo;Gentoo Way&rdquo; of handling networks.</p>
+<ol>
+<li>
+<p><strong>Create a network script symlink:</strong>
+Gentoo uses a generic <code>net.lo</code> script. You need to link it to your wireless interface.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo ln -s /etc/init.d/net.lo /etc/init.d/net.wlp1s0
+</span></span></code></pre></div></li>
+<li>
+<p><strong>Configure <code>/etc/conf.d/net</code>:</strong>
+Tell the system to use wpa_supplicant for this interface. Add these lines to the file:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># /etc/conf.d/net</span>
+</span></span><span style="display:flex;"><span>modules<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;wpa_supplicant&#34;</span>
+</span></span><span style="display:flex;"><span>wpa_supplicant_wlp1s0<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;-Dnl80211 -c/etc/wpa_supplicant/wpa_supplicant.conf&#34;</span>
+</span></span><span style="display:flex;"><span>config_wlp1s0<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;dhcp&#34;</span>
+</span></span></code></pre></div></li>
+<li>
+<p><strong>Enable the scripts to start at boot:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo rc-update add net.wlp1s0 default
+</span></span></code></pre></div><p><em>(Note: You usually do <strong>not</strong> need to add <code>dhcpcd</code> or <code>wpa_supplicant</code> separately to the runlevel when using this method; the <code>net.wlp1s0</code> script handles calling them).</em></p>
+</li>
+<li>
+<p><strong>Start it immediately (optional):</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo /etc/init.d/net.wlp1s0 start
+</span></span></code></pre></div></li>
+</ol>
+<h3 id="summary-checklist">Summary checklist</h3>
+<ul>
+<li><strong>Systemd:</strong> Use <code>wpa_supplicant@wlp1s0.service</code>.</li>
+<li><strong>OpenRC:</strong> Use the <code>net.wlp1s0</code> symbolic link method.</li>
+</ul>
+<p><strong>Important Note:</strong> Do not mix the two methods. If you use the OpenRC <code>net.wlp1s0</code> method, do not enable the standalone <code>wpa_supplicant</code> or <code>dhcpcd</code> services. If you use Systemd, use the service files directly.</p>
+
 </div>
 
 
