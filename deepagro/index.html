@@ -29,7 +29,7 @@ Aquí tienes el desglose paso a paso de lo que hace la empresa y qué pensaría 
 1. ¿Qué es DeepAgro? Según su web, DeepAgro es una empresa de AgTech (tecnología agrícola). Su producto estrella es un sistema de detección de malezas basado en IA y Computer Vision.">
   <meta itemprop="datePublished" content="2026-03-03T20:27:39-03:00">
   <meta itemprop="dateModified" content="2026-03-03T20:27:39-03:00">
-  <meta itemprop="wordCount" content="2924">
+  <meta itemprop="wordCount" content="3877">
   <meta itemprop="keywords" content="Hotz">
   
   <meta name="twitter:card" content="summary">
@@ -387,6 +387,105 @@ El script que corre en el tractor. Detecta y dispara el relé.</p>
 </ul>
 <p>La dificultad no es el software, es <strong>ponerse a sacar fotos y etiquetarlas</strong>. Si eres agricultor, tienes el campo y el tractor. Solo te falta pasar un fin de semana programando.</p>
 <p><strong>George Hotz te diría:</strong> <em>&ldquo;No pagues rentas. Hazlo tú. Aprender a programar es un &lsquo;Superpoder&rsquo; que te da soberanía sobre tus herramientas.&rdquo;</em></p>
+<hr>
+<p>¡Exacto! Has llegado al corazón del problema. Es la diferencia entre &ldquo;programar&rdquo; (dar instrucciones lógicas) y &ldquo;entrenar&rdquo; (dar ejemplos).</p>
+<p>Aquí te lo explico de forma directa, como lo haría Hotz:</p>
+<h3 id="1-la-ia-no-sabe-nada-el-problema-de-la-pizarra-en-blanco">1. La IA no &ldquo;sabe&rdquo; nada (El problema de la Pizarra en Blanco)</h3>
+<p>Si le escribes código tradicional, le das reglas:</p>
+<ul>
+<li><code>Si (color == verde) -&gt; pintar</code>.</li>
+<li><code>Si (temperatura &gt; 100) -&gt; apagar</code>.</li>
+</ul>
+<p>Pero con una maleza no puedes dar reglas fáciles. ¿Cómo le explicas a una computadora qué es una &ldquo;maleza&rdquo; con código?</p>
+<ul>
+<li>¿Es verde? Sí, pero el cultivo también.</li>
+<li>¿Es una hoja con tallo? Sí, pero el maíz también.</li>
+<li>¿Es pequeña? A veces.</li>
+</ul>
+<p>No puedes escribir <code>if (planta == maleza)</code>. Es imposible definirlo con reglas matemáticas simples porque cada maleza es diferente, la luz cambia, hay sombras, tierra, etc.</p>
+<p><strong>La solución (Machine Learning):</strong>
+En lugar de escribir las reglas, le das <strong>ejemplos</strong>. Le dices: <em>&ldquo;Mira estas 1000 fotos. Las cosas que encuadré en rojo son malezas. Aprende tú solo las reglas visuales que las diferencian&rdquo;.</em></p>
+<h3 id="2-por-qué-es-difícil-el-trabajo-sucio">2. ¿Por qué es &ldquo;difícil&rdquo;? (El trabajo sucio)</h3>
+<p>El código para entrenar es fácil (copiar y pegar de GitHub). Lo difícil es el <strong>Dataset</strong>.</p>
+<p>Para que la IA aprenda bien, necesitas:</p>
+<ol>
+<li><strong>Volumen:</strong> No bastan 10 fotos. Necesitas cientos o miles. Si le muestras 5 malezas, la IA memorizará esas 5 específicas y no reconocerá la 6ta. Necesitas variedad.</li>
+<li><strong>Variedad de condiciones:</strong>
+<ul>
+<li>Fotos de mañana (poca luz).</li>
+<li>Fotos de mediodía (sol fuerte, sombras duras).</li>
+<li>Fotos con lluvia o tierra mojada.</li>
+<li>Fotos con la cámara sucia.</li>
+<li>Malezas pequeñas (recién nacidas).</li>
+<li>Malezas grandes.</li>
+</ul>
+</li>
+<li><strong>Etiquetado manual (El infierno):</strong> Tú tienes que sentarte y con el ratón dibujar cuadraditos alrededor de cada maleza en esas 1000 fotos. Si te equivocas y marcas una hoja de maíz como maleza, la IA se confundirá.</li>
+</ol>
+<p><strong>George Hotz diría:</strong></p>
+<blockquote>
+<p><em>&ldquo;El código es trivial. Cualquier idiota puede importar <code>torch</code> y correr un bucle de entrenamiento. El valor real está en los datos. DeepAgro probablemente gastó meses pagando a gente para clicar fotos. Ese es su &lsquo;moat&rsquo; (foso defensivo), no su software.&rdquo;</em></p>
+</blockquote>
+<h3 id="3-el-proceso-resumido">3. El proceso resumido</h3>
+<ol>
+<li><strong>Tú ves una foto:</strong> Ves una planta.</li>
+<li><strong>La IA ve una foto:</strong> Ve una matriz de números (píxeles).</li>
+<li><strong>Entrenamiento:</strong>
+<ul>
+<li>La IA intenta adivinar &ldquo;esto es maleza&rdquo;.</li>
+<li>Tú la corriges: &ldquo;No, imbécil, eso es maíz&rdquo; (ajustando pesos matemáticos internos).</li>
+<li>Repites esto un millón de veces hasta que el error es bajo.</li>
+</ul>
+</li>
+</ol>
+<h3 id="conclusión">Conclusión</h3>
+<p>Sacar fotos y etiquetarlas es difícil porque es <strong>trabajo manual repetitivo</strong>. No hay atajo tecnológico para eso (todavía).</p>
+<p>Por eso empresas como DeepAgro protegen tanto su sistema: <strong>su código no vale nada (es YOLO estándar), pero su colección de fotos etiquetadas vale millones.</strong></p>
+<p>Si tú te tomas el trabajo de sacar 2000 fotos y etiquetarlas, tienes la parte más valiosa de la empresa en tu mano.</p>
+<p>No, técnicamente <strong>no es un &ldquo;wrapper de GPT&rdquo;</strong> en el sentido estricto que Hotz usa el insulto, pero cae en una categoría similar y quizás aún más básica.</p>
+<p>Vamos a desglosarlo con la lógica de Hotz:</p>
+<h3 id="1-qué-es-un-wrapper-para-hotz">1. ¿Qué es un &ldquo;Wrapper&rdquo; para Hotz?</h3>
+<p>Para Hotz, un &ldquo;GPT Wrapper&rdquo; es una empresa que:</p>
+<ul>
+<li>Se conecta a la API de OpenAI (ChatGPT).</li>
+<li>Le pone una interfaz bonita.</li>
+<li>Cobra una suscripción.</li>
+<li><strong>Valor añadido:</strong> Cero. Si OpenAI lanza una función nueva, tu empresa muere.</li>
+</ul>
+<p>Ejemplo típico: &ldquo;Escribe un email por mí&rdquo; o &ldquo;Chatea con tu PDF&rdquo;. Son texto entrando, texto saliendo.</p>
+<h3 id="2-qué-hace-deepagro">2. ¿Qué hace DeepAgro?</h3>
+<p>DeepAgro usa <strong>Computer Vision (Visión por Computadora)</strong>, no procesamiento de lenguaje (LLMs/GPT).</p>
+<ul>
+<li><strong>Input:</strong> Video (píxeles).</li>
+<li><strong>Output:</strong> Señal eléctrica (encender spray).</li>
+<li><strong>Modelo:</strong> Usan modelos de detección de objetos (tipo <strong>YOLO</strong>), que son redes neuronales mucho más pequeñas y rápidas que GPT.</li>
+</ul>
+<p><strong>Conclusión:</strong> No son un wrapper de GPT. No le preguntan a ChatGPT &ldquo;¿Esto es maleza?&rdquo;. Eso sería absurdo, lento y caro. Ellos usan un modelo especializado en imágenes.</p>
+<h3 id="3-entonces-qué-pensaría-hotz-el-yolo-wrapper">3. Entonces, ¿qué pensaría Hotz? (El &ldquo;YOLO Wrapper&rdquo;)</h3>
+<p>Si no es un wrapper de GPT, ¿qué es para Hotz?
+Probablemente lo llamaría un <strong>&ldquo;YOLO Wrapper&rdquo;</strong> o un <strong>&ldquo;Dataset Wrapper&rdquo;</strong>.</p>
+<p>Hotz diría algo así:</p>
+<blockquote>
+<p><em>&ldquo;No son un wrapper de GPT, eso sería demasiado sofisticado. Son solo un wrapper de YOLO (un modelo de visión abierto). Descargaron un modelo gratis de internet, lo entrenaron con fotos de malezas y lo venden en una caja cerrada. Su único &lsquo;moat&rsquo; (foso defensivo) es que se tomaron la molestia de etiquetar las fotos.&rdquo;</em></p>
+</blockquote>
+<p><strong>El desprecio de Hotz sería similar, pero por razones distintas:</strong></p>
+<ul>
+<li><strong>No innovan en IA:</strong> No inventaron un nuevo algoritmo. Usan tecnología estándar (&ldquo;commoditized&rdquo;).</li>
+<li><strong>Cerraron lo que debería ser abierto:</strong> Igual que con los chips de IA, Hotz cree que estos modelos deberían ser open source y correr en cualquier hardware barato, no en una caja mágica propietaria.</li>
+</ul>
+<h3 id="4-es-más-difícil-que-un-wrapper-de-gpt">4. ¿Es más difícil que un Wrapper de GPT?</h3>
+<p><strong>Sí, un poco.</strong>
+Un wrapper de GPT es puramente software (fácil de copiar).
+DeepAgro tiene desafíos físicos que Hotz respeta (aunque sea poco):</p>
+<ol>
+<li><strong>Hardware:</strong> La caja tiene que aguantar polvo, vibración, agua, 12V crudos del tractor.</li>
+<li><strong>Latencia:</strong> GPT tarda segundos. DeepAgro tiene que detectar la maleza en <strong>milisegundos</strong> para no pasarse de largo. Esto requiere optimización &ldquo;on-device&rdquo; (en el dispositivo), lo cual es más difícil que llamar una API en la nube.</li>
+</ol>
+<h3 id="veredicto-final">Veredicto Final</h3>
+<p><strong>No es un &ldquo;GPT Wrapper&rdquo;.</strong> Es un <strong>&ldquo;Integrador de Visión Artificial&rdquo;</strong>.</p>
+<p>Para Hotz, la empresa es <strong>aburrida</strong>. No hay magia. Es ingeniería estándar aplicada a un nicho.
+Su valor no está en la tecnología (que es común), sino en haber <strong>integrado</strong> la cámara, la IA y la bomba de veneno en un solo aparato listo para usar.</p>
+<p>Hotz te diría: <em>&ldquo;Puedes hacer lo mismo con una Raspberry Pi y un modelo abierto, pero si eres agricultor y no sabes programar, quizás te convenga pagarles a ellos. Solo recuerda: no te están vendiendo inteligencia, te están vendiendo comodidad.&rdquo;</em></p>
 
 </div>
 

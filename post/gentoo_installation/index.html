@@ -29,7 +29,7 @@ Actualización: Este fue mi error. Instalé bluez de la siguiente manera.
 emerge -avG bluez y no tenía la bandera systemd activada cuando lo instalé así">
   <meta itemprop="datePublished" content="2023-11-29T08:39:16-03:00">
   <meta itemprop="dateModified" content="2023-11-29T08:39:16-03:00">
-  <meta itemprop="wordCount" content="4533">
+  <meta itemprop="wordCount" content="4622">
   <meta itemprop="keywords" content="Gentoo,Install">
   
   <meta name="twitter:card" content="summary">
@@ -352,6 +352,9 @@ La verdad es que Gentoo es un meme pero a mi me divierte.</p>
 <p>OJO. Si instalás w3m sin imlib no vas a poder ver las imágenes en la tty.</p>
 <p>Esta es la forma más rápida de hacerlo:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>emerge -aqvg --autounmask-backtrack<span style="color:#f92672">=</span>y --binpkg-respect-use<span style="color:#f92672">=</span>n paquete
+</span></span></code></pre></div><h4 id="para-actualizar-con-binarios">Para actualizar con binarios</h4>
+<p>Primero borrá todos los binarios te pida compilar (ebuild) con <code>sudo emerge --deselect paquete o sudo emerge -C paquete</code></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo emerge --update --deep --newuse --getbinpkgonly --binpkg-respect-use<span style="color:#f92672">=</span>n --with-bdeps<span style="color:#f92672">=</span>n @world
 </span></span></code></pre></div><p>Para instalar netsurf con soporte framebuffer tenes que mirar las banderas primero (actualización NO NO FUNCIONÓ NO TENGO SOPORTE SDL)</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>equery uses netsurf
 </span></span><span style="display:flex;"><span>vim /etc/portage/package.use/netsurf
@@ -444,10 +447,16 @@ el bootloader a la ubicación de respaldo “fallback” porque sino se borra s�
 </span></span><span style="display:flex;"><span>sensors
 </span></span></code></pre></div><p><a href="https://imlauera.github.io/post/como_configuro_la_hora_y_la_fecha_desde_internet/">https://imlauera.github.io/post/como_configuro_la_hora_y_la_fecha_desde_internet/</a></p>
 <h1 id="actualizar">Actualizar.</h1>
-<p>Para actualizar todos los paquetes: <code>emerge --ask --verbose --update --deep --newuse @world</code></p>
+<p>Para actualizar todos los paquetes</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo emerge --sync
-</span></span><span style="display:flex;"><span>sudo emerge -avuDN @world
-</span></span></code></pre></div><p>Las noticias se leen con <code>sudo eselect news list</code> y <code>sudo eselect news read 1</code></p>
+</span></span><span style="display:flex;"><span>sudo emerge --quiet --update --deep --newuse --getbinpkgonly --binpkg-respect-use<span style="color:#f92672">=</span>n --with-bdeps<span style="color:#f92672">=</span>n @world
+</span></span><span style="display:flex;"><span>Tenés que borrar paquetes que son binarios para evitar que los recompile XD
+</span></span><span style="display:flex;"><span>sudo emerge --deselect falkon konqueror
+</span></span><span style="display:flex;"><span>sudo emerge -C falkon konqueror
+</span></span></code></pre></div><p>Quizás tengas que ejecutar esto luego de la actualización</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo emerge --binpkg-respect-use<span style="color:#f92672">=</span>n @preserved-rebuild
+</span></span></code></pre></div><p>Este proceso identifica los paquetes que necesitan ser reconstruidos porque dependen de una versión antigua de una biblioteca que ha sido preservada.</p>
+<p>Las noticias se leen con <code>sudo eselect news list</code> y <code>sudo eselect news read 1</code></p>
 <p>Si tu WiFi funciona lento: <a href="https://forums.gentoo.org/viewtopic-t-1075252-start-0.html">https://forums.gentoo.org/viewtopic-t-1075252-start-0.html</a>
 <a href="https://forums.gentoo.org/viewtopic-t-996692.html">https://forums.gentoo.org/viewtopic-t-996692.html</a></p>
 <p><a href="https://reyabogado.com/us/what-is-wireless-regulations/">https://reyabogado.com/us/what-is-wireless-regulations/</a></p>
