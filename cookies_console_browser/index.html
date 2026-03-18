@@ -21,7 +21,7 @@
   <meta itemprop="description" content="cp ~/.config/falkon/profiles/default/Cookies /tmp/falkon_cookies.sqlite sqlite3 -separator $&#39;\t&#39; -noheader /tmp/falkon_cookies.sqlite &#34;SELECT host_key, CASE WHEN host_key LIKE &#39;.%&#39; THEN &#39;TRUE&#39; ELSE &#39;FALSE&#39; END, path, CASE WHEN is_secure=1 THEN &#39;TRUE&#39; ELSE &#39;FALSE&#39; END, CAST((expires_utc/1000000.0 - 11644473600) AS INTEGER), name, value FROM cookies;&#34; &gt; ~/cookies_netscape.txt curl -v -L -b ~/cookies_netscape.txt -c ~/cookies_out.txt &#34;https://inv.nadeko.net/&#34; -o /tmp/forum.html &amp;&amp; w3m /tmp/forum.html curl -v -L -b ~/cookies_out.txt &#34;https://inv.nadeko.net/&#34; -o /tmp/forum.html &amp;&amp; w3m /tmp/forum.html #### Ahora usamos las cookies para descargar videos o el instagram de una persona. $ yt-dlp --cookies cookies_out.txt $ gallery-dl --cookies ~/cookies_out.txt https://instagram.com/user Para iniciarlo con startx (twm) echo “exec twm” &gt; .xinitrc">
   <meta itemprop="datePublished" content="2025-10-17T15:24:32-03:00">
   <meta itemprop="dateModified" content="2025-10-17T15:24:32-03:00">
-  <meta itemprop="wordCount" content="1518">
+  <meta itemprop="wordCount" content="1876">
   <meta itemprop="keywords" content="Console">
   
   <meta name="twitter:card" content="summary">
@@ -313,11 +313,116 @@ echo &ldquo;exec twm&rdquo; &gt; .xinitrc">
 <p>Si muestra <code>LOGGEDIN = 0</code>, las cookies no tienen la sesión válida.</p>
 <hr>
 <h2 id="paso-5-obtener-formulario-de-respuesta">Paso 5: Obtener Formulario de Respuesta</h2>
+<h1 id="a-veces-no-funciona-porque-tenes-que-seguir-un-redirect-de-javascript--explicado-mas-abajo">a veces no funciona porque tenes que seguir un redirect de javascript &hellip; (explicado mas abajo)</h1>
 <h3 id="obtener-el-token-de-seguridad-y-formulario">Obtener el token de seguridad y formulario</h3>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>curl -sL <span style="color:#e6db74">&#34;https://foros.3dgames.com.ar/newreply.php?do=newreply&amp;t=1034102&#34;</span> <span style="color:#ae81ff">\
 </span></span></span><span style="display:flex;"><span>  -b /tmp/all_cookies.txt <span style="color:#ae81ff">\
 </span></span></span><span style="display:flex;"><span>  -c /tmp/session.txt
-</span></span></code></pre></div><p>Buscar:</p>
+</span></span></code></pre></div><h2 id="3-el-problema-de-la-redirección">3. El problema de la redirección</h2>
+<p><strong>El problema</strong>: Cuando hacés <code>curl -L</code> y el servidor responde con una página HTML que tiene:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-html" data-lang="html"><span style="display:flex;"><span>&lt;<span style="color:#f92672">script</span>&gt;
+</span></span><span style="display:flex;"><span>window.<span style="color:#a6e22e">location</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;https://foros.3dgames.com.ar/newreply.php?do=newreply&amp;t=1034102&#34;</span>;
+</span></span><span style="display:flex;"><span>&lt;/<span style="color:#f92672">script</span>&gt;
+</span></span></code></pre></div><p><code>curl -L</code> NO sigue este tipo de redirect porque no es un HTTP 301/302 - es JavaScript.</p>
+<h3 id="la-solución">La solución</h3>
+<ol>
+<li><strong>Hacer un request inicial al home</strong> para obtener la cookie de sesión (<code>bb_sessionhash</code>)</li>
+<li><strong>Guardar las cookies</strong> que llegan en el response</li>
+<li><strong>Usar esas cookies</strong> para el siguiente request</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Request inicial - obtener cookies de sesión</span>
+</span></span><span style="display:flex;"><span>curl -sL <span style="color:#e6db74">&#34;https://foros.3dgames.com.ar/&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -b /tmp/all_cookies.txt <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -c /tmp/final_cookies.txt
+</span></span></code></pre></div><p>Explicación:</p>
+<ul>
+<li><code>-sL</code>: silent + follow redirects (solo HTTP redirects)</li>
+<li><code>-b</code>: enviar cookies</li>
+<li><code>-c</code>: guardar cookies recibidas</li>
+</ul>
+<h2 id="4-obtener-el-formulario-de-respuesta">4. Obtener el formulario de respuesta</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>curl -sL <span style="color:#e6db74">&#34;https://foros.3dgames.com.ar/newreply.php?do=newreply&amp;t=1034102&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -b /tmp/final_cookies.txt <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -o /tmp/reply_page.html
+</span></span></code></pre></div><p>Del HTML obtenido, extraé los campos hidden (buscá con grep o leyendo el archivo):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-html" data-lang="html"><span style="display:flex;"><span>&lt;<span style="color:#f92672">input</span> <span style="color:#a6e22e">type</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;hidden&#34;</span> <span style="color:#a6e22e">name</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;securitytoken&#34;</span> <span style="color:#a6e22e">value</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;1773796089-498d52367b0a91318348b6c7ff1ce08a9d3ef12b&#34;</span> /&gt;
+</span></span><span style="display:flex;"><span>&lt;<span style="color:#f92672">input</span> <span style="color:#a6e22e">type</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;hidden&#34;</span> <span style="color:#a6e22e">name</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;wysiwyg&#34;</span> <span style="color:#a6e22e">id</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;vB_Editor_001_mode&#34;</span> <span style="color:#a6e22e">value</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;1&#34;</span> /&gt;
+</span></span><span style="display:flex;"><span>&lt;<span style="color:#f92672">input</span> <span style="color:#a6e22e">type</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;hidden&#34;</span> <span style="color:#a6e22e">name</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;do&#34;</span> <span style="color:#a6e22e">value</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;postreply&#34;</span> /&gt;
+</span></span><span style="display:flex;"><span>&lt;<span style="color:#f92672">input</span> <span style="color:#a6e22e">type</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;hidden&#34;</span> <span style="color:#a6e22e">name</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;t&#34;</span> <span style="color:#a6e22e">value</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;1034102&#34;</span> /&gt;
+</span></span><span style="display:flex;"><span>&lt;<span style="color:#f92672">input</span> <span style="color:#a6e22e">type</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;hidden&#34;</span> <span style="color:#a6e22e">name</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;loggedinuser&#34;</span> <span style="color:#a6e22e">value</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;919561&#34;</span> /&gt;
+</span></span></code></pre></div><p>Y el campo del mensaje:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-html" data-lang="html"><span style="display:flex;"><span>&lt;<span style="color:#f92672">textarea</span> <span style="color:#a6e22e">id</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;vB_Editor_001_editor&#34;</span> <span style="color:#a6e22e">name</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;message&#34;</span> <span style="color:#a6e22e">rows</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;8&#34;</span> <span style="color:#a6e22e">cols</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;60&#34;</span>&gt;&lt;/<span style="color:#f92672">textarea</span>&gt;
+</span></span></code></pre></div><h2 id="5-publicar-la-respuesta">5. Publicar la respuesta</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>curl -sL <span style="color:#e6db74">&#34;https://foros.3dgames.com.ar/newreply.php?do=postreply&amp;t=1034102&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -b /tmp/final_cookies.txt <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -H <span style="color:#e6db74">&#34;Content-Type: application/x-www-form-urlencoded&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --data-urlencode <span style="color:#e6db74">&#34;message=Hola irish desde opencode&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --data-urlencode <span style="color:#e6db74">&#34;securitytoken=1773796089-498d52367b0a91318348b6c7ff1ce08a9d3ef12b&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --data-urlencode <span style="color:#e6db74">&#34;do=postreply&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --data-urlencode <span style="color:#e6db74">&#34;t=1034102&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --data-urlencode <span style="color:#e6db74">&#34;wysiwyg=1&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --data-urlencode <span style="color:#e6db74">&#34;loggedinuser=919561&#34;</span>
+</span></span></code></pre></div><h2 id="6-verificar-que-se-publicó">6. Verificar que se publicó</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>curl -sL <span style="color:#e6db74">&#34;https://foros.3dgames.com.ar/threads/1034102-programacion-ya-esta-saturado/page1484&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -b /tmp/final_cookies.txt | grep <span style="color:#e6db74">&#34;Hola irish&#34;</span>
+</span></span></code></pre></div><p>Si ves el mensaje en el HTML, ¡estuvo exitoso!</p>
+<h2 id="7-comandos-útiles">7. Comandos útiles</h2>
+<table>
+  <thead>
+      <tr>
+          <th>Comando</th>
+          <th>Descripción</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><code>curl -sL url</code></td>
+          <td>GET con follow redirects</td>
+      </tr>
+      <tr>
+          <td><code>curl -b cookies.txt</code></td>
+          <td>Enviar cookies</td>
+      </tr>
+      <tr>
+          <td><code>curl -c cookies.txt</code></td>
+          <td>Guardar cookies recibidas</td>
+      </tr>
+      <tr>
+          <td><code>curl -o file.html</code></td>
+          <td>Guardar output a archivo</td>
+      </tr>
+      <tr>
+          <td><code>curl -w &quot;%{url_effective}&quot;</code></td>
+          <td>Ver URL final después de redirects</td>
+      </tr>
+      <tr>
+          <td><code>--data-urlencode &quot;key=valor&quot;</code></td>
+          <td>Formatear datos como application/x-www-form-urlencoded</td>
+      </tr>
+  </tbody>
+</table>
+<h2 id="8-troubleshooting">8. Troubleshooting</h2>
+<h3 id="cas-authentication-wanted">&ldquo;CAS Authentication wanted&rdquo;</h3>
+<ul>
+<li>El TGT expiró o es inválido</li>
+<li>Necesitás obtener un TGT fresco desde el navegador</li>
+</ul>
+<h3 id="redirect-infinito">Redirect infinito</h3>
+<ul>
+<li>Falta la cookie <code>bb_sessionhash</code></li>
+<li>Hacé el request inicial al home primero</li>
+</ul>
+<h3 id="security-token-is-invalid">&ldquo;Security token is invalid&rdquo;</h3>
+<ul>
+<li>El token expiró</li>
+<li>Obtené un nuevo token de la página de newreply</li>
+</ul>
+<h3 id="binary-file-matches">&ldquo;Binary file matches&rdquo;</h3>
+<ul>
+<li>El servidor responde con gzip</li>
+<li>Agregá <code>--compressed</code> o verificá que el servidor no esté comprimiendo</li>
+</ul>
+<p>Buscar:</p>
 <ul>
 <li><code>securitytoken</code> - necesario para POST</li>
 <li><code>action=&quot;newreply.php?do=postreply&amp;t=ID&quot;</code> - URL del formulario</li>
