@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/descargar_instagram_stories/">
+  <meta property="og:site_name" content="Imlauer">
+  <meta property="og:title" content="Descargar instagram stories desde la bash">
+  <meta property="og:description" content="Cortesía de opencode XD.
+#!/bin/bash # Descargar historias de Instagram desde iqsaved.com usando chromium headless USERNAME=&#34;${1:-}&#34; OUTPUT_DIR=&#34;${2:-./instagram_stories}&#34; if [ -z &#34;$USERNAME&#34; ]; then echo &#34;Uso: $0 &lt;nombre_usuario&gt; [directorio_salida]&#34; echo &#34;Ejemplo: $0 male_leoncini /tmp/mis_historias&#34; exit 1 fi URL=&#34;https://iqsaved.com/viewer/$USERNAME&#34; echo &#34;Descargando historias de: $URL&#34; mkdir -p &#34;$OUTPUT_DIR&#34; cd &#34;$OUTPUT_DIR&#34; # Iniciar chromium con modo headless y debug remoto echo &#34;Iniciando chromium...&#34; chromium --headless --disable-gpu --no-sandbox --remote-debugging-port=9222 &#34;$URL&#34; &gt; /dev/null 2&gt;&amp;1 &amp; CHROME_PID=$! # Esperar a que chrome este listo sleep 4 # Obtener WebSocket URL de la pagina WS_URL=$(curl -s http://localhost:9222/json | python3 -c &#34; import sys, json pages = json.load(sys.stdin) target = [p for p in pages if &#39;$USERNAME&#39; in p.get(&#39;url&#39;,&#39;&#39;) or &#39;iqsaved&#39; in p.get(&#39;url&#39;,&#39;&#39;)] if target: print(target[0][&#39;webSocketDebuggerUrl&#39;]) &#34; 2&gt;/dev/null) if [ -z &#34;$WS_URL&#34; ]; then echo &#34;Error: No se pudo obtener WebSocket URL&#34; kill $CHROME_PID 2&gt;/dev/null exit 1 fi echo &#34;WebSocket: $WS_URL&#34; # Instalar ws si no existe WS_DIR=&#34;/tmp/ws_cdp&#34; if [ ! -d &#34;$WS_DIR&#34; ]; then mkdir -p &#34;$WS_DIR&#34; cd &#34;$WS_DIR&#34; npm init -y &gt; /dev/null 2&gt;&amp;1 npm install ws &gt; /dev/null 2&gt;&amp;1 fi # Crear script para extraer URLs cat &gt; &#34;$WS_DIR/get_stories.js&#34; &lt;&lt; &#39;SCRIPT_EOF&#39; const WebSocket = require(&#39;ws&#39;); const ws = new WebSocket(process.argv[2]); let cmdId = 0; const send = (method, params={}) =&gt; { return new Promise((resolve) =&gt; { const id = &#43;&#43;cmdId; ws.send(JSON.stringify({id, method, params})); ws.once(&#39;message&#39;, (msg) =&gt; { const data = JSON.parse(msg); resolve(data.result || data); }); }); }; ws.on(&#39;open&#39;, async () =&gt; { console.error(&#39;Esperando que carguen las historias (12s)...&#39;); await new Promise(r =&gt; setTimeout(r, 12000)); const r = await send(&#39;Runtime.evaluate&#39;, { expression: `JSON.stringify({ downloads: [...document.querySelectorAll(&#39;a[download],a[href$=&#34;.mp4&#34;],a[href$=&#34;.jpg&#34;]&#39;)] .map(a =&gt; ({href: a.href, text: a.getAttribute(&#39;download&#39;) || a.text.trim()})) .filter(a =&gt; a.href.includes(&#39;cdn.iqsaved&#39;)) })` }); // El resultado viene anidado: r.result.value es un string JSON const value = r.result ? r.result.value : r.value; process.stdout.write(value); ws.close(); }); ws.on(&#39;error&#39;, e =&gt; { console.error(&#39;Error:&#39;, e.message); process.exit(1); }); SCRIPT_EOF # Ejecutar y extraer URLs (solo stdout, ignorar stderr) JSON_RESULT=$(cd &#34;$WS_DIR&#34; &amp;&amp; node get_stories.js &#34;$WS_URL&#34; 2&gt;/dev/null) # Cerrar chromium kill $CHROME_PID 2&gt;/dev/null # Parsear y descargar echo &#34;$JSON_RESULT&#34; | python3 -c &#34; import sys, json, subprocess, re, os from urllib.parse import unquote try: data = json.load(sys.stdin) downloads = data.get(&#39;downloads&#39;, []) if not downloads: print(&#39;No se encontraron descargas&#39;) sys.exit(0) print(f&#39;Encontrados {len(downloads)} archivos&#39;) for i, item in enumerate(downloads, 1): url = item[&#39;href&#39;] # Extraer nombre de archivo o generar uno if &#39;filename=&#39; in url: fname = url.split(&#39;filename=&#39;)[1].split(&#39;&amp;&#39;)[0] fname = unquote(fname) else: fname = f&#39;file_{i}&#39; # Determinar extension if &#39;.mp4&#39; in fname: ext = &#39;mp4&#39; elif &#39;.jpg&#39; in fname or &#39;.jpeg&#39; in fname: ext = &#39;jpg&#39; else: ext = &#39;bin&#39; outfile = f&#39;{i}.{ext}&#39; # Skip if already exists and has content if os.path.exists(outfile) and os.path.getsize(outfile) &gt; 1000: print(f&#39;Omitiendo {outfile} (ya existe)&#39;) continue print(f&#39;Descargando {outfile}...&#39;) subprocess.run([&#39;wget&#39;, &#39;-q&#39;, &#39;-O&#39;, outfile, url], check=True) print(&#39;Descarga completa!&#39;) except Exception as e: print(f&#39;Error: {e}&#39;) sys.exit(1) &#34; echo &#34;Archivos en: $(pwd)&#34; ls -la">
+  <meta property="og:locale" content="es_es">
+  <meta property="og:type" content="article">
+    <meta property="article:published_time" content="2026-03-19T23:29:15-03:00">
+    <meta property="article:modified_time" content="2026-03-19T23:29:15-03:00">
+    <meta property="article:tag" content="Cli">
+
+  
+  <meta itemprop="name" content="Descargar instagram stories desde la bash">
+  <meta itemprop="description" content="Cortesía de opencode XD.
+#!/bin/bash # Descargar historias de Instagram desde iqsaved.com usando chromium headless USERNAME=&#34;${1:-}&#34; OUTPUT_DIR=&#34;${2:-./instagram_stories}&#34; if [ -z &#34;$USERNAME&#34; ]; then echo &#34;Uso: $0 &lt;nombre_usuario&gt; [directorio_salida]&#34; echo &#34;Ejemplo: $0 male_leoncini /tmp/mis_historias&#34; exit 1 fi URL=&#34;https://iqsaved.com/viewer/$USERNAME&#34; echo &#34;Descargando historias de: $URL&#34; mkdir -p &#34;$OUTPUT_DIR&#34; cd &#34;$OUTPUT_DIR&#34; # Iniciar chromium con modo headless y debug remoto echo &#34;Iniciando chromium...&#34; chromium --headless --disable-gpu --no-sandbox --remote-debugging-port=9222 &#34;$URL&#34; &gt; /dev/null 2&gt;&amp;1 &amp; CHROME_PID=$! # Esperar a que chrome este listo sleep 4 # Obtener WebSocket URL de la pagina WS_URL=$(curl -s http://localhost:9222/json | python3 -c &#34; import sys, json pages = json.load(sys.stdin) target = [p for p in pages if &#39;$USERNAME&#39; in p.get(&#39;url&#39;,&#39;&#39;) or &#39;iqsaved&#39; in p.get(&#39;url&#39;,&#39;&#39;)] if target: print(target[0][&#39;webSocketDebuggerUrl&#39;]) &#34; 2&gt;/dev/null) if [ -z &#34;$WS_URL&#34; ]; then echo &#34;Error: No se pudo obtener WebSocket URL&#34; kill $CHROME_PID 2&gt;/dev/null exit 1 fi echo &#34;WebSocket: $WS_URL&#34; # Instalar ws si no existe WS_DIR=&#34;/tmp/ws_cdp&#34; if [ ! -d &#34;$WS_DIR&#34; ]; then mkdir -p &#34;$WS_DIR&#34; cd &#34;$WS_DIR&#34; npm init -y &gt; /dev/null 2&gt;&amp;1 npm install ws &gt; /dev/null 2&gt;&amp;1 fi # Crear script para extraer URLs cat &gt; &#34;$WS_DIR/get_stories.js&#34; &lt;&lt; &#39;SCRIPT_EOF&#39; const WebSocket = require(&#39;ws&#39;); const ws = new WebSocket(process.argv[2]); let cmdId = 0; const send = (method, params={}) =&gt; { return new Promise((resolve) =&gt; { const id = &#43;&#43;cmdId; ws.send(JSON.stringify({id, method, params})); ws.once(&#39;message&#39;, (msg) =&gt; { const data = JSON.parse(msg); resolve(data.result || data); }); }); }; ws.on(&#39;open&#39;, async () =&gt; { console.error(&#39;Esperando que carguen las historias (12s)...&#39;); await new Promise(r =&gt; setTimeout(r, 12000)); const r = await send(&#39;Runtime.evaluate&#39;, { expression: `JSON.stringify({ downloads: [...document.querySelectorAll(&#39;a[download],a[href$=&#34;.mp4&#34;],a[href$=&#34;.jpg&#34;]&#39;)] .map(a =&gt; ({href: a.href, text: a.getAttribute(&#39;download&#39;) || a.text.trim()})) .filter(a =&gt; a.href.includes(&#39;cdn.iqsaved&#39;)) })` }); // El resultado viene anidado: r.result.value es un string JSON const value = r.result ? r.result.value : r.value; process.stdout.write(value); ws.close(); }); ws.on(&#39;error&#39;, e =&gt; { console.error(&#39;Error:&#39;, e.message); process.exit(1); }); SCRIPT_EOF # Ejecutar y extraer URLs (solo stdout, ignorar stderr) JSON_RESULT=$(cd &#34;$WS_DIR&#34; &amp;&amp; node get_stories.js &#34;$WS_URL&#34; 2&gt;/dev/null) # Cerrar chromium kill $CHROME_PID 2&gt;/dev/null # Parsear y descargar echo &#34;$JSON_RESULT&#34; | python3 -c &#34; import sys, json, subprocess, re, os from urllib.parse import unquote try: data = json.load(sys.stdin) downloads = data.get(&#39;downloads&#39;, []) if not downloads: print(&#39;No se encontraron descargas&#39;) sys.exit(0) print(f&#39;Encontrados {len(downloads)} archivos&#39;) for i, item in enumerate(downloads, 1): url = item[&#39;href&#39;] # Extraer nombre de archivo o generar uno if &#39;filename=&#39; in url: fname = url.split(&#39;filename=&#39;)[1].split(&#39;&amp;&#39;)[0] fname = unquote(fname) else: fname = f&#39;file_{i}&#39; # Determinar extension if &#39;.mp4&#39; in fname: ext = &#39;mp4&#39; elif &#39;.jpg&#39; in fname or &#39;.jpeg&#39; in fname: ext = &#39;jpg&#39; else: ext = &#39;bin&#39; outfile = f&#39;{i}.{ext}&#39; # Skip if already exists and has content if os.path.exists(outfile) and os.path.getsize(outfile) &gt; 1000: print(f&#39;Omitiendo {outfile} (ya existe)&#39;) continue print(f&#39;Descargando {outfile}...&#39;) subprocess.run([&#39;wget&#39;, &#39;-q&#39;, &#39;-O&#39;, outfile, url], check=True) print(&#39;Descarga completa!&#39;) except Exception as e: print(f&#39;Error: {e}&#39;) sys.exit(1) &#34; echo &#34;Archivos en: $(pwd)&#34; ls -la">
+  <meta itemprop="datePublished" content="2026-03-19T23:29:15-03:00">
+  <meta itemprop="dateModified" content="2026-03-19T23:29:15-03:00">
+  <meta itemprop="wordCount" content="464">
+  <meta itemprop="keywords" content="Cli">
+  
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Descargar instagram stories desde la bash">
+  <meta name="twitter:description" content="Cortesía de opencode XD.
+#!/bin/bash # Descargar historias de Instagram desde iqsaved.com usando chromium headless USERNAME=&#34;${1:-}&#34; OUTPUT_DIR=&#34;${2:-./instagram_stories}&#34; if [ -z &#34;$USERNAME&#34; ]; then echo &#34;Uso: $0 &lt;nombre_usuario&gt; [directorio_salida]&#34; echo &#34;Ejemplo: $0 male_leoncini /tmp/mis_historias&#34; exit 1 fi URL=&#34;https://iqsaved.com/viewer/$USERNAME&#34; echo &#34;Descargando historias de: $URL&#34; mkdir -p &#34;$OUTPUT_DIR&#34; cd &#34;$OUTPUT_DIR&#34; # Iniciar chromium con modo headless y debug remoto echo &#34;Iniciando chromium...&#34; chromium --headless --disable-gpu --no-sandbox --remote-debugging-port=9222 &#34;$URL&#34; &gt; /dev/null 2&gt;&amp;1 &amp; CHROME_PID=$! # Esperar a que chrome este listo sleep 4 # Obtener WebSocket URL de la pagina WS_URL=$(curl -s http://localhost:9222/json | python3 -c &#34; import sys, json pages = json.load(sys.stdin) target = [p for p in pages if &#39;$USERNAME&#39; in p.get(&#39;url&#39;,&#39;&#39;) or &#39;iqsaved&#39; in p.get(&#39;url&#39;,&#39;&#39;)] if target: print(target[0][&#39;webSocketDebuggerUrl&#39;]) &#34; 2&gt;/dev/null) if [ -z &#34;$WS_URL&#34; ]; then echo &#34;Error: No se pudo obtener WebSocket URL&#34; kill $CHROME_PID 2&gt;/dev/null exit 1 fi echo &#34;WebSocket: $WS_URL&#34; # Instalar ws si no existe WS_DIR=&#34;/tmp/ws_cdp&#34; if [ ! -d &#34;$WS_DIR&#34; ]; then mkdir -p &#34;$WS_DIR&#34; cd &#34;$WS_DIR&#34; npm init -y &gt; /dev/null 2&gt;&amp;1 npm install ws &gt; /dev/null 2&gt;&amp;1 fi # Crear script para extraer URLs cat &gt; &#34;$WS_DIR/get_stories.js&#34; &lt;&lt; &#39;SCRIPT_EOF&#39; const WebSocket = require(&#39;ws&#39;); const ws = new WebSocket(process.argv[2]); let cmdId = 0; const send = (method, params={}) =&gt; { return new Promise((resolve) =&gt; { const id = &#43;&#43;cmdId; ws.send(JSON.stringify({id, method, params})); ws.once(&#39;message&#39;, (msg) =&gt; { const data = JSON.parse(msg); resolve(data.result || data); }); }); }; ws.on(&#39;open&#39;, async () =&gt; { console.error(&#39;Esperando que carguen las historias (12s)...&#39;); await new Promise(r =&gt; setTimeout(r, 12000)); const r = await send(&#39;Runtime.evaluate&#39;, { expression: `JSON.stringify({ downloads: [...document.querySelectorAll(&#39;a[download],a[href$=&#34;.mp4&#34;],a[href$=&#34;.jpg&#34;]&#39;)] .map(a =&gt; ({href: a.href, text: a.getAttribute(&#39;download&#39;) || a.text.trim()})) .filter(a =&gt; a.href.includes(&#39;cdn.iqsaved&#39;)) })` }); // El resultado viene anidado: r.result.value es un string JSON const value = r.result ? r.result.value : r.value; process.stdout.write(value); ws.close(); }); ws.on(&#39;error&#39;, e =&gt; { console.error(&#39;Error:&#39;, e.message); process.exit(1); }); SCRIPT_EOF # Ejecutar y extraer URLs (solo stdout, ignorar stderr) JSON_RESULT=$(cd &#34;$WS_DIR&#34; &amp;&amp; node get_stories.js &#34;$WS_URL&#34; 2&gt;/dev/null) # Cerrar chromium kill $CHROME_PID 2&gt;/dev/null # Parsear y descargar echo &#34;$JSON_RESULT&#34; | python3 -c &#34; import sys, json, subprocess, re, os from urllib.parse import unquote try: data = json.load(sys.stdin) downloads = data.get(&#39;downloads&#39;, []) if not downloads: print(&#39;No se encontraron descargas&#39;) sys.exit(0) print(f&#39;Encontrados {len(downloads)} archivos&#39;) for i, item in enumerate(downloads, 1): url = item[&#39;href&#39;] # Extraer nombre de archivo o generar uno if &#39;filename=&#39; in url: fname = url.split(&#39;filename=&#39;)[1].split(&#39;&amp;&#39;)[0] fname = unquote(fname) else: fname = f&#39;file_{i}&#39; # Determinar extension if &#39;.mp4&#39; in fname: ext = &#39;mp4&#39; elif &#39;.jpg&#39; in fname or &#39;.jpeg&#39; in fname: ext = &#39;jpg&#39; else: ext = &#39;bin&#39; outfile = f&#39;{i}.{ext}&#39; # Skip if already exists and has content if os.path.exists(outfile) and os.path.getsize(outfile) &gt; 1000: print(f&#39;Omitiendo {outfile} (ya existe)&#39;) continue print(f&#39;Descargando {outfile}...&#39;) subprocess.run([&#39;wget&#39;, &#39;-q&#39;, &#39;-O&#39;, outfile, url], check=True) print(&#39;Descarga completa!&#39;) except Exception as e: print(f&#39;Error: {e}&#39;) sys.exit(1) &#34; echo &#34;Archivos en: $(pwd)&#34; ls -la">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Descargar instagram stories desde la bash
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/descargar_instagram_stories/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="Cortesía de opencode XD.
+#!/bin/bash
+# Descargar historias de Instagram desde iqsaved.com usando chromium headless
+
+USERNAME=&#34;${1:-}&#34;
+OUTPUT_DIR=&#34;${2:-./instagram_stories}&#34;
+
+if [ -z &#34;$USERNAME&#34; ]; then
+    echo &#34;Uso: $0 &lt;nombre_usuario&gt; [directorio_salida]&#34;
+    echo &#34;Ejemplo: $0 male_leoncini /tmp/mis_historias&#34;
+    exit 1
+fi
+
+URL=&#34;https://iqsaved.com/viewer/$USERNAME&#34;
+echo &#34;Descargando historias de: $URL&#34;
+
+mkdir -p &#34;$OUTPUT_DIR&#34;
+cd &#34;$OUTPUT_DIR&#34;
+
+# Iniciar chromium con modo headless y debug remoto
+echo &#34;Iniciando chromium...&#34;
+chromium --headless --disable-gpu --no-sandbox --remote-debugging-port=9222 &#34;$URL&#34; &gt; /dev/null 2&gt;&amp;1 &amp;
+CHROME_PID=$!
+
+# Esperar a que chrome este listo
+sleep 4
+
+# Obtener WebSocket URL de la pagina
+WS_URL=$(curl -s http://localhost:9222/json | python3 -c &#34;
+import sys, json
+pages = json.load(sys.stdin)
+target = [p for p in pages if &#39;$USERNAME&#39; in p.get(&#39;url&#39;,&#39;&#39;) or &#39;iqsaved&#39; in p.get(&#39;url&#39;,&#39;&#39;)]
+if target:
+    print(target[0][&#39;webSocketDebuggerUrl&#39;])
+&#34; 2&gt;/dev/null)
+
+if [ -z &#34;$WS_URL&#34; ]; then
+    echo &#34;Error: No se pudo obtener WebSocket URL&#34;
+    kill $CHROME_PID 2&gt;/dev/null
+    exit 1
+fi
+
+echo &#34;WebSocket: $WS_URL&#34;
+
+# Instalar ws si no existe
+WS_DIR=&#34;/tmp/ws_cdp&#34;
+if [ ! -d &#34;$WS_DIR&#34; ]; then
+    mkdir -p &#34;$WS_DIR&#34;
+    cd &#34;$WS_DIR&#34;
+    npm init -y &gt; /dev/null 2&gt;&amp;1
+    npm install ws &gt; /dev/null 2&gt;&amp;1
+fi
+
+# Crear script para extraer URLs
+cat &gt; &#34;$WS_DIR/get_stories.js&#34; &lt;&lt; &#39;SCRIPT_EOF&#39;
+const WebSocket = require(&#39;ws&#39;);
+
+const ws = new WebSocket(process.argv[2]);
+let cmdId = 0;
+
+const send = (method, params={}) =&gt; {
+  return new Promise((resolve) =&gt; {
+    const id = &#43;&#43;cmdId;
+    ws.send(JSON.stringify({id, method, params}));
+    ws.once(&#39;message&#39;, (msg) =&gt; {
+      const data = JSON.parse(msg);
+      resolve(data.result || data);
+    });
+  });
+};
+
+ws.on(&#39;open&#39;, async () =&gt; {
+  console.error(&#39;Esperando que carguen las historias (12s)...&#39;);
+  await new Promise(r =&gt; setTimeout(r, 12000));
+  
+  const r = await send(&#39;Runtime.evaluate&#39;, {
+    expression: `JSON.stringify({
+      downloads: [...document.querySelectorAll(&#39;a[download],a[href$=&#34;.mp4&#34;],a[href$=&#34;.jpg&#34;]&#39;)]
+        .map(a =&gt; ({href: a.href, text: a.getAttribute(&#39;download&#39;) || a.text.trim()}))
+        .filter(a =&gt; a.href.includes(&#39;cdn.iqsaved&#39;))
+    })`
+  });
+  
+  // El resultado viene anidado: r.result.value es un string JSON
+  const value = r.result ? r.result.value : r.value;
+  process.stdout.write(value);
+  ws.close();
+});
+ws.on(&#39;error&#39;, e =&gt; { console.error(&#39;Error:&#39;, e.message); process.exit(1); });
+SCRIPT_EOF
+
+# Ejecutar y extraer URLs (solo stdout, ignorar stderr)
+JSON_RESULT=$(cd &#34;$WS_DIR&#34; &amp;&amp; node get_stories.js &#34;$WS_URL&#34; 2&gt;/dev/null)
+
+# Cerrar chromium
+kill $CHROME_PID 2&gt;/dev/null
+
+# Parsear y descargar
+echo &#34;$JSON_RESULT&#34; | python3 -c &#34;
+import sys, json, subprocess, re, os
+from urllib.parse import unquote
+
+try:
+    data = json.load(sys.stdin)
+    downloads = data.get(&#39;downloads&#39;, [])
+    
+    if not downloads:
+        print(&#39;No se encontraron descargas&#39;)
+        sys.exit(0)
+    
+    print(f&#39;Encontrados {len(downloads)} archivos&#39;)
+    
+    for i, item in enumerate(downloads, 1):
+        url = item[&#39;href&#39;]
+        # Extraer nombre de archivo o generar uno
+        if &#39;filename=&#39; in url:
+            fname = url.split(&#39;filename=&#39;)[1].split(&#39;&amp;&#39;)[0]
+            fname = unquote(fname)
+        else:
+            fname = f&#39;file_{i}&#39;
+        
+        # Determinar extension
+        if &#39;.mp4&#39; in fname:
+            ext = &#39;mp4&#39;
+        elif &#39;.jpg&#39; in fname or &#39;.jpeg&#39; in fname:
+            ext = &#39;jpg&#39;
+        else:
+            ext = &#39;bin&#39;
+        
+        outfile = f&#39;{i}.{ext}&#39;
+        
+        # Skip if already exists and has content
+        if os.path.exists(outfile) and os.path.getsize(outfile) &gt; 1000:
+            print(f&#39;Omitiendo {outfile} (ya existe)&#39;)
+            continue
+        
+        print(f&#39;Descargando {outfile}...&#39;)
+        
+        subprocess.run([&#39;wget&#39;, &#39;-q&#39;, &#39;-O&#39;, outfile, url], check=True)
+    
+    print(&#39;Descarga completa!&#39;)
+except Exception as e:
+    print(f&#39;Error: {e}&#39;)
+    sys.exit(1)
+&#34;
+
+echo &#34;Archivos en: $(pwd)&#34;
+ls -la
+">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Descargar instagram stories desde la bash
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2026-03-19T23:29:15-03:00'>
+      March 19, 2026
+    </time>
+    
+    <br>
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/cli/">Cli</a>
+    
+    
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <p>Cortesía de opencode XD.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/bash
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"># Descargar historias de Instagram desde iqsaved.com usando chromium headless</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>USERNAME<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>1<span style="color:#66d9ef">:-</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>OUTPUT_DIR<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>2<span style="color:#66d9ef">:-</span>./instagram_stories<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> -z <span style="color:#e6db74">&#34;</span>$USERNAME<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Uso: </span>$0<span style="color:#e6db74"> &lt;nombre_usuario&gt; [directorio_salida]&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Ejemplo: </span>$0<span style="color:#e6db74"> male_leoncini /tmp/mis_historias&#34;</span>
+</span></span><span style="display:flex;"><span>    exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>URL<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;https://iqsaved.com/viewer/</span>$USERNAME<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;Descargando historias de: </span>$URL<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>mkdir -p <span style="color:#e6db74">&#34;</span>$OUTPUT_DIR<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>cd <span style="color:#e6db74">&#34;</span>$OUTPUT_DIR<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Iniciar chromium con modo headless y debug remoto</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;Iniciando chromium...&#34;</span>
+</span></span><span style="display:flex;"><span>chromium --headless --disable-gpu --no-sandbox --remote-debugging-port<span style="color:#f92672">=</span><span style="color:#ae81ff">9222</span> <span style="color:#e6db74">&#34;</span>$URL<span style="color:#e6db74">&#34;</span> &gt; /dev/null 2&gt;&amp;<span style="color:#ae81ff">1</span> &amp;
+</span></span><span style="display:flex;"><span>CHROME_PID<span style="color:#f92672">=</span>$!
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Esperar a que chrome este listo</span>
+</span></span><span style="display:flex;"><span>sleep <span style="color:#ae81ff">4</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Obtener WebSocket URL de la pagina</span>
+</span></span><span style="display:flex;"><span>WS_URL<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>curl -s http://localhost:9222/json | python3 -c <span style="color:#e6db74">&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">import sys, json
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">pages = json.load(sys.stdin)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">target = [p for p in pages if &#39;</span>$USERNAME<span style="color:#e6db74">&#39; in p.get(&#39;url&#39;,&#39;&#39;) or &#39;iqsaved&#39; in p.get(&#39;url&#39;,&#39;&#39;)]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">if target:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    print(target[0][&#39;webSocketDebuggerUrl&#39;])
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;</span> 2&gt;/dev/null<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> -z <span style="color:#e6db74">&#34;</span>$WS_URL<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Error: No se pudo obtener WebSocket URL&#34;</span>
+</span></span><span style="display:flex;"><span>    kill $CHROME_PID 2&gt;/dev/null
+</span></span><span style="display:flex;"><span>    exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;WebSocket: </span>$WS_URL<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Instalar ws si no existe</span>
+</span></span><span style="display:flex;"><span>WS_DIR<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/tmp/ws_cdp&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> ! -d <span style="color:#e6db74">&#34;</span>$WS_DIR<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    mkdir -p <span style="color:#e6db74">&#34;</span>$WS_DIR<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    cd <span style="color:#e6db74">&#34;</span>$WS_DIR<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    npm init -y &gt; /dev/null 2&gt;&amp;<span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>    npm install ws &gt; /dev/null 2&gt;&amp;<span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Crear script para extraer URLs</span>
+</span></span><span style="display:flex;"><span>cat &gt; <span style="color:#e6db74">&#34;</span>$WS_DIR<span style="color:#e6db74">/get_stories.js&#34;</span> <span style="color:#e6db74">&lt;&lt; &#39;SCRIPT_EOF&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">const WebSocket = require(&#39;ws&#39;);
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">const ws = new WebSocket(process.argv[2]);
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">let cmdId = 0;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">const send = (method, params={}) =&gt; {
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  return new Promise((resolve) =&gt; {
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    const id = ++cmdId;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    ws.send(JSON.stringify({id, method, params}));
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    ws.once(&#39;message&#39;, (msg) =&gt; {
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      const data = JSON.parse(msg);
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      resolve(data.result || data);
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    });
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  });
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">};
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">ws.on(&#39;open&#39;, async () =&gt; {
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  console.error(&#39;Esperando que carguen las historias (12s)...&#39;);
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  await new Promise(r =&gt; setTimeout(r, 12000));
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  const r = await send(&#39;Runtime.evaluate&#39;, {
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    expression: `JSON.stringify({
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      downloads: [...document.querySelectorAll(&#39;a[download],a[href$=&#34;.mp4&#34;],a[href$=&#34;.jpg&#34;]&#39;)]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        .map(a =&gt; ({href: a.href, text: a.getAttribute(&#39;download&#39;) || a.text.trim()}))
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        .filter(a =&gt; a.href.includes(&#39;cdn.iqsaved&#39;))
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    })`
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  });
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  // El resultado viene anidado: r.result.value es un string JSON
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  const value = r.result ? r.result.value : r.value;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  process.stdout.write(value);
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  ws.close();
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">});
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">ws.on(&#39;error&#39;, e =&gt; { console.error(&#39;Error:&#39;, e.message); process.exit(1); });
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">SCRIPT_EOF</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Ejecutar y extraer URLs (solo stdout, ignorar stderr)</span>
+</span></span><span style="display:flex;"><span>JSON_RESULT<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>cd <span style="color:#e6db74">&#34;</span>$WS_DIR<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">&amp;&amp;</span> node get_stories.js <span style="color:#e6db74">&#34;</span>$WS_URL<span style="color:#e6db74">&#34;</span> 2&gt;/dev/null<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Cerrar chromium</span>
+</span></span><span style="display:flex;"><span>kill $CHROME_PID 2&gt;/dev/null
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Parsear y descargar</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;</span>$JSON_RESULT<span style="color:#e6db74">&#34;</span> | python3 -c <span style="color:#e6db74">&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">import sys, json, subprocess, re, os
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">from urllib.parse import unquote
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">try:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    data = json.load(sys.stdin)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    downloads = data.get(&#39;downloads&#39;, [])
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    if not downloads:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        print(&#39;No se encontraron descargas&#39;)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        sys.exit(0)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    print(f&#39;Encontrados {len(downloads)} archivos&#39;)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    for i, item in enumerate(downloads, 1):
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        url = item[&#39;href&#39;]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        # Extraer nombre de archivo o generar uno
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        if &#39;filename=&#39; in url:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            fname = url.split(&#39;filename=&#39;)[1].split(&#39;&amp;&#39;)[0]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            fname = unquote(fname)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        else:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            fname = f&#39;file_{i}&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        # Determinar extension
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        if &#39;.mp4&#39; in fname:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            ext = &#39;mp4&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        elif &#39;.jpg&#39; in fname or &#39;.jpeg&#39; in fname:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            ext = &#39;jpg&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        else:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            ext = &#39;bin&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        outfile = f&#39;{i}.{ext}&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        # Skip if already exists and has content
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        if os.path.exists(outfile) and os.path.getsize(outfile) &gt; 1000:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            print(f&#39;Omitiendo {outfile} (ya existe)&#39;)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            continue
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        print(f&#39;Descargando {outfile}...&#39;)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        subprocess.run([&#39;wget&#39;, &#39;-q&#39;, &#39;-O&#39;, outfile, url], check=True)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    print(&#39;Descarga completa!&#39;)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">except Exception as e:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    print(f&#39;Error: {e}&#39;)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    sys.exit(1)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;Archivos en: </span><span style="color:#66d9ef">$(</span>pwd<span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>ls -la
+</span></span></code></pre></div>
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+</footer>
+
+
+</body>
+</html>
