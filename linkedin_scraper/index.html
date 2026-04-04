@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/linkedin_scraper/">
+  <meta property="og:site_name" content="Imlauer">
+  <meta property="og:title" content="Linkedin scraper">
+  <meta property="og:description" content="Linkedin está sobrecargado y es extremadamente lento, acá podés usar estos 2 scripts para evitar ingresar a la página. Borré mis cookies vas a tener que extraer las tuyas. El resultado es esto: https://imlauer.github.io/george_hotz_linkedin.html
+Cortesía de OpenCode.
+linkedin.js te genera el json const puppeteer = require(&#39;puppeteer&#39;); const fs = require(&#39;fs&#39;); const cookies = [ { domain: &#39;.www.linkedin.com&#39;, name: &#39;li_at&#39;, value: &#39;&#39;, path: &#39;/&#39;, secure: true, httpOnly: false }, { domain: &#39;.www.linkedin.com&#39;, name: &#39;li_rm&#39;, value: &#39;&#39;, path: &#39;/&#39;, secure: true, httpOnly: false }, ]; const urls = [ &#39;https://www.linkedin.com/in/george-hotz-b3866476/recent-activity/posts/&#39;, &#39;https://www.linkedin.com/in/george-hotz-b3866476/recent-activity/&#39;, ]; async function scrapePage(page, url) { console.log(`\n=== Loading ${url} ===`); await page.goto(url, { waitUntil: &#39;domcontentloaded&#39;, timeout: 120000 }); await new Promise(r =&gt; setTimeout(r, 15000)); let scrollCount = 0; let lastPostCount = 0; let noChangeCount = 0; while (noChangeCount &lt; 15 &amp;&amp; scrollCount &lt; 150) { await page.evaluate(() =&gt; window.scrollTo(0, document.body.scrollHeight)); await new Promise(r =&gt; setTimeout(r, 2500)); const postCount = await page.evaluate(() =&gt; { return document.querySelectorAll(&#39;article, .feed-shared-update-v2&#39;).length; }); console.log(`Scroll ${scrollCount} - Posts: ${postCount}`); if (postCount &gt; lastPostCount) { noChangeCount = 0; lastPostCount = postCount; } else { noChangeCount&#43;&#43;; await page.evaluate(() =&gt; { const buttons = Array.from(document.querySelectorAll(&#39;button&#39;)); for (const btn of buttons) { const text = btn.innerText || btn.textContent || &#39;&#39;; if (text.includes(&#39;Show&#39;) || text.includes(&#39;See more&#39;)) { try { btn.click(); } catch(e) {} } } }); await new Promise(r =&gt; setTimeout(r, 1500)); } scrollCount&#43;&#43;; } const posts = await page.evaluate(() =&gt; { const results = []; document.querySelectorAll(&#39;article, .feed-shared-update-v2&#39;).forEach(article =&gt; { const text = (article.innerText || article.textContent || &#39;&#39;).trim(); if (text.length &gt; 100 &amp;&amp; text.length &lt; 20000) { results.push(text); } }); return results; }); return posts; } async function main() { const browser = await puppeteer.launch({ headless: &#39;new&#39;, args: [&#39;--no-sandbox&#39;, &#39;--disable-setuid-sandbox&#39;, &#39;--disable-blink-features=AutomationControlled&#39;] }); const page = await browser.newPage(); await page.setUserAgent(&#39;Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36&#39;); await page.evaluateOnNewDocument(() =&gt; { Object.defineProperty(navigator, &#39;webdriver&#39;, { get: () =&gt; undefined }); }); await page.setCookie(...cookies); let allPosts = []; for (const url of urls) { try { const posts = await scrapePage(page, url); console.log(`Found ${posts.length} posts from this page`); allPosts = [...allPosts, ...posts]; } catch(e) { console.log(`Error loading ${url}: ${e.message}`); } } const uniquePosts = [...new Set(allPosts)]; console.log(`\n=== Total unique posts: ${uniquePosts.length} ===\n`); fs.writeFileSync(&#39;/home/esotericwarfare/opencode/all_posts_complete.json&#39;, JSON.stringify(uniquePosts, null, 2)); console.log(&#39;Saved to all_posts_complete.json&#39;); console.log(&#39;\n--- All posts ---\n&#39;); uniquePosts.forEach((p, i) =&gt; { console.log(`=== POST ${i&#43;1} ===`); console.log(p.substring(0, 600)); console.log(&#39;\n---\n&#39;); }); await browser.close(); } main().catch(console.error); generate_html.py genera el html a partir del JSON. import json with open(&#39;/home/esotericwarfare/opencode/all_posts_complete.json&#39;, &#39;r&#39;) as f: posts = json.load(f) html = &#39;&#39;&#39;&lt;!DOCTYPE html&gt; &lt;html lang=&#34;en&#34;&gt; &lt;head&gt; &lt;meta charset=&#34;UTF-8&#34;&gt; &lt;meta name=&#34;viewport&#34; content=&#34;width=device-width, initial-scale=1.0&#34;&gt; &lt;title&gt;George Hotz - LinkedIn Posts&lt;/title&gt; &lt;style&gt; * { box-sizing: border-box; margin: 0; padding: 0; } body { font-family: -apple-system, BlinkMacSystemFont, &#34;Segoe UI&#34;, Roboto, sans-serif; background: #f3f2ef; color: #191919; padding: 20px; } .container { max-width: 700px; margin: 0 auto; } header { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); } header h1 { font-size: 24px; color: #0a66c2; margin-bottom: 5px; } header .title { font-size: 14px; color: #666; } header .followers { font-size: 12px; color: #666; margin-top: 8px; } .post { background: white; border-radius: 8px; padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); } .post-header { display: flex; align-items: center; margin-bottom: 12px; } .post-avatar { width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 18px; margin-right: 12px; } .post-info { flex: 1; } .post-name { font-weight: 600; font-size: 14px; } .post-role { font-size: 12px; color: #666; } .post-time { font-size: 12px; color: #666; } .post-content { font-size: 14px; white-space: pre-wrap; word-wrap: break-word; } .post-stats { display: flex; gap: 15px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #eee; font-size: 12px; color: #666; } .visibility { font-size: 12px; color: #666; margin-top: 8px; } .repost-label { background: #eef3f8; color: #0a66c2; padding: 12px; border-radius: 4px; margin-bottom: 12px; } .image-placeholder { background: #f3f2ef; border-radius: 8px; padding: 40px; text-align: center; color: #666; margin: 12px 0; } .footer { text-align: center; padding: 40px; color: #666; } &lt;/style&gt; &lt;/head&gt; &lt;body&gt; &lt;div class=&#34;container&#34;&gt; &lt;header&gt; &lt;h1&gt;George Hotz&lt;/h1&gt; &lt;div class=&#34;title&#34;&gt;President at comma.ai (we&#39;re hiring, comma.ai/jobs)&lt;/div&gt; &lt;div class=&#34;title&#34;&gt;San Diego, California, United States&lt;/div&gt; &lt;div class=&#34;followers&#34;&gt;56,325 followers&lt;/div&gt; &lt;/header&gt; &lt;div id=&#34;posts&#34;&gt;&#39;&#39;&#39; def parse_post(text): lines = text.split(&#39;\n&#39;) post = {&#39;content&#39;: &#39;&#39;, &#39;time&#39;: &#39;&#39;, &#39;visibility&#39;: &#39;&#39;, &#39;is_repost&#39;: &#39;reposted this&#39; in text, &#39;has_image&#39;: &#39;Activate to view larger image&#39; in text, &#39;edited&#39;: &#39;Edited&#39; in text} content_lines = [] for line in lines: if &#39;ago&#39; in line and (&#39;hour&#39; in line or &#39;day&#39; in line or &#39;week&#39; in line or &#39;month&#39; in line or &#39;year&#39; in line): post[&#39;time&#39;] = line.strip() elif &#39;Visible to&#39; in line: post[&#39;visibility&#39;] = line.strip() elif &#39;ago&#39; not in line and &#39;Feed post&#39; not in line and &#39;Following&#39; not in line and &#39;President at&#39; not in line and line.strip() and not line.startswith(&#39;•&#39;): if not line.replace(&#39;.&#39;,&#39;&#39;).isdigit(): content_lines.append(line) post[&#39;content&#39;] = &#39;\n&#39;.join(content_lines).strip() return post for i, post_text in enumerate(posts): p = parse_post(post_text) time_display = p[&#39;time&#39;] if p[&#39;time&#39;] else &#39;some time ago&#39; edited_display = &#39; · Edited&#39; if p[&#39;edited&#39;] else &#39;&#39; html &#43;= f&#39;&#39;&#39; &lt;div class=&#34;post&#34;&gt; &lt;div class=&#34;post-header&#34;&gt; &lt;div class=&#34;post-avatar&#34;&gt;GH&lt;/div&gt; &lt;div class=&#34;post-info&#34;&gt; &lt;div class=&#34;post-name&#34;&gt;George Hotz&lt;/div&gt; &lt;div class=&#34;post-role&#34;&gt;President at comma.ai&lt;/div&gt; &lt;div class=&#34;post-time&#34;&gt;{time_display}{edited_display}&lt;/div&gt; &lt;/div&gt; &lt;/div&gt;&#39;&#39;&#39; if p[&#39;is_repost&#39;]: html &#43;= &#39;&lt;div class=&#34;repost-label&#34;&gt;&lt;strong&gt;George Hotz reposted this&lt;/strong&gt;&lt;/div&gt;&#39; content = p[&#39;content&#39;].replace(&#39;&amp;&#39;, &#39;&amp;amp;&#39;).replace(&#39;&lt;&#39;, &#39;&amp;lt;&#39;).replace(&#39;&gt;&#39;, &#39;&amp;gt;&#39;) html &#43;= f&#39;&lt;div class=&#34;post-content&#34;&gt;{content}&lt;/div&gt;&#39; if p[&#39;has_image&#39;]: html &#43;= &#39;&lt;div class=&#34;image-placeholder&#34;&gt;🖼️ Image&lt;/div&gt;&#39; html &#43;= f&#39;&#39;&#39;&lt;div class=&#34;visibility&#34;&gt;{p[&#39;visibility&#39;] if p[&#39;visibility&#39;] else &#39;Visible to anyone on or off LinkedIn&#39;}&lt;/div&gt; &lt;/div&gt;&#39;&#39;&#39; html &#43;= &#39;&#39;&#39;&lt;/div&gt; &lt;div class=&#34;footer&#34;&gt; &lt;p&gt;Scraped from LinkedIn using cookies from Falkon browser&lt;/p&gt; &lt;p&gt;Total: &#39;&#39;&#39; &#43; str(len(posts)) &#43; &#39;&#39;&#39; posts&lt;/p&gt; &lt;/div&gt; &lt;/div&gt; &lt;/body&gt; &lt;/html&gt;&#39;&#39;&#39; with open(&#39;/home/esotericwarfare/opencode/george_hotz_linkedin.html&#39;, &#39;w&#39;) as f: f.write(html) print(f&#39;HTML created with {len(posts)} posts&#39;)">
+  <meta property="og:locale" content="es_es">
+  <meta property="og:type" content="article">
+    <meta property="article:published_time" content="2026-04-04T13:31:12-03:00">
+    <meta property="article:modified_time" content="2026-04-04T13:31:12-03:00">
+    <meta property="article:tag" content="Cli">
+
+  
+  <meta itemprop="name" content="Linkedin scraper">
+  <meta itemprop="description" content="Linkedin está sobrecargado y es extremadamente lento, acá podés usar estos 2 scripts para evitar ingresar a la página. Borré mis cookies vas a tener que extraer las tuyas. El resultado es esto: https://imlauer.github.io/george_hotz_linkedin.html
+Cortesía de OpenCode.
+linkedin.js te genera el json const puppeteer = require(&#39;puppeteer&#39;); const fs = require(&#39;fs&#39;); const cookies = [ { domain: &#39;.www.linkedin.com&#39;, name: &#39;li_at&#39;, value: &#39;&#39;, path: &#39;/&#39;, secure: true, httpOnly: false }, { domain: &#39;.www.linkedin.com&#39;, name: &#39;li_rm&#39;, value: &#39;&#39;, path: &#39;/&#39;, secure: true, httpOnly: false }, ]; const urls = [ &#39;https://www.linkedin.com/in/george-hotz-b3866476/recent-activity/posts/&#39;, &#39;https://www.linkedin.com/in/george-hotz-b3866476/recent-activity/&#39;, ]; async function scrapePage(page, url) { console.log(`\n=== Loading ${url} ===`); await page.goto(url, { waitUntil: &#39;domcontentloaded&#39;, timeout: 120000 }); await new Promise(r =&gt; setTimeout(r, 15000)); let scrollCount = 0; let lastPostCount = 0; let noChangeCount = 0; while (noChangeCount &lt; 15 &amp;&amp; scrollCount &lt; 150) { await page.evaluate(() =&gt; window.scrollTo(0, document.body.scrollHeight)); await new Promise(r =&gt; setTimeout(r, 2500)); const postCount = await page.evaluate(() =&gt; { return document.querySelectorAll(&#39;article, .feed-shared-update-v2&#39;).length; }); console.log(`Scroll ${scrollCount} - Posts: ${postCount}`); if (postCount &gt; lastPostCount) { noChangeCount = 0; lastPostCount = postCount; } else { noChangeCount&#43;&#43;; await page.evaluate(() =&gt; { const buttons = Array.from(document.querySelectorAll(&#39;button&#39;)); for (const btn of buttons) { const text = btn.innerText || btn.textContent || &#39;&#39;; if (text.includes(&#39;Show&#39;) || text.includes(&#39;See more&#39;)) { try { btn.click(); } catch(e) {} } } }); await new Promise(r =&gt; setTimeout(r, 1500)); } scrollCount&#43;&#43;; } const posts = await page.evaluate(() =&gt; { const results = []; document.querySelectorAll(&#39;article, .feed-shared-update-v2&#39;).forEach(article =&gt; { const text = (article.innerText || article.textContent || &#39;&#39;).trim(); if (text.length &gt; 100 &amp;&amp; text.length &lt; 20000) { results.push(text); } }); return results; }); return posts; } async function main() { const browser = await puppeteer.launch({ headless: &#39;new&#39;, args: [&#39;--no-sandbox&#39;, &#39;--disable-setuid-sandbox&#39;, &#39;--disable-blink-features=AutomationControlled&#39;] }); const page = await browser.newPage(); await page.setUserAgent(&#39;Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36&#39;); await page.evaluateOnNewDocument(() =&gt; { Object.defineProperty(navigator, &#39;webdriver&#39;, { get: () =&gt; undefined }); }); await page.setCookie(...cookies); let allPosts = []; for (const url of urls) { try { const posts = await scrapePage(page, url); console.log(`Found ${posts.length} posts from this page`); allPosts = [...allPosts, ...posts]; } catch(e) { console.log(`Error loading ${url}: ${e.message}`); } } const uniquePosts = [...new Set(allPosts)]; console.log(`\n=== Total unique posts: ${uniquePosts.length} ===\n`); fs.writeFileSync(&#39;/home/esotericwarfare/opencode/all_posts_complete.json&#39;, JSON.stringify(uniquePosts, null, 2)); console.log(&#39;Saved to all_posts_complete.json&#39;); console.log(&#39;\n--- All posts ---\n&#39;); uniquePosts.forEach((p, i) =&gt; { console.log(`=== POST ${i&#43;1} ===`); console.log(p.substring(0, 600)); console.log(&#39;\n---\n&#39;); }); await browser.close(); } main().catch(console.error); generate_html.py genera el html a partir del JSON. import json with open(&#39;/home/esotericwarfare/opencode/all_posts_complete.json&#39;, &#39;r&#39;) as f: posts = json.load(f) html = &#39;&#39;&#39;&lt;!DOCTYPE html&gt; &lt;html lang=&#34;en&#34;&gt; &lt;head&gt; &lt;meta charset=&#34;UTF-8&#34;&gt; &lt;meta name=&#34;viewport&#34; content=&#34;width=device-width, initial-scale=1.0&#34;&gt; &lt;title&gt;George Hotz - LinkedIn Posts&lt;/title&gt; &lt;style&gt; * { box-sizing: border-box; margin: 0; padding: 0; } body { font-family: -apple-system, BlinkMacSystemFont, &#34;Segoe UI&#34;, Roboto, sans-serif; background: #f3f2ef; color: #191919; padding: 20px; } .container { max-width: 700px; margin: 0 auto; } header { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); } header h1 { font-size: 24px; color: #0a66c2; margin-bottom: 5px; } header .title { font-size: 14px; color: #666; } header .followers { font-size: 12px; color: #666; margin-top: 8px; } .post { background: white; border-radius: 8px; padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); } .post-header { display: flex; align-items: center; margin-bottom: 12px; } .post-avatar { width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 18px; margin-right: 12px; } .post-info { flex: 1; } .post-name { font-weight: 600; font-size: 14px; } .post-role { font-size: 12px; color: #666; } .post-time { font-size: 12px; color: #666; } .post-content { font-size: 14px; white-space: pre-wrap; word-wrap: break-word; } .post-stats { display: flex; gap: 15px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #eee; font-size: 12px; color: #666; } .visibility { font-size: 12px; color: #666; margin-top: 8px; } .repost-label { background: #eef3f8; color: #0a66c2; padding: 12px; border-radius: 4px; margin-bottom: 12px; } .image-placeholder { background: #f3f2ef; border-radius: 8px; padding: 40px; text-align: center; color: #666; margin: 12px 0; } .footer { text-align: center; padding: 40px; color: #666; } &lt;/style&gt; &lt;/head&gt; &lt;body&gt; &lt;div class=&#34;container&#34;&gt; &lt;header&gt; &lt;h1&gt;George Hotz&lt;/h1&gt; &lt;div class=&#34;title&#34;&gt;President at comma.ai (we&#39;re hiring, comma.ai/jobs)&lt;/div&gt; &lt;div class=&#34;title&#34;&gt;San Diego, California, United States&lt;/div&gt; &lt;div class=&#34;followers&#34;&gt;56,325 followers&lt;/div&gt; &lt;/header&gt; &lt;div id=&#34;posts&#34;&gt;&#39;&#39;&#39; def parse_post(text): lines = text.split(&#39;\n&#39;) post = {&#39;content&#39;: &#39;&#39;, &#39;time&#39;: &#39;&#39;, &#39;visibility&#39;: &#39;&#39;, &#39;is_repost&#39;: &#39;reposted this&#39; in text, &#39;has_image&#39;: &#39;Activate to view larger image&#39; in text, &#39;edited&#39;: &#39;Edited&#39; in text} content_lines = [] for line in lines: if &#39;ago&#39; in line and (&#39;hour&#39; in line or &#39;day&#39; in line or &#39;week&#39; in line or &#39;month&#39; in line or &#39;year&#39; in line): post[&#39;time&#39;] = line.strip() elif &#39;Visible to&#39; in line: post[&#39;visibility&#39;] = line.strip() elif &#39;ago&#39; not in line and &#39;Feed post&#39; not in line and &#39;Following&#39; not in line and &#39;President at&#39; not in line and line.strip() and not line.startswith(&#39;•&#39;): if not line.replace(&#39;.&#39;,&#39;&#39;).isdigit(): content_lines.append(line) post[&#39;content&#39;] = &#39;\n&#39;.join(content_lines).strip() return post for i, post_text in enumerate(posts): p = parse_post(post_text) time_display = p[&#39;time&#39;] if p[&#39;time&#39;] else &#39;some time ago&#39; edited_display = &#39; · Edited&#39; if p[&#39;edited&#39;] else &#39;&#39; html &#43;= f&#39;&#39;&#39; &lt;div class=&#34;post&#34;&gt; &lt;div class=&#34;post-header&#34;&gt; &lt;div class=&#34;post-avatar&#34;&gt;GH&lt;/div&gt; &lt;div class=&#34;post-info&#34;&gt; &lt;div class=&#34;post-name&#34;&gt;George Hotz&lt;/div&gt; &lt;div class=&#34;post-role&#34;&gt;President at comma.ai&lt;/div&gt; &lt;div class=&#34;post-time&#34;&gt;{time_display}{edited_display}&lt;/div&gt; &lt;/div&gt; &lt;/div&gt;&#39;&#39;&#39; if p[&#39;is_repost&#39;]: html &#43;= &#39;&lt;div class=&#34;repost-label&#34;&gt;&lt;strong&gt;George Hotz reposted this&lt;/strong&gt;&lt;/div&gt;&#39; content = p[&#39;content&#39;].replace(&#39;&amp;&#39;, &#39;&amp;amp;&#39;).replace(&#39;&lt;&#39;, &#39;&amp;lt;&#39;).replace(&#39;&gt;&#39;, &#39;&amp;gt;&#39;) html &#43;= f&#39;&lt;div class=&#34;post-content&#34;&gt;{content}&lt;/div&gt;&#39; if p[&#39;has_image&#39;]: html &#43;= &#39;&lt;div class=&#34;image-placeholder&#34;&gt;🖼️ Image&lt;/div&gt;&#39; html &#43;= f&#39;&#39;&#39;&lt;div class=&#34;visibility&#34;&gt;{p[&#39;visibility&#39;] if p[&#39;visibility&#39;] else &#39;Visible to anyone on or off LinkedIn&#39;}&lt;/div&gt; &lt;/div&gt;&#39;&#39;&#39; html &#43;= &#39;&#39;&#39;&lt;/div&gt; &lt;div class=&#34;footer&#34;&gt; &lt;p&gt;Scraped from LinkedIn using cookies from Falkon browser&lt;/p&gt; &lt;p&gt;Total: &#39;&#39;&#39; &#43; str(len(posts)) &#43; &#39;&#39;&#39; posts&lt;/p&gt; &lt;/div&gt; &lt;/div&gt; &lt;/body&gt; &lt;/html&gt;&#39;&#39;&#39; with open(&#39;/home/esotericwarfare/opencode/george_hotz_linkedin.html&#39;, &#39;w&#39;) as f: f.write(html) print(f&#39;HTML created with {len(posts)} posts&#39;)">
+  <meta itemprop="datePublished" content="2026-04-04T13:31:12-03:00">
+  <meta itemprop="dateModified" content="2026-04-04T13:31:12-03:00">
+  <meta itemprop="wordCount" content="913">
+  <meta itemprop="keywords" content="Cli">
+  
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Linkedin scraper">
+  <meta name="twitter:description" content="Linkedin está sobrecargado y es extremadamente lento, acá podés usar estos 2 scripts para evitar ingresar a la página. Borré mis cookies vas a tener que extraer las tuyas. El resultado es esto: https://imlauer.github.io/george_hotz_linkedin.html
+Cortesía de OpenCode.
+linkedin.js te genera el json const puppeteer = require(&#39;puppeteer&#39;); const fs = require(&#39;fs&#39;); const cookies = [ { domain: &#39;.www.linkedin.com&#39;, name: &#39;li_at&#39;, value: &#39;&#39;, path: &#39;/&#39;, secure: true, httpOnly: false }, { domain: &#39;.www.linkedin.com&#39;, name: &#39;li_rm&#39;, value: &#39;&#39;, path: &#39;/&#39;, secure: true, httpOnly: false }, ]; const urls = [ &#39;https://www.linkedin.com/in/george-hotz-b3866476/recent-activity/posts/&#39;, &#39;https://www.linkedin.com/in/george-hotz-b3866476/recent-activity/&#39;, ]; async function scrapePage(page, url) { console.log(`\n=== Loading ${url} ===`); await page.goto(url, { waitUntil: &#39;domcontentloaded&#39;, timeout: 120000 }); await new Promise(r =&gt; setTimeout(r, 15000)); let scrollCount = 0; let lastPostCount = 0; let noChangeCount = 0; while (noChangeCount &lt; 15 &amp;&amp; scrollCount &lt; 150) { await page.evaluate(() =&gt; window.scrollTo(0, document.body.scrollHeight)); await new Promise(r =&gt; setTimeout(r, 2500)); const postCount = await page.evaluate(() =&gt; { return document.querySelectorAll(&#39;article, .feed-shared-update-v2&#39;).length; }); console.log(`Scroll ${scrollCount} - Posts: ${postCount}`); if (postCount &gt; lastPostCount) { noChangeCount = 0; lastPostCount = postCount; } else { noChangeCount&#43;&#43;; await page.evaluate(() =&gt; { const buttons = Array.from(document.querySelectorAll(&#39;button&#39;)); for (const btn of buttons) { const text = btn.innerText || btn.textContent || &#39;&#39;; if (text.includes(&#39;Show&#39;) || text.includes(&#39;See more&#39;)) { try { btn.click(); } catch(e) {} } } }); await new Promise(r =&gt; setTimeout(r, 1500)); } scrollCount&#43;&#43;; } const posts = await page.evaluate(() =&gt; { const results = []; document.querySelectorAll(&#39;article, .feed-shared-update-v2&#39;).forEach(article =&gt; { const text = (article.innerText || article.textContent || &#39;&#39;).trim(); if (text.length &gt; 100 &amp;&amp; text.length &lt; 20000) { results.push(text); } }); return results; }); return posts; } async function main() { const browser = await puppeteer.launch({ headless: &#39;new&#39;, args: [&#39;--no-sandbox&#39;, &#39;--disable-setuid-sandbox&#39;, &#39;--disable-blink-features=AutomationControlled&#39;] }); const page = await browser.newPage(); await page.setUserAgent(&#39;Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36&#39;); await page.evaluateOnNewDocument(() =&gt; { Object.defineProperty(navigator, &#39;webdriver&#39;, { get: () =&gt; undefined }); }); await page.setCookie(...cookies); let allPosts = []; for (const url of urls) { try { const posts = await scrapePage(page, url); console.log(`Found ${posts.length} posts from this page`); allPosts = [...allPosts, ...posts]; } catch(e) { console.log(`Error loading ${url}: ${e.message}`); } } const uniquePosts = [...new Set(allPosts)]; console.log(`\n=== Total unique posts: ${uniquePosts.length} ===\n`); fs.writeFileSync(&#39;/home/esotericwarfare/opencode/all_posts_complete.json&#39;, JSON.stringify(uniquePosts, null, 2)); console.log(&#39;Saved to all_posts_complete.json&#39;); console.log(&#39;\n--- All posts ---\n&#39;); uniquePosts.forEach((p, i) =&gt; { console.log(`=== POST ${i&#43;1} ===`); console.log(p.substring(0, 600)); console.log(&#39;\n---\n&#39;); }); await browser.close(); } main().catch(console.error); generate_html.py genera el html a partir del JSON. import json with open(&#39;/home/esotericwarfare/opencode/all_posts_complete.json&#39;, &#39;r&#39;) as f: posts = json.load(f) html = &#39;&#39;&#39;&lt;!DOCTYPE html&gt; &lt;html lang=&#34;en&#34;&gt; &lt;head&gt; &lt;meta charset=&#34;UTF-8&#34;&gt; &lt;meta name=&#34;viewport&#34; content=&#34;width=device-width, initial-scale=1.0&#34;&gt; &lt;title&gt;George Hotz - LinkedIn Posts&lt;/title&gt; &lt;style&gt; * { box-sizing: border-box; margin: 0; padding: 0; } body { font-family: -apple-system, BlinkMacSystemFont, &#34;Segoe UI&#34;, Roboto, sans-serif; background: #f3f2ef; color: #191919; padding: 20px; } .container { max-width: 700px; margin: 0 auto; } header { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); } header h1 { font-size: 24px; color: #0a66c2; margin-bottom: 5px; } header .title { font-size: 14px; color: #666; } header .followers { font-size: 12px; color: #666; margin-top: 8px; } .post { background: white; border-radius: 8px; padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); } .post-header { display: flex; align-items: center; margin-bottom: 12px; } .post-avatar { width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 18px; margin-right: 12px; } .post-info { flex: 1; } .post-name { font-weight: 600; font-size: 14px; } .post-role { font-size: 12px; color: #666; } .post-time { font-size: 12px; color: #666; } .post-content { font-size: 14px; white-space: pre-wrap; word-wrap: break-word; } .post-stats { display: flex; gap: 15px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #eee; font-size: 12px; color: #666; } .visibility { font-size: 12px; color: #666; margin-top: 8px; } .repost-label { background: #eef3f8; color: #0a66c2; padding: 12px; border-radius: 4px; margin-bottom: 12px; } .image-placeholder { background: #f3f2ef; border-radius: 8px; padding: 40px; text-align: center; color: #666; margin: 12px 0; } .footer { text-align: center; padding: 40px; color: #666; } &lt;/style&gt; &lt;/head&gt; &lt;body&gt; &lt;div class=&#34;container&#34;&gt; &lt;header&gt; &lt;h1&gt;George Hotz&lt;/h1&gt; &lt;div class=&#34;title&#34;&gt;President at comma.ai (we&#39;re hiring, comma.ai/jobs)&lt;/div&gt; &lt;div class=&#34;title&#34;&gt;San Diego, California, United States&lt;/div&gt; &lt;div class=&#34;followers&#34;&gt;56,325 followers&lt;/div&gt; &lt;/header&gt; &lt;div id=&#34;posts&#34;&gt;&#39;&#39;&#39; def parse_post(text): lines = text.split(&#39;\n&#39;) post = {&#39;content&#39;: &#39;&#39;, &#39;time&#39;: &#39;&#39;, &#39;visibility&#39;: &#39;&#39;, &#39;is_repost&#39;: &#39;reposted this&#39; in text, &#39;has_image&#39;: &#39;Activate to view larger image&#39; in text, &#39;edited&#39;: &#39;Edited&#39; in text} content_lines = [] for line in lines: if &#39;ago&#39; in line and (&#39;hour&#39; in line or &#39;day&#39; in line or &#39;week&#39; in line or &#39;month&#39; in line or &#39;year&#39; in line): post[&#39;time&#39;] = line.strip() elif &#39;Visible to&#39; in line: post[&#39;visibility&#39;] = line.strip() elif &#39;ago&#39; not in line and &#39;Feed post&#39; not in line and &#39;Following&#39; not in line and &#39;President at&#39; not in line and line.strip() and not line.startswith(&#39;•&#39;): if not line.replace(&#39;.&#39;,&#39;&#39;).isdigit(): content_lines.append(line) post[&#39;content&#39;] = &#39;\n&#39;.join(content_lines).strip() return post for i, post_text in enumerate(posts): p = parse_post(post_text) time_display = p[&#39;time&#39;] if p[&#39;time&#39;] else &#39;some time ago&#39; edited_display = &#39; · Edited&#39; if p[&#39;edited&#39;] else &#39;&#39; html &#43;= f&#39;&#39;&#39; &lt;div class=&#34;post&#34;&gt; &lt;div class=&#34;post-header&#34;&gt; &lt;div class=&#34;post-avatar&#34;&gt;GH&lt;/div&gt; &lt;div class=&#34;post-info&#34;&gt; &lt;div class=&#34;post-name&#34;&gt;George Hotz&lt;/div&gt; &lt;div class=&#34;post-role&#34;&gt;President at comma.ai&lt;/div&gt; &lt;div class=&#34;post-time&#34;&gt;{time_display}{edited_display}&lt;/div&gt; &lt;/div&gt; &lt;/div&gt;&#39;&#39;&#39; if p[&#39;is_repost&#39;]: html &#43;= &#39;&lt;div class=&#34;repost-label&#34;&gt;&lt;strong&gt;George Hotz reposted this&lt;/strong&gt;&lt;/div&gt;&#39; content = p[&#39;content&#39;].replace(&#39;&amp;&#39;, &#39;&amp;amp;&#39;).replace(&#39;&lt;&#39;, &#39;&amp;lt;&#39;).replace(&#39;&gt;&#39;, &#39;&amp;gt;&#39;) html &#43;= f&#39;&lt;div class=&#34;post-content&#34;&gt;{content}&lt;/div&gt;&#39; if p[&#39;has_image&#39;]: html &#43;= &#39;&lt;div class=&#34;image-placeholder&#34;&gt;🖼️ Image&lt;/div&gt;&#39; html &#43;= f&#39;&#39;&#39;&lt;div class=&#34;visibility&#34;&gt;{p[&#39;visibility&#39;] if p[&#39;visibility&#39;] else &#39;Visible to anyone on or off LinkedIn&#39;}&lt;/div&gt; &lt;/div&gt;&#39;&#39;&#39; html &#43;= &#39;&#39;&#39;&lt;/div&gt; &lt;div class=&#34;footer&#34;&gt; &lt;p&gt;Scraped from LinkedIn using cookies from Falkon browser&lt;/p&gt; &lt;p&gt;Total: &#39;&#39;&#39; &#43; str(len(posts)) &#43; &#39;&#39;&#39; posts&lt;/p&gt; &lt;/div&gt; &lt;/div&gt; &lt;/body&gt; &lt;/html&gt;&#39;&#39;&#39; with open(&#39;/home/esotericwarfare/opencode/george_hotz_linkedin.html&#39;, &#39;w&#39;) as f: f.write(html) print(f&#39;HTML created with {len(posts)} posts&#39;)">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Linkedin scraper
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/linkedin_scraper/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="Linkedin está sobrecargado y es extremadamente lento, acá podés usar estos 2 scripts para evitar ingresar a la página. Borré mis cookies vas a tener que extraer las tuyas. El resultado es esto: https://imlauer.github.io/george_hotz_linkedin.html
+Cortesía de OpenCode.
+linkedin.js te genera el json
+const puppeteer = require(&#39;puppeteer&#39;);
+const fs = require(&#39;fs&#39;);
+
+const cookies = [
+  { domain: &#39;.www.linkedin.com&#39;, name: &#39;li_at&#39;, value: &#39;&#39;, path: &#39;/&#39;, secure: true, httpOnly: false },
+  { domain: &#39;.www.linkedin.com&#39;, name: &#39;li_rm&#39;, value: &#39;&#39;, path: &#39;/&#39;, secure: true, httpOnly: false },
+];
+
+const urls = [
+  &#39;https://www.linkedin.com/in/george-hotz-b3866476/recent-activity/posts/&#39;,
+  &#39;https://www.linkedin.com/in/george-hotz-b3866476/recent-activity/&#39;,
+];
+
+async function scrapePage(page, url) {
+  console.log(`\n=== Loading ${url} ===`);
+  await page.goto(url, { waitUntil: &#39;domcontentloaded&#39;, timeout: 120000 });
+  await new Promise(r =&gt; setTimeout(r, 15000));
+  
+  let scrollCount = 0;
+  let lastPostCount = 0;
+  let noChangeCount = 0;
+  
+  while (noChangeCount &lt; 15 &amp;&amp; scrollCount &lt; 150) {
+    await page.evaluate(() =&gt; window.scrollTo(0, document.body.scrollHeight));
+    await new Promise(r =&gt; setTimeout(r, 2500));
+    
+    const postCount = await page.evaluate(() =&gt; {
+      return document.querySelectorAll(&#39;article, .feed-shared-update-v2&#39;).length;
+    });
+    
+    console.log(`Scroll ${scrollCount} - Posts: ${postCount}`);
+    
+    if (postCount &gt; lastPostCount) {
+      noChangeCount = 0;
+      lastPostCount = postCount;
+    } else {
+      noChangeCount&#43;&#43;;
+      
+      await page.evaluate(() =&gt; {
+        const buttons = Array.from(document.querySelectorAll(&#39;button&#39;));
+        for (const btn of buttons) {
+          const text = btn.innerText || btn.textContent || &#39;&#39;;
+          if (text.includes(&#39;Show&#39;) || text.includes(&#39;See more&#39;)) {
+            try { btn.click(); } catch(e) {}
+          }
+        }
+      });
+      await new Promise(r =&gt; setTimeout(r, 1500));
+    }
+    scrollCount&#43;&#43;;
+  }
+  
+  const posts = await page.evaluate(() =&gt; {
+    const results = [];
+    document.querySelectorAll(&#39;article, .feed-shared-update-v2&#39;).forEach(article =&gt; {
+      const text = (article.innerText || article.textContent || &#39;&#39;).trim();
+      if (text.length &gt; 100 &amp;&amp; text.length &lt; 20000) {
+        results.push(text);
+      }
+    });
+    return results;
+  });
+  
+  return posts;
+}
+
+async function main() {
+  const browser = await puppeteer.launch({
+    headless: &#39;new&#39;,
+    args: [&#39;--no-sandbox&#39;, &#39;--disable-setuid-sandbox&#39;, &#39;--disable-blink-features=AutomationControlled&#39;]
+  });
+
+  const page = await browser.newPage();
+  await page.setUserAgent(&#39;Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36&#39;);
+  
+  await page.evaluateOnNewDocument(() =&gt; {
+    Object.defineProperty(navigator, &#39;webdriver&#39;, { get: () =&gt; undefined });
+  });
+  
+  await page.setCookie(...cookies);
+
+  let allPosts = [];
+  
+  for (const url of urls) {
+    try {
+      const posts = await scrapePage(page, url);
+      console.log(`Found ${posts.length} posts from this page`);
+      allPosts = [...allPosts, ...posts];
+    } catch(e) {
+      console.log(`Error loading ${url}: ${e.message}`);
+    }
+  }
+
+  const uniquePosts = [...new Set(allPosts)];
+  
+  console.log(`\n=== Total unique posts: ${uniquePosts.length} ===\n`);
+  
+  fs.writeFileSync(&#39;/home/esotericwarfare/opencode/all_posts_complete.json&#39;, JSON.stringify(uniquePosts, null, 2));
+  console.log(&#39;Saved to all_posts_complete.json&#39;);
+
+  console.log(&#39;\n--- All posts ---\n&#39;);
+  uniquePosts.forEach((p, i) =&gt; {
+    console.log(`=== POST ${i&#43;1} ===`);
+    console.log(p.substring(0, 600));
+    console.log(&#39;\n---\n&#39;);
+  });
+
+  await browser.close();
+}
+
+main().catch(console.error);
+generate_html.py genera el html a partir del JSON.
+import json
+
+with open(&#39;/home/esotericwarfare/opencode/all_posts_complete.json&#39;, &#39;r&#39;) as f:
+    posts = json.load(f)
+
+html = &#39;&#39;&#39;&lt;!DOCTYPE html&gt;
+&lt;html lang=&#34;en&#34;&gt;
+&lt;head&gt;
+    &lt;meta charset=&#34;UTF-8&#34;&gt;
+    &lt;meta name=&#34;viewport&#34; content=&#34;width=device-width, initial-scale=1.0&#34;&gt;
+    &lt;title&gt;George Hotz - LinkedIn Posts&lt;/title&gt;
+    &lt;style&gt;
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, &#34;Segoe UI&#34;, Roboto, sans-serif; background: #f3f2ef; color: #191919; padding: 20px; }
+        .container { max-width: 700px; margin: 0 auto; }
+        header { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        header h1 { font-size: 24px; color: #0a66c2; margin-bottom: 5px; }
+        header .title { font-size: 14px; color: #666; }
+        header .followers { font-size: 12px; color: #666; margin-top: 8px; }
+        .post { background: white; border-radius: 8px; padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .post-header { display: flex; align-items: center; margin-bottom: 12px; }
+        .post-avatar { width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 18px; margin-right: 12px; }
+        .post-info { flex: 1; }
+        .post-name { font-weight: 600; font-size: 14px; }
+        .post-role { font-size: 12px; color: #666; }
+        .post-time { font-size: 12px; color: #666; }
+        .post-content { font-size: 14px; white-space: pre-wrap; word-wrap: break-word; }
+        .post-stats { display: flex; gap: 15px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #eee; font-size: 12px; color: #666; }
+        .visibility { font-size: 12px; color: #666; margin-top: 8px; }
+        .repost-label { background: #eef3f8; color: #0a66c2; padding: 12px; border-radius: 4px; margin-bottom: 12px; }
+        .image-placeholder { background: #f3f2ef; border-radius: 8px; padding: 40px; text-align: center; color: #666; margin: 12px 0; }
+        .footer { text-align: center; padding: 40px; color: #666; }
+    &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;div class=&#34;container&#34;&gt;
+        &lt;header&gt;
+            &lt;h1&gt;George Hotz&lt;/h1&gt;
+            &lt;div class=&#34;title&#34;&gt;President at comma.ai (we&#39;re hiring, comma.ai/jobs)&lt;/div&gt;
+            &lt;div class=&#34;title&#34;&gt;San Diego, California, United States&lt;/div&gt;
+            &lt;div class=&#34;followers&#34;&gt;56,325 followers&lt;/div&gt;
+        &lt;/header&gt;
+        &lt;div id=&#34;posts&#34;&gt;&#39;&#39;&#39;
+
+def parse_post(text):
+    lines = text.split(&#39;\n&#39;)
+    post = {&#39;content&#39;: &#39;&#39;, &#39;time&#39;: &#39;&#39;, &#39;visibility&#39;: &#39;&#39;, &#39;is_repost&#39;: &#39;reposted this&#39; in text, &#39;has_image&#39;: &#39;Activate to view larger image&#39; in text, &#39;edited&#39;: &#39;Edited&#39; in text}
+    
+    content_lines = []
+    for line in lines:
+        if &#39;ago&#39; in line and (&#39;hour&#39; in line or &#39;day&#39; in line or &#39;week&#39; in line or &#39;month&#39; in line or &#39;year&#39; in line):
+            post[&#39;time&#39;] = line.strip()
+        elif &#39;Visible to&#39; in line:
+            post[&#39;visibility&#39;] = line.strip()
+        elif &#39;ago&#39; not in line and &#39;Feed post&#39; not in line and &#39;Following&#39; not in line and &#39;President at&#39; not in line and line.strip() and not line.startswith(&#39;•&#39;):
+            if not line.replace(&#39;.&#39;,&#39;&#39;).isdigit():
+                content_lines.append(line)
+    
+    post[&#39;content&#39;] = &#39;\n&#39;.join(content_lines).strip()
+    return post
+
+for i, post_text in enumerate(posts):
+    p = parse_post(post_text)
+    time_display = p[&#39;time&#39;] if p[&#39;time&#39;] else &#39;some time ago&#39;
+    edited_display = &#39; · Edited&#39; if p[&#39;edited&#39;] else &#39;&#39;
+    
+    html &#43;= f&#39;&#39;&#39;
+        &lt;div class=&#34;post&#34;&gt;
+            &lt;div class=&#34;post-header&#34;&gt;
+                &lt;div class=&#34;post-avatar&#34;&gt;GH&lt;/div&gt;
+                &lt;div class=&#34;post-info&#34;&gt;
+                    &lt;div class=&#34;post-name&#34;&gt;George Hotz&lt;/div&gt;
+                    &lt;div class=&#34;post-role&#34;&gt;President at comma.ai&lt;/div&gt;
+                    &lt;div class=&#34;post-time&#34;&gt;{time_display}{edited_display}&lt;/div&gt;
+                &lt;/div&gt;
+            &lt;/div&gt;&#39;&#39;&#39;
+    
+    if p[&#39;is_repost&#39;]:
+        html &#43;= &#39;&lt;div class=&#34;repost-label&#34;&gt;&lt;strong&gt;George Hotz reposted this&lt;/strong&gt;&lt;/div&gt;&#39;
+    
+    content = p[&#39;content&#39;].replace(&#39;&amp;&#39;, &#39;&amp;amp;&#39;).replace(&#39;&lt;&#39;, &#39;&amp;lt;&#39;).replace(&#39;&gt;&#39;, &#39;&amp;gt;&#39;)
+    html &#43;= f&#39;&lt;div class=&#34;post-content&#34;&gt;{content}&lt;/div&gt;&#39;
+    
+    if p[&#39;has_image&#39;]:
+        html &#43;= &#39;&lt;div class=&#34;image-placeholder&#34;&gt;🖼️ Image&lt;/div&gt;&#39;
+    
+    html &#43;= f&#39;&#39;&#39;&lt;div class=&#34;visibility&#34;&gt;{p[&#39;visibility&#39;] if p[&#39;visibility&#39;] else &#39;Visible to anyone on or off LinkedIn&#39;}&lt;/div&gt;
+        &lt;/div&gt;&#39;&#39;&#39;
+
+html &#43;= &#39;&#39;&#39;&lt;/div&gt;
+        &lt;div class=&#34;footer&#34;&gt;
+            &lt;p&gt;Scraped from LinkedIn using cookies from Falkon browser&lt;/p&gt;
+            &lt;p&gt;Total: &#39;&#39;&#39; &#43; str(len(posts)) &#43; &#39;&#39;&#39; posts&lt;/p&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;&#39;&#39;&#39;
+
+with open(&#39;/home/esotericwarfare/opencode/george_hotz_linkedin.html&#39;, &#39;w&#39;) as f:
+    f.write(html)
+
+print(f&#39;HTML created with {len(posts)} posts&#39;)
+">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Linkedin scraper
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2026-04-04T13:31:12-03:00'>
+      April 04, 2026
+    </time>
+    
+    <br>
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/cli/">Cli</a>
+    
+    
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <p>Linkedin está sobrecargado y es extremadamente lento, acá podés usar estos 2 scripts para evitar ingresar a la página. Borré mis cookies vas a tener que extraer las tuyas. El resultado es esto: <a href="https://imlauer.github.io/george_hotz_linkedin.html">https://imlauer.github.io/george_hotz_linkedin.html</a></p>
+<p>Cortesía de OpenCode.</p>
+<h4 id="linkedinjs-te-genera-el-json"><code>linkedin.js</code> te genera el json</h4>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">puppeteer</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;puppeteer&#39;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">fs</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;fs&#39;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">cookies</span> <span style="color:#f92672">=</span> [
+</span></span><span style="display:flex;"><span>  { <span style="color:#a6e22e">domain</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;.www.linkedin.com&#39;</span>, <span style="color:#a6e22e">name</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;li_at&#39;</span>, <span style="color:#a6e22e">value</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;&#39;</span>, <span style="color:#a6e22e">path</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;/&#39;</span>, <span style="color:#a6e22e">secure</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">true</span>, <span style="color:#a6e22e">httpOnly</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">false</span> },
+</span></span><span style="display:flex;"><span>  { <span style="color:#a6e22e">domain</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;.www.linkedin.com&#39;</span>, <span style="color:#a6e22e">name</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;li_rm&#39;</span>, <span style="color:#a6e22e">value</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;&#39;</span>, <span style="color:#a6e22e">path</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;/&#39;</span>, <span style="color:#a6e22e">secure</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">true</span>, <span style="color:#a6e22e">httpOnly</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">false</span> },
+</span></span><span style="display:flex;"><span>];
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">urls</span> <span style="color:#f92672">=</span> [
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#39;https://www.linkedin.com/in/george-hotz-b3866476/recent-activity/posts/&#39;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#39;https://www.linkedin.com/in/george-hotz-b3866476/recent-activity/&#39;</span>,
+</span></span><span style="display:flex;"><span>];
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">async</span> <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">scrapePage</span>(<span style="color:#a6e22e">page</span>, <span style="color:#a6e22e">url</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">`\n=== Loading </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">url</span><span style="color:#e6db74">}</span><span style="color:#e6db74"> ===`</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">page</span>.<span style="color:#66d9ef">goto</span>(<span style="color:#a6e22e">url</span>, { <span style="color:#a6e22e">waitUntil</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;domcontentloaded&#39;</span>, <span style="color:#a6e22e">timeout</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">120000</span> });
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">await</span> <span style="color:#66d9ef">new</span> Promise(<span style="color:#a6e22e">r</span> =&gt; <span style="color:#a6e22e">setTimeout</span>(<span style="color:#a6e22e">r</span>, <span style="color:#ae81ff">15000</span>));
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">scrollCount</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">lastPostCount</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">noChangeCount</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">while</span> (<span style="color:#a6e22e">noChangeCount</span> <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">15</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">scrollCount</span> <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">150</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">page</span>.<span style="color:#a6e22e">evaluate</span>(() =&gt; window.<span style="color:#a6e22e">scrollTo</span>(<span style="color:#ae81ff">0</span>, document.<span style="color:#a6e22e">body</span>.<span style="color:#a6e22e">scrollHeight</span>));
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">await</span> <span style="color:#66d9ef">new</span> Promise(<span style="color:#a6e22e">r</span> =&gt; <span style="color:#a6e22e">setTimeout</span>(<span style="color:#a6e22e">r</span>, <span style="color:#ae81ff">2500</span>));
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">postCount</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">page</span>.<span style="color:#a6e22e">evaluate</span>(() =&gt; {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">return</span> document.<span style="color:#a6e22e">querySelectorAll</span>(<span style="color:#e6db74">&#39;article, .feed-shared-update-v2&#39;</span>).<span style="color:#a6e22e">length</span>;
+</span></span><span style="display:flex;"><span>    });
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">`Scroll </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">scrollCount</span><span style="color:#e6db74">}</span><span style="color:#e6db74"> - Posts: </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">postCount</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>);
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">postCount</span> <span style="color:#f92672">&gt;</span> <span style="color:#a6e22e">lastPostCount</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">noChangeCount</span> <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">lastPostCount</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">postCount</span>;
+</span></span><span style="display:flex;"><span>    } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">noChangeCount</span><span style="color:#f92672">++</span>;
+</span></span><span style="display:flex;"><span>      
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">page</span>.<span style="color:#a6e22e">evaluate</span>(() =&gt; {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">buttons</span> <span style="color:#f92672">=</span> Array.<span style="color:#a6e22e">from</span>(document.<span style="color:#a6e22e">querySelectorAll</span>(<span style="color:#e6db74">&#39;button&#39;</span>));
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">const</span> <span style="color:#a6e22e">btn</span> <span style="color:#66d9ef">of</span> <span style="color:#a6e22e">buttons</span>) {
+</span></span><span style="display:flex;"><span>          <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">text</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">btn</span>.<span style="color:#a6e22e">innerText</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">btn</span>.<span style="color:#a6e22e">textContent</span> <span style="color:#f92672">||</span> <span style="color:#e6db74">&#39;&#39;</span>;
+</span></span><span style="display:flex;"><span>          <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">text</span>.<span style="color:#a6e22e">includes</span>(<span style="color:#e6db74">&#39;Show&#39;</span>) <span style="color:#f92672">||</span> <span style="color:#a6e22e">text</span>.<span style="color:#a6e22e">includes</span>(<span style="color:#e6db74">&#39;See more&#39;</span>)) {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">try</span> { <span style="color:#a6e22e">btn</span>.<span style="color:#a6e22e">click</span>(); } <span style="color:#66d9ef">catch</span>(<span style="color:#a6e22e">e</span>) {}
+</span></span><span style="display:flex;"><span>          }
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>      });
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">await</span> <span style="color:#66d9ef">new</span> Promise(<span style="color:#a6e22e">r</span> =&gt; <span style="color:#a6e22e">setTimeout</span>(<span style="color:#a6e22e">r</span>, <span style="color:#ae81ff">1500</span>));
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">scrollCount</span><span style="color:#f92672">++</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">posts</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">page</span>.<span style="color:#a6e22e">evaluate</span>(() =&gt; {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">results</span> <span style="color:#f92672">=</span> [];
+</span></span><span style="display:flex;"><span>    document.<span style="color:#a6e22e">querySelectorAll</span>(<span style="color:#e6db74">&#39;article, .feed-shared-update-v2&#39;</span>).<span style="color:#a6e22e">forEach</span>(<span style="color:#a6e22e">article</span> =&gt; {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">text</span> <span style="color:#f92672">=</span> (<span style="color:#a6e22e">article</span>.<span style="color:#a6e22e">innerText</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">article</span>.<span style="color:#a6e22e">textContent</span> <span style="color:#f92672">||</span> <span style="color:#e6db74">&#39;&#39;</span>).<span style="color:#a6e22e">trim</span>();
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">text</span>.<span style="color:#a6e22e">length</span> <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">100</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">text</span>.<span style="color:#a6e22e">length</span> <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">20000</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">results</span>.<span style="color:#a6e22e">push</span>(<span style="color:#a6e22e">text</span>);
+</span></span><span style="display:flex;"><span>      }
+</span></span><span style="display:flex;"><span>    });
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">results</span>;
+</span></span><span style="display:flex;"><span>  });
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">posts</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">async</span> <span style="color:#66d9ef">function</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">browser</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">puppeteer</span>.<span style="color:#a6e22e">launch</span>({
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">headless</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;new&#39;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">args</span><span style="color:#f92672">:</span> [<span style="color:#e6db74">&#39;--no-sandbox&#39;</span>, <span style="color:#e6db74">&#39;--disable-setuid-sandbox&#39;</span>, <span style="color:#e6db74">&#39;--disable-blink-features=AutomationControlled&#39;</span>]
+</span></span><span style="display:flex;"><span>  });
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">page</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">browser</span>.<span style="color:#a6e22e">newPage</span>();
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">page</span>.<span style="color:#a6e22e">setUserAgent</span>(<span style="color:#e6db74">&#39;Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36&#39;</span>);
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">page</span>.<span style="color:#a6e22e">evaluateOnNewDocument</span>(() =&gt; {
+</span></span><span style="display:flex;"><span>    Object.<span style="color:#a6e22e">defineProperty</span>(<span style="color:#a6e22e">navigator</span>, <span style="color:#e6db74">&#39;webdriver&#39;</span>, { <span style="color:#a6e22e">get</span><span style="color:#f92672">:</span> () =&gt; <span style="color:#66d9ef">undefined</span> });
+</span></span><span style="display:flex;"><span>  });
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">page</span>.<span style="color:#a6e22e">setCookie</span>(...<span style="color:#a6e22e">cookies</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">let</span> <span style="color:#a6e22e">allPosts</span> <span style="color:#f92672">=</span> [];
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">const</span> <span style="color:#a6e22e">url</span> <span style="color:#66d9ef">of</span> <span style="color:#a6e22e">urls</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">try</span> {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">posts</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">scrapePage</span>(<span style="color:#a6e22e">page</span>, <span style="color:#a6e22e">url</span>);
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">`Found </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">posts</span>.<span style="color:#a6e22e">length</span><span style="color:#e6db74">}</span><span style="color:#e6db74"> posts from this page`</span>);
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">allPosts</span> <span style="color:#f92672">=</span> [...<span style="color:#a6e22e">allPosts</span>, ...<span style="color:#a6e22e">posts</span>];
+</span></span><span style="display:flex;"><span>    } <span style="color:#66d9ef">catch</span>(<span style="color:#a6e22e">e</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">`Error loading </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">url</span><span style="color:#e6db74">}</span><span style="color:#e6db74">: </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">e</span>.<span style="color:#a6e22e">message</span><span style="color:#e6db74">}</span><span style="color:#e6db74">`</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">uniquePosts</span> <span style="color:#f92672">=</span> [...<span style="color:#66d9ef">new</span> <span style="color:#a6e22e">Set</span>(<span style="color:#a6e22e">allPosts</span>)];
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">`\n=== Total unique posts: </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">uniquePosts</span>.<span style="color:#a6e22e">length</span><span style="color:#e6db74">}</span><span style="color:#e6db74"> ===\n`</span>);
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">fs</span>.<span style="color:#a6e22e">writeFileSync</span>(<span style="color:#e6db74">&#39;/home/esotericwarfare/opencode/all_posts_complete.json&#39;</span>, <span style="color:#a6e22e">JSON</span>.<span style="color:#a6e22e">stringify</span>(<span style="color:#a6e22e">uniquePosts</span>, <span style="color:#66d9ef">null</span>, <span style="color:#ae81ff">2</span>));
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#39;Saved to all_posts_complete.json&#39;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#39;\n--- All posts ---\n&#39;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">uniquePosts</span>.<span style="color:#a6e22e">forEach</span>((<span style="color:#a6e22e">p</span>, <span style="color:#a6e22e">i</span>) =&gt; {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">`=== POST </span><span style="color:#e6db74">${</span><span style="color:#a6e22e">i</span><span style="color:#f92672">+</span><span style="color:#ae81ff">1</span><span style="color:#e6db74">}</span><span style="color:#e6db74"> ===`</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#a6e22e">p</span>.<span style="color:#a6e22e">substring</span>(<span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">600</span>));
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#39;\n---\n&#39;</span>);
+</span></span><span style="display:flex;"><span>  });
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">browser</span>.<span style="color:#a6e22e">close</span>();
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">main</span>().<span style="color:#66d9ef">catch</span>(<span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">error</span>);
+</span></span></code></pre></div><h4 id="generate_htmlpy-genera-el-html-a-partir-del-json"><code>generate_html.py</code> genera el html a partir del JSON.</h4>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">import</span> json
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">with</span> open(<span style="color:#e6db74">&#39;/home/esotericwarfare/opencode/all_posts_complete.json&#39;</span>, <span style="color:#e6db74">&#39;r&#39;</span>) <span style="color:#66d9ef">as</span> f:
+</span></span><span style="display:flex;"><span>    posts <span style="color:#f92672">=</span> json<span style="color:#f92672">.</span>load(f)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>html <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;&#39;&#39;&lt;!DOCTYPE html&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&lt;html lang=&#34;en&#34;&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&lt;head&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    &lt;meta charset=&#34;UTF-8&#34;&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    &lt;meta name=&#34;viewport&#34; content=&#34;width=device-width, initial-scale=1.0&#34;&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    &lt;title&gt;George Hotz - LinkedIn Posts&lt;/title&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    &lt;style&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        * { box-sizing: border-box; margin: 0; padding: 0; }
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        body { font-family: -apple-system, BlinkMacSystemFont, &#34;Segoe UI&#34;, Roboto, sans-serif; background: #f3f2ef; color: #191919; padding: 20px; }
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        .container { max-width: 700px; margin: 0 auto; }
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        header { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        header h1 { font-size: 24px; color: #0a66c2; margin-bottom: 5px; }
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        header .title { font-size: 14px; color: #666; }
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        header .followers { font-size: 12px; color: #666; margin-top: 8px; }
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        .post { background: white; border-radius: 8px; padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        .post-header { display: flex; align-items: center; margin-bottom: 12px; }
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        .post-avatar { width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 18px; margin-right: 12px; }
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        .post-info { flex: 1; }
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        .post-name { font-weight: 600; font-size: 14px; }
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        .post-role { font-size: 12px; color: #666; }
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        .post-time { font-size: 12px; color: #666; }
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        .post-content { font-size: 14px; white-space: pre-wrap; word-wrap: break-word; }
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        .post-stats { display: flex; gap: 15px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #eee; font-size: 12px; color: #666; }
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        .visibility { font-size: 12px; color: #666; margin-top: 8px; }
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        .repost-label { background: #eef3f8; color: #0a66c2; padding: 12px; border-radius: 4px; margin-bottom: 12px; }
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        .image-placeholder { background: #f3f2ef; border-radius: 8px; padding: 40px; text-align: center; color: #666; margin: 12px 0; }
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        .footer { text-align: center; padding: 40px; color: #666; }
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    &lt;/style&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&lt;/head&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&lt;body&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    &lt;div class=&#34;container&#34;&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        &lt;header&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            &lt;h1&gt;George Hotz&lt;/h1&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            &lt;div class=&#34;title&#34;&gt;President at comma.ai (we&#39;re hiring, comma.ai/jobs)&lt;/div&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            &lt;div class=&#34;title&#34;&gt;San Diego, California, United States&lt;/div&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            &lt;div class=&#34;followers&#34;&gt;56,325 followers&lt;/div&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        &lt;/header&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        &lt;div id=&#34;posts&#34;&gt;&#39;&#39;&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">parse_post</span>(text):
+</span></span><span style="display:flex;"><span>    lines <span style="color:#f92672">=</span> text<span style="color:#f92672">.</span>split(<span style="color:#e6db74">&#39;</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#39;</span>)
+</span></span><span style="display:flex;"><span>    post <span style="color:#f92672">=</span> {<span style="color:#e6db74">&#39;content&#39;</span>: <span style="color:#e6db74">&#39;&#39;</span>, <span style="color:#e6db74">&#39;time&#39;</span>: <span style="color:#e6db74">&#39;&#39;</span>, <span style="color:#e6db74">&#39;visibility&#39;</span>: <span style="color:#e6db74">&#39;&#39;</span>, <span style="color:#e6db74">&#39;is_repost&#39;</span>: <span style="color:#e6db74">&#39;reposted this&#39;</span> <span style="color:#f92672">in</span> text, <span style="color:#e6db74">&#39;has_image&#39;</span>: <span style="color:#e6db74">&#39;Activate to view larger image&#39;</span> <span style="color:#f92672">in</span> text, <span style="color:#e6db74">&#39;edited&#39;</span>: <span style="color:#e6db74">&#39;Edited&#39;</span> <span style="color:#f92672">in</span> text}
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    content_lines <span style="color:#f92672">=</span> []
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> line <span style="color:#f92672">in</span> lines:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#e6db74">&#39;ago&#39;</span> <span style="color:#f92672">in</span> line <span style="color:#f92672">and</span> (<span style="color:#e6db74">&#39;hour&#39;</span> <span style="color:#f92672">in</span> line <span style="color:#f92672">or</span> <span style="color:#e6db74">&#39;day&#39;</span> <span style="color:#f92672">in</span> line <span style="color:#f92672">or</span> <span style="color:#e6db74">&#39;week&#39;</span> <span style="color:#f92672">in</span> line <span style="color:#f92672">or</span> <span style="color:#e6db74">&#39;month&#39;</span> <span style="color:#f92672">in</span> line <span style="color:#f92672">or</span> <span style="color:#e6db74">&#39;year&#39;</span> <span style="color:#f92672">in</span> line):
+</span></span><span style="display:flex;"><span>            post[<span style="color:#e6db74">&#39;time&#39;</span>] <span style="color:#f92672">=</span> line<span style="color:#f92672">.</span>strip()
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">elif</span> <span style="color:#e6db74">&#39;Visible to&#39;</span> <span style="color:#f92672">in</span> line:
+</span></span><span style="display:flex;"><span>            post[<span style="color:#e6db74">&#39;visibility&#39;</span>] <span style="color:#f92672">=</span> line<span style="color:#f92672">.</span>strip()
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">elif</span> <span style="color:#e6db74">&#39;ago&#39;</span> <span style="color:#f92672">not</span> <span style="color:#f92672">in</span> line <span style="color:#f92672">and</span> <span style="color:#e6db74">&#39;Feed post&#39;</span> <span style="color:#f92672">not</span> <span style="color:#f92672">in</span> line <span style="color:#f92672">and</span> <span style="color:#e6db74">&#39;Following&#39;</span> <span style="color:#f92672">not</span> <span style="color:#f92672">in</span> line <span style="color:#f92672">and</span> <span style="color:#e6db74">&#39;President at&#39;</span> <span style="color:#f92672">not</span> <span style="color:#f92672">in</span> line <span style="color:#f92672">and</span> line<span style="color:#f92672">.</span>strip() <span style="color:#f92672">and</span> <span style="color:#f92672">not</span> line<span style="color:#f92672">.</span>startswith(<span style="color:#e6db74">&#39;•&#39;</span>):
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> line<span style="color:#f92672">.</span>replace(<span style="color:#e6db74">&#39;.&#39;</span>,<span style="color:#e6db74">&#39;&#39;</span>)<span style="color:#f92672">.</span>isdigit():
+</span></span><span style="display:flex;"><span>                content_lines<span style="color:#f92672">.</span>append(line)
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    post[<span style="color:#e6db74">&#39;content&#39;</span>] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#39;</span><span style="color:#f92672">.</span>join(content_lines)<span style="color:#f92672">.</span>strip()
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> post
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> i, post_text <span style="color:#f92672">in</span> enumerate(posts):
+</span></span><span style="display:flex;"><span>    p <span style="color:#f92672">=</span> parse_post(post_text)
+</span></span><span style="display:flex;"><span>    time_display <span style="color:#f92672">=</span> p[<span style="color:#e6db74">&#39;time&#39;</span>] <span style="color:#66d9ef">if</span> p[<span style="color:#e6db74">&#39;time&#39;</span>] <span style="color:#66d9ef">else</span> <span style="color:#e6db74">&#39;some time ago&#39;</span>
+</span></span><span style="display:flex;"><span>    edited_display <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39; · Edited&#39;</span> <span style="color:#66d9ef">if</span> p[<span style="color:#e6db74">&#39;edited&#39;</span>] <span style="color:#66d9ef">else</span> <span style="color:#e6db74">&#39;&#39;</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    html <span style="color:#f92672">+=</span> <span style="color:#e6db74">f</span><span style="color:#e6db74">&#39;&#39;&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        &lt;div class=&#34;post&#34;&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            &lt;div class=&#34;post-header&#34;&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">                &lt;div class=&#34;post-avatar&#34;&gt;GH&lt;/div&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">                &lt;div class=&#34;post-info&#34;&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">                    &lt;div class=&#34;post-name&#34;&gt;George Hotz&lt;/div&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">                    &lt;div class=&#34;post-role&#34;&gt;President at comma.ai&lt;/div&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">                    &lt;div class=&#34;post-time&#34;&gt;</span><span style="color:#e6db74">{</span>time_display<span style="color:#e6db74">}{</span>edited_display<span style="color:#e6db74">}</span><span style="color:#e6db74">&lt;/div&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">                &lt;/div&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            &lt;/div&gt;&#39;&#39;&#39;</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> p[<span style="color:#e6db74">&#39;is_repost&#39;</span>]:
+</span></span><span style="display:flex;"><span>        html <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#39;&lt;div class=&#34;repost-label&#34;&gt;&lt;strong&gt;George Hotz reposted this&lt;/strong&gt;&lt;/div&gt;&#39;</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    content <span style="color:#f92672">=</span> p[<span style="color:#e6db74">&#39;content&#39;</span>]<span style="color:#f92672">.</span>replace(<span style="color:#e6db74">&#39;&amp;&#39;</span>, <span style="color:#e6db74">&#39;&amp;amp;&#39;</span>)<span style="color:#f92672">.</span>replace(<span style="color:#e6db74">&#39;&lt;&#39;</span>, <span style="color:#e6db74">&#39;&amp;lt;&#39;</span>)<span style="color:#f92672">.</span>replace(<span style="color:#e6db74">&#39;&gt;&#39;</span>, <span style="color:#e6db74">&#39;&amp;gt;&#39;</span>)
+</span></span><span style="display:flex;"><span>    html <span style="color:#f92672">+=</span> <span style="color:#e6db74">f</span><span style="color:#e6db74">&#39;&lt;div class=&#34;post-content&#34;&gt;</span><span style="color:#e6db74">{</span>content<span style="color:#e6db74">}</span><span style="color:#e6db74">&lt;/div&gt;&#39;</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> p[<span style="color:#e6db74">&#39;has_image&#39;</span>]:
+</span></span><span style="display:flex;"><span>        html <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#39;&lt;div class=&#34;image-placeholder&#34;&gt;🖼️ Image&lt;/div&gt;&#39;</span>
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    html <span style="color:#f92672">+=</span> <span style="color:#e6db74">f</span><span style="color:#e6db74">&#39;&#39;&#39;&lt;div class=&#34;visibility&#34;&gt;</span><span style="color:#e6db74">{</span>p[<span style="color:#e6db74">&#39;visibility&#39;</span>] <span style="color:#66d9ef">if</span> p[<span style="color:#e6db74">&#39;visibility&#39;</span>] <span style="color:#66d9ef">else</span> <span style="color:#e6db74">&#39;Visible to anyone on or off LinkedIn&#39;</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&lt;/div&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        &lt;/div&gt;&#39;&#39;&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>html <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#39;&#39;&#39;&lt;/div&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        &lt;div class=&#34;footer&#34;&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            &lt;p&gt;Scraped from LinkedIn using cookies from Falkon browser&lt;/p&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            &lt;p&gt;Total: &#39;&#39;&#39;</span> <span style="color:#f92672">+</span> str(len(posts)) <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;&#39;&#39; posts&lt;/p&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        &lt;/div&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    &lt;/div&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&lt;/body&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&lt;/html&gt;&#39;&#39;&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">with</span> open(<span style="color:#e6db74">&#39;/home/esotericwarfare/opencode/george_hotz_linkedin.html&#39;</span>, <span style="color:#e6db74">&#39;w&#39;</span>) <span style="color:#66d9ef">as</span> f:
+</span></span><span style="display:flex;"><span>    f<span style="color:#f92672">.</span>write(html)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>print(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#39;HTML created with </span><span style="color:#e6db74">{</span>len(posts)<span style="color:#e6db74">}</span><span style="color:#e6db74"> posts&#39;</span>)
+</span></span></code></pre></div>
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+</footer>
+
+
+</body>
+</html>
