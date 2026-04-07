@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/descentralized_uber/">
+  <meta property="og:site_name" content="Imlauer">
+  <meta property="og:title" content="Descentralized Uber">
+  <meta property="og:description" content="Building a fully decentralized Uber-like ride-hailing system (no intermediary company) is possible in theory, but it requires solving matching, identity, payments, trust, and safety without a central server. Below is a realistic architecture you could implement today using existing tools.
+I’ll explain the core components, then a practical stack, and finally the hard problems most people underestimate 🚧
+1. What “decentralized Uber” actually means Traditional ride-hailing like Uber works because it centrally handles:">
+  <meta property="og:locale" content="es_es">
+  <meta property="og:type" content="article">
+    <meta property="article:published_time" content="2026-04-06T22:48:07-03:00">
+    <meta property="article:modified_time" content="2026-04-06T22:48:07-03:00">
+    <meta property="article:tag" content="Descentralized">
+
+  
+  <meta itemprop="name" content="Descentralized Uber">
+  <meta itemprop="description" content="Building a fully decentralized Uber-like ride-hailing system (no intermediary company) is possible in theory, but it requires solving matching, identity, payments, trust, and safety without a central server. Below is a realistic architecture you could implement today using existing tools.
+I’ll explain the core components, then a practical stack, and finally the hard problems most people underestimate 🚧
+1. What “decentralized Uber” actually means Traditional ride-hailing like Uber works because it centrally handles:">
+  <meta itemprop="datePublished" content="2026-04-06T22:48:07-03:00">
+  <meta itemprop="dateModified" content="2026-04-06T22:48:07-03:00">
+  <meta itemprop="wordCount" content="565">
+  <meta itemprop="keywords" content="Descentralized">
+  
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Descentralized Uber">
+  <meta name="twitter:description" content="Building a fully decentralized Uber-like ride-hailing system (no intermediary company) is possible in theory, but it requires solving matching, identity, payments, trust, and safety without a central server. Below is a realistic architecture you could implement today using existing tools.
+I’ll explain the core components, then a practical stack, and finally the hard problems most people underestimate 🚧
+1. What “decentralized Uber” actually means Traditional ride-hailing like Uber works because it centrally handles:">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Descentralized Uber
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/descentralized_uber/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="Building a fully decentralized Uber-like ride-hailing system (no intermediary company) is possible in theory, but it requires solving matching, identity, payments, trust, and safety without a central server. Below is a realistic architecture you could implement today using existing tools.
+I’ll explain the core components, then a practical stack, and finally the hard problems most people underestimate 🚧
+
+1. What “decentralized Uber” actually means
+Traditional ride-hailing like Uber works because it centrally handles:">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Descentralized Uber
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2026-04-06T22:48:07-03:00'>
+      April 06, 2026
+    </time>
+    
+    <br>
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/descentralized/">Descentralized</a>
+    
+    
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <p>Building a <strong>fully decentralized Uber-like ride-hailing system (no intermediary company)</strong> is possible in theory, but it requires solving <strong>matching, identity, payments, trust, and safety</strong> without a central server. Below is a realistic architecture you could implement today using existing tools.</p>
+<p>I’ll explain the <strong>core components</strong>, then a <strong>practical stack</strong>, and finally the <strong>hard problems most people underestimate</strong> 🚧</p>
+<hr>
+<h1 id="1-what-decentralized-uber-actually-means">1. What “decentralized Uber” actually means</h1>
+<p>Traditional ride-hailing like Uber works because it centrally handles:</p>
+<ul>
+<li>driver discovery</li>
+<li>passenger discovery</li>
+<li>pricing</li>
+<li>reputation</li>
+<li>dispute resolution</li>
+<li>payments</li>
+<li>fraud prevention</li>
+</ul>
+<p>A decentralized system must replace all of these with <strong>protocol-level mechanisms</strong> instead of a company.</p>
+<p>Think:</p>
+<blockquote>
+<p>BitTorrent for rides.</p>
+</blockquote>
+<hr>
+<h1 id="2-architecture-overview">2. Architecture overview</h1>
+<p>You need 5 layers:</p>
+<pre tabindex="0"><code>Identity layer
+Discovery layer
+Matching layer
+Reputation layer
+Payment layer
+</code></pre><p>Let’s design each.</p>
+<hr>
+<h1 id="3-identity-layer-drivers--passengers">3. Identity layer (drivers + passengers)</h1>
+<p>Drivers must prove:</p>
+<ul>
+<li>they exist</li>
+<li>they’re licensed</li>
+<li>they’re trusted</li>
+</ul>
+<p>Possible solutions:</p>
+<h3 id="option-a--decentralized-identity">Option A — decentralized identity</h3>
+<p>Use:</p>
+<ul>
+<li>W3C DID standard</li>
+<li>verifiable credentials</li>
+</ul>
+<p>Example:</p>
+<pre tabindex="0"><code>Driver wallet contains:
+
+driver_license.vc
+insurance.vc
+vehicle_registration.vc
+reputation_score.vc
+</code></pre><p>Passenger app verifies locally.</p>
+<p>No server required.</p>
+<hr>
+<h1 id="4-discovery-layer-finding-nearby-drivers">4. Discovery layer (finding nearby drivers)</h1>
+<p>This replaces Uber’s servers.</p>
+<p>Use:</p>
+<h3 id="option-a--dht-network">Option A — DHT network</h3>
+<p>Example technologies:</p>
+<ul>
+<li>IPFS</li>
+<li>libp2p</li>
+</ul>
+<p>Drivers publish:</p>
+<pre tabindex="0"><code>location hash
+availability
+vehicle type
+price/km
+</code></pre><p>Passengers query nearby nodes.</p>
+<hr>
+<h1 id="5-matching-layer-ride-negotiation">5. Matching layer (ride negotiation)</h1>
+<p>Instead of a centralized dispatcher:</p>
+<p>Use <strong>local auction matching</strong></p>
+<p>Passenger broadcasts:</p>
+<pre tabindex="0"><code>pickup location
+destination
+max price
+time window
+</code></pre><p>Drivers respond:</p>
+<pre tabindex="0"><code>offer price
+ETA
+vehicle info
+reputation proof
+</code></pre><p>Passenger selects best offer.</p>
+<p>Fully peer-to-peer.</p>
+<hr>
+<h1 id="6-payment-layer-no-company-involved">6. Payment layer (no company involved)</h1>
+<p>This is critical.</p>
+<p>Options:</p>
+<h3 id="option-a--crypto-escrow-smart-contract">Option A — crypto escrow smart contract</h3>
+<p>Use:</p>
+<ul>
+<li>Ethereum</li>
+<li>Polygon</li>
+<li>Solana</li>
+</ul>
+<p>Workflow:</p>
+<pre tabindex="0"><code>passenger locks funds
+ride happens
+driver receives funds automatically
+</code></pre><p>No intermediary.</p>
+<hr>
+<h3 id="option-b--lightning-payments-better-ux">Option B — Lightning payments (better UX)</h3>
+<p>Use:</p>
+<ul>
+<li>Lightning Network</li>
+</ul>
+<p>Advantages:</p>
+<ul>
+<li>instant</li>
+<li>cheap</li>
+<li>mobile-friendly</li>
+</ul>
+<p>Very strong candidate.</p>
+<hr>
+<h1 id="7-reputation-system-the-hardest-problem">7. Reputation system (the hardest problem)</h1>
+<p>Centralized Uber works because it controls reputation.</p>
+<p>Decentralized solution:</p>
+<p>Store signed ride receipts:</p>
+<pre tabindex="0"><code>driver signs ride
+passenger signs ride
+receipt stored on DHT
+</code></pre><p>Reputation score =</p>
+<pre tabindex="0"><code>weighted average(receipts)
+</code></pre><p>Tamper-resistant.</p>
+<p>Portable across apps.</p>
+<hr>
+<h1 id="8-safety-layer-the-real-challenge">8. Safety layer (the real challenge)</h1>
+<p>This is what kills most decentralized Uber projects.</p>
+<p>You must solve:</p>
+<h3 id="identity-fraud">identity fraud</h3>
+<p>solution:</p>
+<p>verifiable credentials</p>
+<hr>
+<h3 id="driver-impersonation">driver impersonation</h3>
+<p>solution:</p>
+<p>challenge-response signatures</p>
+<hr>
+<h3 id="emergency-situations">emergency situations</h3>
+<p>solution:</p>
+<p>trusted contact broadcast</p>
+<hr>
+<h3 id="disputes">disputes</h3>
+<p>solution:</p>
+<p>jury arbitration protocol like:</p>
+<p>Kleros</p>
+<hr>
+<h1 id="9-example-real-architecture-stack">9. Example real architecture stack</h1>
+<p>A practical build could be:</p>
+<pre tabindex="0"><code>Mobile app:
+Flutter / React Native
+
+Networking:
+libp2p
+
+Discovery:
+IPFS DHT
+
+Identity:
+DID + Verifiable Credentials
+
+Payments:
+Lightning Network
+
+Reputation:
+signed ride receipts + Merkle history
+
+Maps:
+OpenStreetMap
+
+Routing:
+OSRM
+</code></pre><p>Fully decentralized.</p>
+<p>No company required.</p>
+<hr>
+<h1 id="10-existing-decentralized-uber-attempts">10. Existing decentralized Uber attempts</h1>
+<p>These already tried:</p>
+<h3 id="arcade-city">Arcade City</h3>
+<p>Crypto ridesharing DAO</p>
+<hr>
+<h3 id="lazooz">LaZooz</h3>
+<p>Token-based ridesharing network</p>
+<hr>
+<h3 id="dav-network">DAV Network</h3>
+<p>Autonomous vehicle + ridesharing protocol</p>
+<hr>
+<p>None succeeded at scale because of:</p>
+<pre tabindex="0"><code>legal compliance
+driver onboarding friction
+network effects
+safety expectations
+payments UX
+</code></pre><p>Technology wasn’t the blocker.</p>
+<p>Adoption was.</p>
+<hr>
+<h1 id="11-the-best-modern-design-2026-realistic-approach">11. The best modern design (2026 realistic approach)</h1>
+<p>Instead of fully pure decentralization:</p>
+<p>Use:</p>
+<pre tabindex="0"><code>P2P matching
+self-sovereign identity
+crypto escrow payments
+community moderation
+optional federation nodes
+</code></pre><p>This becomes:</p>
+<p><strong>serverless but still usable</strong></p>
+<p>Huge difference.</p>
+<hr>
+<h1 id="12-why-this-idea-is-actually-powerful-right-now">12. Why this idea is actually powerful right now</h1>
+<p>Because you’re already working in <strong>electricity installation and infrastructure planning</strong>, you understand something most software people don’t:</p>
+<p>Real-world services need:</p>
+<pre tabindex="0"><code>trust
+compliance
+verification
+safety guarantees
+</code></pre><p>A decentralized Uber must integrate with physical-world certification systems (licenses, insurance, inspections).</p>
+<p>That’s the missing piece.</p>
+<hr>
+<p>If you want, I can design a <strong>minimal working prototype architecture (MVP)</strong> that two phones could run today on a local network without any server.</p>
+
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+</footer>
+
+
+</body>
+</html>
