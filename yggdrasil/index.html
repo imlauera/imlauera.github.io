@@ -28,7 +28,7 @@ Features:
 automatic routing no central servers end-to-end encryption stable node identity via keypair works over TCP / TLS / QUIC multicast discovery on LAN Install Yggdrasil Arch Linux sudo pacman -S yggdrasil Enable service:">
   <meta itemprop="datePublished" content="2026-04-18T07:28:02-03:00">
   <meta itemprop="dateModified" content="2026-04-18T07:28:02-03:00">
-  <meta itemprop="wordCount" content="456">
+  <meta itemprop="wordCount" content="1709">
   
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="Yggdrasil">
@@ -316,7 +316,497 @@ tls://peer...      Established
 <li>TTY-native mesh tools</li>
 <li>offline-first knowledge systems</li>
 </ul>
-<p>Perfect foundation for a Manna-lite assistant environment.</p>
+<hr>
+<h1 id="dns-for-ygg-domains">DNS for .ygg domains</h1>
+<p>Yggdrasil no tiene DNS oficial. Usá un servidor DNS público de la comunidad.</p>
+<h2 id="why-you-need-dns">Why you need DNS</h2>
+<p>Without DNS, you can&rsquo;t resolve <code>.ygg</code> domains like <code>inv.nadeko.ygg</code>.</p>
+<h2 id="finding-a-working-dns-server">Finding a working DNS server</h2>
+<p>Search online:</p>
+<pre tabindex="0"><code>yggdrasil DNS server public list
+</code></pre><p>Official list: <a href="https://yggdrasil-network.github.io/services.md">https://yggdrasil-network.github.io/services.md</a></p>
+<h2 id="common-public-dns-servers">Common public DNS servers</h2>
+<table>
+  <thead>
+      <tr>
+          <th>IP</th>
+          <th>Location</th>
+          <th>Provider</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><code>324:71e:281a:9ed3::53</code></td>
+          <td>(varies)</td>
+          <td>acetone</td>
+      </tr>
+      <tr>
+          <td><code>302:db60::53</code></td>
+          <td>Praha, Czechia</td>
+          <td>Revertron</td>
+      </tr>
+      <tr>
+          <td><code>300:6223::53</code></td>
+          <td>Bratislava, Slovakia</td>
+          <td>Revertron</td>
+      </tr>
+      <tr>
+          <td><code>302:7991::53</code></td>
+          <td>Saint Petersburg, Russia</td>
+          <td>Revertron</td>
+      </tr>
+  </tbody>
+</table>
+<h2 id="testing-which-dns-is-reachable">Testing which DNS is reachable</h2>
+<p>Not all DNS servers are accessible from every node. It depends on your mesh topology (who you&rsquo;re peered with).</p>
+<p>Test each one:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ping -c <span style="color:#ae81ff">2</span> 324:71e:281a:9ed3::53
+</span></span><span style="display:flex;"><span>ping -c <span style="color:#ae81ff">2</span> 302:db60::53
+</span></span><span style="display:flex;"><span>ping -c <span style="color:#ae81ff">2</span> 300:6223::53
+</span></span><span style="display:flex;"><span>ping -c <span style="color:#ae81ff">2</span> 302:7991::53
+</span></span></code></pre></div><p>The one that responds = your DNS server.</p>
+<h2 id="why-this-specific-dns">Why this specific DNS?</h2>
+<p>In my case:</p>
+<ul>
+<li>My routing table was small (only 13 nodes)</li>
+<li>Most DNS servers were unreachable</li>
+<li>Only <code>324:71e:281a:9ed3::53</code> responded to ping</li>
+<li>That&rsquo;s why I used this one</li>
+</ul>
+<p>Your reachable DNS may be different. Test all of them.</p>
+<h2 id="configure-systemd-resolved">Configure systemd-resolved</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo mkdir -p /etc/systemd/resolved.conf.d
+</span></span></code></pre></div><p>Create config:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>echo <span style="color:#e6db74">&#39;[Resolve]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">DNS=324:71e:281a:9ed3::53
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Domains=~ygg&#39;</span> | sudo tee /etc/systemd/resolved.conf.d/yggdrasil.conf
+</span></span></code></pre></div><p>What this does:</p>
+<ul>
+<li><code>DNS=</code> → Your Yggdrasil DNS server IP</li>
+<li><code>Domains=~ygg</code> → Route all <code>.ygg</code> domains to this DNS</li>
+</ul>
+<p>Restart:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo systemctl restart systemd-resolved
+</span></span></code></pre></div><h2 id="verify-dns-works">Verify DNS works</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>resolvectl query inv.nadeko.ygg
+</span></span></code></pre></div><p>Should return an IPv6 address like:</p>
+<pre tabindex="0"><code>inv.nadeko.ygg: 200:28fa:d807:e104:5a13:e2c4:eaf:445f
+</code></pre><hr>
+<h1 id="accessing-ygg-websites">Accessing .ygg websites</h1>
+<h2 id="from-nadekonet">From nadeko.net</h2>
+<table>
+  <thead>
+      <tr>
+          <th>Service</th>
+          <th>URL</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Invidious</td>
+          <td><code>http://inv.nadeko.ygg</code></td>
+      </tr>
+      <tr>
+          <td>4get</td>
+          <td><code>http://4get.nadeko.ygg</code></td>
+      </tr>
+      <tr>
+          <td>Rimgo</td>
+          <td><code>http://ri.nadeko.ygg</code></td>
+      </tr>
+      <tr>
+          <td>PrivateBin</td>
+          <td><code>http://pbin.nadeko.ygg</code></td>
+      </tr>
+      <tr>
+          <td>Redlib</td>
+          <td><code>http://redlib.nadeko.ygg</code></td>
+      </tr>
+  </tbody>
+</table>
+<h2 id="other-yggdrasil-services">Other Yggdrasil services</h2>
+<table>
+  <thead>
+      <tr>
+          <th>Service</th>
+          <th>URL</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Yggdrasil Directory</td>
+          <td><code>http://[21e:a51c:885b:7db0:166e:927:98cd:d186]/</code></td>
+      </tr>
+      <tr>
+          <td>Yggdrasil Map</td>
+          <td><code>http://[21e:e795:8e82:a9e2:ff48:952d:55f2:f0bb]/</code></td>
+      </tr>
+      <tr>
+          <td>HowTo Ygg Wiki</td>
+          <td><code>http://[222:a8e4:50cd:55c:788e:b0a5:4e2f:a92c]/</code></td>
+      </tr>
+      <tr>
+          <td>Search Engine (Mimir)</td>
+          <td><code>http://[200:b48d:469e:c7c7:3e13:c41d:ba4d:d2b8]</code></td>
+      </tr>
+      <tr>
+          <td>IP Checker</td>
+          <td><code>http://[200:56bd:a9e9:c1fa:8f99:1d3c:3c84:6507]</code></td>
+      </tr>
+      <tr>
+          <td>Forum</td>
+          <td><code>http://[21a:34aa:c782:3ad2:1bf8:73f8:141:66e8]</code></td>
+      </tr>
+      <tr>
+          <td>i2pd</td>
+          <td><code>http://i2pd.ygg/</code></td>
+      </tr>
+      <tr>
+          <td>PrivateBin</td>
+          <td><code>http://privatebin.ygg/</code></td>
+      </tr>
+      <tr>
+          <td>Flibusta</td>
+          <td><code>http://flibusta.ygg/</code></td>
+      </tr>
+      <tr>
+          <td>Rutracker mirror</td>
+          <td><code>http://rutracker.ygg/</code></td>
+      </tr>
+      <tr>
+          <td>Minecraft</td>
+          <td><code>http://create.ygg/</code></td>
+      </tr>
+      <tr>
+          <td>Matrix</td>
+          <td><code>http://matrix.softpigeones.ygg:8008</code></td>
+      </tr>
+  </tbody>
+</table>
+<h2 id="full-directory">Full directory</h2>
+<p>There&rsquo;s a full directory with 157+ sites at:</p>
+<pre tabindex="0"><code>http://[21e:a51c:885b:7db0:166e:927:98cd:d186]/
+</code></pre><p>Check there for more services!</p>
+<h2 id="http-vs-https">HTTP vs HTTPS</h2>
+<ul>
+<li><strong>HTTP</strong> → works perfectly</li>
+<li><strong>HTTPS</strong> → may have certificate errors (cert is for clearnet domain, not .ygg)</li>
+</ul>
+<p>For HTTPS services on .ygg, you may need to:</p>
+<ul>
+<li>Use <code>https://inv-ygg.nadeko.net</code> (clearnet alternative)</li>
+<li>Or ignore certificate errors in curl:
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>curl -kL https://inv.nadeko.ygg
+</span></span></code></pre></div></li>
+</ul>
+<hr>
+<h1 id="useful-commands">Useful commands</h1>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Check peers</span>
+</span></span><span style="display:flex;"><span>sudo yggdrasilctl getpeers
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Check routing table</span>
+</span></span><span style="display:flex;"><span>sudo yggdrasilctl gettree
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># See your address</span>
+</span></span><span style="display:flex;"><span>sudo yggdrasilctl getself
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># See sessions</span>
+</span></span><span style="display:flex;"><span>sudo yggdrasilctl getsessions
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Restart Yggdrasil</span>
+</span></span><span style="display:flex;"><span>sudo systemctl restart yggdrasil
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># View logs</span>
+</span></span><span style="display:flex;"><span>sudo journalctl -u yggdrasil -f
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Test DNS resolution</span>
+</span></span><span style="display:flex;"><span>resolvectl query inv.nadeko.ygg
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Test connectivity</span>
+</span></span><span style="display:flex;"><span>curl -sL http://inv.nadeko.ygg/
+</span></span></code></pre></div><hr>
+<h1 id="complete-setup--new-pc-from-scratch">Complete Setup — New PC from Scratch</h1>
+<p>This section has everything you need to set up Yggdrasil on a fresh system.</p>
+<hr>
+<h2 id="step-1-install-yggdrasil">Step 1: Install Yggdrasil</h2>
+<h3 id="arch-linux-1">Arch Linux</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo pacman -S yggdrasil
+</span></span></code></pre></div><h3 id="debianubuntu">Debian/Ubuntu</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Download from GitHub</span>
+</span></span><span style="display:flex;"><span>wget https://github.com/yggdrasil-network/yggdrasil/releases/latest/download/yggdrasil-linux-amd64
+</span></span><span style="display:flex;"><span>mv yggdrasil-linux-amd64 /usr/local/bin/yggdrasil
+</span></span><span style="display:flex;"><span>chmod +x /usr/local/bin/yggdrasil
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Or build from source (requires Go)</span>
+</span></span><span style="display:flex;"><span>git clone https://github.com/yggdrasil-network/yggdrasil
+</span></span><span style="display:flex;"><span>cd yggdrasil
+</span></span><span style="display:flex;"><span>go build -o yggdrasil .
+</span></span><span style="display:flex;"><span>sudo mv yggdrasil /usr/local/bin/
+</span></span></code></pre></div><h3 id="fedorarhel">Fedora/RHEL</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo dnf install yggdrasil
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Or use COPR</span>
+</span></span><span style="display:flex;"><span>sudo dnf copr enable @yggdrasil/yggdrasil
+</span></span><span style="display:flex;"><span>sudo dnf install yggdrasil
+</span></span></code></pre></div><h3 id="void-linux">Void Linux</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo xbps-install yggdrasil
+</span></span></code></pre></div><h3 id="gentoo">Gentoo</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Add to /etc/portage/package.accept_keywords</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;=net-p2p/yggdrasil-9999 **&#34;</span> | sudo tee /etc/portage/package.accept_keywords/yggdrasil
+</span></span><span style="display:flex;"><span>sudo emerge --ask net-p2p/yggdrasil
+</span></span></code></pre></div><h3 id="macos">macOS</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>brew install yggdrasil
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Or</span>
+</span></span><span style="display:flex;"><span>sudo brew install --cask yggdrasil
+</span></span></code></pre></div><hr>
+<h2 id="step-2-enable-and-start-service">Step 2: Enable and start service</h2>
+<h3 id="systemd-linux">systemd (Linux)</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo systemctl enable yggdrasil
+</span></span><span style="display:flex;"><span>sudo systemctl start yggdrasil
+</span></span></code></pre></div><h3 id="openrc-void-gentoo">OpenRC (Void, Gentoo)</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo rc-update add yggdrasil default
+</span></span><span style="display:flex;"><span>sudo service yggdrasil start
+</span></span></code></pre></div><h3 id="macos-launchd">macOS (launchd)</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo launchctl load /Library/LaunchDaemons/com.yggdrasil.plist
+</span></span></code></pre></div><h3 id="manual-run-no-service">Manual run (no service)</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo yggdrasil -useconffile /etc/yggdrasil.conf
+</span></span></code></pre></div><hr>
+<h2 id="step-3-generate-configuration">Step 3: Generate configuration</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo yggdrasil -genconf | sudo tee /etc/yggdrasil.conf
+</span></span></code></pre></div><p>This creates a fresh config with:</p>
+<ul>
+<li>New random PrivateKey (new node identity)</li>
+<li>Empty peers list</li>
+<li>Default settings</li>
+</ul>
+<hr>
+<h2 id="step-4-add-public-peers">Step 4: Add public peers</h2>
+<p>Peers are required to join the network. Without peers, you can&rsquo;t connect.</p>
+<h3 id="option-a-use-recommended-peers-from-this-guide">Option A: Use recommended peers from this guide</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo yggdrasil -genconf &gt; /tmp/yggdrasil-new.conf
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Edit the file and add peers to the Peers: [] section</span>
+</span></span><span style="display:flex;"><span>nano /tmp/yggdrasil-new.conf
+</span></span></code></pre></div><p>Recommended peers:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">Peers</span>: [
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;tcp://ygg-1.okade.pro:20000&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;tcp://ygg.nadeko.net:44441&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;tls://ygg.nadeko.net:44442&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;tls://ygg.jjolly.dev:3443&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;tcp://mo.us.ygg.triplebit.org:9000&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;tls://mo.us.ygg.triplebit.org:993&#34;</span>
+</span></span><span style="display:flex;"><span>]
+</span></span></code></pre></div><h3 id="option-b-find-public-peers-online">Option B: Find public peers online</h3>
+<p>Official public peers list:</p>
+<ul>
+<li><a href="https://github.com/yggdrasil-network/public-peers">https://github.com/yggdrasil-network/public-peers</a></li>
+<li><a href="https://yggdrasil-network.github.io/services.html">https://yggdrasil-network.github.io/services.html</a></li>
+</ul>
+<p>Look for peers close to your geographic location for best latency.</p>
+<h3 id="option-c-use-peer-discovery-on-lan">Option C: Use peer discovery on LAN</h3>
+<p>If other Yggdrasil nodes are on your LAN, multicast discovery will find them automatically:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">MulticastInterfaces</span>:
+</span></span><span style="display:flex;"><span>  - <span style="color:#f92672">Regex</span>: <span style="color:#ae81ff">.*</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">Beacon</span>: <span style="color:#66d9ef">true</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">Listen</span>: <span style="color:#66d9ef">true</span>
+</span></span></code></pre></div><hr>
+<h2 id="step-5-configure-listeners-recommended">Step 5: Configure listeners (recommended)</h2>
+<p>Allow incoming connections for better connectivity:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">Listen</span>: [<span style="color:#e6db74">&#34;tls://0.0.0.0:0&#34;</span>,<span style="color:#e6db74">&#34;tls://[::]:0&#34;</span>]
+</span></span></code></pre></div><p>This lets other nodes connect to you and improves network participation.</p>
+<hr>
+<h2 id="step-6-apply-configuration">Step 6: Apply configuration</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo cp /tmp/yggdrasil-new.conf /etc/yggdrasil.conf
+</span></span><span style="display:flex;"><span>sudo systemctl restart yggdrasil
+</span></span></code></pre></div><p>Wait 10-30 seconds for connections to establish.</p>
+<hr>
+<h2 id="step-7-verify-connection">Step 7: Verify connection</h2>
+<h3 id="check-if-service-is-running">Check if service is running</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo systemctl status yggdrasil
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Or</span>
+</span></span><span style="display:flex;"><span>ps aux | grep yggdrasil
+</span></span></code></pre></div><h3 id="check-your-address">Check your address</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo yggdrasilctl getself
+</span></span></code></pre></div><p>Should show an address like <code>202:xxxx:xxxx:xxxx::xxxx</code></p>
+<h3 id="check-peers">Check peers</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo yggdrasilctl getpeers
+</span></span></code></pre></div><p>You should see peers with <code>State: Established</code></p>
+<h3 id="check-routing-table">Check routing table</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo yggdrasilctl gettree
+</span></span></code></pre></div><p>Shows known nodes (should grow over time)</p>
+<h3 id="test-connectivity-1">Test connectivity</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ping -c <span style="color:#ae81ff">3</span> 200:415c:2061:a9c0:9dbc:b95d:66ec:1347
+</span></span></code></pre></div><p>This is nadeko&rsquo;s Yggdrasil address.</p>
+<hr>
+<h2 id="step-8-set-up-dns-for-ygg-domains">Step 8: Set up DNS (for .ygg domains)</h2>
+<p>This lets you resolve domains like <code>inv.nadeko.ygg</code></p>
+<h3 id="configure-systemd-resolved-1">Configure systemd-resolved</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo mkdir -p /etc/systemd/resolved.conf.d
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#39;[Resolve]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">DNS=324:71e:281a:9ed3::53
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Domains=~ygg&#39;</span> | sudo tee /etc/systemd/resolved.conf.d/yggdrasil.conf
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>sudo systemctl restart systemd-resolved
+</span></span></code></pre></div><h3 id="test-dns-resolution">Test DNS resolution</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>resolvectl query inv.nadeko.ygg
+</span></span></code></pre></div><p>Should return an IPv6 address.</p>
+<h3 id="alternative-use-etchosts">Alternative: Use /etc/hosts</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Find the IP first</span>
+</span></span><span style="display:flex;"><span>resolvectl query inv.nadeko.ygg
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Add to /etc/hosts</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;200:28fa:d807:e104:5a13:e2c4:eaf:445f inv.nadeko.ygg&#34;</span> | sudo tee -a /etc/hosts
+</span></span></code></pre></div><hr>
+<h2 id="step-9-configure-firewall-if-needed">Step 9: Configure firewall (if needed)</h2>
+<h3 id="ufw">ufw</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo ufw allow 0:65535/tcp
+</span></span><span style="display:flex;"><span>sudo ufw allow 0:65535/udp
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Or more specific</span>
+</span></span><span style="display:flex;"><span>sudo ufw allow 9001/tcp
+</span></span><span style="display:flex;"><span>sudo ufw allow 9001/udp
+</span></span></code></pre></div><h3 id="iptables">iptables</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo iptables -A INPUT -p tcp --dport <span style="color:#ae81ff">9001</span> -j ACCEPT
+</span></span><span style="display:flex;"><span>sudo iptables -A OUTPUT -p tcp --sport <span style="color:#ae81ff">9001</span> -j ACCEPT
+</span></span><span style="display:flex;"><span>sudo ip6tables -A INPUT -p tcp --dport <span style="color:#ae81ff">9001</span> -j ACCEPT
+</span></span><span style="display:flex;"><span>sudo ip6tables -A OUTPUT -p tcp --sport <span style="color:#ae81ff">9001</span> -j ACCEPT
+</span></span></code></pre></div><h3 id="firewalld">firewalld</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo firewall-cmd --permanent --add-port<span style="color:#f92672">=</span>9001/tcp
+</span></span><span style="display:flex;"><span>sudo firewall-cmd --reload
+</span></span></code></pre></div><hr>
+<h2 id="step-10-troubleshooting">Step 10: Troubleshooting</h2>
+<h3 id="no-peers-connected">No peers connected</h3>
+<ol>
+<li>
+<p>Check service status:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo systemctl status yggdrasil
+</span></span></code></pre></div></li>
+<li>
+<p>Check logs:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo journalctl -u yggdrasil -n <span style="color:#ae81ff">50</span>
+</span></span></code></pre></div></li>
+<li>
+<p>Check firewall:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo ufw status
+</span></span><span style="display:flex;"><span>sudo iptables -L -n
+</span></span></code></pre></div></li>
+<li>
+<p>Try different peers (some may be down)</p>
+</li>
+<li>
+<p>Check your internet connection</p>
+</li>
+</ol>
+<h3 id="service-wont-start">Service won&rsquo;t start</h3>
+<ol>
+<li>
+<p>Check configuration syntax:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo yggdrasil -useconffile /etc/yggdrasil.conf -normaliseconf
+</span></span></code></pre></div></li>
+<li>
+<p>Check logs:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo journalctl -u yggdrasil -xe
+</span></span></code></pre></div></li>
+<li>
+<p>Check port availability:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo netstat -tlnp | grep yggdrasil
+</span></span></code></pre></div></li>
+</ol>
+<h3 id="dns-not-working">DNS not working</h3>
+<ol>
+<li>
+<p>Check systemd-resolved:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo systemd-resolve --status
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Or</span>
+</span></span><span style="display:flex;"><span>resolvectl status
+</span></span></code></pre></div></li>
+<li>
+<p>Test DNS server directly:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>dig @324:71e:281a:9ed3::53 inv.nadeko.ygg
+</span></span></code></pre></div></li>
+<li>
+<p>Check /etc/resolv.conf:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cat /etc/resolv.conf
+</span></span></code></pre></div></li>
+<li>
+<p>Try different DNS server</p>
+</li>
+</ol>
+<h3 id="cant-reach-ygg-websites">Can&rsquo;t reach .ygg websites</h3>
+<ol>
+<li>
+<p>Verify your Yggdrasil address:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo yggdrasilctl getself
+</span></span></code></pre></div></li>
+<li>
+<p>Test connectivity to a known node:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ping -c <span style="color:#ae81ff">3</span> 200:415c:2061:a9c0:9dbc:b95d:66ec:1347
+</span></span></code></pre></div></li>
+<li>
+<p>Check your routing table:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo yggdrasilctl gettree
+</span></span></code></pre></div></li>
+<li>
+<p>Check peer connections:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo yggdrasilctl getpeers
+</span></span></code></pre></div></li>
+</ol>
+<hr>
+<h2 id="quick-verification-checklist">Quick verification checklist</h2>
+<ul>
+<li><input disabled="" type="checkbox"> Service running: <code>sudo systemctl status yggdrasil</code></li>
+<li><input disabled="" type="checkbox"> Have address: <code>sudo yggdrasilctl getself</code></li>
+<li><input disabled="" type="checkbox"> Peers connected: <code>sudo yggdrasilctl getpeers</code></li>
+<li><input disabled="" type="checkbox"> Can ping another node: <code>ping -c 3 200:415c:2061:a9c0:9dbc:b95d:66ec:1347</code></li>
+<li><input disabled="" type="checkbox"> DNS resolves: <code>resolvectl query inv.nadeko.ygg</code></li>
+<li><input disabled="" type="checkbox"> Can load website: <code>curl -sL http://inv.nadeko.ygg/</code></li>
+</ul>
+<hr>
+<h2 id="keeping-your-identity">Keeping your identity</h2>
+<p>Your Yggdrasil address is tied to your PrivateKey.</p>
+<p><strong>Backup your key:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo yggdrasilctl getself | grep <span style="color:#e6db74">&#34;Private key&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Or extract from config</span>
+</span></span><span style="display:flex;"><span>grep PrivateKey /etc/yggdrasil.conf
+</span></span></code></pre></div><p>Store this key securely. If you lose it, you get a new address.</p>
+<p><strong>Restoring on a new PC:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Copy the PrivateKey to the new config</span>
+</span></span><span style="display:flex;"><span>nano /etc/yggdrasil.conf
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Edit the PrivateKey line with your backed-up key</span>
+</span></span><span style="display:flex;"><span>sudo systemctl restart yggdrasil
+</span></span></code></pre></div><hr>
+<h2 id="quick-reference-commands">Quick reference commands</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Service management</span>
+</span></span><span style="display:flex;"><span>sudo systemctl start yggdrasil
+</span></span><span style="display:flex;"><span>sudo systemctl stop yggdrasil
+</span></span><span style="display:flex;"><span>sudo systemctl restart yggdrasil
+</span></span><span style="display:flex;"><span>sudo systemctl status yggdrasil
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Get info</span>
+</span></span><span style="display:flex;"><span>sudo yggdrasilctl getself      <span style="color:#75715e"># Your address and keys</span>
+</span></span><span style="display:flex;"><span>sudo yggdrasilctl getpeers     <span style="color:#75715e"># Connected peers</span>
+</span></span><span style="display:flex;"><span>sudo yggdrasilctl gettree    <span style="color:#75715e"># Routing table</span>
+</span></span><span style="display:flex;"><span>sudo yggdrasilctl getsessions  <span style="color:#75715e"># Active sessions</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Debug</span>
+</span></span><span style="display:flex;"><span>sudo journalctl -u yggdrasil -f    <span style="color:#75715e"># Follow logs</span>
+</span></span><span style="display:flex;"><span>sudo yggdrasilctl list           <span style="color:#75715e"># All available commands</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Network</span>
+</span></span><span style="display:flex;"><span>ip addr show tun0               <span style="color:#75715e"># Check interface</span>
+</span></span><span style="display:flex;"><span>ping -c <span style="color:#ae81ff">3</span> 200:415c:2061:a9c0:9dbc:b95d:66ec:1347
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># DNS</span>
+</span></span><span style="display:flex;"><span>resolvectl query inv.nadeko.ygg
+</span></span><span style="display:flex;"><span>resolvectl query nadeko.net
+</span></span></code></pre></div><hr>
+<h2 id="sources">Sources</h2>
+<ul>
+<li><a href="https://yggdrasil-network.github.io/">https://yggdrasil-network.github.io/</a></li>
+<li><a href="https://yggdrasil-network.github.io/services.html">https://yggdrasil-network.github.io/services.html</a></li>
+<li><a href="https://github.com/yggdrasil-network/public-peers">https://github.com/yggdrasil-network/public-peers</a></li>
+<li><a href="https://nadeko.net/announcements/invidious-yggdrasil/">https://nadeko.net/announcements/invidious-yggdrasil/</a></li>
+<li><a href="https://github.com/Revertron/wyrd">https://github.com/Revertron/wyrd</a></li>
+</ul>
 
 </div>
 
