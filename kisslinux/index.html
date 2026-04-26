@@ -31,7 +31,7 @@ legacy boot sin swap Si estás en una VM podes directamente crear una única par
 o n p 1 Enter Enter w uefi (gpt) con Swap g (gpt disk label) n 1 (partition number [1/128]) 2048 first sector &#43;300M last sector (boot sector size) t 1 (EFI System) n 2 default &#43;4G t 2 swap n 3 default (fill up partition) default (fill up partition) w (write) Descargá el último release kiss-chroot de acá: https://codeberg.org/kiss-community/repo/releases Extraélo como root.">
   <meta itemprop="datePublished" content="2025-06-25T02:43:44-03:00">
   <meta itemprop="dateModified" content="2025-06-25T02:43:44-03:00">
-  <meta itemprop="wordCount" content="1777">
+  <meta itemprop="wordCount" content="1792">
   <meta itemprop="keywords" content="Linux">
   
   <meta name="twitter:card" content="summary">
@@ -235,10 +235,15 @@ Extraélo como <code>root</code>.</p>
 </span></span></code></pre></div><p>Verás que el ethernet está cargado, etc. Es un buen comienzo pero no es todo.
 Ahora podes descargar <code>linux-firmware</code> pero en este caso lo omnitiremos.
 Primero tenemos que crear la configuración por defecto del kernel</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>make defconfig
+<p>Si estás desde archlinux:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>zcat /proc/config.gz &gt; /mnt/usr/src/linux/.config
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>make olddefconfig
+</span></span><span style="display:flex;"><span>make oldconfig
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># make defconfig</span>
 </span></span></code></pre></div><p>Si ejecutamos:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>make help
-</span></span></code></pre></div><p>Encontrarás un argumento llamado <code>localyesconfig (update current config converting local mods to core)</code></p>
+</span></span></code></pre></div><p>Encontrarás un argumento llamado <code>localyesconfig (update current config converting local mods to core)</code>
+make olddefconfig</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>make localyesconfig
 </span></span></code></pre></div><p>Hay que habilitar <code>CONFIG_FRAMEBUFFER_CONSOLE</code></p>
 <p>Sacale una foto o una screenshot a la salida de ese comando para buscar uno por uno más rápido.</p>
