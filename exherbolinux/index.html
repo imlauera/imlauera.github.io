@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/exherbolinux/">
+  <meta property="og:site_name" content="Imlauer">
+  <meta property="og:title" content="Exherbolinux">
+  <meta property="og:description" content="https://www.exherbo.org/docs/install-guide.html
+This guide uses ptr-get that’s part of CRUX not exherbo.
+https://linuxmind.dev/2025/09/02/how-to-install-the-operating-system-exherbo-linux/
+https://alexherbo2.github.io/wiki/exherbo/install-guide/
+https://gist.github.com/s0dyy/905be36b2c39fb8c14906e15c05c68a3
+Follow my KISS Linux Guide: https://imlauera.github.io/kisslinux/ and my archlinux install guide: https://imlauera.github.io/post/instalacion_arch_basica/.
+It’s better to read the whole Gentoo Handbook.
+Or the Linux From Scratch book: https://www.linuxfromscratch.org/lfs/downloads/stable/
+Here are some scripts to auto-install Linux From Scratch lol: https://github.com/luisgbm/lfs-scripts
+mount --mkdir /dev/sda3 /mnt/exherbo mount -o rbind /dev /mnt/exherbo/dev/ mount -o rbind /sys /mnt/exherbo/sys/ mount -t proc none /mnt/exherbo/proc/ mount /dev/sda1 /mnt/exherbo/boot/ cp /etc/resolv.conf /mnt/exherbo/etc/resolv.conf env -i TERM=$TERM SHELL=/bin/bash HOME=$HOME $(which chroot) /mnt/exherbo /bin/bash source /etc/profile export PS1=&#34;(chroot) $PS1&#34; cave search is too slow use ls /var/db/paludis/repositories/*/packages/sys-kernel/ cave search linux-stable cd /usr/src Using the archlinux config file is a bad idea I was 10 hours compiling the kernel and I had to cancel it. Instead of doing this I ask claude ai to make me a .config file for my pc specs. LOL.">
+  <meta property="og:locale" content="es_es">
+  <meta property="og:type" content="article">
+    <meta property="article:published_time" content="2026-04-25T21:27:08-03:00">
+    <meta property="article:modified_time" content="2026-04-25T21:27:08-03:00">
+    <meta property="article:tag" content="Linux">
+
+  
+  <meta itemprop="name" content="Exherbolinux">
+  <meta itemprop="description" content="https://www.exherbo.org/docs/install-guide.html
+This guide uses ptr-get that’s part of CRUX not exherbo.
+https://linuxmind.dev/2025/09/02/how-to-install-the-operating-system-exherbo-linux/
+https://alexherbo2.github.io/wiki/exherbo/install-guide/
+https://gist.github.com/s0dyy/905be36b2c39fb8c14906e15c05c68a3
+Follow my KISS Linux Guide: https://imlauera.github.io/kisslinux/ and my archlinux install guide: https://imlauera.github.io/post/instalacion_arch_basica/.
+It’s better to read the whole Gentoo Handbook.
+Or the Linux From Scratch book: https://www.linuxfromscratch.org/lfs/downloads/stable/
+Here are some scripts to auto-install Linux From Scratch lol: https://github.com/luisgbm/lfs-scripts
+mount --mkdir /dev/sda3 /mnt/exherbo mount -o rbind /dev /mnt/exherbo/dev/ mount -o rbind /sys /mnt/exherbo/sys/ mount -t proc none /mnt/exherbo/proc/ mount /dev/sda1 /mnt/exherbo/boot/ cp /etc/resolv.conf /mnt/exherbo/etc/resolv.conf env -i TERM=$TERM SHELL=/bin/bash HOME=$HOME $(which chroot) /mnt/exherbo /bin/bash source /etc/profile export PS1=&#34;(chroot) $PS1&#34; cave search is too slow use ls /var/db/paludis/repositories/*/packages/sys-kernel/ cave search linux-stable cd /usr/src Using the archlinux config file is a bad idea I was 10 hours compiling the kernel and I had to cancel it. Instead of doing this I ask claude ai to make me a .config file for my pc specs. LOL.">
+  <meta itemprop="datePublished" content="2026-04-25T21:27:08-03:00">
+  <meta itemprop="dateModified" content="2026-04-25T21:27:08-03:00">
+  <meta itemprop="wordCount" content="2691">
+  <meta itemprop="keywords" content="Linux">
+  
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Exherbolinux">
+  <meta name="twitter:description" content="https://www.exherbo.org/docs/install-guide.html
+This guide uses ptr-get that’s part of CRUX not exherbo.
+https://linuxmind.dev/2025/09/02/how-to-install-the-operating-system-exherbo-linux/
+https://alexherbo2.github.io/wiki/exherbo/install-guide/
+https://gist.github.com/s0dyy/905be36b2c39fb8c14906e15c05c68a3
+Follow my KISS Linux Guide: https://imlauera.github.io/kisslinux/ and my archlinux install guide: https://imlauera.github.io/post/instalacion_arch_basica/.
+It’s better to read the whole Gentoo Handbook.
+Or the Linux From Scratch book: https://www.linuxfromscratch.org/lfs/downloads/stable/
+Here are some scripts to auto-install Linux From Scratch lol: https://github.com/luisgbm/lfs-scripts
+mount --mkdir /dev/sda3 /mnt/exherbo mount -o rbind /dev /mnt/exherbo/dev/ mount -o rbind /sys /mnt/exherbo/sys/ mount -t proc none /mnt/exherbo/proc/ mount /dev/sda1 /mnt/exherbo/boot/ cp /etc/resolv.conf /mnt/exherbo/etc/resolv.conf env -i TERM=$TERM SHELL=/bin/bash HOME=$HOME $(which chroot) /mnt/exherbo /bin/bash source /etc/profile export PS1=&#34;(chroot) $PS1&#34; cave search is too slow use ls /var/db/paludis/repositories/*/packages/sys-kernel/ cave search linux-stable cd /usr/src Using the archlinux config file is a bad idea I was 10 hours compiling the kernel and I had to cancel it. Instead of doing this I ask claude ai to make me a .config file for my pc specs. LOL.">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Exherbolinux
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/exherbolinux/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="https://www.exherbo.org/docs/install-guide.html
+This guide uses ptr-get that&rsquo;s part of CRUX not exherbo.
+https://linuxmind.dev/2025/09/02/how-to-install-the-operating-system-exherbo-linux/
+https://alexherbo2.github.io/wiki/exherbo/install-guide/
+https://gist.github.com/s0dyy/905be36b2c39fb8c14906e15c05c68a3
+Follow my KISS Linux Guide: https://imlauera.github.io/kisslinux/ and my
+archlinux install guide:
+https://imlauera.github.io/post/instalacion_arch_basica/.
+It&rsquo;s better to read the whole Gentoo Handbook.
+Or the Linux From Scratch book:
+https://www.linuxfromscratch.org/lfs/downloads/stable/
+Here are some scripts to auto-install Linux From Scratch lol:
+https://github.com/luisgbm/lfs-scripts
+
+    mount --mkdir /dev/sda3 /mnt/exherbo
+    mount -o rbind /dev /mnt/exherbo/dev/
+    mount -o rbind /sys /mnt/exherbo/sys/
+    mount -t proc none /mnt/exherbo/proc/
+    mount /dev/sda1 /mnt/exherbo/boot/
+    cp /etc/resolv.conf /mnt/exherbo/etc/resolv.conf
+    env -i TERM=$TERM SHELL=/bin/bash HOME=$HOME $(which chroot) /mnt/exherbo /bin/bash
+    source /etc/profile
+    export PS1=&#34;(chroot) $PS1&#34;
+    cave search is too slow use
+    ls /var/db/paludis/repositories/*/packages/sys-kernel/
+    cave search linux-stable 
+    cd /usr/src
+Using the archlinux config file is a bad idea I was 10 hours compiling
+the kernel and I had to cancel it. Instead of doing this I ask claude ai
+to make me a .config file for my pc specs. LOL.">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Exherbolinux
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2026-04-25T21:27:08-03:00'>
+      April 25, 2026
+    </time>
+    
+    <br>
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/linux/">Linux</a>
+    
+    
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <p><a href="https://www.exherbo.org/docs/install-guide.html">https://www.exherbo.org/docs/install-guide.html</a></p>
+<p>This guide uses ptr-get that&rsquo;s part of CRUX not exherbo.</p>
+<p><a href="https://linuxmind.dev/2025/09/02/how-to-install-the-operating-system-exherbo-linux/">https://linuxmind.dev/2025/09/02/how-to-install-the-operating-system-exherbo-linux/</a></p>
+<p><a href="https://alexherbo2.github.io/wiki/exherbo/install-guide/">https://alexherbo2.github.io/wiki/exherbo/install-guide/</a></p>
+<p><a href="https://gist.github.com/s0dyy/905be36b2c39fb8c14906e15c05c68a3">https://gist.github.com/s0dyy/905be36b2c39fb8c14906e15c05c68a3</a></p>
+<p>Follow my KISS Linux Guide: <a href="https://imlauera.github.io/kisslinux/">https://imlauera.github.io/kisslinux/</a> and my
+archlinux install guide:
+<a href="https://imlauera.github.io/post/instalacion_arch_basica/">https://imlauera.github.io/post/instalacion_arch_basica/</a>.</p>
+<p>It&rsquo;s better to read the whole Gentoo Handbook.</p>
+<p>Or the Linux From Scratch book:
+<a href="https://www.linuxfromscratch.org/lfs/downloads/stable/">https://www.linuxfromscratch.org/lfs/downloads/stable/</a></p>
+<p>Here are some scripts to auto-install Linux From Scratch lol:
+<a href="https://github.com/luisgbm/lfs-scripts">https://github.com/luisgbm/lfs-scripts</a></p>
+<hr>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>    mount --mkdir /dev/sda3 /mnt/exherbo
+</span></span><span style="display:flex;"><span>    mount -o rbind /dev /mnt/exherbo/dev/
+</span></span><span style="display:flex;"><span>    mount -o rbind /sys /mnt/exherbo/sys/
+</span></span><span style="display:flex;"><span>    mount -t proc none /mnt/exherbo/proc/
+</span></span><span style="display:flex;"><span>    mount /dev/sda1 /mnt/exherbo/boot/
+</span></span><span style="display:flex;"><span>    cp /etc/resolv.conf /mnt/exherbo/etc/resolv.conf
+</span></span><span style="display:flex;"><span>    env -i TERM<span style="color:#f92672">=</span>$TERM SHELL<span style="color:#f92672">=</span>/bin/bash HOME<span style="color:#f92672">=</span>$HOME <span style="color:#66d9ef">$(</span>which chroot<span style="color:#66d9ef">)</span> /mnt/exherbo /bin/bash
+</span></span><span style="display:flex;"><span>    source /etc/profile
+</span></span><span style="display:flex;"><span>    export PS1<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;(chroot) </span>$PS1<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    cave search is too slow use
+</span></span><span style="display:flex;"><span>    ls /var/db/paludis/repositories/*/packages/sys-kernel/
+</span></span><span style="display:flex;"><span>    cave search linux-stable 
+</span></span><span style="display:flex;"><span>    cd /usr/src
+</span></span></code></pre></div><p>Using the archlinux config file is a bad idea I was 10 hours compiling
+the kernel and I had to cancel it. Instead of doing this I ask claude ai
+to make me a .config file for my pc specs. LOL.</p>
+<pre tabindex="0"><code>    curl -O https://gitlab.archlinux.org/archlinux/packaging/packages/linux/-/raw/main/config 
+    cp config /usr/src/linux/.config
+     
+    # OR
+
+    # I don&#39;t recommend this because I&#39;ll take alot of time:
+    # if you already have archlinux: zcat /proc/config.gz &gt; /usr/src/linux/.config
+
+    cd linux
+
+# keeps Arch’s choices.
+
+# auto-answers new options with defaults.
+
+# avoids interactive prompts
+
+    make olddefconfig
+    make -j$(nproc)
+    make modules_install
+    make install
+
+    cave resolve -x linux-headers
+</code></pre><p>Observacion : Los linux headers NO son el kernel ni sirven para compilar
+el kernel completo.Linux-headers es la API del kernel. Son archivos de
+cabecera (.h) que describen la interfaz del kernel hacia el espacio de
+usuario y hacia módulos externos. Sirven para compilar modulos externos.
+Los headers deben coincidir con el kernel que estas usando</p>
+<pre tabindex="0"><code>    [I] esotericwarfare@arch ~&gt; ls -ltr /mnt/exherbo/var/db/paludis/repositories/*/packages/sys-kernel/linux-headers/
+    total 112
+    -rw-r--r-- 1 root root  274 Jan  6 13:57 linux-headers-5.16.exheres-0
+    -rw-r--r-- 1 root root  274 Jan  6 13:57 linux-headers-5.15.exheres-0
+    -rw-r--r-- 1 root root  270 Jan  6 13:57 linux-headers-5.10.exheres-0
+    drwxr-xr-x 2 root root 4096 Jan  6 13:57 files
+    -rw-r--r-- 1 root root  274 Jan  6 13:57 linux-headers-6.1.exheres-0
+    -rw-r--r-- 1 root root  274 Jan  6 13:57 linux-headers-6.10.exheres-0
+    -rw-r--r-- 1 root root  274 Jan  6 13:57 linux-headers-6.0.exheres-0
+    -rw-r--r-- 1 root root  270 Jan  6 13:57 linux-headers-5.4.exheres-0
+    -rw-r--r-- 1 root root  274 Jan  6 13:57 linux-headers-5.19.exheres-0
+    -rw-r--r-- 1 root root  274 Jan  6 13:57 linux-headers-5.18.exheres-0
+    -rw-r--r-- 1 root root  274 Jan  6 13:57 linux-headers-5.17.exheres-0
+    -rw-r--r-- 1 root root  274 Jan  6 13:57 linux-headers-6.16.exheres-0
+    -rw-r--r-- 1 root root  274 Jan  6 13:57 linux-headers-6.15.exheres-0
+    -rw-r--r-- 1 root root  274 Jan  6 13:57 linux-headers-6.14.exheres-0
+    -rw-r--r-- 1 root root  274 Jan  6 13:57 linux-headers-6.13.exheres-0
+    -rw-r--r-- 1 root root  274 Jan  6 13:57 linux-headers-6.12.exheres-0
+    -rw-r--r-- 1 root root  274 Jan  6 13:57 linux-headers-6.11.exheres-0
+    -rw-r--r-- 1 root root  274 Jan  6 13:57 linux-headers-6.6.exheres-0
+    -rw-r--r-- 1 root root  274 Jan  6 13:57 linux-headers-6.5.exheres-0
+    -rw-r--r-- 1 root root  274 Jan  6 13:57 linux-headers-6.4.exheres-0
+    -rw-r--r-- 1 root root  274 Jan  6 13:57 linux-headers-6.3.exheres-0
+    -rw-r--r-- 1 root root  274 Jan  6 13:57 linux-headers-6.2.exheres-0
+    -rw-r--r-- 1 root root  274 Jan  6 13:57 linux-headers-6.18.exheres-0
+    -rw-r--r-- 1 root root  274 Jan  6 13:57 linux-headers-6.17.exheres-0
+    -rw-r--r-- 1 root root 2193 Jan  6 13:57 linux-headers.exlib
+    -rw-r--r-- 1 root root  274 Jan  6 13:57 linux-headers-6.9.exheres-0
+    -rw-r--r-- 1 root root  274 Jan  6 13:57 linux-headers-6.8.exheres-0
+    -rw-r--r-- 1 root root  274 Jan  6 13:57 linux-headers-6.7.exheres-0
+    [I] esotericwarfare@arch ~&gt; 
+</code></pre><p>Los linux-headers deben coincidir con la version que descargas</p>
+<p><a href="https://wiki.gentoo.org/wiki/Handbook:AMD64/Installation/Kernel">https://wiki.gentoo.org/wiki/Handbook:AMD64/Installation/Kernel</a></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ls -ltr /mnt/exherbo/var/db/paludis/repositories/*/packages/sys-kernel/linux-headers/
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># OR</span>
+</span></span><span style="display:flex;"><span>lynx kernel.org
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Latest Release - Download</span>
+</span></span><span style="display:flex;"><span>tar xvf linux-*
+</span></span><span style="display:flex;"><span>cd linux-*
+</span></span><span style="display:flex;"><span>lspci -k
+</span></span><span style="display:flex;"><span>make defconfig
+</span></span><span style="display:flex;"><span>make help
+</span></span><span style="display:flex;"><span>make localyesconfig
+</span></span><span style="display:flex;"><span>make menuconfig
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>/ <span style="color:#f92672">(</span>slash<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>CONFIG_PATA_ACPI
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>make localyesconfig
+</span></span></code></pre></div><p>Or ask ClaudeAI to generate you a /usr/src/linux-version/.config file or
+a bash script based on your hardware with all the warnings that the
+command make localyesconfig outputs, lol.</p>
+<p>This was the prompt that I used (in spanish):</p>
+<p>Hola Claude AI. Estoy compilando mi propio kernel para usar Exherbo
+Linux sin módulos y quiero que sea lo mas minimalista posible porque
+quiero compilarlo en un tiempo razonable intente usar la configuracion
+del kernel de archlinux curl -O
+<a href="https://gitlab.archlinux.org/archlinux/packaging/packages/linux/-/raw/main/config">https://gitlab.archlinux.org/archlinux/packaging/packages/linux/-/raw/main/config</a>
+y ponerla en el /usr/src/linux pero tomo demasiado tiempo 10 hora y
+todavia no habia terminado de compilar. ¿Que datos queres que te pase de
+mi computadora? Que archivos datos de procesador memoria ? que archivos
+para que puedas configurar el kernel o decime como configurarlo para
+compilar rapido. Esta es mi instalacion de archlinux estos son los
+paquetes que uso: acpi aichat alsa-utils base base-devel bc bridge-utils
+btop chawan-git dnsmasq dosfstools espeak-ng evince fastfetch festival
+fim firefox fish floorp-bin foot freetube-bin gimp git grim grub hugo
+imagemagick inetutils iptables-nft irssi jq kdenlive lib32-mesa
+libguestfs libreoffice-fresh libvirt linux linux-firmware man-db
+man-pages mpv mtools neomutt networkmanager noto-fonts noto-fonts-cjk
+noto-fonts-emoji noto-fonts-extra obs-studio os-prober pipewire
+pipewire-pulse plocate python-pip qbittorrent qemu-full qt5-wayland
+qt6-wayland rclone samba smtube speech-dispatcher sway telegram-desktop
+texlive-fontsextra texlive-fontsrecommended texlive-langspanish
+texlive-latex texlive-latexextra texlive-plaingeneric thunderbird tmux
+tor tor-browser-bin torsocks translate-shell tree unrar unzip v4l-utils
+vim virt-manager w3m wget wine wl-clipboard wmenu xdg-desktop-portal
+xdg-desktop-portal-wlr yay yay-debug yt-dlp</p>
+<p>Al final agrego el script agrego el script que me genero ClaudeAI</p>
+<hr>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>    make -j <span style="color:#66d9ef">$(</span>nproc<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Si usas modulos tenes que usar initramsfs.</span>
+</span></span><span style="display:flex;"><span>    make modules_install 
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Copiara los archivos a /boot (tenes que tener la particion montada)</span>
+</span></span><span style="display:flex;"><span>    make install
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    lsinitrd /boot/initramfs-6.18.4.img | head -50
+</span></span><span style="display:flex;"><span>    ls -la /etc/dracut.conf.d/
+</span></span><span style="display:flex;"><span>    cat /etc/dracut.conf
+</span></span><span style="display:flex;"><span>    cat /etc/dracut.conf.d/*.conf
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Este comando te deberia tirar los módulos.</span>
+</span></span><span style="display:flex;"><span>    lsinitrd /boot/initramfs-6.18.4.img | grep -i <span style="color:#e6db74">&#34;ko.zst&#34;</span> | head -20
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    cat /etc/dracut.conf.d/wifi.conf
+</span></span><span style="display:flex;"><span>    add_drivers<span style="color:#f92672">+=</span><span style="color:#e6db74">&#34; rtl8723be rtl8723-common rtlwifi rtl_pci btcoexist &#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#39;add_drivers+=&#34; rtl8723be rtl8723-common rtlwifi rtl_pci btcoexist &#34;&#39;</span> &gt; /etc/dracut.conf.d/wifi.conf
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    export PATH<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    dracut --force --add-drivers <span style="color:#e6db74">&#34;rtl8723be rtl8723-common rtlwifi rtl_pci btcoexist&#34;</span> /boot/initramfs-6.18.4.img 6.18.4
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    grep -r rtl8723 /etc/modprobe.d/
+</span></span><span style="display:flex;"><span>    find /lib/modules/6.18.4 -name <span style="color:#e6db74">&#34;*rtl8723*&#34;</span>
+</span></span><span style="display:flex;"><span>    ls -la /lib/modules/6.18.4/kernel/drivers/net/wireless/realtek/rtlwifi/
+</span></span><span style="display:flex;"><span>    grep -E <span style="color:#e6db74">&#34;RTL8723|RTLWIFI&#34;</span> .config
+</span></span><span style="display:flex;"><span>    ls -la /lib/firmware/rtlwifi/rtl8723befw*.bin
+</span></span></code></pre></div><p>Esto hace el make install:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>    cp arch/x86/boot/bzImage /boot/kernel
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    Systemd
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    https://www.exherbo.org/docs/systemd.html
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    vim /etc/paludis/options.conf
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Agrega la opcion: */* systemd</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    cave resolve -x sys-apps/systemd
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    Resolving: <span style="color:#ae81ff">1</span> steps, <span style="color:#ae81ff">3</span> metadata <span style="color:#f92672">(</span><span style="color:#ae81ff">3</span> arbor<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Reinstall every package.</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    cave resolve world -cx
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    eclectic init list
+</span></span><span style="display:flex;"><span>    eclectic init set systemd
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;exherbo&#34;</span> | tee /etc/hostname
+</span></span><span style="display:flex;"><span>    /etc/vconsole.conf
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>export
+</span></span><span style="display:flex;"><span>PATH<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># These packages I installed on gentoo</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># sys-kernel/installkernel dracut uki</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># sys-apps/systemd-utils boot kernel-install</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># sys-kernel/installkernel</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>kernel-install add 6.18.3 /boot/vmlinuz-6.18.3
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># If that doesn&#39;t generate the initramfs try this command:</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>dracut --force --kver 6.18.4 /boot/initramfs-6.18.4.img
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>lspci -k | grep -A <span style="color:#ae81ff">3</span> -i network
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>dmesg | grep -i firmware
+</span></span></code></pre></div><p>Esto ejecutalo desde tu otra distribucion de Linux y vas a tener que
+agregar un /etc/grub.d/40_custom probablemente porque no va a detectar
+bien el os-prober.</p>
+<p>Probablemente no necesitas ejecutar grub-install en tu otra distro (si estas instalando exherbo solo si)</p>
+<pre tabindex="0"><code>    # efi
+    grub-install --target=x86_64-efi --efi-directory=/boot --removable
+
+    # legacy bios
+
+    grub-install --boot-directory=/mnt/boot /dev/sda --recheck 
+
+
+    vim /etc/grub.d/40_custom 
+
+    #!/bin/sh
+    exec tail -n +3 $0
+    # This file provides an easy way to add custom menu entries.  Simply type the
+    # menu entries you want to add after this comment.  Be careful not to change
+    # the &#39;exec tail&#39; line above.
+
+    menuentry &#39;Exherbo Linux&#39; --class exherbo --class gnu-linux --class gnu --class os {
+            insmod part_gpt
+            insmod ext2
+            set root=&#39;hd0,gpt3&#39;
+            if [ x$feature_platform_search_hint = xy ]; then
+              search --no-floppy --fs-uuid --set=root --hint-bios=hd0,gpt3 --hint-efi=hd0,gpt3 --hint-baremetal=ahci0,gpt3  57c5ee6d-dee8-43be-bfa4-d7f91eb993e7
+            else
+              search --no-floppy --fs-uuid --set=root 57c5ee6d-dee8-43be-bfa4-d7f91eb993e7
+            fi
+            linux (hd0,gpt1)/vmlinuz-6.18.4 root=UUID=57c5ee6d-dee8-43be-bfa4-d7f91eb993e7 rw
+            initrd (hd0,gpt1)/initramfs-6.18.4.img
+    }
+
+    grub-mkconfig -o /boot/grub/grub.cfg
+
+
+    cat&lt; /etc/hosts
+    127.0.0.1       localhost
+    ::1 localhost
+    127.0.0.1       exherbo.localdomain        exherbo
+    EOF
+</code></pre><p>Ahora para instalar linux-firmware, necesitás habilitar el repositorio ::hardware en Exherbo.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>    sudo cp /etc/paludis/repositories/arbor.conf /etc/paludis/repositories/hardware.conf
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    Add the repositories
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    sudo cp /etc/paludis/repositories/arbor.conf /etc/paludis/repositories/x11.conf
+</span></span><span style="display:flex;"><span>    sudo cp /etc/paludis/repositories/arbor.conf /etc/paludis/repositories/desktop.conf
+</span></span><span style="display:flex;"><span>    sudo cp /etc/paludis/repositories/arbor.conf /etc/paludis/repositories/net.conf
+</span></span><span style="display:flex;"><span>    sudo cp /etc/paludis/repositories/arbor.conf /etc/paludis/repositories/kde.conf
+</span></span><span style="display:flex;"><span>    sudo cp /etc/paludis/repositories/arbor.conf /etc/paludis/repositories/python.conf
+</span></span><span style="display:flex;"><span>    sudo cp /etc/paludis/repositories/arbor.conf /etc/paludis/repositories/media.conf
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    sudo vim /etc/paludis/repositories/repo_name.conf
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    format <span style="color:#f92672">=</span> e
+</span></span><span style="display:flex;"><span>    location <span style="color:#f92672">=</span> <span style="color:#e6db74">${</span>root<span style="color:#e6db74">}</span>/var/db/paludis/repositories/repo_name
+</span></span><span style="display:flex;"><span>    ........
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    cave sync
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    sudo cp /etc/paludis/repositories/perl.conf /etc/paludis/repositories/perl.conf
+</span></span><span style="display:flex;"><span>    sudo cp /etc/paludis/repositories/perl.conf /etc/paludis/repositories/gnome.conf
+</span></span><span style="display:flex;"><span>    sudo cp /etc/paludis/repositories/python.conf /etc/paludis/repositories/python.conf
+</span></span></code></pre></div><p>Now open every single file</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>    sudo vim /etc/paludis/repositories/repo_name.conf
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    format <span style="color:#f92672">=</span> e
+</span></span><span style="display:flex;"><span>    location <span style="color:#f92672">=</span> <span style="color:#e6db74">${</span>root<span style="color:#e6db74">}</span>/var/db/paludis/repositories/repo_name
+</span></span><span style="display:flex;"><span>    sync <span style="color:#f92672">=</span> git+https://gitlab.exherbo.org/exherbo/repo_name.git
+</span></span></code></pre></div><p>For example</p>
+<pre tabindex="0"><code>    format = e
+    location = ${root}/var/db/paludis/repositories/x11
+    sync = git+https://gitlab.exherbo.org/exherbo/x11.git
+
+    Do this to every file created before.
+
+    cave sync
+
+    cave resolve -x linux-firmware
+
+    # Luego de instalar el firmware deberas regenerar el initramfs.
+
+    dracut --force --kver 6.18.4 /boot/initramfs-6.18.4.img
+
+
+    passwd
+
+    localedef -i en_US -f ISO-8859-1 en_US
+    vim /etc/locale.gen # en_US.UTF-8
+    locale-gen
+    echo LANG=&#34;en_US.UTF-8&#34; &gt; /etc/env.d/99locale
+    ln -s /usr/share/zoneinfo/America/Buenos_Aires /etc/localtime
+</code></pre><h1 id="you-need-to-create-your-user-now-and-add-it-to-the-groups">You need to create your user now and add it to the groups.</h1>
+<pre tabindex="0"><code>    useradd -m -G adm,disk,wheel,cdrom,audio,video,usb,users ${username}
+    passwd username
+
+
+    reboot
+
+    # For to boot into tty.
+    sudo systemctl set-default multi-user.target 
+    sudo systemctl enable sshd
+    sudo systemctl enable gpm
+
+    # Al intentar instalar fastfetch te dira que no esta disponible.
+    # Tenes que agregar el repositorio.
+
+    cave resolve -x fastfetch
+
+
+    sudo nano /etc/paludis/repositories/tombriden.conf
+
+    format = e
+    location = /var/db/paludis/repositories/tombriden
+    sync = git+https://git.exherbo.org/dev/tombriden.git
+
+    cave sync
+
+    cave resolve -x fastfetch
+</code></pre><p><a href="http://0pointer.de/blog/projects/the-new-configuration-files">http://0pointer.de/blog/projects/the-new-configuration-files</a></p>
+<p>Post-installation Tasks</p>
+<p><a href="https://www.exherbo.org/docs/install-guide.html">https://www.exherbo.org/docs/install-guide.html</a></p>
+<pre tabindex="0"><code>    cave show stages
+    cave purge
+    cave update-world sys-devel/gdb
+    cave update-world -s stages
+
+
+    cave resolve -x tmux fastfetch falkon
+
+
+    cave resolve ImageMagick --lazy --recommendations take --suggestions take
+
+    cave resolve falkon --lazy -r take -s take
+
+    cave resolve -x w3m
+
+    cave resolve -c net-www/w3m -x --skip-phase test
+</code></pre><p>fbpdf and dillo are deleted packages lol</p>
+<pre tabindex="0"><code>    !   app-text/fbpdf
+        Reasons: target
+        Unsuitable candidates:
+          * app-text/fbpdf-scm:0::graveyard
+            Masked by graveyard (Package has been deleted)
+
+Failed to compile w3m:
+</code></pre><p>Packages that I use on ArchLinux.</p>
+<pre tabindex="0"><code>openssh ttyd whois fzf bash-completion pipewire pipewire-pulse tmux
+fastfetch os-prober sudo fish sway wmenu foot alsa-utils mpv imagemagick
+translate-shell git hugo python-pip wl-clipboard grim btop imv yt-dlp
+neomutt firefox falkon irssi w3m links imlib2 rsync fbida samba
+obs-studio gimp qt6-wayland qt5-wayland(para smtube) thunderbird tor
+torsocks v4l-utils unrar unzip qbittorrent kdenlive extra/texlive-latex
+extra/texlive-latexextra extra/texlive-plaingeneric texlive-fontsextra
+extra/texlive-fontsrecommended evince extra/texlive-langspanish wget
+acpi telegram-desktop festival espeak-ng speech-dispatcher libreoffice
+tree rclone inetutils bc xorg-xwayland feh chromium newsboat
+telegram-desktop
+</code></pre><p>ClaudeAI:</p>
+<p>Looking at your build log, w3m is failing to compile due to several
+issues with modern C compilers and OpenSSL 3:</p>
+<p>Main Issues</p>
+<ol>
+<li>Missing function declaration: prepare_sys_errlist() is no longer
+available in modern glibc</li>
+<li>longjmp() macro issue: The LONGJMP macro is incorrectly defined for
+your system</li>
+<li>Type incompatibility: Pointer type mismatch with wtf_parse1()</li>
+</ol>
+<p>Quick Fix</p>
+<p>The simplest solution is to apply patches for modern systems. Here&rsquo;s
+what you need to do:</p>
+<p>Create a patch file in
+/var/db/paludis/repositories/net/packages/net-www/w3m/files/ called
+modern-glibc-fixes.patch:</p>
+<pre tabindex="0"><code>    --- a/main.c
+    +++ b/main.c
+    @@ -407,7 +407,9 @@ main(int argc, char **argv, char **envp)
+         mySignal(SIGPIPE, SigPipe);
+     #endif
+     
+    +#ifdef HAVE_SYS_ERRLIST
+         prepare_sys_errlist();
+    +#endif
+     
+     #ifdef USE_MOUSE
+         if (use_mouse)
+</code></pre><p>And fix the longjmp issue by editing config.h after configure runs, or
+better yet, create another patch fix-longjmp.patch:</p>
+<pre tabindex="0"><code>    --- a/config.h.in
+    +++ b/config.h.in
+    @@ -180,7 +180,7 @@
+     #define SETJMP(env) sigsetjmp(env,1)
+     #define LONGJMP(env,val) siglongjmp(env,val)
+     #else
+    -#define LONGJMP(env,val) longjmp(env)
+    +#define LONGJMP(env,val) longjmp(env,val)
+     #define SETJMP(env) setjmp(env)
+     #endif
+</code></pre><p>Then update your ebuild to apply these patches in the src_prepare phase.</p>
+<p>Alternative Solution</p>
+<p>Since w3m-0.5.3 is quite old (from 2011), consider using w3m-img or the
+maintained fork at <a href="https://github.com/tats/w3m">https://github.com/tats/w3m</a> which has fixes for
+modern systems. The maintained version should compile cleanly on modern
+Linux systems.</p>
+<p>Would you like help modifying the ebuild to apply these patches, or
+would you prefer to try the maintained fork instead?</p>
+<hr>
+<p>Instalar samba:</p>
+<pre tabindex="0"><code>cave resolve -x samba
+
+n net-libs/ngtcp2:0::net 1.19.0 to ::installed
+
+&#34;Implementation of the QUIC protocol which is now being discussed in the
+IETF QUICWG&#34;
+
+You need to change: PROVIDERS: -gnutls -&gt; gnutls No changes needed:
+-debug -examples build_options: symbols=split jobs=2 -dwarf_compress
+recommended_tests -trace work=tidyup
+
+Reasons requiring changes: net-fs/samba-4.23.4:0::net
+
+Cannot proceed without: user configuration changes
+</code></pre><p>This is output from a package manager (looks like Paludis from Exherbo
+Linux) showing a dependency resolution for installing Samba. Let me
+break down what&rsquo;s happening:</p>
+<p>What will be installed</p>
+<p>The package manager plans to install 11 packages as dependencies for
+Samba 4.23.4, including:</p>
+<ul>
+<li>Various libraries (cppunit, keyutils, liburing, talloc, tevent,
+etc.)</li>
+<li>Database components (tdb)</li>
+<li>Network libraries (cyrus-sasl, ngtcp2)</li>
+<li>Utilities (subunit, rpcsvc-proto, iniparser)</li>
+</ul>
+<p>The problem</p>
+<p>You have two blocking issues:</p>
+<ol>
+<li>Configuration Change Required (Blocking)</li>
+</ol>
+<p>The net-libs/ngtcp2 package needs the gnutls provider enabled, but it&rsquo;s
+currently disabled. This is preventing the installation from proceeding.</p>
+<p>Add net-libs/ngtcp2 PROVIDERS: gnutls to /etc/paludis/options.conf</p>
+<p>To fix this, you need to change the provider for ngtcp2 from the default
+to gnutls. The exact method depends on your configuration files, but
+typically you&rsquo;d add something like:</p>
+<pre tabindex="0"><code>    net-libs/ngtcp2 PROVIDERS: gnutls
+</code></pre><p>to your package configuration.</p>
+<ol start="2">
+<li>Missing Dependencies (Errors)</li>
+</ol>
+<p>Several Python packages are in unavailable repositories (::perl and
+::python repositories are not accessible):</p>
+<ul>
+<li>dev-perl/Parse-Yapp - needed by Samba</li>
+<li>dev-python/iso8601, testtools - needed by subunit</li>
+<li>dev-python/fixtures, hypothesis, testscenarios - needed for subunit
+tests</li>
+</ul>
+<p>To fix this, you need to either:</p>
+<ul>
+<li>Enable the ::perl and ::python repositories</li>
+<li>Disable tests for subunit (if you don&rsquo;t need them)</li>
+<li>Find these packages in available repositories</li>
+</ul>
+<p>Optional packages not being installed</p>
+<p>Two suggested packages were skipped:</p>
+<ul>
+<li>ClamAV (for virus scanning via Samba)</li>
+<li>Graphviz (for samba-tool visualization)</li>
+</ul>
+<p>You can add these later with &ndash;take if needed.</p>
+<p>ClaudeAI</p>
+<pre tabindex="0"><code>    #!/bin/bash
+    # Script de configuración minimalista del kernel para Exherbo Linux
+    # Hardware: Intel Celeron N2806, 2 cores, USB 2.0
+    # Objetivo: Compilación rápida (30-50 min vs 10+ horas)
+
+    set -e
+
+    # Colores para output
+    RED=&#39;\033[0;31m&#39;
+    GREEN=&#39;\033[0;32m&#39;
+    YELLOW=&#39;\033[1;33m&#39;
+    NC=&#39;\033[0m&#39; # No Color
+
+    echo -e &#34;${GREEN}========================================${NC}&#34;
+    echo -e &#34;${GREEN}Configuración Minimalista del Kernel${NC}&#34;
+    echo -e &#34;${GREEN}========================================${NC}&#34;
+    echo &#34;&#34;
+
+    # Verificar que estamos en el directorio correcto
+    if [ ! -f &#34;Makefile&#34; ] || [ ! -d &#34;kernel&#34; ]; then
+        echo -e &#34;${RED}Error: No estás en el directorio del kernel (/usr/src/linux)${NC}&#34;
+        echo &#34;Ejecuta: cd /usr/src/linux&#34;
+        exit 1
+    fi
+
+    # Verificar permisos
+    if [ &#34;$EUID&#34; -eq 0 ]; then
+        echo -e &#34;${YELLOW}Advertencia: No ejecutes este script como root${NC}&#34;
+        echo &#34;Solo necesitas root para make modules_install e install&#34;
+        exit 1
+    fi
+
+    echo -e &#34;${YELLOW}Paso 1: Cargando módulos actuales...${NC}&#34;
+    # Cargar todos los módulos que usa tu sistema actual
+    sudo modprobe -a snd_seq snd_hrtimer dvb_core vfat fat \
+      snd_hda_codec_hdmi snd_hda_codec_realtek rtl8723be \
+      r8169 btusb mac80211 uvcvideo bluetooth cfg80211 \
+      snd_hda_intel ahci xhci_hcd i915 2&gt;/dev/null || true
+
+    echo -e &#34;${GREEN}✓ Módulos cargados${NC}&#34;
+    echo &#34;&#34;
+
+    echo -e &#34;${YELLOW}Paso 2: Generando configuración base con localmodconfig...${NC}&#34;
+    echo &#34;Esto creará una config basada SOLO en los módulos actualmente cargados&#34;
+    make localmodconfig
+
+    echo -e &#34;${GREEN}✓ Config base creada${NC}&#34;
+    echo &#34;&#34;
+
+    echo -e &#34;${YELLOW}Paso 3: Desactivando debugging (reduce 30-40% del tiempo)...${NC}&#34;
+    scripts/config --disable DEBUG_KERNEL
+    scripts/config --disable DEBUG_INFO
+    scripts/config --disable DEBUG_INFO_BTF
+    scripts/config --disable DEBUG_INFO_DWARF_TOOLCHAIN_DEFAULT
+    scripts/config --disable DEBUG_INFO_DWARF4
+    scripts/config --disable DEBUG_INFO_DWARF5
+    scripts/config --disable GDB_SCRIPTS
+    scripts/config --disable KASAN
+    scripts/config --disable UBSAN
+    scripts/config --disable KCOV
+    scripts/config --disable PROVE_LOCKING
+    scripts/config --disable LOCK_STAT
+
+    echo -e &#34;${GREEN}✓ Debugging desactivado${NC}&#34;
+    echo &#34;&#34;
+
+    echo -e &#34;${YELLOW}Paso 4: Optimizando para CPU Silvermont (Celeron N2806)...${NC}&#34;
+    scripts/config --disable GENERIC_CPU
+    scripts/config --enable MSILVERMONT
+
+    echo -e &#34;${GREEN}✓ Optimización de CPU configurada${NC}&#34;
+    echo &#34;&#34;
+
+    echo -e &#34;${YELLOW}Paso 5: Desactivando virtualización...${NC}&#34;
+    scripts/config --disable KVM
+    scripts/config --disable KVM_INTEL
+    scripts/config --disable VHOST_NET
+    scripts/config --disable VHOST
+    scripts/config --disable VIRTIO_PCI
+    scripts/config --disable VIRTIO_BALLOON
+    scripts/config --disable VIRTIO_BLK
+    scripts/config --disable VIRTIO_NET
+
+    echo -e &#34;${GREEN}✓ Virtualización desactivada${NC}&#34;
+    echo &#34;&#34;
+
+    echo -e &#34;${YELLOW}Paso 6: Configurando USB 2.0...${NC}&#34;
+    scripts/config --enable USB_XHCI_HCD
+    scripts/config --enable USB_EHCI_HCD
+    scripts/config --disable USB_UHCI_HCD
+
+    echo -e &#34;${GREEN}✓ USB configurado${NC}&#34;
+    echo &#34;&#34;
+
+    echo -e &#34;${YELLOW}Paso 7: Optimizando para 2 cores...${NC}&#34;
+    scripts/config --set-val NR_CPUS 2
+    scripts/config --disable NUMA
+    scripts/config --disable MAXSMP
+
+    echo -e &#34;${GREEN}✓ Configuración de cores optimizada${NC}&#34;
+    echo &#34;&#34;
+
+    echo -e &#34;${YELLOW}Paso 8: Desactivando GPUs innecesarias...${NC}&#34;
+    scripts/config --disable DRM_AMDGPU
+    scripts/config --disable DRM_RADEON
+    scripts/config --disable DRM_NOUVEAU
+    scripts/config --disable DRM_VMWGFX
+    scripts/config --disable DRM_VGEM
+    scripts/config --disable DRM_VKMS
+
+    echo -e &#34;${GREEN}✓ GPUs innecesarias desactivadas${NC}&#34;
+    echo &#34;&#34;
+
+    echo -e &#34;${YELLOW}Paso 9: Habilitando hardware esencial...${NC}&#34;
+    # GPU Intel
+    scripts/config --enable DRM_I915
+    scripts/config --enable DRM_I915_GVT
+
+    # Audio
+    scripts/config --enable SND_HDA_INTEL
+    scripts/config --enable SND_HDA_CODEC_REALTEK
+    scripts/config --enable SND_HDA_CODEC_HDMI
+
+    # Red
+    scripts/config --enable RTL8723BE
+    scripts/config --enable R8169
+
+    # SATA
+    scripts/config --enable AHCI
+    scripts/config --enable SATA_AHCI
+
+    # Filesystems
+    scripts/config --enable EXT4_FS
+    scripts/config --enable VFAT_FS
+    scripts/config --enable FAT_FS
+
+    # Bluetooth
+    scripts/config --enable BT
+    scripts/config --enable BT_INTEL
+    scripts/config --enable BT_RTL
+
+    echo -e &#34;${GREEN}✓ Hardware esencial habilitado${NC}&#34;
+    echo &#34;&#34;
+
+    echo -e &#34;${YELLOW}Paso 10: Desactivando opciones innecesarias adicionales...${NC}&#34;
+    scripts/config --disable WIRELESS_EXT
+    scripts/config --disable INFINIBAND
+    scripts/config --disable NET_VENDOR_BROADCOM
+    scripts/config --disable NET_VENDOR_INTEL  # Solo necesitas Realtek
+    scripts/config --disable WLAN_VENDOR_INTEL
+
+    echo -e &#34;${GREEN}✓ Opciones innecesarias desactivadas${NC}&#34;
+    echo &#34;&#34;
+
+    echo -e &#34;${GREEN}========================================${NC}&#34;
+    echo -e &#34;${GREEN}Configuración completada!${NC}&#34;
+    echo -e &#34;${GREEN}========================================${NC}&#34;
+    echo &#34;&#34;
+    echo -e &#34;${YELLOW}Ahora ejecuta:${NC}&#34;
+    echo &#34;&#34;
+    echo -e &#34;  ${GREEN}make -j2${NC}                    # Compilar (30-50 min estimado)&#34;
+    echo -e &#34;  ${GREEN}sudo make modules_install${NC}  # Instalar módulos&#34;
+    echo -e &#34;  ${GREEN}sudo make install${NC}          # Instalar kernel&#34;
+    echo &#34;&#34;
+    echo -e &#34;${YELLOW}Opcional: Ver la configuración antes de compilar${NC}&#34;
+    echo -e &#34;  ${GREEN}make menuconfig${NC}            # Interfaz gráfica para revisar&#34;
+    echo &#34;&#34;
+    echo -e &#34;${YELLOW}Tiempo estimado de compilación: 30-50 minutos${NC}&#34;
+    echo -e &#34;${YELLOW}(vs 10+ horas con la config de Arch Linux)${NC}&#34;
+    echo &#34;&#34;
+</code></pre><hr>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>    <span style="color:#75715e"># 1. Guarda el script</span>
+</span></span><span style="display:flex;"><span>    cd /usr/src/linux
+</span></span><span style="display:flex;"><span>    nano configurar_kernel.sh
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Copia el contenido del artifact</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># 2. Dale permisos de ejecución</span>
+</span></span><span style="display:flex;"><span>    chmod +x configurar_kernel.sh
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># 3. Ejecuta (NO como root)</span>
+</span></span><span style="display:flex;"><span>    ./configurar_kernel.sh
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># 4. Compila</span>
+</span></span><span style="display:flex;"><span>    make -j2
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># 5. Instala</span>
+</span></span><span style="display:flex;"><span>    sudo make modules_install
+</span></span><span style="display:flex;"><span>    sudo make install
+</span></span></code></pre></div>
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+</footer>
+
+
+</body>
+</html>
