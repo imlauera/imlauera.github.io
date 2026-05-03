@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/mojeek_cli_search_engine/">
+  <meta property="og:site_name" content="Imlauer">
+  <meta property="og:title" content="Mojeek AI overview from cli">
+  <meta property="og:description" content="#!/usr/bin/env bash # mojeek.sh — Consulta Mojeek AI summary sin navegador # Uso: ./mojeek.sh &#34;tu pregunta aquí&#34; QUERY=&#34;${1:-por que monero es mejor que bitcoin}&#34; ENCODED=$(python3 -c &#34;import urllib.parse,sys; print(urllib.parse.quote_plus(sys.argv[1]))&#34; &#34;$QUERY&#34;) UA=&#34;Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36&#34; echo &#34;🔍 Buscando: $QUERY&#34; echo &#34;━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━&#34; HTML=$(curl -s -A &#34;$UA&#34; -H &#34;Accept-Encoding: identity&#34; \ &#34;https://www.mojeek.com/search?q=${ENCODED}&amp;fmt=summary&#34;) KALID=$(echo &#34;$HTML&#34; | grep -oP &#39;data-suid=&#34;\K[a-f0-9]&#43;&#39; | head -1) if [[ -z &#34;$KALID&#34; ]]; then echo &#34;❌ No se pudo obtener el kalid.&#34; echo &#34;$HTML&#34; &gt; /tmp/mojeek_debug.html exit 1 fi echo &#34;✅ kalid: $KALID&#34; echo &#34;&#34; echo &#34;📡 Respuesta:&#34; echo &#34;&#34; curl -s -N -A &#34;$UA&#34; \ -H &#34;Accept: text/event-stream&#34; \ -H &#34;Referer: https://www.mojeek.com/&#34; \ &#34;https://www.mojeek.com/llm/streamResponse?kalid=${KALID}&amp;q=${ENCODED}&#34; \ | python3 -c &#34; import sys, json, re full = &#39;&#39; for line in sys.stdin: line = line.strip() if not line.startswith(&#39;data:&#39;): continue payload = line[5:].strip() if not payload or payload[0] in (&#39;\&#34;&#39;, &#39;[&#39;): continue try: obj = json.loads(payload) choices = obj.get(&#39;choices&#39;, []) if not choices: continue content = choices[0].get(&#39;delta&#39;, {}).get(&#39;content&#39;, &#39;&#39;) if content: full &#43;= content if choices[0].get(&#39;finish_reason&#39;) == &#39;stop&#39;: break except: pass full = re.sub(r&#39;\[citation:[\d,\s]&#43;\]&#39;, &#39;&#39;, full) print(full) &#34; echo &#34;&#34; echo &#34;━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━&#34;">
+  <meta property="og:locale" content="es_es">
+  <meta property="og:type" content="article">
+    <meta property="article:published_time" content="2026-05-03T04:20:31-03:00">
+    <meta property="article:modified_time" content="2026-05-03T04:20:31-03:00">
+
+  
+  <meta itemprop="name" content="Mojeek AI overview from cli">
+  <meta itemprop="description" content="#!/usr/bin/env bash # mojeek.sh — Consulta Mojeek AI summary sin navegador # Uso: ./mojeek.sh &#34;tu pregunta aquí&#34; QUERY=&#34;${1:-por que monero es mejor que bitcoin}&#34; ENCODED=$(python3 -c &#34;import urllib.parse,sys; print(urllib.parse.quote_plus(sys.argv[1]))&#34; &#34;$QUERY&#34;) UA=&#34;Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36&#34; echo &#34;🔍 Buscando: $QUERY&#34; echo &#34;━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━&#34; HTML=$(curl -s -A &#34;$UA&#34; -H &#34;Accept-Encoding: identity&#34; \ &#34;https://www.mojeek.com/search?q=${ENCODED}&amp;fmt=summary&#34;) KALID=$(echo &#34;$HTML&#34; | grep -oP &#39;data-suid=&#34;\K[a-f0-9]&#43;&#39; | head -1) if [[ -z &#34;$KALID&#34; ]]; then echo &#34;❌ No se pudo obtener el kalid.&#34; echo &#34;$HTML&#34; &gt; /tmp/mojeek_debug.html exit 1 fi echo &#34;✅ kalid: $KALID&#34; echo &#34;&#34; echo &#34;📡 Respuesta:&#34; echo &#34;&#34; curl -s -N -A &#34;$UA&#34; \ -H &#34;Accept: text/event-stream&#34; \ -H &#34;Referer: https://www.mojeek.com/&#34; \ &#34;https://www.mojeek.com/llm/streamResponse?kalid=${KALID}&amp;q=${ENCODED}&#34; \ | python3 -c &#34; import sys, json, re full = &#39;&#39; for line in sys.stdin: line = line.strip() if not line.startswith(&#39;data:&#39;): continue payload = line[5:].strip() if not payload or payload[0] in (&#39;\&#34;&#39;, &#39;[&#39;): continue try: obj = json.loads(payload) choices = obj.get(&#39;choices&#39;, []) if not choices: continue content = choices[0].get(&#39;delta&#39;, {}).get(&#39;content&#39;, &#39;&#39;) if content: full &#43;= content if choices[0].get(&#39;finish_reason&#39;) == &#39;stop&#39;: break except: pass full = re.sub(r&#39;\[citation:[\d,\s]&#43;\]&#39;, &#39;&#39;, full) print(full) &#34; echo &#34;&#34; echo &#34;━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━&#34;">
+  <meta itemprop="datePublished" content="2026-05-03T04:20:31-03:00">
+  <meta itemprop="dateModified" content="2026-05-03T04:20:31-03:00">
+  <meta itemprop="wordCount" content="186">
+  
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Mojeek AI overview from cli">
+  <meta name="twitter:description" content="#!/usr/bin/env bash # mojeek.sh — Consulta Mojeek AI summary sin navegador # Uso: ./mojeek.sh &#34;tu pregunta aquí&#34; QUERY=&#34;${1:-por que monero es mejor que bitcoin}&#34; ENCODED=$(python3 -c &#34;import urllib.parse,sys; print(urllib.parse.quote_plus(sys.argv[1]))&#34; &#34;$QUERY&#34;) UA=&#34;Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36&#34; echo &#34;🔍 Buscando: $QUERY&#34; echo &#34;━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━&#34; HTML=$(curl -s -A &#34;$UA&#34; -H &#34;Accept-Encoding: identity&#34; \ &#34;https://www.mojeek.com/search?q=${ENCODED}&amp;fmt=summary&#34;) KALID=$(echo &#34;$HTML&#34; | grep -oP &#39;data-suid=&#34;\K[a-f0-9]&#43;&#39; | head -1) if [[ -z &#34;$KALID&#34; ]]; then echo &#34;❌ No se pudo obtener el kalid.&#34; echo &#34;$HTML&#34; &gt; /tmp/mojeek_debug.html exit 1 fi echo &#34;✅ kalid: $KALID&#34; echo &#34;&#34; echo &#34;📡 Respuesta:&#34; echo &#34;&#34; curl -s -N -A &#34;$UA&#34; \ -H &#34;Accept: text/event-stream&#34; \ -H &#34;Referer: https://www.mojeek.com/&#34; \ &#34;https://www.mojeek.com/llm/streamResponse?kalid=${KALID}&amp;q=${ENCODED}&#34; \ | python3 -c &#34; import sys, json, re full = &#39;&#39; for line in sys.stdin: line = line.strip() if not line.startswith(&#39;data:&#39;): continue payload = line[5:].strip() if not payload or payload[0] in (&#39;\&#34;&#39;, &#39;[&#39;): continue try: obj = json.loads(payload) choices = obj.get(&#39;choices&#39;, []) if not choices: continue content = choices[0].get(&#39;delta&#39;, {}).get(&#39;content&#39;, &#39;&#39;) if content: full &#43;= content if choices[0].get(&#39;finish_reason&#39;) == &#39;stop&#39;: break except: pass full = re.sub(r&#39;\[citation:[\d,\s]&#43;\]&#39;, &#39;&#39;, full) print(full) &#34; echo &#34;&#34; echo &#34;━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━&#34;">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Mojeek AI overview from cli
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/mojeek_cli_search_engine/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="#!/usr/bin/env bash
+# mojeek.sh — Consulta Mojeek AI summary sin navegador
+# Uso: ./mojeek.sh &#34;tu pregunta aquí&#34;
+
+QUERY=&#34;${1:-por que monero es mejor que bitcoin}&#34;
+ENCODED=$(python3 -c &#34;import urllib.parse,sys; print(urllib.parse.quote_plus(sys.argv[1]))&#34; &#34;$QUERY&#34;)
+UA=&#34;Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36&#34;
+
+echo &#34;🔍 Buscando: $QUERY&#34;
+echo &#34;━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━&#34;
+
+HTML=$(curl -s -A &#34;$UA&#34; -H &#34;Accept-Encoding: identity&#34; \
+  &#34;https://www.mojeek.com/search?q=${ENCODED}&amp;fmt=summary&#34;)
+
+KALID=$(echo &#34;$HTML&#34; | grep -oP &#39;data-suid=&#34;\K[a-f0-9]&#43;&#39; | head -1)
+
+if [[ -z &#34;$KALID&#34; ]]; then
+  echo &#34;❌ No se pudo obtener el kalid.&#34;
+  echo &#34;$HTML&#34; &gt; /tmp/mojeek_debug.html
+  exit 1
+fi
+
+echo &#34;✅ kalid: $KALID&#34;
+echo &#34;&#34;
+echo &#34;📡 Respuesta:&#34;
+echo &#34;&#34;
+
+curl -s -N -A &#34;$UA&#34; \
+  -H &#34;Accept: text/event-stream&#34; \
+  -H &#34;Referer: https://www.mojeek.com/&#34; \
+  &#34;https://www.mojeek.com/llm/streamResponse?kalid=${KALID}&amp;q=${ENCODED}&#34; \
+| python3 -c &#34;
+import sys, json, re
+
+full = &#39;&#39;
+for line in sys.stdin:
+    line = line.strip()
+    if not line.startswith(&#39;data:&#39;):
+        continue
+    payload = line[5:].strip()
+    if not payload or payload[0] in (&#39;\&#34;&#39;, &#39;[&#39;):
+        continue
+    try:
+        obj = json.loads(payload)
+        choices = obj.get(&#39;choices&#39;, [])
+        if not choices:
+            continue
+        content = choices[0].get(&#39;delta&#39;, {}).get(&#39;content&#39;, &#39;&#39;)
+        if content:
+            full &#43;= content
+        if choices[0].get(&#39;finish_reason&#39;) == &#39;stop&#39;:
+            break
+    except:
+        pass
+
+full = re.sub(r&#39;\[citation:[\d,\s]&#43;\]&#39;, &#39;&#39;, full)
+print(full)
+&#34;
+
+echo &#34;&#34;
+echo &#34;━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━&#34;
+">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Mojeek AI overview from cli
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2026-05-03T04:20:31-03:00'>
+      May 03, 2026
+    </time>
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/usr/bin/env bash
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"># mojeek.sh — Consulta Mojeek AI summary sin navegador</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Uso: ./mojeek.sh &#34;tu pregunta aquí&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>QUERY<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>1<span style="color:#66d9ef">:-</span>por que monero es mejor que bitcoin<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>ENCODED<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>python3 -c <span style="color:#e6db74">&#34;import urllib.parse,sys; print(urllib.parse.quote_plus(sys.argv[1]))&#34;</span> <span style="color:#e6db74">&#34;</span>$QUERY<span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>UA<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;🔍 Buscando: </span>$QUERY<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>HTML<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>curl -s -A <span style="color:#e6db74">&#34;</span>$UA<span style="color:#e6db74">&#34;</span> -H <span style="color:#e6db74">&#34;Accept-Encoding: identity&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;https://www.mojeek.com/search?q=</span><span style="color:#e6db74">${</span>ENCODED<span style="color:#e6db74">}</span><span style="color:#e6db74">&amp;fmt=summary&#34;</span><span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>KALID<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>echo <span style="color:#e6db74">&#34;</span>$HTML<span style="color:#e6db74">&#34;</span> | grep -oP <span style="color:#e6db74">&#39;data-suid=&#34;\K[a-f0-9]+&#39;</span> | head -1<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> -z <span style="color:#e6db74">&#34;</span>$KALID<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;❌ No se pudo obtener el kalid.&#34;</span>
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;</span>$HTML<span style="color:#e6db74">&#34;</span> &gt; /tmp/mojeek_debug.html
+</span></span><span style="display:flex;"><span>  exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;✅ kalid: </span>$KALID<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;📡 Respuesta:&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>curl -s -N -A <span style="color:#e6db74">&#34;</span>$UA<span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -H <span style="color:#e6db74">&#34;Accept: text/event-stream&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -H <span style="color:#e6db74">&#34;Referer: https://www.mojeek.com/&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;https://www.mojeek.com/llm/streamResponse?kalid=</span><span style="color:#e6db74">${</span>KALID<span style="color:#e6db74">}</span><span style="color:#e6db74">&amp;q=</span><span style="color:#e6db74">${</span>ENCODED<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>| python3 -c <span style="color:#e6db74">&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">import sys, json, re
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">full = &#39;&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">for line in sys.stdin:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    line = line.strip()
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    if not line.startswith(&#39;data:&#39;):
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        continue
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    payload = line[5:].strip()
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    if not payload or payload[0] in (&#39;\&#34;&#39;, &#39;[&#39;):
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        continue
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    try:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        obj = json.loads(payload)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        choices = obj.get(&#39;choices&#39;, [])
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        if not choices:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            continue
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        content = choices[0].get(&#39;delta&#39;, {}).get(&#39;content&#39;, &#39;&#39;)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        if content:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            full += content
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        if choices[0].get(&#39;finish_reason&#39;) == &#39;stop&#39;:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            break
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    except:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        pass
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">full = re.sub(r&#39;\[citation:[\d,\s]+\]&#39;, &#39;&#39;, full)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">print(full)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━&#34;</span>
+</span></span></code></pre></div>
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+</footer>
+
+
+</body>
+</html>

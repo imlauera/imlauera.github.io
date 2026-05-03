@@ -25,7 +25,7 @@ amixer set ‘Internal Mic Boost’ 50%-
 ffmpeg -f fbdev -framerate 60 -i /dev/fb0 -f v4l2 -i /dev/video0 -f alsa -i pipewire -filter_complex &#34;[1:v]scale=320:-1[cam];[0:v][cam]overlay=main_w-overlay_w-20:20&#34; -c:v libx264 -preset ultrafast -pix_fmt yuv420p -c:a aac -b:a 128k -async 1 -ar 48000 -latency 100 prueba.mp4 ffmpeg -f alsa -i pipewire -f fbdev -r 60 -i /dev/fb0 mamita.mkv ffmpeg -f alsa -i pipewire -f fbdev -r 60 -i /dev/fb0 mamita.mp4 ffmpeg -f fbdev -framerate 30 -i /dev/fb0 \ -f v4l2 -i /dev/video0 \ -f alsa -i pipewire \ -filter_complex &#34;[1:v]scale=320:-1[cam];[0:v][cam]overlay=main_w-overlay_w-20:20&#34; \ -c:v libx264 -c:a aac output.mkv Claude Code ffmpeg -f alsa -i pipewire \ -f fbdev -framerate 30 -i /dev/fb0 \ -c:v libx264 -preset ultrafast -tune zerolatency -crf 23 \ -threads 2 \ -c:a aac -b:a 128k \ -pix_fmt yuv420p \ output.mkv Con Webcam ffmpeg -f fbdev -framerate 30 -i /dev/fb0 \ -f v4l2 -framerate 15 -video_size 640x480 -i /dev/video0 \ -f alsa -i pipewire \ -filter_complex &#34;[1:v]scale=240:-1[cam];[0:v][cam]overlay=main_w-overlay_w-10:10&#34; \ -c:v libx264 -preset ultrafast -tune zerolatency -crf 25 \ -threads 2 \ -c:a aac -b:a 128k \ -pix_fmt yuv420p \ output.mkv Este es el que uso funciona de maravilla. (Claude AI). ffmpeg -f alsa -i pipewire \ -f fbdev -framerate 15 -i /dev/fb0 \ -c:v libx264 -preset ultrafast -crf 28 \ -threads 2 \ -c:a aac -b:a 96k \ -s 1024x576 \ output.mkv -s no sirve ffmpeg -f alsa -i pipewire \ -f fbdev -framerate 15 -i /dev/fb0 \ -filter_complex &#34;[1:v]scale=1024:576[scaled]&#34; \ -map 0:a -map &#34;[scaled]&#34; \ -c:v libx264 -preset ultrafast -crf 28 \ -threads 2 \ -c:a aac -b:a 96k \ output.mkv Para accelerar el video eliminar el audio ffmpeg -i output.mkv -vf &#34;setpts=0.04*PTS&#34; -an -c:v libx264 -preset slow -crf 28 output_acelerado.mkv ffmpeg -i gentoo.mkv -vf &#34;setpts=0.04*PTS&#34; -an -c:v libx264 -preset ultrafast -crf 28 -threads 0 output_acelerado.mkv ffmpeg -i output.mkv -vf &#34;setpts=0.04*PTS,scale=854x480&#34; -an -c:v libx264 -preset veryfast -crf 30 -threads 0 output_acelerado.mkv ffmpeg -i output.mkv -vf &#34;setpts=0.04*PTS&#34; -an -c:v copy output_acelerado.mkv -vf “setpts=0.04*PTS” - Acelera el video 25x (0.04 = 1/25). Tu video de 24 horas quedará en aproximadamente 58 minutos">
   <meta itemprop="datePublished" content="2025-07-18T21:32:33-03:00">
   <meta itemprop="dateModified" content="2025-07-18T21:32:33-03:00">
-  <meta itemprop="wordCount" content="3123">
+  <meta itemprop="wordCount" content="3367">
   <meta itemprop="keywords" content="Linux">
   
   <meta name="twitter:card" content="summary">
@@ -758,6 +758,83 @@ Your hardware is pretty limited - expect some trade-offs between quality and smo
 </span></span><span style="display:flex;"><span>ARECORD_PID<span style="color:#f92672">=</span>$!
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>sudo LIBVA_DRIVER_NAME<span style="color:#f92672">=</span>i965 ffmpeg -f kmsgrab -framerate <span style="color:#ae81ff">30</span> -device /dev/dri/card1 -i - -vaapi_device /dev/dri/renderD128 -vf <span style="color:#e6db74">&#39;hwmap=derive_device=vaapi,scale_vaapi=w=1366:h=768:format=nv12&#39;</span> -c:v h264_vaapi -global_quality <span style="color:#ae81ff">25</span> <span style="color:#e6db74">&#34;</span>$VIDEO_FILE<span style="color:#e6db74">&#34;</span> -y
+</span></span></code></pre></div><h3 id="grabar-navegador-con-la-camara-abajo">Grabar navegador con la camara abajo.</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/bash
+</span></span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>TIMESTAMP<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>date +%Y%m%d_%H%M%S<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>AUDIO_FILE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$HOME<span style="color:#e6db74">/audio_</span><span style="color:#e6db74">${</span>TIMESTAMP<span style="color:#e6db74">}</span><span style="color:#e6db74">.wav&#34;</span>
+</span></span><span style="display:flex;"><span>VIDEO_FILE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$HOME<span style="color:#e6db74">/recording_</span><span style="color:#e6db74">${</span>TIMESTAMP<span style="color:#e6db74">}</span><span style="color:#e6db74">.mp4&#34;</span>
+</span></span><span style="display:flex;"><span>CAM_FILE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$HOME<span style="color:#e6db74">/cam_</span><span style="color:#e6db74">${</span>TIMESTAMP<span style="color:#e6db74">}</span><span style="color:#e6db74">.mp4&#34;</span>
+</span></span><span style="display:flex;"><span>OUTPUT_FILE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$HOME<span style="color:#e6db74">/final_</span><span style="color:#e6db74">${</span>TIMESTAMP<span style="color:#e6db74">}</span><span style="color:#e6db74">.mp4&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>AUDIO_PID<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>CAM_PID<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Tamaño del pip (cámara superpuesta)</span>
+</span></span><span style="display:flex;"><span>PIP_W<span style="color:#f92672">=</span><span style="color:#ae81ff">320</span>
+</span></span><span style="display:flex;"><span>PIP_H<span style="color:#f92672">=</span><span style="color:#ae81ff">240</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Resolución de pantalla grabada</span>
+</span></span><span style="display:flex;"><span>SCR_W<span style="color:#f92672">=</span><span style="color:#ae81ff">1366</span>
+</span></span><span style="display:flex;"><span>SCR_H<span style="color:#f92672">=</span><span style="color:#ae81ff">768</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Posición esquina inferior derecha con margen de 20px</span>
+</span></span><span style="display:flex;"><span>PIP_X<span style="color:#f92672">=</span><span style="color:#66d9ef">$((</span>SCR_W <span style="color:#f92672">-</span> PIP_W <span style="color:#f92672">-</span> <span style="color:#ae81ff">20</span><span style="color:#66d9ef">))</span>
+</span></span><span style="display:flex;"><span>PIP_Y<span style="color:#f92672">=</span><span style="color:#66d9ef">$((</span>SCR_H <span style="color:#f92672">-</span> PIP_H <span style="color:#f92672">-</span> <span style="color:#ae81ff">20</span><span style="color:#66d9ef">))</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>cleanup<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">[</span> -n <span style="color:#e6db74">&#34;</span>$AUDIO_PID<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span>   <span style="color:#f92672">&amp;&amp;</span> kill <span style="color:#e6db74">&#34;</span>$AUDIO_PID<span style="color:#e6db74">&#34;</span>   2&gt;/dev/null
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">[</span> -n <span style="color:#e6db74">&#34;</span>$CAM_PID<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span>     <span style="color:#f92672">&amp;&amp;</span> kill <span style="color:#e6db74">&#34;</span>$CAM_PID<span style="color:#e6db74">&#34;</span>      2&gt;/dev/null
+</span></span><span style="display:flex;"><span>    wait 2&gt;/dev/null
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> -f <span style="color:#e6db74">&#34;</span>$VIDEO_FILE<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">[</span> -f <span style="color:#e6db74">&#34;</span>$CAM_FILE<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">[</span> -f <span style="color:#e6db74">&#34;</span>$AUDIO_FILE<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;Combinando video, cámara y audio...&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        ffmpeg <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            -i <span style="color:#e6db74">&#34;</span>$VIDEO_FILE<span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            -i <span style="color:#e6db74">&#34;</span>$CAM_FILE<span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            -i <span style="color:#e6db74">&#34;</span>$AUDIO_FILE<span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            -filter_complex <span style="color:#e6db74">&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">                [0:v]scale=</span><span style="color:#e6db74">${</span>SCR_W<span style="color:#e6db74">}</span><span style="color:#e6db74">:</span><span style="color:#e6db74">${</span>SCR_H<span style="color:#e6db74">}</span><span style="color:#e6db74">,setsar=1[screen];
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">                [1:v]scale=</span><span style="color:#e6db74">${</span>PIP_W<span style="color:#e6db74">}</span><span style="color:#e6db74">:</span><span style="color:#e6db74">${</span>PIP_H<span style="color:#e6db74">}</span><span style="color:#e6db74">,setsar=1[cam];
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">                [screen][cam]overlay=x=</span><span style="color:#e6db74">${</span>PIP_X<span style="color:#e6db74">}</span><span style="color:#e6db74">:y=</span><span style="color:#e6db74">${</span>PIP_Y<span style="color:#e6db74">}</span><span style="color:#e6db74">[pip];
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">                [pip]drawtext=text=&#39;● REC&#39;:fontcolor=red:fontsize=36:x=20:y=20:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">                    fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf[out]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            &#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            -map <span style="color:#e6db74">&#34;[out]&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            -map <span style="color:#e6db74">&#34;2:a&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            -c:v libx264 -preset fast -crf <span style="color:#ae81ff">23</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            -c:a aac <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            -shortest <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;</span>$OUTPUT_FILE<span style="color:#e6db74">&#34;</span> -y
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        rm -f <span style="color:#e6db74">&#34;</span>$AUDIO_FILE<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;</span>$VIDEO_FILE<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;</span>$CAM_FILE<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;Guardado en: </span>$OUTPUT_FILE<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>    exit <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>trap <span style="color:#e6db74">&#39;cleanup&#39;</span> EXIT INT TERM
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Grabar cámara</span>
+</span></span><span style="display:flex;"><span>ffmpeg -f v4l2 -video_size 320x240 -framerate <span style="color:#ae81ff">30</span> -i /dev/video0 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    -c:v libx264 -preset ultrafast -crf <span style="color:#ae81ff">28</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;</span>$CAM_FILE<span style="color:#e6db74">&#34;</span> -y &amp;
+</span></span><span style="display:flex;"><span>CAM_PID<span style="color:#f92672">=</span>$!
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Grabar audio interno + micrófono mezclados</span>
+</span></span><span style="display:flex;"><span>MONITOR<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>pactl list sources short | grep monitor | head -1 | awk <span style="color:#e6db74">&#39;{print $2}&#39;</span><span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>ffmpeg -f pulse -i <span style="color:#e6db74">&#34;</span>$MONITOR<span style="color:#e6db74">&#34;</span> -f pulse -i default <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    -filter_complex <span style="color:#e6db74">&#34;[0:a][1:a]amix=inputs=2[aout]&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    -map <span style="color:#e6db74">&#34;[aout]&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;</span>$AUDIO_FILE<span style="color:#e6db74">&#34;</span> -y &amp;
+</span></span><span style="display:flex;"><span>AUDIO_PID<span style="color:#f92672">=</span>$!
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Grabar pantalla</span>
+</span></span><span style="display:flex;"><span>sudo LIBVA_DRIVER_NAME<span style="color:#f92672">=</span>i965 ffmpeg <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    -f kmsgrab -framerate <span style="color:#ae81ff">30</span> -device /dev/dri/card1 -i - <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    -vaapi_device /dev/dri/renderD128 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    -vf <span style="color:#e6db74">&#39;hwmap=derive_device=vaapi,scale_vaapi=w=1366:h=768:format=nv12&#39;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    -c:v h264_vaapi -global_quality <span style="color:#ae81ff">25</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;</span>$VIDEO_FILE<span style="color:#e6db74">&#34;</span> -y
 </span></span></code></pre></div>
 </div>
 
