@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/comma_ai_selfdriving/">
+  <meta property="og:site_name" content="Imlauer">
+  <meta property="og:title" content="Comma AI self driving">
+  <meta property="og:description" content="Correr openpilot en PC con hardware propio — Guía técnica Arquitectura del sistema (entender antes de hacer) openpilot es una colección de procesos independientes que se comunican via cereal (basado en Cap’n Proto &#43; ZMQ). Los procesos principales son:
+camerad → captura frames de cámara → publica en msgq modeld → consume frames → corre la red neuronal → publica plan de manejo controlsd → consume el plan → genera CarControl (steering/gas/brake) pandad → consume CarControl → lo serializa a CAN → lo manda al Panda via USB boardd → idem, maneja la comunicación física con el Panda Para correr sin comma device necesitás reemplazar dos capas:">
+  <meta property="og:locale" content="es_es">
+  <meta property="og:type" content="article">
+
+  
+  <meta itemprop="name" content="Comma AI self driving">
+  <meta itemprop="description" content="Correr openpilot en PC con hardware propio — Guía técnica Arquitectura del sistema (entender antes de hacer) openpilot es una colección de procesos independientes que se comunican via cereal (basado en Cap’n Proto &#43; ZMQ). Los procesos principales son:
+camerad → captura frames de cámara → publica en msgq modeld → consume frames → corre la red neuronal → publica plan de manejo controlsd → consume el plan → genera CarControl (steering/gas/brake) pandad → consume CarControl → lo serializa a CAN → lo manda al Panda via USB boardd → idem, maneja la comunicación física con el Panda Para correr sin comma device necesitás reemplazar dos capas:">
+  <meta itemprop="wordCount" content="1032">
+  
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Comma AI self driving">
+  <meta name="twitter:description" content="Correr openpilot en PC con hardware propio — Guía técnica Arquitectura del sistema (entender antes de hacer) openpilot es una colección de procesos independientes que se comunican via cereal (basado en Cap’n Proto &#43; ZMQ). Los procesos principales son:
+camerad → captura frames de cámara → publica en msgq modeld → consume frames → corre la red neuronal → publica plan de manejo controlsd → consume el plan → genera CarControl (steering/gas/brake) pandad → consume CarControl → lo serializa a CAN → lo manda al Panda via USB boardd → idem, maneja la comunicación física con el Panda Para correr sin comma device necesitás reemplazar dos capas:">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Comma AI self driving
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/comma_ai_selfdriving/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="Correr openpilot en PC con hardware propio — Guía técnica
+Arquitectura del sistema (entender antes de hacer)
+openpilot es una colección de procesos independientes que se comunican via cereal (basado en Cap&rsquo;n Proto &#43; ZMQ). Los procesos principales son:
+camerad     → captura frames de cámara → publica en msgq
+modeld      → consume frames → corre la red neuronal → publica plan de manejo
+controlsd   → consume el plan → genera CarControl (steering/gas/brake)
+pandad      → consume CarControl → lo serializa a CAN → lo manda al Panda via USB
+boardd      → idem, maneja la comunicación física con el Panda
+Para correr sin comma device necesitás reemplazar dos capas:">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Comma AI self driving
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='0001-01-01T00:00:00Z'>
+      January 01, 0001
+    </time>
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <h1 id="correr-openpilot-en-pc-con-hardware-propio--guía-técnica">Correr openpilot en PC con hardware propio — Guía técnica</h1>
+<h2 id="arquitectura-del-sistema-entender-antes-de-hacer">Arquitectura del sistema (entender antes de hacer)</h2>
+<p>openpilot es una colección de <strong>procesos independientes</strong> que se comunican via <strong>cereal</strong> (basado en Cap&rsquo;n Proto + ZMQ). Los procesos principales son:</p>
+<pre tabindex="0"><code>camerad     → captura frames de cámara → publica en msgq
+modeld      → consume frames → corre la red neuronal → publica plan de manejo
+controlsd   → consume el plan → genera CarControl (steering/gas/brake)
+pandad      → consume CarControl → lo serializa a CAN → lo manda al Panda via USB
+boardd      → idem, maneja la comunicación física con el Panda
+</code></pre><p>Para correr sin comma device necesitás reemplazar dos capas:</p>
+<ul>
+<li><strong>Cámara</strong> → webcam USB en vez de la cámara del comma</li>
+<li><strong>Interfaz CAN</strong> → Panda (dispositivo de comma, ~$99) en vez del hardware embebido</li>
+</ul>
+<p>Sí, el <strong>Panda es prácticamente el único componente de comma que necesitás comprar</strong>. Todo lo demás se resuelve con hardware genérico.</p>
+<hr>
+<h2 id="lista-de-hardware-necesario">Lista de hardware necesario</h2>
+<table>
+  <thead>
+      <tr>
+          <th>Componente</th>
+          <th>Qué comprar</th>
+          <th>Para qué sirve</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><strong>PC/laptop con Linux</strong></td>
+          <td>El tuyo (Arch ya está)</td>
+          <td>Corre todos los procesos de openpilot</td>
+      </tr>
+      <tr>
+          <td><strong>Panda</strong></td>
+          <td>~$99 en comma.ai/shop</td>
+          <td>Interfaz USB ↔ CAN bus del auto. Es open source hardware</td>
+      </tr>
+      <tr>
+          <td><strong>Arnés para tu auto</strong></td>
+          <td>~$100-150 en comma.ai/shop</td>
+          <td>Se conecta entre el conector ADAS del auto y el Panda</td>
+      </tr>
+      <tr>
+          <td><strong>Webcam USB</strong></td>
+          <td>Logitech C920/C615, NexiGo N60</td>
+          <td>Mínimo 720p, mínimo ~78° FOV. Una sola alcanza</td>
+      </tr>
+      <tr>
+          <td><strong>Cable USB-A a USB-A</strong></td>
+          <td>Cualquiera</td>
+          <td>PC → Panda</td>
+      </tr>
+  </tbody>
+</table>
+<p>El Panda es open source (firmware en GitHub: <code>commaai/panda</code>), por lo que en teoría podrías fabricar uno vos, aunque comprar el oficial es más práctico.</p>
+<hr>
+<h2 id="paso-1--verificar-compatibilidad-de-tu-auto">Paso 1 — Verificar compatibilidad de tu auto</h2>
+<p>Antes de gastar un peso, confirmá en <code>https://comma.ai/vehicles</code> si tu auto está soportado. Para que funcione, el auto necesita:</p>
+<ul>
+<li><strong>CAN bus</strong> (todos los autos modernos post-2010 básicamente)</li>
+<li><strong>ACC</strong> (Adaptive Cruise Control) y <strong>LKAS</strong> (Lane Keep Assist) de fábrica</li>
+</ul>
+<p>Si tu auto tiene ACC y alguna forma de LKAS/LCA, casi con certeza tiene las interfaces necesarias para que openpilot funcione.</p>
+<hr>
+<h2 id="paso-2--instalar-openpilot-en-arch-linux">Paso 2 — Instalar openpilot en Arch Linux</h2>
+<p>openpilot se desarrolla y testea sobre Ubuntu 24.04, que es el target principal aparte del hardware embebido. Corriendo en cualquier otro sistema no está recomendado y probablemente requiera modificaciones.</p>
+<p>Para Arch, la aproximación más limpia es un <strong>contenedor o chroot Ubuntu 24.04</strong>, o bien instalar dependencias manualmente. La ruta DIY:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Clonar el repo</span>
+</span></span><span style="display:flex;"><span>git clone https://github.com/commaai/openpilot.git
+</span></span><span style="display:flex;"><span>cd openpilot
+</span></span><span style="display:flex;"><span>git submodule update --init --recursive
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Instalar dependencias (en Arch, equivalentes AUR/pacman)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># El script oficial es para Ubuntu pero podés leerlo:</span>
+</span></span><span style="display:flex;"><span>cat tools/ubuntu_setup.sh
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Dependencias clave en Arch:</span>
+</span></span><span style="display:flex;"><span>sudo pacman -S python python-pip clang cmake capnproto <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  zeromq openssl libyaml eigen ffmpeg v4l-utils <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  qt6-base qt6-multimedia vulkan-icd-loader
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>pip install -r tools/requirements.txt
+</span></span><span style="display:flex;"><span>pip install -r requirements.txt
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Build (usa scons internamente)</span>
+</span></span><span style="display:flex;"><span>scons -j<span style="color:#66d9ef">$(</span>nproc<span style="color:#66d9ef">)</span>
+</span></span></code></pre></div><p>Si hay problemas de compatibilidad en Arch, la alternativa más limpia es usar <strong>systemd-nspawn</strong> o <strong>Docker con Ubuntu 24.04</strong> para no pelear contra diferencias de libc/capnproto.</p>
+<hr>
+<h2 id="paso-3--conectar-el-panda-y-verificar">Paso 3 — Conectar el Panda y verificar</h2>
+<p>El Panda es un dispositivo USB que expone la interfaz CAN del auto. En Linux:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Después de conectar el Panda via USB:</span>
+</span></span><span style="display:flex;"><span>lsusb | grep -i comma
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Debería aparecer algo como: Bus 001 Device 004: ID bbaa:ddcc</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Reglas udev (si no tenés acceso sin sudo):</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># El repo del panda trae udev rules:</span>
+</span></span><span style="display:flex;"><span>git clone https://github.com/commaai/panda
+</span></span><span style="display:flex;"><span>cd panda
+</span></span><span style="display:flex;"><span>sudo cp drivers/linux/panda.rules /etc/udev/rules.d/
+</span></span><span style="display:flex;"><span>sudo udevadm control --reload-rules
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Verificar que openpilot detecta el panda:</span>
+</span></span><span style="display:flex;"><span>python -c <span style="color:#e6db74">&#34;import panda; p = panda.Panda(); print(p.get_version())&#34;</span>
+</span></span></code></pre></div><hr>
+<h2 id="paso-4--instalar-el-arnés-en-el-auto">Paso 4 — Instalar el arnés en el auto</h2>
+<p>El arnés se conecta en el conector del módulo de cámara ADAS (detrás del espejo retrovisor, típicamente). Interrumpe la señal entre la cámara de fábrica y la ECU, y añade acceso al CAN bus. El proceso no requiere modificaciones permanentes al vehículo y es completamente reversible.</p>
+<pre tabindex="0"><code>Auto [conector ADAS] ─── Arnés ─── [pasa la señal al módulo original]
+                              └──── [OBD-C / USB-C] ──── Panda ──── [USB-A] ──── PC
+</code></pre><hr>
+<h2 id="paso-5--posicionar-la-webcam-y-correr-openpilot">Paso 5 — Posicionar la webcam y correr openpilot</h2>
+<p>Se necesita una webcam USB de al menos 720p y 78 grados de FOV (ej. Logitech C920/C615, NexiGo N60). El setup es: conectar la cámara primero, luego conectar el Panda.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Verificar que la cámara es reconocida:</span>
+</span></span><span style="display:flex;"><span>v4l2-ctl --list-devices
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Ejemplo: /dev/video0</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Correr openpilot con webcam:</span>
+</span></span><span style="display:flex;"><span>cd openpilot
+</span></span><span style="display:flex;"><span>USE_WEBCAM<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span> python system/manager/manager.py
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Si tenés múltiples cámaras y la road camera no es /dev/video0:</span>
+</span></span><span style="display:flex;"><span>USE_WEBCAM<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span> ROAD_CAM<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span> python system/manager/manager.py
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># (ROAD_CAM=N usa /dev/videoN)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Si querés también driver monitoring camera:</span>
+</span></span><span style="display:flex;"><span>USE_WEBCAM<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span> ROAD_CAM<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span> DRIVER_CAM<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span> python system/manager/manager.py
+</span></span></code></pre></div><p>Arrancá el auto, el UI debería mostrar la vista de la cámara, y vas a entrar en proceso de calibración automática.</p>
+<hr>
+<h2 id="paso-6--calibración">Paso 6 — Calibración</h2>
+<p>openpilot necesita calibrar la posición de la cámara respecto al auto. Esto lo hace automáticamente mientras manejás ~10-20 km en ruta recta. El proceso corre en el servicio <code>calibrationd</code> y guarda el estado en <code>/data/params</code>.</p>
+<hr>
+<h2 id="limitaciones-importantes-que-tenés-que-saber">Limitaciones importantes que tenés que saber</h2>
+<p>El port de webcam demuestra la independencia de plataforma de openpilot, pero las conexiones USB poco confiables y las webcams que se mueven son una preocupación seria. Las webcams también son diferentes a las cámaras con las que se entrenaron los modelos, por lo que se espera que openpilot funcione significativamente peor con este setup.</p>
+<p>Resumiendo las limitaciones reales:</p>
+<ul>
+<li><strong>Performance del modelo degradada</strong>: los modelos se entrenaron con las ópticas específicas del comma (FOV, distorsión, etc.). Una C920 va a funcionar pero no igual.</li>
+<li><strong>Driver monitoring opcional</strong>: necesitás segunda webcam para la cámara del conductor, pero podés saltarla en modo pasivo.</li>
+<li><strong>Latencia USB</strong>: el Panda conectado via USB al PC agrega latencia vs tenerlo integrado. Funciona, pero es menos robusto.</li>
+<li><strong>El Panda sigue siendo de comma</strong>: es el único componente no-genérico. El firmware es open source así que podrías portarlo a otro microcontrolador (STM32F4) pero es trabajo extra considerable.</li>
+</ul>
+<hr>
+<h2 id="stack-completo-resumido">Stack completo resumido</h2>
+<pre tabindex="0"><code>[webcam USB] → camerad (USE_WEBCAM=1)
+                    ↓ msgq (ZMQ)
+              modeld (red neuronal, corre en CPU/GPU)
+                    ↓ msgq
+              controlsd (control PID/MPC)
+                    ↓ msgq
+              pandad → [Panda USB] → [Arnés] → [CAN bus del auto]
+                                                      ↓
+                                          ECU de dirección / acelerador / freno
+</code></pre><hr>
+<p>Si tu auto está en la lista soportada, el mínimo que necesitás gastar es el <strong>Panda (~$99)</strong> + el <strong>arnés para tu modelo (~$100-150)</strong>. Todo lo demás ya lo tenés. ¿Qué auto tenés?</p>
+
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+
+</footer>
+
+
+</body>
+</html>
