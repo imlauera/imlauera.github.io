@@ -18,7 +18,7 @@ camerad → captura frames de cámara → publica en msgq modeld → consume fra
   <meta itemprop="name" content="Comma AI self driving">
   <meta itemprop="description" content="Correr openpilot en PC con hardware propio — Guía técnica Arquitectura del sistema (entender antes de hacer) openpilot es una colección de procesos independientes que se comunican via cereal (basado en Cap’n Proto &#43; ZMQ). Los procesos principales son:
 camerad → captura frames de cámara → publica en msgq modeld → consume frames → corre la red neuronal → publica plan de manejo controlsd → consume el plan → genera CarControl (steering/gas/brake) pandad → consume CarControl → lo serializa a CAN → lo manda al Panda via USB boardd → idem, maneja la comunicación física con el Panda Para correr sin comma device necesitás reemplazar dos capas:">
-  <meta itemprop="wordCount" content="1032">
+  <meta itemprop="wordCount" content="3750">
   
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="Comma AI self driving">
@@ -239,6 +239,349 @@ boardd      → idem, maneja la comunicación física con el Panda
                                           ECU de dirección / acelerador / freno
 </code></pre><hr>
 <p>Si tu auto está en la lista soportada, el mínimo que necesitás gastar es el <strong>Panda (~$99)</strong> + el <strong>arnés para tu modelo (~$100-150)</strong>. Todo lo demás ya lo tenés. ¿Qué auto tenés?</p>
+<p>Perfecto, ahora tengo todo lo que necesito para darte una respuesta realmente técnica y detallada. Acá va:</p>
+<hr>
+<h1 id="correr-openpilot-en-pc-con-hardware-propio--guía-técnica-1">Correr openpilot en PC con hardware propio — Guía técnica</h1>
+<h2 id="arquitectura-del-sistema-entender-antes-de-hacer-1">Arquitectura del sistema (entender antes de hacer)</h2>
+<p>openpilot es una colección de <strong>procesos independientes</strong> que se comunican via <strong>cereal</strong> (basado en Cap&rsquo;n Proto + ZMQ). Los procesos principales son:</p>
+<pre tabindex="0"><code>camerad     → captura frames de cámara → publica en msgq
+modeld      → consume frames → corre la red neuronal → publica plan de manejo
+controlsd   → consume el plan → genera CarControl (steering/gas/brake)
+pandad      → consume CarControl → lo serializa a CAN → lo manda al Panda via USB
+boardd      → idem, maneja la comunicación física con el Panda
+</code></pre><p>Para correr sin comma device necesitás reemplazar dos capas:</p>
+<ul>
+<li><strong>Cámara</strong> → webcam USB en vez de la cámara del comma</li>
+<li><strong>Interfaz CAN</strong> → Panda (dispositivo de comma, ~$99) en vez del hardware embebido</li>
+</ul>
+<p>Sí, el <strong>Panda es prácticamente el único componente de comma que necesitás comprar</strong>. Todo lo demás se resuelve con hardware genérico.</p>
+<hr>
+<h2 id="lista-de-hardware-necesario-1">Lista de hardware necesario</h2>
+<table>
+  <thead>
+      <tr>
+          <th>Componente</th>
+          <th>Qué comprar</th>
+          <th>Para qué sirve</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><strong>PC/laptop con Linux</strong></td>
+          <td>El tuyo (Arch ya está)</td>
+          <td>Corre todos los procesos de openpilot</td>
+      </tr>
+      <tr>
+          <td><strong>Panda</strong></td>
+          <td>~$99 en comma.ai/shop</td>
+          <td>Interfaz USB ↔ CAN bus del auto. Es open source hardware</td>
+      </tr>
+      <tr>
+          <td><strong>Arnés para tu auto</strong></td>
+          <td>~$100-150 en comma.ai/shop</td>
+          <td>Se conecta entre el conector ADAS del auto y el Panda</td>
+      </tr>
+      <tr>
+          <td><strong>Webcam USB</strong></td>
+          <td>Logitech C920/C615, NexiGo N60</td>
+          <td>Mínimo 720p, mínimo ~78° FOV. Una sola alcanza</td>
+      </tr>
+      <tr>
+          <td><strong>Cable USB-A a USB-A</strong></td>
+          <td>Cualquiera</td>
+          <td>PC → Panda</td>
+      </tr>
+  </tbody>
+</table>
+<p>El Panda es open source (firmware en GitHub: <code>commaai/panda</code>), por lo que en teoría podrías fabricar uno vos, aunque comprar el oficial es más práctico.</p>
+<hr>
+<h2 id="paso-1--verificar-compatibilidad-de-tu-auto-1">Paso 1 — Verificar compatibilidad de tu auto</h2>
+<p>Antes de gastar un peso, confirmá en <code>https://comma.ai/vehicles</code> si tu auto está soportado. Para que funcione, el auto necesita:</p>
+<ul>
+<li><strong>CAN bus</strong> (todos los autos modernos post-2010 básicamente)</li>
+<li><strong>ACC</strong> (Adaptive Cruise Control) y <strong>LKAS</strong> (Lane Keep Assist) de fábrica</li>
+</ul>
+<p>Si tu auto tiene ACC y alguna forma de LKAS/LCA, casi con certeza tiene las interfaces necesarias para que openpilot funcione.</p>
+<hr>
+<h2 id="paso-2--instalar-openpilot-en-arch-linux-1">Paso 2 — Instalar openpilot en Arch Linux</h2>
+<p>openpilot se desarrolla y testea sobre Ubuntu 24.04, que es el target principal aparte del hardware embebido. Corriendo en cualquier otro sistema no está recomendado y probablemente requiera modificaciones.</p>
+<p>Para Arch, la aproximación más limpia es un <strong>contenedor o chroot Ubuntu 24.04</strong>, o bien instalar dependencias manualmente. La ruta DIY:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Clonar el repo</span>
+</span></span><span style="display:flex;"><span>git clone https://github.com/commaai/openpilot.git
+</span></span><span style="display:flex;"><span>cd openpilot
+</span></span><span style="display:flex;"><span>git submodule update --init --recursive
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Instalar dependencias (en Arch, equivalentes AUR/pacman)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># El script oficial es para Ubuntu pero podés leerlo:</span>
+</span></span><span style="display:flex;"><span>cat tools/ubuntu_setup.sh
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Dependencias clave en Arch:</span>
+</span></span><span style="display:flex;"><span>sudo pacman -S python python-pip clang cmake capnproto <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  zeromq openssl libyaml eigen ffmpeg v4l-utils <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  qt6-base qt6-multimedia vulkan-icd-loader
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>pip install -r tools/requirements.txt
+</span></span><span style="display:flex;"><span>pip install -r requirements.txt
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Build (usa scons internamente)</span>
+</span></span><span style="display:flex;"><span>scons -j<span style="color:#66d9ef">$(</span>nproc<span style="color:#66d9ef">)</span>
+</span></span></code></pre></div><p>Si hay problemas de compatibilidad en Arch, la alternativa más limpia es usar <strong>systemd-nspawn</strong> o <strong>Docker con Ubuntu 24.04</strong> para no pelear contra diferencias de libc/capnproto.</p>
+<hr>
+<h2 id="paso-3--conectar-el-panda-y-verificar-1">Paso 3 — Conectar el Panda y verificar</h2>
+<p>El Panda es un dispositivo USB que expone la interfaz CAN del auto. En Linux:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Después de conectar el Panda via USB:</span>
+</span></span><span style="display:flex;"><span>lsusb | grep -i comma
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Debería aparecer algo como: Bus 001 Device 004: ID bbaa:ddcc</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Reglas udev (si no tenés acceso sin sudo):</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># El repo del panda trae udev rules:</span>
+</span></span><span style="display:flex;"><span>git clone https://github.com/commaai/panda
+</span></span><span style="display:flex;"><span>cd panda
+</span></span><span style="display:flex;"><span>sudo cp drivers/linux/panda.rules /etc/udev/rules.d/
+</span></span><span style="display:flex;"><span>sudo udevadm control --reload-rules
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Verificar que openpilot detecta el panda:</span>
+</span></span><span style="display:flex;"><span>python -c <span style="color:#e6db74">&#34;import panda; p = panda.Panda(); print(p.get_version())&#34;</span>
+</span></span></code></pre></div><hr>
+<h2 id="paso-4--instalar-el-arnés-en-el-auto-1">Paso 4 — Instalar el arnés en el auto</h2>
+<p>El arnés se conecta en el conector del módulo de cámara ADAS (detrás del espejo retrovisor, típicamente). Interrumpe la señal entre la cámara de fábrica y la ECU, y añade acceso al CAN bus. El proceso no requiere modificaciones permanentes al vehículo y es completamente reversible.</p>
+<pre tabindex="0"><code>Auto [conector ADAS] ─── Arnés ─── [pasa la señal al módulo original]
+                              └──── [OBD-C / USB-C] ──── Panda ──── [USB-A] ──── PC
+</code></pre><hr>
+<h2 id="paso-5--posicionar-la-webcam-y-correr-openpilot-1">Paso 5 — Posicionar la webcam y correr openpilot</h2>
+<p>Se necesita una webcam USB de al menos 720p y 78 grados de FOV (ej. Logitech C920/C615, NexiGo N60). El setup es: conectar la cámara primero, luego conectar el Panda.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Verificar que la cámara es reconocida:</span>
+</span></span><span style="display:flex;"><span>v4l2-ctl --list-devices
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Ejemplo: /dev/video0</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Correr openpilot con webcam:</span>
+</span></span><span style="display:flex;"><span>cd openpilot
+</span></span><span style="display:flex;"><span>USE_WEBCAM<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span> python system/manager/manager.py
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Si tenés múltiples cámaras y la road camera no es /dev/video0:</span>
+</span></span><span style="display:flex;"><span>USE_WEBCAM<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span> ROAD_CAM<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span> python system/manager/manager.py
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># (ROAD_CAM=N usa /dev/videoN)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Si querés también driver monitoring camera:</span>
+</span></span><span style="display:flex;"><span>USE_WEBCAM<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span> ROAD_CAM<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span> DRIVER_CAM<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span> python system/manager/manager.py
+</span></span></code></pre></div><p>Arrancá el auto, el UI debería mostrar la vista de la cámara, y vas a entrar en proceso de calibración automática.</p>
+<hr>
+<h2 id="paso-6--calibración-1">Paso 6 — Calibración</h2>
+<p>openpilot necesita calibrar la posición de la cámara respecto al auto. Esto lo hace automáticamente mientras manejás ~10-20 km en ruta recta. El proceso corre en el servicio <code>calibrationd</code> y guarda el estado en <code>/data/params</code>.</p>
+<hr>
+<h2 id="limitaciones-importantes-que-tenés-que-saber-1">Limitaciones importantes que tenés que saber</h2>
+<p>El port de webcam demuestra la independencia de plataforma de openpilot, pero las conexiones USB poco confiables y las webcams que se mueven son una preocupación seria. Las webcams también son diferentes a las cámaras con las que se entrenaron los modelos, por lo que se espera que openpilot funcione significativamente peor con este setup.</p>
+<p>Resumiendo las limitaciones reales:</p>
+<ul>
+<li><strong>Performance del modelo degradada</strong>: los modelos se entrenaron con las ópticas específicas del comma (FOV, distorsión, etc.). Una C920 va a funcionar pero no igual.</li>
+<li><strong>Driver monitoring opcional</strong>: necesitás segunda webcam para la cámara del conductor, pero podés saltarla en modo pasivo.</li>
+<li><strong>Latencia USB</strong>: el Panda conectado via USB al PC agrega latencia vs tenerlo integrado. Funciona, pero es menos robusto.</li>
+<li><strong>El Panda sigue siendo de comma</strong>: es el único componente no-genérico. El firmware es open source así que podrías portarlo a otro microcontrolador (STM32F4) pero es trabajo extra considerable.</li>
+</ul>
+<hr>
+<h2 id="stack-completo-resumido-1">Stack completo resumido</h2>
+<pre tabindex="0"><code>[webcam USB] → camerad (USE_WEBCAM=1)
+                    ↓ msgq (ZMQ)
+              modeld (red neuronal, corre en CPU/GPU)
+                    ↓ msgq
+              controlsd (control PID/MPC)
+                    ↓ msgq
+              pandad → [Panda USB] → [Arnés] → [CAN bus del auto]
+                                                      ↓
+                                          ECU de dirección / acelerador / freno
+</code></pre><hr>
+<p>Si tu auto está en la lista soportada, el mínimo que necesitás gastar es el <strong>Panda (~$99)</strong> + el <strong>arnés para tu modelo (~$100-150)</strong>. Todo lo demás ya lo tenés. ¿Qué auto tenés?</p>
+<p>Muy buena pregunta, y es un tema que generó bastante drama en la comunidad.</p>
+<h2 id="historia-del-hardware-de-comma">Historia del hardware de comma</h2>
+<h3 id="era-abierta--eon--neo-2016-2019">Era abierta — EON / Neo (2016-2019)</h3>
+<p>El <strong>Neo</strong> era básicamente un <strong>OnePlus 3T</strong> rooteado corriendo NEOS (un Android customizado). comma publicó todo:</p>
+<ul>
+<li>Esquemáticos del Giraffe (el precursor del arnés) en <code>commaai/neo</code></li>
+<li>Firmware del Panda completo</li>
+<li>El OS (NEOS) basado en Android abierto</li>
+</ul>
+<p>Cualquiera podía replicar todo desde cero. Era genuinamente open source hardware.</p>
+<h3 id="el-giro--comma-two--three--3x-2020-2023">El giro — comma two / three / 3X (2020-2023)</h3>
+<p>Acá es donde se complicó. comma empezó a usar hardware <strong>propietario basado en Snapdragon</strong> (chip de Qualcomm) y:</p>
+<ul>
+<li>El <strong>agnos</strong> (reemplazó a NEOS) sigue siendo mayormente open source</li>
+<li>El firmware del <strong>Panda sigue siendo open source</strong> ✅</li>
+<li>Pero el <strong>hardware del comma three/3X nunca fue publicado como diseño abierto</strong> ❌</li>
+<li>Los esquemáticos del device en sí nunca fueron liberados</li>
+</ul>
+<h3 id="comma-four-2025">comma four (2025)</h3>
+<p>Igual o peor. Hardware cerrado, diseño no publicado.</p>
+<hr>
+<h2 id="por-qué-el-cambio">¿Por qué el cambio?</h2>
+<p>La razón nunca fue declarada oficialmente, pero la comunidad especula dos cosas:</p>
+<p><strong>1. Modelo de negocio</strong> — Si publican los esquemáticos, cualquiera fabrica el device por $50 y no le compran el comma four a $999.</p>
+<p><strong>2. Qualcomm</strong> — Los chips Snapdragon tienen restricciones de licencia que podrían impedir publicar ciertos aspectos del diseño.</p>
+<hr>
+<h2 id="qué-sigue-siendo-open-source-hoy">Qué sigue siendo open source HOY</h2>
+<table>
+  <thead>
+      <tr>
+          <th>Componente</th>
+          <th>Open Source?</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>Software openpilot</td>
+          <td>✅ MIT license</td>
+      </tr>
+      <tr>
+          <td>Firmware Panda</td>
+          <td>✅ open source</td>
+      </tr>
+      <tr>
+          <td>agnos (el OS)</td>
+          <td>✅ mayormente</td>
+      </tr>
+      <tr>
+          <td>opendbc (DBC files de autos)</td>
+          <td>✅</td>
+      </tr>
+      <tr>
+          <td>Esquemáticos del arnés (neo repo)</td>
+          <td>✅ algunos modelos</td>
+      </tr>
+      <tr>
+          <td>Hardware del comma three/four</td>
+          <td>❌ cerrado</td>
+      </tr>
+      <tr>
+          <td>Esquemáticos del Panda PCB</td>
+          <td>⚠️ parcialmente (versiones viejas)</td>
+      </tr>
+  </tbody>
+</table>
+<hr>
+<h2 id="el-elefante-en-la-sala">El elefante en la sala</h2>
+<p>Hay bastante tensión en la comunidad por esto. comma se presenta como empresa &ldquo;open source&rdquo; pero el hardware principal hace años que no lo es. El Panda sigue siendo el único puente viable entre openpilot y el auto, y aunque el firmware es libre, <strong>el diseño PCB de las versiones actuales no está publicado</strong>.</p>
+<p>Por eso la comunidad de RetroPilot y otros intentaron diseñar clones desde cero usando el STM32F4 + transceiver CAN, que es exactamente lo que te mencioné antes — es posible hacerlo porque sabés <em>qué chip</em> usa y el <em>firmware</em> es libre, aunque no tengas los archivos KiCad del PCB oficial.</p>
+<p>Excelente pregunta. Vamos a investigar bien esto.Ahora tengo todo claro. La respuesta es muy concreta:</p>
+<hr>
+<h2 id="el-comma-más-avanzado-que-podés-construir-desde-cero-es-el-neo--eon">El comma más avanzado que podés construir desde cero es el <strong>Neo / EON</strong></h2>
+<p>Y esto es lo que hay publicado en <code>commaai/neo</code>:</p>
+<table>
+  <thead>
+      <tr>
+          <th>Archivo/Carpeta</th>
+          <th>Qué es</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><code>board/</code></td>
+          <td>Esquemáticos EagleCAD del <strong>board CAN</strong> (STM32F205 + transceiver) — el precursor del Panda</td>
+      </tr>
+      <tr>
+          <td><code>case/eon/</code></td>
+          <td>Archivos STL para <strong>imprimir la carcasa en 3D</strong></td>
+      </tr>
+      <tr>
+          <td><code>car_harness/</code></td>
+          <td>Esquemáticos PDF de arneses para <strong>Honda Nidec, Honda Bosch, Toyota</strong></td>
+      </tr>
+      <tr>
+          <td><code>car_harness/OBD-C.sch.pdf</code></td>
+          <td>El conector OBD-C genérico</td>
+      </tr>
+      <tr>
+          <td><code>car_harness/open_pinout.sch.pdf</code></td>
+          <td>Pinout abierto para agregar tu propio auto</td>
+      </tr>
+  </tbody>
+</table>
+<p>El Neo es una plataforma de investigación robótica open source. Está impulsada por un smartphone OnePlus 3 y una placa de interfaz CAN basada en STM32F205, en una carcasa impresa en 3D con refrigeración activa.</p>
+<hr>
+<h2 id="y-el-panda-actual-firmware-sí-pcb-no-del-todo">¿Y el Panda actual? Firmware sí, PCB no del todo</h2>
+<p>El firmware del Panda está en GitHub (<code>commaai/panda</code>) y es open source. Pero los archivos KiCad/EagleCAD del PCB de las versiones actuales (Panda Black, el que se vende hoy) <strong>no están publicados como sí lo estaba el board del Neo</strong>.</p>
+<p>Lo que sí podés hacer: el firmware detecta el tipo de hardware con <code>detect_board_type()</code>, y soporta múltiples variantes. Podés flashear ese firmware en un <strong>STM32F405</strong> genérico de AliExpress (~$5) y conectarle un transceiver CAN — básicamente estás reconstruyendo el Neo board con chips modernos.</p>
+<hr>
+<h2 id="el-mapa-completo-de-lo-que-podés-construir">El mapa completo de lo que podés construir</h2>
+<pre tabindex="0"><code>[OnePlus 3T] ← hardware que ya no sirve, openpilot lo droppeó
+      ↓ reemplazado por
+[Tu PC con Arch] + [webcam USB]     ← el &#34;compute&#34; moderno equivalente
+      ↓ conectado via USB a
+[STM32F405 + SN65HVD230]            ← clon del Panda, firmware de commaai/panda
+      ↓ conectado via conector propietario a
+[Arnés DIY con esquemáticos de commaai/neo/car_harness]
+      ↓
+[CAN bus de tu auto]
+</code></pre><p>El límite real no es el hardware sino el software: <strong>openpilot moderno ya no soporta el OnePlus 3T</strong>, pero eso no importa porque vos usás tu PC. Lo que sí podés replicar libremente es todo el stack de interfaz CAN usando los archivos publicados en el repo neo + el firmware del Panda.</p>
+<p>¿Qué auto tenés? Con eso te digo si hay un arnés ya diseñado en el repo o si hay que hacerlo desde el <code>open_pinout.sch.pdf</code>.</p>
+<p>Acá la respuesta honesta: <strong>videos específicos de openpilot corriendo en PC con webcam en un auto real son escasos</strong>. Lo que encontré:</p>
+<hr>
+<h2 id="lo-que-sí-existe-en-youtube">Lo que SÍ existe en YouTube</h2>
+<p><strong>1. &ldquo;Openpilot with PC Webcam is so close!&rdquo; (Oct 2024)</strong>
+<code>youtube.com/watch?v=ZK4mmyX1saQ</code>
+Alguien intentando correr openpilot con webcam en PC en un auto real. Es un short/clip, no un tutorial completo, pero es exactamente lo que buscás — del año pasado.</p>
+<p><strong>2. &ldquo;Building a Self Driving Car EP1 - comma neo w/ openpilot&rdquo; (2017)</strong>
+<code>youtube.com/watch?v=PwOnsT2UW5o</code>
+El tutorial clásico de construir el Neo desde cero. Está desactualizado pero muestra el proceso físico de armar el hardware.</p>
+<p><strong>3. &ldquo;openpilot in the simulator!&rdquo; (2020)</strong>
+<code>youtube.com/watch?v=c2plaUSx2tk</code>
+El video oficial de comma corriendo openpilot con webcam en PC + CARLA simulator. No es en un auto real pero muestra el setup.</p>
+<hr>
+<h2 id="por-qué-hay-tan-pocos-videos-de-esto">Por qué hay tan pocos videos de esto</h2>
+<p>La razón es simple: el setup PC+webcam+Panda <strong>funciona pero nadie lo termina de hacer andar bien</strong> sin el hardware oficial, entonces la mayoría no graba el resultado. El issue de GitHub que encontré lo dice explícitamente:</p>
+<blockquote>
+<p><em>&quot;$999 is still a bit much for casual interest in openpilot. Let&rsquo;s develop a cheap kit&hellip; panda + car harness + webcam plugged into a laptop.&quot;</em></p>
+</blockquote>
+<p>Eso fue abierto en <strong>abril 2025</strong> — o sea que comma misma reconoce que este setup DIY no está bien documentado todavía.</p>
+<hr>
+<h2 id="lo-más-interesante-que-encontré-no-youtube">Lo más interesante que encontré (no YouTube)</h2>
+<p>Un ingeniero de hardware de comma publicó en diciembre 2024 un blog post donde <strong>instaló openpilot en un Volvo 940 de 1993</strong> — un auto sin ningún CAN bus moderno, fabricando actuadores de dirección desde cero. Prometió open sourcear el código. Es el nivel máximo de DIY:</p>
+<p><code>practicapp.com/carbagepilot-part1/</code></p>
+<hr>
+<h2 id="mi-recomendación-concreta">Mi recomendación concreta</h2>
+<p>Para aprender visualmente, el mejor recurso es el <strong>Discord oficial de comma</strong> (<code>discord.comma.ai</code>) — canal <code>#developer</code> y <code>#community-hardware</code>. Ahí hay gente que comparte clips y experiencias de setups alternativos que no llegan a YouTube.</p>
+<p>¿Querés que te arme un roadmap de qué hacer primero si quisieras intentar esto con tu auto?</p>
+<p>El blog solo tiene la Parte 1 publicada por ahora. Pero leí todo el artículo completo. Te lo explico:</p>
+<hr>
+<h2 id="quién-es-el-autor">¿Quién es el autor?</h2>
+<p><strong>Robbe Derks</strong> — ingeniero de hardware en comma.ai durante 5 años. O sea no es un random, es literalmente alguien que construyó el hardware interno de comma. Su GitHub es <code>github.com/robbederks</code>.</p>
+<hr>
+<h2 id="el-contexto-del-proyecto">El contexto del proyecto</h2>
+<p>Decidió participar en la &ldquo;Carbage Run&rdquo;, una travesía de 6 días por Suecia hasta el círculo polar con autos que tienen más de 20 años y valor menor a €1000. La ruta completa, incluyendo el viaje desde Bélgica, implicaría manejar aproximadamente 6000 km en poco más de una semana, frecuentemente en condiciones difíciles.</p>
+<p>Y se le ocurrió la idea obvia: ¿por qué no hacerlo autónomo?</p>
+<hr>
+<h2 id="el-problema-fundamental">El problema fundamental</h2>
+<p>El Volvo 940 de 1993 tiene muy poca electrónica: la dirección es hidráulica, el acelerador está conectado al carburador por un cable bowden, y el freno usa asistencia de vacío.</p>
+<p>Sin CAN bus, sin EPS, sin nada. Un auto completamente analógico. Entonces tuvo que <strong>retrofitear actuadores modernos</strong> uno por uno.</p>
+<hr>
+<h2 id="los-3-actuadores-que-instaló">Los 3 actuadores que instaló</h2>
+<h3 id="1-dirección--eps-de-un-toyota-corolla-2020">1. Dirección — EPS de un Toyota Corolla 2020</h3>
+<p>Retrofitó un actuador de dirección asistida eléctrica (EPS) y su ECU de un Toyota Corolla 2020. Cortaron la columna de dirección original del Volvo y soldaron los splines del Corolla en el medio. El EPS solo necesita GND, 12V constante (fusible de 80A), una señal de &ldquo;ignición&rdquo; y CAN al sensor de ángulo.</p>
+<p>También instaló un <strong>sensor de ángulo de dirección externo</strong> del Corolla para darle a openpilot la referencia absoluta del volante.</p>
+<h3 id="2-frenos--bosch-ibooster">2. Frenos — Bosch iBooster</h3>
+<p>Reemplazó el sistema de vacío original con un Bosch iBooster, el mismo sistema que usa Tesla. Para su sorpresa, el patrón de agujeros del iBooster coincidió perfectamente con el del Volvo sin necesitar una placa adaptadora.</p>
+<p>También prometió open sourcear el trabajo de hacer el iBooster <strong>controlable via CAN</strong> fuera de su contexto Tesla original — eso todavía no está publicado.</p>
+<h3 id="3-acelerador--servo-rc-de-aliexpress">3. Acelerador — Servo RC de AliExpress</h3>
+<p>Para el acelerador, no encontró una solución automotriz apropiada. Compró un servo RC impermeable de AliExpress y su padre mecanizó una polea que se monta sobre él. Dos cables conectados a la válvula de aire del carburador: el que jala más fuerte gana, lo que permite al conductor anular el sistema simplemente pisando más fuerte el acelerador.</p>
+<h3 id="bonus--radar-de-tesla">Bonus — Radar de Tesla</h3>
+<p>También instaló un sensor de radar Continental de Tesla detrás de la parrilla delantera. Si bien el ACC solo con visión funciona en openpilot, poder contar con un radar real hace la experiencia más suave y consistente.</p>
+<hr>
+<h2 id="está-libre-el-código">¿Está libre el código?</h2>
+<p><strong>Todavía no completamente.</strong> El blog tiene solo la Parte 1 (actuadores mecánicos). El autor prometió:</p>
+<ul>
+<li><strong>Parte 2</strong> — Cableado y la ECU custom que diseñó</li>
+<li><strong>Parte 3</strong> — Open sourcear el código del ECU y el port de openpilot para el Volvo</li>
+</ul>
+<p>El blog solo tiene esa parte publicada a mayo 2026. Dado que la carrera era en enero 2025, es probable que la parte 2 y 3 estén demoradas pero vengan. Su GitHub (<code>robbederks</code>) es donde eventualmente aparecerá todo.</p>
+<hr>
+<h2 id="por-qué-es-tan-impresionante">Por qué es tan impresionante</h2>
+<p>Lo que hizo es <strong>el nivel máximo de DIY</strong> con openpilot:</p>
+<pre tabindex="0"><code>Auto de 1993 completamente analógico
+  + EPS de desarmadero ($junkyard)
+  + iBooster de Tesla (segundo mano)
+  + Servo RC de AliExpress ($20)
+  + Radar de Tesla (junkyard)
+  + comma device + openpilot
+= Auto semi-autónomo en 6000km de ruta invernal
+</code></pre><p>Sin comprar hardware de comma (excepto posiblemente el Panda). Todo el compute y la lógica de conducción: openpilot. Todo el hardware físico: piezas de desarmadero y AliExpress.</p>
 
 </div>
 
