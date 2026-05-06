@@ -162,15 +162,56 @@ src="/quiz/quizdownHighlight.js">
   });
 </script>
 <script>
-  document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", function () {
+
+  function processNode(node) {
+    if (node.nodeType !== Node.TEXT_NODE) return;
+
+    var text = node.textContent;
+    var parent = node.parentNode;
+    if (!parent) return;
+
     
-    document.querySelectorAll("code.language-math").forEach(function (el) {
-      var wrapper = document.createElement("div");
-      wrapper.innerHTML = "\\[" + el.textContent + "\\]";
-      el.closest("pre").replaceWith(wrapper);
+    var p = parent;
+    while (p) {
+      if (p.tagName === "PRE" || p.tagName === "CODE") return;
+      p = p.parentNode;
+    }
+
+    
+    var replaced = text.replace(/\[\s*\n([\s\S]*?)\n\s*\]/g, function(_, inner) {
+      return "\n\\[" + inner + "\\]\n";
     });
-    MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+
+    if (replaced !== text) {
+      var span = document.createElement("span");
+      span.innerHTML = replaced
+        .replace(/\\\[/g, "\\[")
+        .replace(/\\\]/g, "\\]");
+      parent.replaceChild(span, node);
+    }
+  }
+
+  
+  var walker = document.createTreeWalker(
+    document.body,
+    NodeFilter.SHOW_TEXT,
+    null,
+    false
+  );
+  var nodes = [];
+  while (walker.nextNode()) nodes.push(walker.currentNode);
+  nodes.forEach(processNode);
+
+  
+  document.querySelectorAll("code.language-math").forEach(function (el) {
+    var wrapper = document.createElement("div");
+    wrapper.innerHTML = "\\[" + el.textContent + "\\]";
+    el.closest("pre").replaceWith(wrapper);
   });
+
+  MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+});
 </script>
 
 
