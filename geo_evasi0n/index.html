@@ -43,7 +43,7 @@ Y eso cambia completamente el juego.
 🧠 Contexto: qué rompieron exactamente La seguridad de la PlayStation 3 se basaba en:">
   <meta itemprop="datePublished" content="2026-05-04T14:43:40-03:00">
   <meta itemprop="dateModified" content="2026-05-04T14:43:40-03:00">
-  <meta itemprop="wordCount" content="3773">
+  <meta itemprop="wordCount" content="3704">
   <meta itemprop="keywords" content="Geo">
   
   <meta name="twitter:card" content="summary">
@@ -186,21 +186,21 @@ La seguridad de la PlayStation 3 se basaba en:">
 <p>Esto viene de un fallo descubierto por fail0verflow:</p>
 <p>👉 Sony implementó mal ECDSA</p>
 <p>En ECDSA:</p>
-<pre tabindex="0"><code class="language-math" data-lang="math">r = (k * G).x mod n
-s = k^{-1}(H(m) + d_A * r) mod n
-</code></pre><p>Donde:</p>
+<p>$$r = (k \cdot G)_x \bmod n$$</p>
+<p>$$s = k^{-1}(H(m) + d_A \cdot r) \bmod n$$</p>
+<p>Donde:</p>
 <ul>
-<li><code>k</code> = nonce aleatorio (CRÍTICO)</li>
-<li><code>d_A</code> = clave privada</li>
+<li>$k$ = nonce aleatorio (CRÍTICO)</li>
+<li>$d_A$ = clave privada</li>
 </ul>
 <hr>
 <h2 id="-error-fatal-de-sony">❌ Error fatal de Sony</h2>
-<p>👉 Reutilizaron el mismo <code>k</code></p>
+<p>👉 Reutilizaron el mismo $k$</p>
 <hr>
 <h2 id="-consecuencia">💀 Consecuencia</h2>
-<p>Si <code>k</code> se repite:</p>
-<pre tabindex="0"><code class="language-math" data-lang="math">d_A = (s*k - H(m)) * r^{-1} mod n
-</code></pre><p>👉 Se puede recuperar la <strong>clave privada</strong></p>
+<p>Si $k$ se repite:</p>
+<p>$$d_A = (s \cdot k - H(m)) \cdot r^{-1} \bmod n$$</p>
+<p>👉 Se puede recuperar la <strong>clave privada</strong></p>
 <hr>
 <h1 id="-entonces-qué-hizo-geohot">🔓 Entonces… ¿qué hizo geohot?</h1>
 <p>Publicó:</p>
@@ -221,7 +221,7 @@ s = k^{-1}(H(m) + d_A * r) mod n
 </span></span></code></pre></div><p>Ahora cualquiera puede:</p>
 <ul>
 <li>firmar ejecutables como si fuera Sony</li>
-<li>crear firmware “oficial”</li>
+<li>crear firmware &ldquo;oficial&rdquo;</li>
 <li>correr homebrew sin exploits</li>
 </ul>
 <hr>
@@ -271,13 +271,13 @@ s = k^{-1}(H(m) + d_A * r) mod n
 <h1 id="-nota-importante">⚠️ Nota importante</h1>
 <p>Por eso ves que Hotz dice:</p>
 <blockquote>
-<p>“i do not condone piracy”</p>
+<p>&ldquo;i do not condone piracy&rdquo;</p>
 </blockquote>
 <p>Porque esto:</p>
 <p>👉 habilita piratería masiva automáticamente</p>
 <p>(No porque ese fuera el objetivo técnico, pero es la consecuencia directa)</p>
 <hr>
-<h1 id="-asymmetric-half">🧩 “asymmetric half”</h1>
+<h1 id="-asymmetric-half">🧩 &ldquo;asymmetric half&rdquo;</h1>
 <p>Cuando dice:</p>
 <blockquote>
 <p>props to fail0verflow for the asymmetric half</p>
@@ -305,55 +305,46 @@ s = k^{-1}(H(m) + d_A * r) mod n
 <p>Perfecto, entonces vamos a meternos en lo realmente jugoso: <strong>cómo se recupera la clave privada paso a paso</strong> a partir del error de Sony. Esto es crypto aplicado de verdad.</p>
 <hr>
 <h1 id="-1-recordatorio-mínimo-de-ecdsa">🔐 1. Recordatorio mínimo de ECDSA</h1>
-<p>En ECDSA, para firmar un mensaje (m):</p>
+<p>En ECDSA, para firmar un mensaje $m$:</p>
 <ul>
-<li>Elegís un nonce aleatorio (k)</li>
+<li>Elegís un nonce aleatorio $k$</li>
 <li>Calculás:</li>
 </ul>
-<p>r = (kG)_x \bmod n</p>
-<p>s = k^{-1}(H(m) + d_A r) \bmod n</p>
+<p>$$r = (kG)_x \bmod n$$</p>
+<p>$$s = k^{-1}(H(m) + d_A r) \bmod n$$</p>
 <p>Donde:</p>
 <ul>
-<li>(d_A) = clave privada</li>
-<li>(H(m)) = hash del mensaje</li>
-<li>(n) = orden del grupo</li>
+<li>$d_A$ = clave privada</li>
+<li>$H(m)$ = hash del mensaje</li>
+<li>$n$ = orden del grupo</li>
 </ul>
 <hr>
 <h1 id="-2-el-bug-de-sony">💣 2. El bug de Sony</h1>
 <p>Sony hizo algo imperdonable:</p>
-<p>👉 <strong>reutilizó el mismo (k)</strong> para múltiples firmas</p>
+<p>👉 <strong>reutilizó el mismo $k$</strong> para múltiples firmas</p>
 <p>Eso significa:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>k₁ = k₂
 </span></span></code></pre></div><hr>
 <h1 id="-3-qué-tenés-cuando-ves-dos-firmas">🧠 3. Qué tenés cuando ves dos firmas</h1>
-<p>Para dos mensajes distintos (m_1, m_2):</p>
-<p>Tenés:</p>
-<p>[
-s_1 = k^{-1}(H(m_1) + d_A r)
-]
-[
-s_2 = k^{-1}(H(m_2) + d_A r)
-]</p>
+<p>Para dos mensajes distintos $m_1$, $m_2$:</p>
+<p>$$s_1 = k^{-1}(H(m_1) + d_A r)$$</p>
+<p>$$s_2 = k^{-1}(H(m_2) + d_A r)$$</p>
 <hr>
-<h1 id="-4-recuperar-k">🔓 4. Recuperar (k)</h1>
+<h1 id="-4-recuperar-k">🔓 4. Recuperar $k$</h1>
 <p>Restás ambas ecuaciones:</p>
-<p>[
-s_1 - s_2 = k^{-1}(H(m_1) - H(m_2))
-]</p>
+<p>$$s_1 - s_2 = k^{-1}(H(m_1) - H(m_2))$$</p>
 <p>Reordenando:</p>
-<p>k = \frac{H(m_1) - H(m_2)}{s_1 - s_2} \bmod n</p>
+<p>$$k = \frac{H(m_1) - H(m_2)}{s_1 - s_2} \bmod n$$</p>
 <p>👉 Ya tenés el nonce</p>
 <hr>
 <h1 id="-5-recuperar-la-clave-privada">💀 5. Recuperar la clave privada</h1>
 <p>Volvés a la ecuación original:</p>
-<p>[
-s = k^{-1}(H(m) + d_A r)
-]</p>
+<p>$$s = k^{-1}(H(m) + d_A r)$$</p>
 <p>Despejando:</p>
-<p>d_A = (sk - H(m)) r^{-1} \bmod n</p>
+<p>$$d_A = (sk - H(m)) \cdot r^{-1} \bmod n$$</p>
 <hr>
 <h1 id="-6-resultado">🧨 6. Resultado</h1>
-<p>👉 Tenés (d_A): la <strong>clave privada de Sony</strong></p>
+<p>👉 Tenés $d_A$: la <strong>clave privada de Sony</strong></p>
 <hr>
 <h1 id="-7-cómo-encaja-con-lo-que-viste">🧩 7. Cómo encaja con lo que viste</h1>
 <p>En el dump de George Hotz:</p>
@@ -381,9 +372,9 @@ s = k^{-1}(H(m) + d_A r)
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>firma válida → ejecutar
 </span></span></code></pre></div><p>Pero ahora cualquiera puede:</p>
 <ul>
-<li>generar (r, s) válidos</li>
+<li>generar $(r, s)$ válidos</li>
 <li>firmar ejecutables <code>.SELF</code></li>
-<li>crear firmware falso “oficial”</li>
+<li>crear firmware falso &ldquo;oficial&rdquo;</li>
 </ul>
 <p>👉 sin exploits, sin bugs runtime</p>
 <hr>
@@ -395,8 +386,8 @@ s = k^{-1}(H(m) + d_A r)
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>no depende de una versión → rompe TODO el ecosistema
 </span></span></code></pre></div><hr>
 <h1 id="-insight-interesante-nivel-pro">🧠 Insight interesante (nivel pro)</h1>
-<p>El error de Sony no fue “un bug” cualquiera:</p>
-<p>👉 fue no entender que (k) debe ser:</p>
+<p>El error de Sony no fue &ldquo;un bug&rdquo; cualquiera:</p>
+<p>👉 fue no entender que $k$ debe ser:</p>
 <ul>
 <li>único</li>
 <li>impredecible</li>
@@ -404,7 +395,7 @@ s = k^{-1}(H(m) + d_A r)
 </ul>
 <p>Hoy en día esto se evita con:</p>
 <ul>
-<li>RFC 6979 (k determinístico basado en hash)</li>
+<li>RFC 6979 ($k$ determinístico basado en hash)</li>
 <li>DRBG seguros</li>
 </ul>
 <hr>
@@ -465,10 +456,10 @@ s = k^{-1}(H(m) + d_A r)
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>→ reject
 </span></span></code></pre></div><hr>
 <h1 id="-5-qué-cambia-con-el-hack">💣 5. Qué cambia con el hack</h1>
-<p>Con la clave privada (<code>d_A</code>) que publicó George Hotz:</p>
-<p>👉 podés generar <code>(r, s)</code> válidos</p>
+<p>Con la clave privada ($d_A$) que publicó George Hotz:</p>
+<p>👉 podés generar $(r, s)$ válidos</p>
 <p>Entonces:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>tu binario == binario “oficial” para la PS3
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>tu binario == binario &#34;oficial&#34; para la PS3
 </span></span></code></pre></div><hr>
 <h1 id="-6-flujo-real-para-crear-un-self-firmado">🧪 6. Flujo real para crear un SELF firmado</h1>
 <p>Esto es lo que habilitó todo el ecosistema homebrew.</p>
@@ -487,17 +478,10 @@ s = k^{-1}(H(m) + d_A r)
 <p>Acá entra ECDSA:</p>
 <ol>
 <li>calculás hash del ELF</li>
-<li>elegís (k)</li>
-<li>generás:</li>
+<li>elegís $k$</li>
+<li>generás $r$ y $s$ usando:</li>
 </ol>
-<ul>
-<li>(r)</li>
-<li>(s)</li>
-</ul>
-<p>usando:</p>
-<p>[
-s = k^{-1}(H(m) + d_A r)
-]</p>
+<p>$$s = k^{-1}(H(m) + d_A r)$$</p>
 <p>👉 ahora sí podés hacerlo porque tenés <code>d_A</code></p>
 <hr>
 <h2 id="paso-4-empaquetar">Paso 4: empaquetar</h2>
@@ -523,7 +507,7 @@ s = k^{-1}(H(m) + d_A r)
 <p>Entonces al poder firmar:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>bypass completo del DRM
 </span></span></code></pre></div><hr>
-<h1 id="-8-qué-hacía-exactamente-make_self_npdrm">🔍 8. Qué hacía exactamente “make_self_npdrm”</h1>
+<h1 id="-8-qué-hacía-exactamente-make_self_npdrm">🔍 8. Qué hacía exactamente &ldquo;make_self_npdrm&rdquo;</h1>
 <p>Convertía:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>ELF → SELF válido para PS3
 </span></span></code></pre></div><p>Incluyendo:</p>
@@ -577,7 +561,6 @@ s = k^{-1}(H(m) + d_A r)
 <h1 id="-en-una-frase-1">🧠 En una frase</h1>
 <p>👉 Un <code>.SELF</code> es solo un ELF con una firma…
 👉 y cuando tenés la clave, podés hacer que cualquier cosa parezca oficial.</p>
-<hr>
 <hr>
 <p>Si querés ir todavía más bajo nivel, podemos:</p>
 <ul>
@@ -664,22 +647,10 @@ s = k^{-1}(H(m) + d_A r)
 <h1 id="-9-cómo-lo-reversearon">🧠 9. Cómo lo reversearon</h1>
 <p>Gente como fail0verflow hizo:</p>
 <ol>
-<li>
-<p>Dump de memoria</p>
-</li>
-<li>
-<p>Encontrar loaders</p>
-</li>
-<li>
-<p>Identificar:</p>
-<ul>
-<li>funciones SHA1</li>
-<li>funciones ECDSA</li>
-</ul>
-</li>
-<li>
-<p>Trackear qué bytes se hashean</p>
-</li>
+<li>Dump de memoria</li>
+<li>Encontrar loaders</li>
+<li>Identificar funciones SHA1 y funciones ECDSA</li>
+<li>Trackear qué bytes se hashean</li>
 </ol>
 <p>👉 classic reversing flow</p>
 <hr>
@@ -688,9 +659,9 @@ s = k^{-1}(H(m) + d_A r)
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>SHA1 + ECDSA
 </span></span></code></pre></div><p>Hoy suena débil, pero:</p>
 <p>👉 el problema NO fue SHA1
-👉 fue el nonce (k)</p>
+👉 fue el nonce $k$</p>
 <hr>
-<h1 id="-11-mini-signer-conceptual">⚙️ 11. Mini “signer” conceptual</h1>
+<h1 id="-11-mini-signer-conceptual">⚙️ 11. Mini &ldquo;signer&rdquo; conceptual</h1>
 <p>Pseudo implementación:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>hash <span style="color:#f92672">=</span> sha1(data)
 </span></span><span style="display:flex;"><span>
@@ -724,11 +695,10 @@ s = k^{-1}(H(m) + d_A r)
 <p>Podés crear:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>tu ELF → tu SELF → tu PKG
 </span></span></code></pre></div><p>Y la PS3 dice:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>“esto lo firmó Sony”
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>&#34;esto lo firmó Sony&#34;
 </span></span></code></pre></div><hr>
 <h1 id="-en-una-frase-2">🧠 En una frase</h1>
 <p>👉 Reversearon el loader, entendieron el formato, rompieron la firma… y eso fue suficiente para controlar toda la consola.</p>
-<hr>
 <hr>
 <p>Si querés ir al último nivel (muy interesante):</p>
 <ul>
@@ -736,7 +706,7 @@ s = k^{-1}(H(m) + d_A r)
 <li>o cómo detectaron que <code>k</code> era constante en firmas reales</li>
 </ul>
 <p>Ahí ya es reversing criptográfico puro, que fue exactamente lo que hizo famoso este hack.</p>
-<p>Bien, ahora sí entramos en lo más interesante: <strong>cómo se dieron cuenta de que Sony reutilizaba (k)</strong>.
+<p>Bien, ahora sí entramos en lo más interesante: <strong>cómo se dieron cuenta de que Sony reutilizaba $k$</strong>.
 Esto ya es reversing + análisis criptográfico real, no teoría.</p>
 <hr>
 <h1 id="-1-punto-de-partida">🧠 1. Punto de partida</h1>
@@ -745,42 +715,35 @@ Esto ya es reversing + análisis criptográfico real, no teoría.</p>
 <ul>
 <li>muchos <code>.SELF</code> oficiales</li>
 <li>firmware firmado por Sony</li>
-<li>acceso para extraer firmas <code>(r, s)</code></li>
+<li>acceso para extraer firmas $(r, s)$</li>
 </ul>
 <hr>
 <h1 id="-2-qué-hicieron-primero">🔍 2. Qué hicieron primero</h1>
-<p>De cada binario firmado sacaron:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>(r, s)
-</span></span></code></pre></div><p>y el hash del mensaje:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>H(m)
-</span></span></code></pre></div><p>👉 esto es trivial una vez entendés el formato <code>.SELF</code></p>
+<p>De cada binario firmado sacaron $(r, s)$ y el hash del mensaje $H(m)$.</p>
+<p>👉 esto es trivial una vez entendés el formato <code>.SELF</code></p>
 <hr>
-<h1 id="-3-el-momento-wtf">💣 3. El “momento WTF”</h1>
+<h1 id="-3-el-momento-wtf">💣 3. El &ldquo;momento WTF&rdquo;</h1>
 <p>Al comparar múltiples firmas:</p>
-<p>👉 notaron que:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>r era siempre igual
-</span></span></code></pre></div><hr>
+<p>👉 notaron que $r$ era siempre igual</p>
+<hr>
 <h2 id="-por-qué-eso-es-gravísimo">🧠 ¿Por qué eso es gravísimo?</h2>
 <p>Recordá:</p>
-<p>r = (kG)_x \bmod n</p>
-<p>👉 Si <code>r</code> es igual → <strong>k es igual</strong></p>
+<p>$$r = (kG)_x \bmod n$$</p>
+<p>👉 Si $r$ es igual → $k$ es igual</p>
 <hr>
 <h1 id="-4-confirmación-empírica">💀 4. Confirmación empírica</h1>
-<p>Tomaron dos firmas:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>(r, s1) sobre m1
-</span></span><span style="display:flex;"><span>(r, s2) sobre m2
-</span></span></code></pre></div><p>Mismo <code>r</code>, distinto <code>s</code>.</p>
-<p>Eso implica:</p>
+<p>Tomaron dos firmas: $(r, s_1)$ sobre $m_1$ y $(r, s_2)$ sobre $m_2$.</p>
+<p>Mismo $r$, distinto $s$. Eso implica:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>mismo k reutilizado
 </span></span></code></pre></div><hr>
 <h1 id="-5-ataque-directo">🔓 5. Ataque directo</h1>
 <p>Aplicaron:</p>
-<p>k = \frac{H(m_1) - H(m_2)}{s_1 - s_2} \bmod n</p>
+<p>$$k = \frac{H(m_1) - H(m_2)}{s_1 - s_2} \bmod n$$</p>
 <p>Y luego:</p>
-<p>d_A = (s k - H(m)) r^{-1} \bmod n</p>
+<p>$$d_A = (s k - H(m)) \cdot r^{-1} \bmod n$$</p>
 <hr>
 <h1 id="-6-cómo-verificaron-que-era-correcto">🧪 6. Cómo verificaron que era correcto</h1>
-<p>No alcanza con calcular <code>d_A</code>.</p>
+<p>No alcanza con calcular $d_A$.</p>
 <p>Tenés que validar:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>pubkey == d_A * G
 </span></span></code></pre></div><p>Y además:</p>
@@ -788,10 +751,7 @@ Esto ya es reversing + análisis criptográfico real, no teoría.</p>
 </span></span></code></pre></div><p>👉 si eso pasa → tenés la clave real</p>
 <hr>
 <h1 id="-7-alternativa-aún-peor">🧠 7. Alternativa (aún peor)</h1>
-<p>En PS3 pasó algo todavía más brutal:</p>
-<p>👉 en algunos casos:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>k era constante
-</span></span></code></pre></div><p>Ni siquiera “reutilizado accidentalmente”.</p>
+<p>En PS3 pasó algo todavía más brutal: en algunos casos $k$ era constante. Ni siquiera &ldquo;reutilizado accidentalmente&rdquo;.</p>
 <p>Era literalmente:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>k = constante
 </span></span></code></pre></div><hr>
@@ -803,83 +763,57 @@ Esto ya es reversing + análisis criptográfico real, no teoría.</p>
 </span></span></code></pre></div><hr>
 <h1 id="-9-cómo-lo-detectás-en-reversing">💣 9. Cómo lo detectás en reversing</h1>
 <p>Dos caminos:</p>
-<hr>
-<h2 id="a-black-box-lo-que-hicieron-primero">A) Black-box (lo que hicieron primero)</h2>
+<p><strong>A) Black-box (lo que hicieron primero)</strong></p>
 <ul>
 <li>extraés firmas</li>
-<li>comparás <code>r</code></li>
+<li>comparás $r$</li>
 <li>si repite → listo</li>
 </ul>
-<hr>
-<h2 id="b-white-box-reversing-del-firmware">B) White-box (reversing del firmware)</h2>
-<p>Buscás:</p>
-<ul>
-<li>función ECDSA</li>
-<li>generación de <code>k</code></li>
-</ul>
-<p>Y encontrás algo tipo:</p>
+<p><strong>B) White-box (reversing del firmware)</strong></p>
+<p>Buscás la función ECDSA y la generación de $k$, y encontrás algo tipo:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span>k <span style="color:#f92672">=</span> <span style="color:#a6e22e">something_not_random</span>();
 </span></span></code></pre></div><hr>
 <h1 id="-10-patrón-típico-en-reversing">🔍 10. Patrón típico en reversing</h1>
-<p>Buscan en el binario:</p>
-<ul>
-<li>operaciones modulares</li>
-<li>multiplicaciones en curva elíptica</li>
-<li>uso de SHA1</li>
-</ul>
-<p>Luego:</p>
-<p>👉 siguen el flujo hasta ver cómo se genera <code>k</code></p>
+<p>Buscan en el binario operaciones modulares, multiplicaciones en curva elíptica y uso de SHA1. Luego siguen el flujo hasta ver cómo se genera $k$.</p>
 <hr>
 <h1 id="-11-por-qué-esto-pasó-error-conceptual">🧠 11. Por qué esto pasó (error conceptual)</h1>
 <p>Sony probablemente:</p>
 <ul>
 <li>no entendió bien ECDSA</li>
-<li>pensó que <code>k</code> podía ser fijo</li>
+<li>pensó que $k$ podía ser fijo</li>
 <li>o usó un RNG determinístico mal diseñado</li>
 </ul>
 <hr>
 <h1 id="-12-insight-importante">🔥 12. Insight importante</h1>
-<p>Este bug es más común de lo que parece:</p>
-<p>Casos reales:</p>
-<ul>
-<li>Bitcoin wallets rotas</li>
-<li>librerías TLS viejas</li>
-<li>smartcards</li>
-</ul>
-<p>👉 siempre el mismo problema: <code>k</code></p>
+<p>Este bug es más común de lo que parece. Casos reales: Bitcoin wallets rotas, librerías TLS viejas, smartcards.</p>
+<p>👉 siempre el mismo problema: $k$</p>
 <hr>
 <h1 id="-13-qué-hizo-george-hotz-después">🧩 13. Qué hizo George Hotz después</h1>
 <p>Con esa info:</p>
 <ul>
-<li>calculó <code>d_A</code></li>
+<li>calculó $d_A$</li>
 <li>la publicó</li>
 <li>creó tools para firmar</li>
 </ul>
 <p>👉 convirtió un fallo teórico en algo práctico</p>
 <hr>
 <h1 id="-14-en-una-frase">🧠 14. En una frase</h1>
-<p>👉 No “hackearon” la PS3…
+<p>👉 No &ldquo;hackearon&rdquo; la PS3…
 👉 <strong>observaron firmas, detectaron un patrón, y rompieron la criptografía</strong></p>
 <hr>
 <h1 id="-insight-final-nivel-pro">🔥 Insight final (nivel pro)</h1>
 <p>Esto es clave para entender seguridad real:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>los sistemas más seguros del mundo caen por errores pequeños en implementación
-</span></span></code></pre></div><p>No fue:</p>
-<ul>
-<li>buffer overflow</li>
-<li>kernel bug</li>
-</ul>
-<p>Fue:</p>
+</span></span></code></pre></div><p>No fue buffer overflow ni kernel bug. Fue:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>un mal uso de un número aleatorio
 </span></span></code></pre></div><hr>
-<hr>
 <p>Si querés, podemos hacer algo todavía más práctico:</p>
 <p>👉 simular este ataque con números reales (mini ECDSA)
-👉 o mostrar cómo escribir un script que recupere <code>d_A</code> a partir de dos firmas</p>
+👉 o mostrar cómo escribir un script que recupere $d_A$ a partir de dos firmas</p>
 <p>Eso ya es 100% aplicable y te deja con la idea completamente internalizada.</p>
 <p>Buenísimo, vamos a hacerlo <strong>práctico de verdad</strong>, pero con números chicos para que veas todo el flujo sin perderte en aritmética gigante.</p>
 <hr>
-<h1 id="-1-setup-mini-ecdsa-de-juguete">🧪 1. Setup (mini-ECDSA “de juguete”)</h1>
+<h1 id="-1-setup-mini-ecdsa-de-juguete">🧪 1. Setup (mini-ECDSA &ldquo;de juguete&rdquo;)</h1>
 <p>Elegimos parámetros simples:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>n = 97   (orden del grupo, primo chico)
 </span></span></code></pre></div><p>Supongamos que Sony tiene:</p>
@@ -892,114 +826,57 @@ Esto ya es reversing + análisis criptográfico real, no teoría.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>H(m1) = 10
 </span></span><span style="display:flex;"><span>H(m2) = 20
 </span></span></code></pre></div><p>Recordá la ecuación:</p>
-<p>[
-s = k^{-1}(H(m) + d_A r) \bmod n
-]</p>
+<p>$$s = k^{-1}(H(m) + d_A r) \bmod n$$</p>
 <p>Para simplificar, fijamos (como si viniera de la curva):</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>r = 30
 </span></span></code></pre></div><hr>
-<h2 id="-calcular-k-1-mod-n">🔹 Calcular (k^{-1} \mod n)</h2>
+<h2 id="-calcular-k-1-bmod-n">🔹 Calcular $k^{-1} \bmod n$</h2>
 <p>Queremos el inverso de 13 mod 97:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>13 * 15 = 195 ≡ 1 mod 97
-</span></span></code></pre></div><p>👉 entonces:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>k⁻¹ = 15
-</span></span></code></pre></div><hr>
+</span></span></code></pre></div><p>👉 entonces $k^{-1} = 15$</p>
+<hr>
 <h2 id="-firma-1">🔹 Firma 1</h2>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>s1 = 15 * (10 + 45*30) mod 97
-</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>45*30 = 1350
-</span></span><span style="display:flex;"><span>10 + 1350 = 1360
-</span></span><span style="display:flex;"><span>1360 mod 97 = 2
-</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>s1 = 15 * 2 = 30 mod 97
-</span></span></code></pre></div><p>👉 firma 1:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>(r, s1) = (30, 30)
-</span></span></code></pre></div><hr>
+</span></span><span style="display:flex;"><span>   = 15 * 2 = 30 mod 97
+</span></span></code></pre></div><p>👉 firma 1: $(r, s_1) = (30, 30)$</p>
+<hr>
 <h2 id="-firma-2">🔹 Firma 2</h2>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>s2 = 15 * (20 + 1350) mod 97
-</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>20 + 1350 = 1370
-</span></span><span style="display:flex;"><span>1370 mod 97 = 12
-</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>s2 = 15 * 12 = 180 mod 97 = 83
-</span></span></code></pre></div><p>👉 firma 2:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>(r, s2) = (30, 83)
-</span></span></code></pre></div><hr>
+</span></span><span style="display:flex;"><span>   = 15 * 12 = 180 mod 97 = 83
+</span></span></code></pre></div><p>👉 firma 2: $(r, s_2) = (30, 83)$</p>
+<hr>
 <h1 id="-3-ataque-lo-que-hicieron-en-ps3">🔍 3. Ataque (lo que hicieron en PS3)</h1>
-<p>El atacante ve:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>r = 30 (igual en ambas firmas)
-</span></span><span style="display:flex;"><span>s1 = 30
-</span></span><span style="display:flex;"><span>s2 = 83
-</span></span><span style="display:flex;"><span>H(m1) = 10
-</span></span><span style="display:flex;"><span>H(m2) = 20
-</span></span></code></pre></div><hr>
-<h2 id="-paso-1-recuperar-k">🔓 Paso 1: recuperar (k)</h2>
-<p>Usamos:</p>
-<p>[
-k = \frac{H(m_1) - H(m_2)}{s_1 - s_2} \bmod n
-]</p>
-<p>k = \frac{H(m_1) - H(m_2)}{s_1 - s_2} \bmod n</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>(10 - 20) = -10
-</span></span><span style="display:flex;"><span>(30 - 83) = -53
-</span></span></code></pre></div><p>Mod 97:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>-10 ≡ 87
-</span></span><span style="display:flex;"><span>-53 ≡ 44
-</span></span></code></pre></div><p>Necesitamos:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>44⁻¹ mod 97
-</span></span></code></pre></div><p>Sabemos:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>44 * 11 = 484 ≡ 1 mod 97
-</span></span></code></pre></div><p>👉 inverso = 11</p>
-<p>Entonces:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>k = 87 * 11 = 957 mod 97 = 13
-</span></span></code></pre></div><p>💥 Recuperamos:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>k = 13
-</span></span></code></pre></div><hr>
+<p>El atacante ve: $r = 30$ (igual en ambas firmas), $s_1 = 30$, $s_2 = 83$, $H(m_1) = 10$, $H(m_2) = 20$.</p>
+<hr>
+<h2 id="-paso-1-recuperar-k">🔓 Paso 1: recuperar $k$</h2>
+<p>$$k = \frac{H(m_1) - H(m_2)}{s_1 - s_2} \bmod n$$</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>(10 - 20) = -10 ≡ 87 mod 97
+</span></span><span style="display:flex;"><span>(30 - 83) = -53 ≡ 44 mod 97
+</span></span><span style="display:flex;"><span>44⁻¹ mod 97 = 11  (porque 44 * 11 = 484 ≡ 1)
+</span></span><span style="display:flex;"><span>k = 87 * 11 = 957 mod 97 = 13
+</span></span></code></pre></div><p>💥 Recuperamos: $k = 13$</p>
+<hr>
 <h2 id="-paso-2-recuperar-la-clave-privada">🔓 Paso 2: recuperar la clave privada</h2>
-<p>[
-d_A = (s k - H(m)) r^{-1} \bmod n
-]</p>
-<p>d_A = (s k - H(m)) r^{-1} \bmod n</p>
-<p>Usamos la firma 1:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>s = 30
-</span></span><span style="display:flex;"><span>k = 13
-</span></span><span style="display:flex;"><span>H(m) = 10
-</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>s*k = 390
-</span></span><span style="display:flex;"><span>390 - 10 = 380
-</span></span><span style="display:flex;"><span>380 mod 97 = 89
-</span></span></code></pre></div><p>Ahora:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>r = 30
-</span></span><span style="display:flex;"><span>30⁻¹ mod 97 = 55   (porque 30*55 = 1650 ≡ 1)
-</span></span></code></pre></div><p>Entonces:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>d_A = 89 * 55 = 4895 mod 97 = 45
-</span></span></code></pre></div><p>💀 Resultado:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>d_A = 45
-</span></span></code></pre></div><hr>
+<p>$$d_A = (sk - H(m)) \cdot r^{-1} \bmod n$$</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>s*k = 30*13 = 390
+</span></span><span style="display:flex;"><span>390 - 10 = 380 mod 97 = 89
+</span></span><span style="display:flex;"><span>30⁻¹ mod 97 = 55  (porque 30*55 = 1650 ≡ 1)
+</span></span><span style="display:flex;"><span>d_A = 89 * 55 = 4895 mod 97 = 45
+</span></span></code></pre></div><p>💀 Resultado: $d_A = 45$</p>
+<hr>
 <h1 id="-4-lo-que-acabás-de-hacer">🧠 4. Lo que acabás de hacer</h1>
-<p>Acabás de replicar exactamente el ataque que rompió la PlayStation 3.</p>
-<p>Sin:</p>
-<ul>
-<li>acceso al sistema</li>
-<li>reversing profundo</li>
-<li>exploits</li>
-</ul>
-<p>Solo con:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>firmas observadas + matemáticas
-</span></span></code></pre></div><hr>
+<p>Acabás de replicar exactamente el ataque que rompió la PlayStation 3. Sin acceso al sistema, sin reversing profundo, sin exploits. Solo con firmas observadas + matemáticas.</p>
+<hr>
 <h1 id="-5-insight-clave">🔥 5. Insight clave</h1>
-<p>Esto escala igual con números reales:</p>
-<ul>
-<li>en PS3 usan curvas de 160 bits</li>
-<li>hashes SHA1 reales</li>
-<li>firmas reales</li>
-</ul>
-<p>👉 pero el ataque es idéntico</p>
+<p>Esto escala igual con números reales: en PS3 usan curvas de 160 bits, hashes SHA1 reales, firmas reales. Pero el ataque es idéntico.</p>
 <hr>
 <h1 id="-6-patrón-mental-que-te-tenés-que-quedar">🧩 6. Patrón mental que te tenés que quedar</h1>
-<p>Si ves:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>mismo r en dos firmas ECDSA
-</span></span></code></pre></div><p>👉 automáticamente sabés:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>clave privada comprometida
-</span></span></code></pre></div><hr>
-<h1 id="-en-una-frase-3">🧠 En una frase</h1>
-<p>👉 Reutilizar (k) en ECDSA no es un bug menor…
-👉 es equivalente a publicar la clave privada.</p>
+<p>Si ves el mismo $r$ en dos firmas ECDSA:</p>
+<p>👉 automáticamente sabés que la clave privada está comprometida.</p>
 <hr>
+<h1 id="-en-una-frase-3">🧠 En una frase</h1>
+<p>👉 Reutilizar $k$ en ECDSA no es un bug menor…
+👉 es equivalente a publicar la clave privada.</p>
 <hr>
 <p>Si querés, el siguiente paso interesante sería:</p>
 <ul>
@@ -1007,6 +884,7 @@ d_A = (s k - H(m)) r^{-1} \bmod n
 <li>o agarrar firmas reales de PS3 y ver cómo encaja todo</li>
 </ul>
 <p>Ahí ya estás haciendo lo mismo que fail0verflow en su momento.</p>
+<hr>
 <h1 id="iphone-1">iPhone</h1>
 <p>Perfecto, entonces vamos más directo al hueso técnico, sin simplificar de más.</p>
 <p>Esto que hizo George Hotz es básicamente <strong>reconstruir toda la cadena de explotación de evasi0n7</strong> mirando el binario, y lo interesante es que la cadena está muy bien pensada: no depende de un solo bug, sino de <em>composición de primitivas</em>.</p>
@@ -1024,7 +902,7 @@ d_A = (s k - H(m)) r^{-1} \bmod n
 sandboxed
 filesystem limitado
 </code></pre><hr>
-<h1 id="-1-conseguir-ejecución-arbitraria-legítima">🧩 1. Conseguir ejecución arbitraria “legítima”</h1>
+<h1 id="-1-conseguir-ejecución-arbitraria-legítima">🧩 1. Conseguir ejecución arbitraria &ldquo;legítima&rdquo;</h1>
 <p>Descargan una IPA firmada por Apple (WWDC app).</p>
 <p>La clave:</p>
 <ul>
@@ -1252,71 +1130,14 @@ src="/quiz/quizdownHighlight.js">
 
 
 
+
+
 <script type="text/javascript"
   src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
-</script>
+  </script>
 <script type="text/x-mathjax-config">
-  MathJax.Hub.Config({
-    tex2jax: {
-      inlineMath: [],
-      displayMath: [],
-      skipTags: ["script","noscript","style","textarea","pre","code"]
-    }
-  });
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
 </script>
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-
-  function processNode(node) {
-    if (node.nodeType !== Node.TEXT_NODE) return;
-
-    var text = node.textContent;
-    var parent = node.parentNode;
-    if (!parent) return;
-
-    
-    var p = parent;
-    while (p) {
-      if (p.tagName === "PRE" || p.tagName === "CODE") return;
-      p = p.parentNode;
-    }
-
-    
-    var replaced = text.replace(/\[\s*\n([\s\S]*?)\n\s*\]/g, function(_, inner) {
-      return "\n\\[" + inner + "\\]\n";
-    });
-
-    if (replaced !== text) {
-      var span = document.createElement("span");
-      span.innerHTML = replaced
-        .replace(/\\\[/g, "\\[")
-        .replace(/\\\]/g, "\\]");
-      parent.replaceChild(span, node);
-    }
-  }
-
-  
-  var walker = document.createTreeWalker(
-    document.body,
-    NodeFilter.SHOW_TEXT,
-    null,
-    false
-  );
-  var nodes = [];
-  while (walker.nextNode()) nodes.push(walker.currentNode);
-  nodes.forEach(processNode);
-
-  
-  document.querySelectorAll("code.language-math").forEach(function (el) {
-    var wrapper = document.createElement("div");
-    wrapper.innerHTML = "\\[" + el.textContent + "\\]";
-    el.closest("pre").replaceWith(wrapper);
-  });
-
-  MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
-});
-</script>
-
 
 </footer>
 

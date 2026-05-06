@@ -205,71 +205,14 @@ src="/quiz/quizdownHighlight.js">
 
 
 
+
+
 <script type="text/javascript"
   src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
-</script>
+  </script>
 <script type="text/x-mathjax-config">
-  MathJax.Hub.Config({
-    tex2jax: {
-      inlineMath: [],
-      displayMath: [],
-      skipTags: ["script","noscript","style","textarea","pre","code"]
-    }
-  });
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
 </script>
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-
-  function processNode(node) {
-    if (node.nodeType !== Node.TEXT_NODE) return;
-
-    var text = node.textContent;
-    var parent = node.parentNode;
-    if (!parent) return;
-
-    
-    var p = parent;
-    while (p) {
-      if (p.tagName === "PRE" || p.tagName === "CODE") return;
-      p = p.parentNode;
-    }
-
-    
-    var replaced = text.replace(/\[\s*\n([\s\S]*?)\n\s*\]/g, function(_, inner) {
-      return "\n\\[" + inner + "\\]\n";
-    });
-
-    if (replaced !== text) {
-      var span = document.createElement("span");
-      span.innerHTML = replaced
-        .replace(/\\\[/g, "\\[")
-        .replace(/\\\]/g, "\\]");
-      parent.replaceChild(span, node);
-    }
-  }
-
-  
-  var walker = document.createTreeWalker(
-    document.body,
-    NodeFilter.SHOW_TEXT,
-    null,
-    false
-  );
-  var nodes = [];
-  while (walker.nextNode()) nodes.push(walker.currentNode);
-  nodes.forEach(processNode);
-
-  
-  document.querySelectorAll("code.language-math").forEach(function (el) {
-    var wrapper = document.createElement("div");
-    wrapper.innerHTML = "\\[" + el.textContent + "\\]";
-    el.closest("pre").replaceWith(wrapper);
-  });
-
-  MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
-});
-</script>
-
 
 </footer>
 
