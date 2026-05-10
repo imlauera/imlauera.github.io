@@ -10,9 +10,9 @@
   <meta property="og:site_name" content="Imlauer">
   <meta property="og:title" content="Urbanterror Fix">
   <meta property="og:description" content="No puedo jugar a UrbanTerror desde la TTY (abre el juego pero se cierra), asi que le pedi a Claude AI que me lo arregle.
-Ya tengo todo lo que necesito. El problema está muy claro — te lo explico y después los pasos exactos para instalarlo y debuggearlo.
-El problema raíz de Urban Terror en la TTY:
-Urban Terror usa ioquake3, que a diferencia de GZDoom tiene un path de renderizado completamente distinto. GZDoom puede usar Vulkan o OpenGL con EGL directamente sobre KMS/DRM. ioquake3 (la versión que trae Urban Terror 4.3) fue compilada asumiendo que SDL encontrará un display X11 — cuando no lo hay, SDL intenta inicializar OpenGL sobre KMS/DRM, pero el código del engine llama a SDL_SetGammaRamp que en modo KMS/DRM sin X11 manda SIGSEGV (señal 11). La causa consistente del segfault es exactamente SDL_SetGammaRamp: Received signal 11, exiting, que es lo que te pasó.">
+¡Buena aclaración! En Arch el proceso es más limpio. Vamos:
+1. Instalar dependencias sudo pacman -S git base-devel sdl2 mesa libgl \ libpulse alsa-lib libdrm libgbm \ curl speex opusfile Verificá que SDL2 tenga KMSDRM (en Arch viene habilitado por defecto):
+sdl2-config --version # Confirmar backend KMSDRM: find /usr/lib -name &#34;libSDL2*&#34; | xargs strings | grep -i kms 2. Clonar y compilar ioQuake3 git clone https://github.com/ioquake/ioq3.git cd ioq3 make \ USE_SDL=1 \ USE_OPENGL2=0 \ USE_CURL=1 \ USE_VOIP=1 \ ARCH=x86_64 \ -j$(nproc) El binario queda en:">
   <meta property="og:locale" content="es_es">
   <meta property="og:type" content="article">
     <meta property="article:published_time" content="2026-05-08T17:31:54-03:00">
@@ -22,20 +22,20 @@ Urban Terror usa ioquake3, que a diferencia de GZDoom tiene un path de renderiza
   
   <meta itemprop="name" content="Urbanterror Fix">
   <meta itemprop="description" content="No puedo jugar a UrbanTerror desde la TTY (abre el juego pero se cierra), asi que le pedi a Claude AI que me lo arregle.
-Ya tengo todo lo que necesito. El problema está muy claro — te lo explico y después los pasos exactos para instalarlo y debuggearlo.
-El problema raíz de Urban Terror en la TTY:
-Urban Terror usa ioquake3, que a diferencia de GZDoom tiene un path de renderizado completamente distinto. GZDoom puede usar Vulkan o OpenGL con EGL directamente sobre KMS/DRM. ioquake3 (la versión que trae Urban Terror 4.3) fue compilada asumiendo que SDL encontrará un display X11 — cuando no lo hay, SDL intenta inicializar OpenGL sobre KMS/DRM, pero el código del engine llama a SDL_SetGammaRamp que en modo KMS/DRM sin X11 manda SIGSEGV (señal 11). La causa consistente del segfault es exactamente SDL_SetGammaRamp: Received signal 11, exiting, que es lo que te pasó.">
+¡Buena aclaración! En Arch el proceso es más limpio. Vamos:
+1. Instalar dependencias sudo pacman -S git base-devel sdl2 mesa libgl \ libpulse alsa-lib libdrm libgbm \ curl speex opusfile Verificá que SDL2 tenga KMSDRM (en Arch viene habilitado por defecto):
+sdl2-config --version # Confirmar backend KMSDRM: find /usr/lib -name &#34;libSDL2*&#34; | xargs strings | grep -i kms 2. Clonar y compilar ioQuake3 git clone https://github.com/ioquake/ioq3.git cd ioq3 make \ USE_SDL=1 \ USE_OPENGL2=0 \ USE_CURL=1 \ USE_VOIP=1 \ ARCH=x86_64 \ -j$(nproc) El binario queda en:">
   <meta itemprop="datePublished" content="2026-05-08T17:31:54-03:00">
   <meta itemprop="dateModified" content="2026-05-08T17:31:54-03:00">
-  <meta itemprop="wordCount" content="537">
+  <meta itemprop="wordCount" content="660">
   <meta itemprop="keywords" content="Ai">
   
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="Urbanterror Fix">
   <meta name="twitter:description" content="No puedo jugar a UrbanTerror desde la TTY (abre el juego pero se cierra), asi que le pedi a Claude AI que me lo arregle.
-Ya tengo todo lo que necesito. El problema está muy claro — te lo explico y después los pasos exactos para instalarlo y debuggearlo.
-El problema raíz de Urban Terror en la TTY:
-Urban Terror usa ioquake3, que a diferencia de GZDoom tiene un path de renderizado completamente distinto. GZDoom puede usar Vulkan o OpenGL con EGL directamente sobre KMS/DRM. ioquake3 (la versión que trae Urban Terror 4.3) fue compilada asumiendo que SDL encontrará un display X11 — cuando no lo hay, SDL intenta inicializar OpenGL sobre KMS/DRM, pero el código del engine llama a SDL_SetGammaRamp que en modo KMS/DRM sin X11 manda SIGSEGV (señal 11). La causa consistente del segfault es exactamente SDL_SetGammaRamp: Received signal 11, exiting, que es lo que te pasó.">
+¡Buena aclaración! En Arch el proceso es más limpio. Vamos:
+1. Instalar dependencias sudo pacman -S git base-devel sdl2 mesa libgl \ libpulse alsa-lib libdrm libgbm \ curl speex opusfile Verificá que SDL2 tenga KMSDRM (en Arch viene habilitado por defecto):
+sdl2-config --version # Confirmar backend KMSDRM: find /usr/lib -name &#34;libSDL2*&#34; | xargs strings | grep -i kms 2. Clonar y compilar ioQuake3 git clone https://github.com/ioquake/ioq3.git cd ioq3 make \ USE_SDL=1 \ USE_OPENGL2=0 \ USE_CURL=1 \ USE_VOIP=1 \ ARCH=x86_64 \ -j$(nproc) El binario queda en:">
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -54,9 +54,30 @@ Urban Terror usa ioquake3, que a diferencia de GZDoom tiene un path de renderiza
   <meta name="referrer" content="no-referrer">
   <meta name="author" content="Imlauer.">
   <meta name="description" content="No puedo jugar a UrbanTerror desde la TTY (abre el juego pero se cierra), asi que le pedi a Claude AI que me lo arregle.
-Ya tengo todo lo que necesito. El problema está muy claro — te lo explico y después los pasos exactos para instalarlo y debuggearlo.
-El problema raíz de Urban Terror en la TTY:
-Urban Terror usa ioquake3, que a diferencia de GZDoom tiene un path de renderizado completamente distinto. GZDoom puede usar Vulkan o OpenGL con EGL directamente sobre KMS/DRM. ioquake3 (la versión que trae Urban Terror 4.3) fue compilada asumiendo que SDL encontrará un display X11 — cuando no lo hay, SDL intenta inicializar OpenGL sobre KMS/DRM, pero el código del engine llama a SDL_SetGammaRamp que en modo KMS/DRM sin X11 manda SIGSEGV (señal 11). La causa consistente del segfault es exactamente SDL_SetGammaRamp: Received signal 11, exiting, que es lo que te pasó.">
+¡Buena aclaración! En Arch el proceso es más limpio. Vamos:
+
+1. Instalar dependencias
+sudo pacman -S git base-devel sdl2 mesa libgl \
+  libpulse alsa-lib libdrm libgbm \
+  curl speex opusfile
+Verificá que SDL2 tenga KMSDRM (en Arch viene habilitado por defecto):
+sdl2-config --version
+
+# Confirmar backend KMSDRM:
+find /usr/lib -name &#34;libSDL2*&#34; | xargs strings | grep -i kms
+
+2. Clonar y compilar ioQuake3
+git clone https://github.com/ioquake/ioq3.git
+cd ioq3
+
+make \
+  USE_SDL=1 \
+  USE_OPENGL2=0 \
+  USE_CURL=1 \
+  USE_VOIP=1 \
+  ARCH=x86_64 \
+  -j$(nproc)
+El binario queda en:">
 </head>
 <body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
   <div class="navbar-brand">
@@ -105,76 +126,143 @@ Urban Terror usa ioquake3, que a diferencia de GZDoom tiene un path de renderiza
       <div class="container">
 <div class="content is-medium">
   <p>No puedo jugar a UrbanTerror desde la TTY (abre el juego pero se cierra), asi que le pedi a Claude AI que me lo arregle.</p>
-<p>Ya tengo todo lo que necesito. El problema está muy claro — te lo explico y después los pasos exactos para instalarlo y debuggearlo.</p>
-<p><strong>El problema raíz de Urban Terror en la TTY:</strong></p>
-<p>Urban Terror usa ioquake3, que a diferencia de GZDoom tiene un path de renderizado completamente distinto. GZDoom puede usar Vulkan o OpenGL con EGL directamente sobre KMS/DRM. ioquake3 (la versión que trae Urban Terror 4.3) fue compilada asumiendo que SDL encontrará un display X11 — cuando no lo hay, SDL intenta inicializar OpenGL sobre KMS/DRM, pero el código del engine llama a <code>SDL_SetGammaRamp</code> que en modo KMS/DRM sin X11 manda SIGSEGV (señal 11). La causa consistente del segfault es exactamente <code>SDL_SetGammaRamp: Received signal 11, exiting</code>, que es lo que te pasó.</p>
-<p>La solución es un combo de tres cosas: instalar bien, deshabilitar el gamma ramp, y forzar el driver correcto. Acá van los pasos exactos:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># ── PASO 1: Instalar dependencias ──────────────────────────────────────────</span>
-</span></span><span style="display:flex;"><span>sudo pacman -S lib32-libstdc++5 lib32-glibc lib32-sdl2 lib32-openal <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span>               lib32-libvorbis lib32-libjpeg-turbo wget unzip
+<p>¡Buena aclaración! En Arch el proceso es más limpio. Vamos:</p>
+<hr>
+<h2 id="1-instalar-dependencias">1. Instalar dependencias</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo pacman -S git base-devel sdl2 mesa libgl <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  libpulse alsa-lib libdrm libgbm <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  curl speex opusfile
+</span></span></code></pre></div><p>Verificá que SDL2 tenga KMSDRM (en Arch viene habilitado por defecto):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sdl2-config --version
 </span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># ── PASO 2: Descargar Urban Terror 4.3.4 ──────────────────────────────────</span>
-</span></span><span style="display:flex;"><span>mkdir -p ~/games/urbanterror <span style="color:#f92672">&amp;&amp;</span> cd ~/games/urbanterror
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Confirmar backend KMSDRM:</span>
+</span></span><span style="display:flex;"><span>find /usr/lib -name <span style="color:#e6db74">&#34;libSDL2*&#34;</span> | xargs strings | grep -i kms
+</span></span></code></pre></div><hr>
+<h2 id="2-clonar-y-compilar-ioquake3">2. Clonar y compilar ioQuake3</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>git clone https://github.com/ioquake/ioq3.git
+</span></span><span style="display:flex;"><span>cd ioq3
 </span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># Descarga directa del instalador oficial (Linux, ~800MB)</span>
-</span></span><span style="display:flex;"><span>wget https://cdn.urbanterror.info/urt/43/releases/zips/UrbanTerror43_full.zip
-</span></span><span style="display:flex;"><span>unzip UrbanTerror43_full.zip
-</span></span><span style="display:flex;"><span>cd UrbanTerror43
+</span></span><span style="display:flex;"><span>make <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  USE_SDL<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  USE_OPENGL2<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  USE_CURL<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  USE_VOIP<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  ARCH<span style="color:#f92672">=</span>x86_64 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -j<span style="color:#66d9ef">$(</span>nproc<span style="color:#66d9ef">)</span>
+</span></span></code></pre></div><p>El binario queda en:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>./build/release-linux-x86_64/ioquake3.x86_64
+</span></span></code></pre></div><hr>
+<h2 id="3-apuntar-al-contenido-de-urban-terror">3. Apuntar al contenido de Urban Terror</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>SDL_VIDEODRIVER<span style="color:#f92672">=</span>kmsdrm <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>./build/release-linux-x86_64/ioquake3.x86_64 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  +set fs_game q3ut4 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  +set fs_basepath /home/esotericwarfare/urbanterror/UrbanTerror43
+</span></span></code></pre></div><hr>
+<h2 id="4-si-kmsdrm-falla-verificar-permisos">4. Si KMSDRM falla, verificar permisos</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Tu usuario debe estar en el grupo &#39;video&#39; y &#39;input&#39;</span>
+</span></span><span style="display:flex;"><span>sudo usermod -aG video,input $USER
 </span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># ── PASO 3: Verificar el binario que incluye ──────────────────────────────</span>
-</span></span><span style="display:flex;"><span>ls -la ioUrbanTerror*
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># Vas a ver: ioUrbanTerror.i386 y/o ioUrbanTerror.x86_64</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Verificar dispositivos DRM disponibles:</span>
+</span></span><span style="display:flex;"><span>ls -la /dev/dri/
 </span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># ── PASO 4: El fix del segfault — deshabilitar gamma ──────────────────────</span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># Editá el archivo de config ANTES de lanzar:</span>
-</span></span><span style="display:flex;"><span>mkdir -p ~/.q3a/q3ut4
-</span></span><span style="display:flex;"><span>cat &gt;&gt; ~/.q3a/q3ut4/q3config.cfg <span style="color:#e6db74">&lt;&lt; &#39;EOF&#39;
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">seta r_ignorehwgamma &#34;1&#34;
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">seta r_fullscreen &#34;0&#34;
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">seta r_mode &#34;-1&#34;
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">seta r_customwidth &#34;1280&#34;
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">seta r_customheight &#34;720&#34;
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Debería verse algo como:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># card0, card1, renderD128</span>
+</span></span></code></pre></div><p>Después de agregar al grupo, <strong>cerrar sesión y volver a entrar</strong> para que tome efecto.</p>
+<hr>
+<h2 id="5-crear-script-de-arranque">5. Crear script de arranque</h2>
+<p>Para no escribir todo cada vez:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cat &gt; ~/launch-urt.sh <span style="color:#e6db74">&lt;&lt; &#39;EOF&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">#!/bin/bash
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">SDL_VIDEODRIVER=kmsdrm \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">SDL_RENDER_DRIVER=opengles2 \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">/home/esotericwarfare/ioq3/build/release-linux-x86_64/ioquake3.x86_64 \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  +set fs_game q3ut4 \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  +set fs_basepath /home/esotericwarfare/urbanterror/UrbanTerror43 \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  &#34;$@&#34;
 </span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOF</span>
 </span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># ── PASO 5: Intentar lanzar con SDL forzado a KMS/DRM ─────────────────────</span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># Primero asegurate de estar en el grupo video:</span>
-</span></span><span style="display:flex;"><span>sudo usermod -aG video,input $USER
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># (necesitás re-loguear o usar: newgrp video)</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># Lanzar forzando el driver KMS/DRM de SDL (sin X11):</span>
-</span></span><span style="display:flex;"><span>SDL_VIDEODRIVER<span style="color:#f92672">=</span>kmsdrm ./ioUrbanTerror.x86_64 +set r_ignorehwgamma <span style="color:#ae81ff">1</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># Si ese segfaultea también, probá con offscreen (para diagnóstico):</span>
-</span></span><span style="display:flex;"><span>SDL_VIDEODRIVER<span style="color:#f92672">=</span>offscreen ./ioUrbanTerror.x86_64 +set dedicated <span style="color:#ae81ff">0</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># ── PASO 6: Capturar el error exacto ─────────────────────────────────────</span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># Corré esto para ver el backtrace completo:</span>
-</span></span><span style="display:flex;"><span>SDL_VIDEODRIVER<span style="color:#f92672">=</span>kmsdrm ./ioUrbanTerror.x86_64 <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span>    +set r_ignorehwgamma <span style="color:#ae81ff">1</span> <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span>    +set com_logfile <span style="color:#ae81ff">1</span> <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span>    +set com_journal <span style="color:#ae81ff">0</span> <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span>    2&gt;&amp;<span style="color:#ae81ff">1</span> | tee ~/urt_error.log
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># El log queda en ~/.q3a/q3ut4/qconsole.log también</span>
-</span></span><span style="display:flex;"><span>cat ~/.q3a/q3ut4/qconsole.log
-</span></span></code></pre></div><p><strong>Si sigue fallando — plan B con Quake3e-UrbanTerror:</strong></p>
-<p>Hay un fork moderno del engine llamado Quake3e-UrbanTerror que está basado en el último source dump de ioquake3 sin SDL, con todas las correcciones aplicadas — y reporta entre 10% y 200% más FPS que el engine original. Ese engine maneja KMS/DRM mucho mejor:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Clonar y compilar Quake3e para Urban Terror</span>
-</span></span><span style="display:flex;"><span>git clone https://github.com/rorgoroth/Quake3e-UrbanTerror.git
-</span></span><span style="display:flex;"><span>cd Quake3e-UrbanTerror
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>sudo pacman -S cmake vulkan-headers vulkan-icd-loader mesa
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>cmake -B build -DCMAKE_BUILD_TYPE<span style="color:#f92672">=</span>Release
-</span></span><span style="display:flex;"><span>cmake --build build --parallel <span style="color:#66d9ef">$(</span>nproc<span style="color:#66d9ef">)</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># Copiar el binario al directorio de UrT:</span>
-</span></span><span style="display:flex;"><span>cp build/quake3e.ded ~/games/urbanterror/UrbanTerror43/
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># Lanzar (sin SDL, usa Vulkan/DRM directo):</span>
-</span></span><span style="display:flex;"><span>cd ~/games/urbanterror/UrbanTerror43
-</span></span><span style="display:flex;"><span>SDL_VIDEODRIVER<span style="color:#f92672">=</span>kmsdrm ./quake3e.ded +set sv_pure <span style="color:#ae81ff">0</span>
-</span></span></code></pre></div><p>Instalalo primero con los pasos 1-6, lanzalo, <strong>copiarme el contenido de <code>~/urt_error.log</code> o de <code>~/.q3a/q3ut4/qconsole.log</code></strong> y con eso veo exactamente en qué línea revienta y si el fix del gamma ramp alcanza o necesitamos el engine alternativo.</p>
+</span></span><span style="display:flex;"><span>chmod +x ~/launch-urt.sh
+</span></span></code></pre></div><hr>
+<h2 id="posibles-problemas-en-arch">Posibles problemas en Arch</h2>
+<table>
+  <thead>
+      <tr>
+          <th>Problema</th>
+          <th>Solución</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td><code>KMSDRM not available</code></td>
+          <td>SDL2 del sistema no tiene el backend, reinstalar con <code>sudo pacman -S sdl2</code></td>
+      </tr>
+      <tr>
+          <td><code>could not open display</code></td>
+          <td>Normal en TTY, KMSDRM no necesita display</td>
+      </tr>
+      <tr>
+          <td><code>signal 11</code> igual</td>
+          <td>Probar <code>SDL_VIDEODRIVER=offscreen</code> para descartar el problema</td>
+      </tr>
+      <tr>
+          <td>Pantalla negra</td>
+          <td>Agregar <code>+r_mode -2 +r_fullscreen 1</code> al comando</td>
+      </tr>
+      <tr>
+          <td>Sin sonido</td>
+          <td>Agregar <code>SDL_AUDIODRIVER=alsa</code> o <code>=pulseaudio</code></td>
+      </tr>
+  </tbody>
+</table>
+<p>¿Querés que también vea cómo hacer que arranque automáticamente desde TTY1 al iniciar el sistema?</p>
+<hr>
+<p>El problema es claro: Urban Terror está usando un binario precompilado de 2018 que intenta inicializar OpenGL vía SDL2 con un display X11/Wayland, y cuando no encuentra ninguno desde la TTY, recibe un <strong>Segmentation Fault (signal 11)</strong>.</p>
+<p>Los juegos que mencionás (Doom via GZDoom/Chocolate, SuperTuxKart, 0ad) funcionan en TTY porque usan KMS/DRM directamente o tienen backends que no dependen de X11.</p>
+<p>Urban Terror 4.3 es un binario cerrado basado en ioQuake3, así que no podés recompilarlo fácilmente. Tus opciones son:</p>
+<hr>
+<h2 id="opción-1-usar-xvfb--x11vnc-sin-monitor-todo-virtual">Opción 1: Usar Xvfb + x11vnc (sin monitor, todo virtual)</h2>
+<p>No es TTY pura, pero funciona sin GPU display:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>Xvfb :1 -screen <span style="color:#ae81ff">0</span> 1280x720x24 &amp;
+</span></span><span style="display:flex;"><span>DISPLAY<span style="color:#f92672">=</span>:1 ./Quake3-UrT.x86_64
+</span></span></code></pre></div><hr>
+<h2 id="opción-2-forzar-sdl2-con-backend-drmkmsdrm">Opción 2: Forzar SDL2 con backend DRM/KMSDRM</h2>
+<p>SDL2 tiene un backend <code>KMSDRM</code> que va directo al framebuffer sin X11. El binario de UrT usa SDL2, así que podés intentar forzarlo:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>SDL_VIDEODRIVER<span style="color:#f92672">=</span>kmsdrm ./Quake3-UrT.x86_64
+</span></span></code></pre></div><p>Si falla, verificá que tu usuario tenga acceso a los dispositivos DRM:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ls -la /dev/dri/
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Tu usuario debe estar en el grupo &#39;video&#39; o &#39;render&#39;</span>
+</span></span><span style="display:flex;"><span>sudo usermod -aG video,render $USER
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Luego volver a loguear</span>
+</span></span></code></pre></div><p>También probá con el renderizador específico:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>SDL_VIDEODRIVER<span style="color:#f92672">=</span>kmsdrm SDL_RENDER_DRIVER<span style="color:#f92672">=</span>opengles2 ./Quake3-UrT.x86_64
+</span></span></code></pre></div><hr>
+<h2 id="opción-3-recompilar-ioquake3-con-soporte-tty-nativo">Opción 3: Recompilar ioQuake3 con soporte TTY nativo</h2>
+<p>Urban Terror 4.3 usa ioQuake3. Podés compilar tu propio binario ioQuake3 con soporte KMS y apuntarle los archivos <code>.pk3</code> de UrT:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>git clone https://github.com/ioquake/ioq3.git
+</span></span><span style="display:flex;"><span>cd ioq3
+</span></span><span style="display:flex;"><span>make USE_SDL<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span> USE_OPENGL2<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>
+</span></span></code></pre></div><p>Luego ejecutarlo apuntando al directorio de UrT:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>./build/release-linux-x86_64/ioquake3.x86_64 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  +set fs_game q3ut4 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  +set fs_basepath /home/esotericwarfare/urbanterror/UrbanTerror43
+</span></span></code></pre></div><hr>
+<h2 id="opción-4-usar-un-servidor-x-liviano-en-tty-xorg-sin-compositor">Opción 4: Usar un servidor X liviano en TTY (Xorg sin compositor)</h2>
+<p>La más compatible y simple. Instalás Xorg mínimo y lo arrancás desde TTY:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo apt install xorg xinit
+</span></span></code></pre></div><p>Creás un <code>~/.xinitrc</code> minimalista:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>echo <span style="color:#e6db74">&#39;./Quake3-UrT.x86_64&#39;</span> &gt; ~/.xinitrc
+</span></span><span style="display:flex;"><span>chmod +x ~/.xinitrc
+</span></span></code></pre></div><p>Y desde la TTY:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>startx
+</span></span></code></pre></div><p>Xorg puede arrancar directo desde TTY usando KMS sin necesidad de un display manager.</p>
+<hr>
+<h2 id="diagnóstico-rápido-recomendado">Diagnóstico rápido recomendado</h2>
+<p>Primero probá esto para ver qué backends SDL2 están disponibles en tu sistema:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>SDL_VIDEODRIVER<span style="color:#f92672">=</span>kmsdrm ./Quake3-UrT.x86_64 2&gt;&amp;<span style="color:#ae81ff">1</span> | head -30
+</span></span><span style="display:flex;"><span>SDL_VIDEODRIVER<span style="color:#f92672">=</span>offscreen ./Quake3-UrT.x86_64 2&gt;&amp;<span style="color:#ae81ff">1</span> | head -30
+</span></span></code></pre></div><p>Y verificá qué versión de SDL2 tiene el binario enlazada:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ldd ./Quake3-UrT.x86_64 | grep sdl
+</span></span></code></pre></div><p>Si el binario tiene SDL2 enlazada dinámicamente, podés reemplazarla con una versión compilada con soporte KMSDRM. Si está enlazada estáticamente, la <strong>Opción 3</strong> (recompilar ioQ3) es tu mejor camino.</p>
 
 </div>
 
