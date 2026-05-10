@@ -8,9 +8,11 @@
 <head>
   <meta property="og:url" content="https://imlauera.github.io/freebsd_tarball_install/">
   <meta property="og:site_name" content="Imlauer">
-  <meta property="og:title" content="Freebsd tarball install">
-  <meta property="og:description" content="Vi tu guía de Arch. Es muy completa y práctica. Me gusta especialmente que documentás todo paso a paso con comandos concretos y explicaciones del “por qué” (GPT vs MBR, --removable para UEFI con fallas, etc.).
-Ahora te armo una guía de instalación de FreeBSD desde tarball al estilo Arch — manteniendo tu formato (comandos directos, explicaciones mínimas pero útiles, y notas de troubleshooting). La estructura será: particionado → formateo → extracción → configuración → bootloader → chroot → servicios.">
+  <meta property="og:title" content="Freebsd manual install from a tarball">
+  <meta property="og:description" content="Instalación de FreeBSD desde tarball (estilo Arch Linux) Tags: FreeBSD, Installation
+ANTES DE EMPEZAR: Esta guía asume que instalás desde un live de Arch Linux o cualquier Linux con acceso a gdisk, zfs-utils y wget. Si venís de mi guía de Arch, el flujo va a ser familiar.
+Paso 0: Preparar el entorno loadkeys es timedatectl set-ntp true Instalá las herramientas necesarias:
+sudo pacman -S gptfdisk dosfstools zfs-utils sudo modprobe zfs Nota sobre UFS vs ZFS: Desde un live de Arch, formatear con UFS es difícil porque ufsutils no está en los repos oficiales. ZFS en cambio sí está disponible con zfs-utils. Esta guía usa ZFS, que además es la opción recomendada en FreeBSD de todas formas.">
   <meta property="og:locale" content="es_es">
   <meta property="og:type" content="article">
     <meta property="article:published_time" content="2026-05-08T16:59:52-03:00">
@@ -18,24 +20,28 @@ Ahora te armo una guía de instalación de FreeBSD desde tarball al estilo Arch 
     <meta property="article:tag" content="Freebsd">
 
   
-  <meta itemprop="name" content="Freebsd tarball install">
-  <meta itemprop="description" content="Vi tu guía de Arch. Es muy completa y práctica. Me gusta especialmente que documentás todo paso a paso con comandos concretos y explicaciones del “por qué” (GPT vs MBR, --removable para UEFI con fallas, etc.).
-Ahora te armo una guía de instalación de FreeBSD desde tarball al estilo Arch — manteniendo tu formato (comandos directos, explicaciones mínimas pero útiles, y notas de troubleshooting). La estructura será: particionado → formateo → extracción → configuración → bootloader → chroot → servicios.">
+  <meta itemprop="name" content="Freebsd manual install from a tarball">
+  <meta itemprop="description" content="Instalación de FreeBSD desde tarball (estilo Arch Linux) Tags: FreeBSD, Installation
+ANTES DE EMPEZAR: Esta guía asume que instalás desde un live de Arch Linux o cualquier Linux con acceso a gdisk, zfs-utils y wget. Si venís de mi guía de Arch, el flujo va a ser familiar.
+Paso 0: Preparar el entorno loadkeys es timedatectl set-ntp true Instalá las herramientas necesarias:
+sudo pacman -S gptfdisk dosfstools zfs-utils sudo modprobe zfs Nota sobre UFS vs ZFS: Desde un live de Arch, formatear con UFS es difícil porque ufsutils no está en los repos oficiales. ZFS en cambio sí está disponible con zfs-utils. Esta guía usa ZFS, que además es la opción recomendada en FreeBSD de todas formas.">
   <meta itemprop="datePublished" content="2026-05-08T16:59:52-03:00">
   <meta itemprop="dateModified" content="2026-05-08T16:59:52-03:00">
-  <meta itemprop="wordCount" content="1125">
+  <meta itemprop="wordCount" content="952">
   <meta itemprop="keywords" content="Freebsd">
   
   <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="Freebsd tarball install">
-  <meta name="twitter:description" content="Vi tu guía de Arch. Es muy completa y práctica. Me gusta especialmente que documentás todo paso a paso con comandos concretos y explicaciones del “por qué” (GPT vs MBR, --removable para UEFI con fallas, etc.).
-Ahora te armo una guía de instalación de FreeBSD desde tarball al estilo Arch — manteniendo tu formato (comandos directos, explicaciones mínimas pero útiles, y notas de troubleshooting). La estructura será: particionado → formateo → extracción → configuración → bootloader → chroot → servicios.">
+  <meta name="twitter:title" content="Freebsd manual install from a tarball">
+  <meta name="twitter:description" content="Instalación de FreeBSD desde tarball (estilo Arch Linux) Tags: FreeBSD, Installation
+ANTES DE EMPEZAR: Esta guía asume que instalás desde un live de Arch Linux o cualquier Linux con acceso a gdisk, zfs-utils y wget. Si venís de mi guía de Arch, el flujo va a ser familiar.
+Paso 0: Preparar el entorno loadkeys es timedatectl set-ntp true Instalá las herramientas necesarias:
+sudo pacman -S gptfdisk dosfstools zfs-utils sudo modprobe zfs Nota sobre UFS vs ZFS: Desde un live de Arch, formatear con UFS es difícil porque ufsutils no está en los repos oficiales. ZFS en cambio sí está disponible con zfs-utils. Esta guía usa ZFS, que además es la opción recomendada en FreeBSD de todas formas.">
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>
     
-    Freebsd tarball install
+    Freebsd manual install from a tarball
     
   </title>
   <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
@@ -47,8 +53,21 @@ Ahora te armo una guía de instalación de FreeBSD desde tarball al estilo Arch 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="referrer" content="no-referrer">
   <meta name="author" content="Imlauer.">
-  <meta name="description" content="Vi tu guía de Arch. Es muy completa y práctica. Me gusta especialmente que documentás todo paso a paso con comandos concretos y explicaciones del &ldquo;por qué&rdquo; (GPT vs MBR, --removable para UEFI con fallas, etc.).
-Ahora te armo una guía de instalación de FreeBSD desde tarball al estilo Arch — manteniendo tu formato (comandos directos, explicaciones mínimas pero útiles, y notas de troubleshooting). La estructura será: particionado → formateo → extracción → configuración → bootloader → chroot → servicios.">
+  <meta name="description" content="Instalación de FreeBSD desde tarball (estilo Arch Linux)
+Tags: FreeBSD, Installation
+
+
+ANTES DE EMPEZAR: Esta guía asume que instalás desde un live de Arch Linux o cualquier Linux con acceso a gdisk, zfs-utils y wget. Si venís de mi guía de Arch, el flujo va a ser familiar.
+
+
+Paso 0: Preparar el entorno
+loadkeys es
+timedatectl set-ntp true
+Instalá las herramientas necesarias:
+sudo pacman -S gptfdisk dosfstools zfs-utils
+sudo modprobe zfs
+
+Nota sobre UFS vs ZFS: Desde un live de Arch, formatear con UFS es difícil porque ufsutils no está en los repos oficiales. ZFS en cambio sí está disponible con zfs-utils. Esta guía usa ZFS, que además es la opción recomendada en FreeBSD de todas formas.">
 </head>
 <body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
   <div class="navbar-brand">
@@ -73,7 +92,7 @@ Ahora te armo una guía de instalación de FreeBSD desde tarball al estilo Arch 
       <div class="hero-body">
 <div class="container">
   <h1 class="title">
-    Freebsd tarball install
+    Freebsd manual install from a tarball
   </h1>
   <h2 class="subtitle">
     <time datetime='2026-05-08T16:59:52-03:00'>
@@ -96,224 +115,211 @@ Ahora te armo una guía de instalación de FreeBSD desde tarball al estilo Arch 
     <section class="section">
       <div class="container">
 <div class="content is-medium">
-  <p>Vi tu guía de Arch. Es muy completa y práctica. Me gusta especialmente que documentás todo paso a paso con comandos concretos y explicaciones del &ldquo;por qué&rdquo; (GPT vs MBR, <code>--removable</code> para UEFI con fallas, etc.).</p>
-<p>Ahora te armo una guía de <strong>instalación de FreeBSD desde tarball al estilo Arch</strong> — manteniendo tu formato (comandos directos, explicaciones mínimas pero útiles, y notas de troubleshooting). La estructura será: particionado → formateo → extracción → configuración → bootloader → chroot → servicios.</p>
+  <h1 id="instalación-de-freebsd-desde-tarball-estilo-arch-linux">Instalación de FreeBSD desde tarball (estilo Arch Linux)</h1>
+<p><strong>Tags:</strong> FreeBSD, Installation</p>
 <hr>
-<h1 id="instalación-de-freebsd-desde-tarball-estilo-arch-linux">Instalación de FreeBSD desde tarball (estilo Arch Linux)</h1>
-<h2 id="paso-0-preparar-el-entorno-desde-arch-linux">Paso 0: Preparar el entorno desde Arch Linux</h2>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>loadkeys es
-</span></span><span style="display:flex;"><span>timedatectl set-ntp true
-</span></span></code></pre></div><p>Necesitás herramientas para manipular particiones GPT y sistemas de archivos UFS/ZFS:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo pacman -S gptfdisk dosfstools
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># Si querés ZFS (recomendado en FreeBSD):</span>
-</span></span><span style="display:flex;"><span>sudo pacman -S zfs-utils
-</span></span><span style="display:flex;"><span>sudo modprobe zfs
-</span></span></code></pre></div><hr>
+<blockquote>
+<p><strong>ANTES DE EMPEZAR:</strong> Esta guía asume que instalás desde un live de Arch Linux o cualquier Linux con acceso a <code>gdisk</code>, <code>zfs-utils</code> y <code>wget</code>. Si venís de mi guía de Arch, el flujo va a ser familiar.</p>
+</blockquote>
+<hr>
+<h2 id="paso-0-preparar-el-entorno">Paso 0: Preparar el entorno</h2>
+<pre tabindex="0"><code>loadkeys es
+timedatectl set-ntp true
+</code></pre><p>Instalá las herramientas necesarias:</p>
+<pre tabindex="0"><code>sudo pacman -S gptfdisk dosfstools zfs-utils
+sudo modprobe zfs
+</code></pre><blockquote>
+<p><strong>Nota sobre UFS vs ZFS:</strong> Desde un live de Arch, formatear con UFS es difícil porque <code>ufsutils</code> no está en los repos oficiales. ZFS en cambio sí está disponible con <code>zfs-utils</code>. Esta guía usa ZFS, que además es la opción recomendada en FreeBSD de todas formas.</p>
+</blockquote>
+<hr>
 <h2 id="paso-1-conectarte-a-wifi-si-es-necesario">Paso 1: Conectarte a WiFi (si es necesario)</h2>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>iwctl
-</span></span><span style="display:flex;"><span>device list
-</span></span><span style="display:flex;"><span>station wlan0 scan
-</span></span><span style="display:flex;"><span>station wlan0 connect NOMBRE_RED
-</span></span><span style="display:flex;"><span>station wlan0 show
-</span></span><span style="display:flex;"><span>exit
-</span></span></code></pre></div><p>Probá conexión:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ping -c <span style="color:#ae81ff">3</span> freebsd.org
-</span></span></code></pre></div><hr>
+<pre tabindex="0"><code>iwctl
+device list
+station wlan0 scan
+station wlan0 connect NOMBRE_RED
+station wlan0 show
+exit
+</code></pre><p>Probá conexión:</p>
+<pre tabindex="0"><code>ping -c 3 freebsd.org
+</code></pre><hr>
 <h2 id="paso-2-particionar-el-disco">Paso 2: Particionar el disco</h2>
 <p><strong>¡ATENCIÓN! Esto destruye todos los datos de <code>/dev/sdX</code>. Verificá con <code>lsblk</code> antes.</strong></p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>lsblk
-</span></span><span style="display:flex;"><span>gdisk /dev/sdX
-</span></span></code></pre></div><p>Dentro de <code>gdisk</code>:</p>
-<pre tabindex="0"><code>o              # crear nueva tabla GPT
+<pre tabindex="0"><code>lsblk
+gdisk /dev/sdX
+</code></pre><p>Dentro de <code>gdisk</code>:</p>
+<pre tabindex="0"><code>o              # nueva tabla GPT
 y              # confirmar
 
-n              # nueva partición
-1              # número
-[Enter]        # primer sector por defecto
-+512M          # último sector (EFI)
-ef00           # tipo EFI System
+n              # partición EFI
+1
+[Enter]
++512M
+ef00
 
-n
+n              # swap (ajustá según tu RAM)
 2
 [Enter]
-+8G            # ajustá según tu RAM
-8200           # tipo Linux swap (FreeBSD la usa igual)
++8G
+8200
 
-n
+n              # raíz FreeBSD (ZFS)
 3
 [Enter]
-[Enter]        # resto del disco
-a503           # tipo FreeBSD UFS (o a504 para ZFS)
+[Enter]
+a504           # tipo FreeBSD ZFS
 
-w              # escribir cambios
-y              # confirmar
-</code></pre><hr>
+w
+y
+</code></pre><blockquote>
+<p>Por qué GPT y no MBR: igual que en Arch, UEFI moderno requiere GPT. Los firmwares Intel hace años que deprecaron CSM/MBR. Más info: <a href="https://hardzone.es/reportajes/que-es/csm-bios-uefi-placa-base-hdd-ssd/">https://hardzone.es/reportajes/que-es/csm-bios-uefi-placa-base-hdd-ssd/</a></p>
+</blockquote>
+<hr>
 <h2 id="paso-3-formatear-particiones">Paso 3: Formatear particiones</h2>
 <h3 id="efi">EFI:</h3>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mkfs.vfat -F <span style="color:#ae81ff">32</span> /dev/sdX1
-</span></span></code></pre></div><h3 id="swap">Swap:</h3>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mkswap /dev/sdX2
-</span></span><span style="display:flex;"><span>swapon /dev/sdX2
-</span></span></code></pre></div><h3 id="raíz--opción-a-ufs-más-simple-similar-a-ext4">Raíz — Opción A: UFS (más simple, similar a ext4):</h3>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>newfs /dev/sdX3
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># Nota: newfs es el mkfs.ufs de FreeBSD, pero desde Arch no lo tenés.</span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># Alternativa: usá la ISO de FreeBSD en modo live o descargá los tools.</span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># Por eso, si estás en Arch puro, ZFS es más fácil porque tenés zfs-utils.</span>
-</span></span></code></pre></div><h3 id="raíz--opción-b-zfs-recomendado-nativo-en-freebsd">Raíz — Opción B: ZFS (recomendado, nativo en FreeBSD):</h3>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>zpool create -f -o altroot<span style="color:#f92672">=</span>/mnt/freebsd -O mountpoint<span style="color:#f92672">=</span>/ zroot /dev/sdX3
-</span></span><span style="display:flex;"><span>zfs create zroot/ROOT/default
-</span></span><span style="display:flex;"><span>zfs set mountpoint<span style="color:#f92672">=</span>/ zroot/ROOT/default
-</span></span><span style="display:flex;"><span>zpool set bootfs<span style="color:#f92672">=</span>zroot/ROOT/default zroot
-</span></span></code></pre></div><blockquote>
-<p><strong>Nota:</strong> Si usás UFS desde Arch Linux necesitás las herramientas <code>ufsutils</code> que no están en los repos oficiales. ZFS es más práctico desde Arch porque <code>zfs-utils</code> sí está disponible.</p>
-</blockquote>
-<hr>
+<pre tabindex="0"><code>mkfs.vfat -F 32 /dev/sdX1
+</code></pre><h3 id="swap">Swap:</h3>
+<pre tabindex="0"><code>mkswap /dev/sdX2
+swapon /dev/sdX2
+</code></pre><h3 id="raíz-con-zfs">Raíz con ZFS:</h3>
+<pre tabindex="0"><code>zpool create -f \
+  -o altroot=/mnt/freebsd \
+  -O mountpoint=/ \
+  -O atime=off \
+  -O compression=lz4 \
+  zroot /dev/sdX3
+
+zfs create zroot/ROOT
+zfs create -o mountpoint=/ zroot/ROOT/default
+zpool set bootfs=zroot/ROOT/default zroot
+</code></pre><p>Datasets opcionales (equivalente a particiones separadas en Arch):</p>
+<pre tabindex="0"><code>zfs create -o mountpoint=/home zroot/home
+zfs create -o mountpoint=/var  zroot/var
+zfs create -o mountpoint=/tmp  zroot/tmp
+</code></pre><hr>
 <h2 id="paso-4-descargar-los-tarballs-de-freebsd">Paso 4: Descargar los tarballs de FreeBSD</h2>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cd /tmp
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># Usá el mirror más cercano. Ejemplo para Argentina/Chile:</span>
-</span></span><span style="display:flex;"><span>wget https://download.freebsd.org/releases/amd64/15.0-RELEASE/base.txz
-</span></span><span style="display:flex;"><span>wget https://download.freebsd.org/releases/amd64/15.0-RELEASE/kernel.txz
-</span></span><span style="display:flex;"><span>wget https://download.freebsd.org/releases/amd64/15.0-RELEASE/lib32.txz   <span style="color:#75715e"># opcional, compat 32-bit</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># Verificá integridad:</span>
-</span></span><span style="display:flex;"><span>wget https://download.freebsd.org/releases/amd64/15.0-RELEASE/CHECKSUM.SHA512
-</span></span><span style="display:flex;"><span>sha512sum -c CHECKSUM.SHA512 --ignore-missing
-</span></span></code></pre></div><hr>
-<h2 id="paso-5-extraer-los-tarballs">Paso 5: Extraer los tarballs</h2>
-<h3 id="si-usaste-zfs">Si usaste ZFS:</h3>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mkdir -p /mnt/freebsd
-</span></span><span style="display:flex;"><span>zfs set mountpoint<span style="color:#f92672">=</span>/mnt/freebsd zroot/ROOT/default
-</span></span><span style="display:flex;"><span>cd /mnt/freebsd
-</span></span><span style="display:flex;"><span>tar xvJf /tmp/base.txz
-</span></span><span style="display:flex;"><span>tar xvJf /tmp/kernel.txz
-</span></span><span style="display:flex;"><span>tar xvJf /tmp/lib32.txz   <span style="color:#75715e"># si lo descargaste</span>
-</span></span></code></pre></div><h3 id="si-usaste-ufs-y-lograste-formatearla">Si usaste UFS (y lograste formatearla):</h3>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mkdir -p /mnt/freebsd
-</span></span><span style="display:flex;"><span>mount /dev/sdX3 /mnt/freebsd
-</span></span><span style="display:flex;"><span>cd /mnt/freebsd
-</span></span><span style="display:flex;"><span>tar xvJf /tmp/base.txz
-</span></span><span style="display:flex;"><span>tar xvJf /tmp/kernel.txz
-</span></span></code></pre></div><hr>
-<h2 id="paso-6-configurar-el-bootloader-efi">Paso 6: Configurar el bootloader EFI</h2>
-<p>FreeBSD usa su propio <code>loader.efi</code>, no GRUB. Copialo a la partición EFI:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mkdir -p /mnt/freebsd/boot/efi
-</span></span><span style="display:flex;"><span>mount /dev/sdX1 /mnt/freebsd/boot/efi
-</span></span><span style="display:flex;"><span>mkdir -p /mnt/freebsd/boot/efi/EFI/BOOT
-</span></span><span style="display:flex;"><span>cp /mnt/freebsd/boot/loader.efi /mnt/freebsd/boot/efi/EFI/BOOT/BOOTX64.efi
-</span></span></code></pre></div><blockquote>
-<p><strong>Nota:</strong> Si tu UEFI es problemático (como los que borran entradas EFI), copiá también a la ruta fallback:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cp /mnt/freebsd/boot/loader.efi /mnt/freebsd/boot/efi/EFI/BOOT/BOOTX64.efi
-</span></span></code></pre></div><p>FreeBSD no usa <code>efibootmgr</code>, su loader se autoinstala en la partición EFI.</p>
+<pre tabindex="0"><code>cd /tmp
+BASE=&#34;https://download.freebsd.org/releases/amd64/14.2-RELEASE&#34;
+
+wget $BASE/base.txz
+wget $BASE/kernel.txz
+wget $BASE/lib32.txz      # opcional: compat 32-bit
+
+# Verificá integridad:
+wget $BASE/CHECKSUM.SHA512
+sha512sum -c CHECKSUM.SHA512 --ignore-missing
+</code></pre><blockquote>
+<p>Cambiá <code>14.2-RELEASE</code> por la versión actual. Verificá en <a href="https://download.freebsd.org/releases/amd64/">https://download.freebsd.org/releases/amd64/</a></p>
 </blockquote>
 <hr>
-<h2 id="paso-7-preparar-el-chroot-y-entrar">Paso 7: Preparar el chroot y entrar</h2>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mount --bind /dev /mnt/freebsd/dev
-</span></span><span style="display:flex;"><span>mount --bind /proc /mnt/freebsd/proc
-</span></span><span style="display:flex;"><span>mount --bind /sys /mnt/freebsd/sys
-</span></span><span style="display:flex;"><span>cp /etc/resolv.conf /mnt/freebsd/etc/
-</span></span><span style="display:flex;"><span>chroot /mnt/freebsd /bin/sh
-</span></span></code></pre></div><hr>
-<h2 id="paso-8-configurar-el-sistema-dentro-del-chroot">Paso 8: Configurar el sistema dentro del chroot</h2>
-<h3 id="81-fstab-swap-y-puntos-de-montaje">8.1 fstab (swap y puntos de montaje):</h3>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cat &gt; /etc/fstab <span style="color:#e6db74">&lt;&lt; &#39;EOF&#39;
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">/dev/gpt/swap    none    swap    sw    0    0
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOF</span>
-</span></span></code></pre></div><blockquote>
-<p>En FreeBSD los discos GPT se nombran <code>/dev/gpt/label</code> o <code>/dev/ada0p1</code>. Si no usaste labels, podés referirte por UUID o dispositivo. Para instalación simple, usá <code>/dev/ada0p2</code> (ajustá según tu hardware real).</p>
+<h2 id="paso-5-extraer-los-tarballs">Paso 5: Extraer los tarballs</h2>
+<pre tabindex="0"><code>mkdir -p /mnt/freebsd
+zfs set mountpoint=/mnt/freebsd zroot/ROOT/default
+
+cd /mnt/freebsd
+tar xvJf /tmp/base.txz
+tar xvJf /tmp/kernel.txz
+tar xvJf /tmp/lib32.txz   # si lo descargaste
+</code></pre><hr>
+<h2 id="paso-6-partición-efi-y-bootloader">Paso 6: Partición EFI y bootloader</h2>
+<p>FreeBSD usa su propio <code>loader.efi</code>, no GRUB:</p>
+<pre tabindex="0"><code>mkdir -p /mnt/freebsd/boot/efi
+mount /dev/sdX1 /mnt/freebsd/boot/efi
+mkdir -p /mnt/freebsd/boot/efi/EFI/BOOT
+cp /mnt/freebsd/boot/loader.efi /mnt/freebsd/boot/efi/EFI/BOOT/BOOTX64.efi
+</code></pre><blockquote>
+<p><strong>OJO con UEFI problemático:</strong> igual que en Arch con el flag <code>--removable</code> de GRUB, algunos firmwares borran las entradas EFI. Copiando a <code>EFI/BOOT/BOOTX64.efi</code> usás la ruta fallback estándar, que la mayoría de los firmwares respeta. FreeBSD no usa <code>efibootmgr</code>.</p>
 </blockquote>
-<h3 id="82-zfs-si-aplica">8.2 ZFS (si aplica):</h3>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>echo <span style="color:#e6db74">&#39;zfs_load=&#34;YES&#34;&#39;</span> &gt;&gt; /boot/loader.conf
-</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#39;vfs.root.mountfrom=&#34;zfs:zroot/ROOT/default&#34;&#39;</span> &gt;&gt; /boot/loader.conf
-</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#39;zfs_enable=&#34;YES&#34;&#39;</span> &gt;&gt; /etc/rc.conf
-</span></span></code></pre></div><h3 id="83-hostname-y-red">8.3 Hostname y red:</h3>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>echo <span style="color:#e6db74">&#39;hostname=&#34;freebsd&#34;&#39;</span> &gt;&gt; /etc/rc.conf
-</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#39;ifconfig_DEFAULT=&#34;DHCP&#34;&#39;</span> &gt;&gt; /etc/rc.conf   <span style="color:#75715e"># Ajustá si tu interfaz no es em0/re0/etc</span>
-</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#39;sshd_enable=&#34;YES&#34;&#39;</span> &gt;&gt; /etc/rc.conf
-</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#39;dumpdev=&#34;NO&#34;&#39;</span> &gt;&gt; /etc/rc.conf              <span style="color:#75715e"># desactiva crash dumps si no querés partición swap dedicada</span>
-</span></span></code></pre></div><h3 id="84-zona-horaria">8.4 Zona horaria:</h3>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>tzsetup
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># Seleccioná tu zona interactivamente (America/Buenos_Aires)</span>
-</span></span></code></pre></div><h3 id="85-locale">8.5 Locale:</h3>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>echo <span style="color:#e6db74">&#39;LANG=en_US.UTF-8&#39;</span> &gt; /etc/login.conf
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># FreeBSD maneja locales diferente a Arch. Para consola:</span>
-</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#39;keymap=&#34;es.kbd&#34;&#39;</span> &gt;&gt; /etc/rc.conf
-</span></span></code></pre></div><h3 id="86-contraseña-root">8.6 Contraseña root:</h3>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>passwd
-</span></span></code></pre></div><h3 id="87-crear-usuario">8.7 Crear usuario:</h3>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>adduser
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># Seguí las preguntas. Añadilo al grupo &#39;wheel&#39; si querés usar su/sudo después.</span>
-</span></span></code></pre></div><hr>
-<h2 id="paso-9-instalar-sudo-y-configurar-opcional-pero-recomendado">Paso 9: Instalar sudo y configurar (opcional pero recomendado)</h2>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pkg install sudo
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># O si pkg no está configurado todavía, esperá a bootear y hacerlo desde el sistema vivo.</span>
-</span></span></code></pre></div><p>Para habilitar sudo para el grupo wheel:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>visudo
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># Descomentá: %wheel ALL=(ALL:ALL) ALL</span>
-</span></span></code></pre></div><hr>
-<h2 id="paso-10-salir-del-chroot-y-desmontar">Paso 10: Salir del chroot y desmontar</h2>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>exit                              <span style="color:#75715e"># salir del chroot</span>
-</span></span><span style="display:flex;"><span>umount /mnt/freebsd/dev
-</span></span><span style="display:flex;"><span>umount /mnt/freebsd/proc
-</span></span><span style="display:flex;"><span>umount /mnt/freebsd/sys
-</span></span><span style="display:flex;"><span>umount /mnt/freebsd/boot/efi
-</span></span><span style="display:flex;"><span>zpool export zroot               <span style="color:#75715e"># si usaste ZFS</span>
-</span></span><span style="display:flex;"><span>umount /mnt/freebsd              <span style="color:#75715e"># si usaste UFS</span>
-</span></span><span style="display:flex;"><span>swapoff /dev/sdX2
-</span></span></code></pre></div><hr>
+<hr>
+<h2 id="paso-7-entrar-al-chroot">Paso 7: Entrar al chroot</h2>
+<pre tabindex="0"><code>mount --bind /dev  /mnt/freebsd/dev
+mount --bind /proc /mnt/freebsd/proc
+mount --bind /sys  /mnt/freebsd/sys
+cp /etc/resolv.conf /mnt/freebsd/etc/
+chroot /mnt/freebsd /bin/sh
+</code></pre><blockquote>
+<p>A diferencia de <code>arch-chroot</code>, acá es chroot manual. No hay equivalente de <code>arch-chroot</code> en FreeBSD porque el sistema de archivos virtual se monta diferente.</p>
+</blockquote>
+<hr>
+<h2 id="paso-8-configurar-el-sistema">Paso 8: Configurar el sistema</h2>
+<h3 id="81-zfs-al-boot">8.1 ZFS al boot:</h3>
+<pre tabindex="0"><code>echo &#39;zfs_load=&#34;YES&#34;&#39; &gt;&gt; /boot/loader.conf
+echo &#39;vfs.root.mountfrom=&#34;zfs:zroot/ROOT/default&#34;&#39; &gt;&gt; /boot/loader.conf
+</code></pre><h3 id="82-rcconf--servicios-y-red">8.2 rc.conf — servicios y red:</h3>
+<pre tabindex="0"><code>cat &gt;&gt; /etc/rc.conf &lt;&lt; &#39;EOF&#39;
+zfs_enable=&#34;YES&#34;
+hostname=&#34;freebsd&#34;
+ifconfig_DEFAULT=&#34;DHCP&#34;
+sshd_enable=&#34;YES&#34;
+dumpdev=&#34;NO&#34;
+EOF
+</code></pre><blockquote>
+<p><code>ifconfig_DEFAULT=&quot;DHCP&quot;</code> funciona para la mayoría de las interfaces. Si no levanta la red, verificá el nombre real con <code>ifconfig</code> (FreeBSD nombra <code>em0</code>, <code>re0</code>, <code>igb0</code>, etc.) y ajustá a <code>ifconfig_em0=&quot;DHCP&quot;</code>.</p>
+</blockquote>
+<h3 id="83-fstab">8.3 fstab:</h3>
+<pre tabindex="0"><code>cat &gt;&gt; /etc/fstab &lt;&lt; &#39;EOF&#39;
+# swap
+/dev/ada0p2    none    swap    sw    0    0
+EOF
+</code></pre><blockquote>
+<p>Ajustá <code>ada0p2</code> según tu hardware. En VMs suele ser <code>vtbd0p2</code>. Usá <code>gpart show</code> para verificar.</p>
+</blockquote>
+<h3 id="84-zona-horaria">8.4 Zona horaria:</h3>
+<pre tabindex="0"><code>tzsetup
+# Seleccioná America → Argentina → Buenos Aires
+</code></pre><h3 id="85-keymap-y-locale">8.5 Keymap y locale:</h3>
+<pre tabindex="0"><code>echo &#39;keymap=&#34;es.kbd&#34;&#39; &gt;&gt; /etc/rc.conf
+echo &#39;LANG=en_US.UTF-8&#39; &gt;&gt; /etc/login.conf
+</code></pre><h3 id="86-etchosts">8.6 /etc/hosts:</h3>
+<pre tabindex="0"><code>cat &gt;&gt; /etc/hosts &lt;&lt; &#39;EOF&#39;
+127.0.0.1   localhost
+::1         localhost
+127.0.0.1   freebsd.localdomain freebsd
+EOF
+</code></pre><h3 id="87-contraseña-root">8.7 Contraseña root:</h3>
+<pre tabindex="0"><code>passwd
+</code></pre><h3 id="88-crear-usuario">8.8 Crear usuario:</h3>
+<pre tabindex="0"><code>adduser
+# Cuando pregunte grupos extra, agregá: wheel
+</code></pre><hr>
+<h2 id="paso-9-sudo-opcional-pero-recomendado">Paso 9: sudo (opcional pero recomendado)</h2>
+<pre tabindex="0"><code>pkg install sudo
+visudo
+# Descomentá:  %wheel ALL=(ALL:ALL) ALL
+</code></pre><blockquote>
+<p>La primera vez que ejecutás <code>pkg</code> puede tardar porque bootstrapea el sistema de paquetes. Si falla, ejecutá <code>pkg bootstrap -f</code>.</p>
+</blockquote>
+<hr>
+<h2 id="paso-10-salir-y-desmontar">Paso 10: Salir y desmontar</h2>
+<pre tabindex="0"><code>exit                           # salir del chroot
+umount /mnt/freebsd/dev
+umount /mnt/freebsd/proc
+umount /mnt/freebsd/sys
+umount /mnt/freebsd/boot/efi
+zpool export zroot
+swapoff /dev/sdX2
+</code></pre><hr>
 <h2 id="paso-11-rebootear">Paso 11: Rebootear</h2>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>reboot
-</span></span></code></pre></div><p>Desconectá cualquier medio de instalación. El sistema debería bootear directo al loader de FreeBSD.</p>
+<pre tabindex="0"><code>reboot
+</code></pre><p>Sacá el medio de instalación. El sistema debería bootear al loader de FreeBSD.</p>
 <hr>
 <h2 id="paso-12-post-instalación-ya-dentro-de-freebsd">Paso 12: Post-instalación (ya dentro de FreeBSD)</h2>
-<h3 id="actualizar-el-sistema">Actualizar el sistema:</h3>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>freebsd-update fetch
-</span></span><span style="display:flex;"><span>freebsd-update install
-</span></span></code></pre></div><h3 id="instalar-el-stack-gráfico-equivalente-a-tu-xorg--sway-en-arch">Instalar el stack gráfico (equivalente a tu xorg + sway en Arch):</h3>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pkg install xorg-minimal sway foot wmenu waybar
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># o si querés algo más completo:</span>
-</span></span><span style="display:flex;"><span>pkg install xorg sway i3status dmenu st
-</span></span></code></pre></div><h3 id="audio-equivalente-a-pipewire">Audio (equivalente a pipewire):</h3>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pkg install pulseaudio
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># FreeBSD usa OSS nativamente, pero pulseaudio funciona como capa de compatibilidad.</span>
-</span></span></code></pre></div><h3 id="gestor-de-paquetes-equivalente-a-pacman">Gestor de paquetes (equivalente a pacman):</h3>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pkg install pkg
-</span></span><span style="display:flex;"><span>pkg update
-</span></span><span style="display:flex;"><span>pkg search nombre_paquete
-</span></span><span style="display:flex;"><span>pkg install nombre_paquete
-</span></span></code></pre></div><hr>
-<h2 id="notas-de-troubleshooting">Notas de troubleshooting</h2>
-<table>
-  <thead>
-      <tr>
-          <th>Problema</th>
-          <th>Solución</th>
-      </tr>
-  </thead>
-  <tbody>
-      <tr>
-          <td>No bootea, UEFI no encuentra el loader</td>
-          <td>Asegurate que <code>BOOTX64.efi</code> esté en <code>/EFI/BOOT/</code>. Algunos firmwares necesitan el archivo en la raíz de la EFI también.</td>
-      </tr>
-      <tr>
-          <td>ZFS no importa al bootear</td>
-          <td>Desde el loader de FreeBSD (cuando aparece <code>OK</code> en el boot), presioná <code>3</code> para entrar al loader prompt y ejecutá: <code>set vfs.root.mountfrom=&quot;zfs:zroot/ROOT/default&quot;</code> luego <code>boot</code></td>
-      </tr>
-      <tr>
-          <td>No hay red después de bootear</td>
-          <td>Verificá con <code>ifconfig</code>. FreeBSD nombra interfaces <code>em0</code>, <code>re0</code>, <code>igb0</code>, etc. Ajustá <code>/etc/rc.conf</code> con el nombre correcto.</td>
-      </tr>
-      <tr>
-          <td><code>pkg</code> no funciona (no encuentra repos)</td>
-          <td>Ejecutá <code>pkg bootstrap -f</code> o configurá <code>/etc/pkg/FreeBSD.conf</code></td>
-      </tr>
-      <tr>
-          <td>Querés compilar desde fuentes como Gentoo</td>
-          <td>Descargá <code>src.txz</code>, extraelo en <code>/usr/src</code>, y usá <code>make buildworld buildkernel installkernel installworld</code></td>
-      </tr>
-  </tbody>
-</table>
-<hr>
-<h2 id="diferencias-clave-con-tu-guía-de-arch">Diferencias clave con tu guía de Arch</h2>
+<h3 id="actualizar">Actualizar:</h3>
+<pre tabindex="0"><code>freebsd-update fetch
+freebsd-update install
+</code></pre><h3 id="stack-gráfico-equivalente-a-sway-en-arch">Stack gráfico (equivalente a sway en Arch):</h3>
+<pre tabindex="0"><code>pkg install xorg-minimal sway foot wmenu waybar
+</code></pre><h3 id="audio">Audio:</h3>
+<p>FreeBSD tiene OSS nativo. Para compatibilidad con apps que usan PulseAudio:</p>
+<pre tabindex="0"><code>pkg install pulseaudio
+</code></pre><h3 id="gestión-de-paquetes-equivalente-a-pacman">Gestión de paquetes (equivalente a pacman):</h3>
+<pre tabindex="0"><code>pkg update
+pkg search nombre_paquete
+pkg install nombre_paquete
+pkg upgrade
+pkg autoremove          # equivalente a pacman -Rns $(pacman -Qdtq)
+pkg info                # equivalente a pacman -Qe
+</code></pre><hr>
+<h2 id="diferencias-clave-con-arch-linux">Diferencias clave con Arch Linux</h2>
 <table>
   <thead>
       <tr>
@@ -332,15 +338,15 @@ y              # confirmar
       </tr>
       <tr>
           <td><code>grub-install</code></td>
-          <td>Copiás <code>loader.efi</code> a la partición EFI</td>
+          <td>Copiás <code>loader.efi</code> a la EFI</td>
       </tr>
       <tr>
           <td><code>arch-chroot</code></td>
           <td><code>chroot /mnt /bin/sh</code> (manual)</td>
       </tr>
       <tr>
-          <td><code>systemctl enable</code></td>
-          <td><code>echo 'service_enable=&quot;YES&quot;' &gt;&gt; /etc/rc.conf</code></td>
+          <td><code>systemctl enable servicio</code></td>
+          <td><code>echo 'servicio_enable=&quot;YES&quot;' &gt;&gt; /etc/rc.conf</code></td>
       </tr>
       <tr>
           <td><code>pacman -S</code></td>
@@ -348,16 +354,58 @@ y              # confirmar
       </tr>
       <tr>
           <td><code>mkinitcpio</code></td>
-          <td>No existe. FreeBSD compila el kernel con los módulos necesarios.</td>
+          <td>No existe — el kernel incluye los módulos necesarios</td>
       </tr>
       <tr>
           <td><code>ext4</code></td>
-          <td><code>UFS</code> o <code>ZFS</code> (ZFS es nativo y recomendado)</td>
+          <td>UFS o ZFS (ZFS nativo y recomendado)</td>
+      </tr>
+      <tr>
+          <td><code>/etc/hostname</code></td>
+          <td><code>hostname=</code> en <code>/etc/rc.conf</code></td>
+      </tr>
+      <tr>
+          <td><code>locale-gen</code></td>
+          <td><code>/etc/login.conf</code> (diferente sistema de locales)</td>
       </tr>
   </tbody>
 </table>
 <hr>
-<p>¿Querés que profundice en algún paso? Por ejemplo, la instalación con UFS desde Arch es más complicada porque faltan las <code>ufsutils</code> en los repos. Podría explicar cómo hacerlo usando la ISO de FreeBSD en modo live como &ldquo;puente&rdquo;, o cómo configurar ZFS con datasets separados para <code>/home</code>, <code>/var</code>, etc. (similar a cómo separás particiones en Arch).</p>
+<h2 id="troubleshooting">Troubleshooting</h2>
+<table>
+  <thead>
+      <tr>
+          <th>Problema</th>
+          <th>Solución</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>No bootea, UEFI no encuentra el loader</td>
+          <td>Verificá que <code>BOOTX64.efi</code> esté en <code>/EFI/BOOT/</code>. Algunos firmwares también buscan en <code>/EFI/freebsd/</code>.</td>
+      </tr>
+      <tr>
+          <td>En el boot aparece <code>OK</code> y se cuelga</td>
+          <td>Estás en el loader prompt. Ejecutá: <code>set vfs.root.mountfrom=&quot;zfs:zroot/ROOT/default&quot;</code> y luego <code>boot</code></td>
+      </tr>
+      <tr>
+          <td>No hay red después de bootear</td>
+          <td>Ejecutá <code>ifconfig</code> para ver el nombre real de la interfaz. Ajustá <code>/etc/rc.conf</code> con <code>ifconfig_em0=&quot;DHCP&quot;</code> (o el nombre que corresponda).</td>
+      </tr>
+      <tr>
+          <td><code>pkg</code> no encuentra repos</td>
+          <td>Ejecutá <code>pkg bootstrap -f</code> o revisá <code>/etc/pkg/FreeBSD.conf</code></td>
+      </tr>
+      <tr>
+          <td>ZFS pool no importa al boot</td>
+          <td>Desde el loader prompt: <code>zpool import -f zroot</code> luego <code>boot</code></td>
+      </tr>
+      <tr>
+          <td>Querés compilar desde ports</td>
+          <td>Descargá <code>src.txz</code>, extraelo en <code>/usr/src</code>, y usá <code>make buildworld buildkernel installkernel installworld</code></td>
+      </tr>
+  </tbody>
+</table>
 
 </div>
 
