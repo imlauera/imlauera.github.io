@@ -27,7 +27,7 @@ sdl2-config --version # Confirmar backend KMSDRM: find /usr/lib -name &#34;libSD
 sdl2-config --version # Confirmar backend KMSDRM: find /usr/lib -name &#34;libSDL2*&#34; | xargs strings | grep -i kms 2. Clonar y compilar ioQuake3 CAMBIO A CMAKE MAS ABAJO ESTA. git clone https://github.com/ioquake/ioq3.git cd ioq3 make \ USE_SDL=1 \ USE_OPENGL2=0 \ USE_CURL=1 \ USE_VOIP=1 \ ARCH=x86_64 \ -j$(nproc) El binario queda en:">
   <meta itemprop="datePublished" content="2026-05-08T17:31:54-03:00">
   <meta itemprop="dateModified" content="2026-05-08T17:31:54-03:00">
-  <meta itemprop="wordCount" content="1109">
+  <meta itemprop="wordCount" content="1226">
   <meta itemprop="keywords" content="Ai">
   
   <meta name="twitter:card" content="summary">
@@ -345,6 +345,27 @@ El binario queda en:">
 </span></span><span style="display:flex;"><span>chmod +x ~/urt.sh
 </span></span></code></pre></div><p>El juego abre bien o hay algún problema gráfico/de controles?</p>
 <p>Con la tecla <code>~</code> abrís la consola y te conectás con <code>/connect IP:PORT</code> googleá urbanterror servers.</p>
+<p>GENIAL!! Lo logramos! Después de todo ese camino compilar ioQ3, parchear STANDALONE, el pak0 falso, sdl12-compat&hellip; funcionó!</p>
+<p>Para los mapas que faltan, UrT los descarga automáticamente si configurás el directorio de descarga. Desde la consola del juego (<code>~</code>):</p>
+<pre tabindex="0"><code>/cl_allowDownload 1
+/cl_downloadURL &#34;&#34;
+</code></pre><p>O agregalo al script de arranque para que siempre esté activo:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cat &gt; ~/urt.sh <span style="color:#e6db74">&lt;&lt; &#39;EOF&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">#!/bin/bash
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">SDL_VIDEODRIVER=kmsdrm ~/ioq3/build/Release/ioquake3 \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  +set fs_game q3ut4 \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  +set fs_basepath /home/esotericwarfare/UrbanTerror43/ \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  +set r_mode -2 \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  +set r_customwidth 1920 \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  +set r_customheight 1080 \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  +set r_fullscreen 1 \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  +set cl_allowDownload 1 \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  &#34;$@&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOF</span>
+</span></span><span style="display:flex;"><span>chmod +x ~/urt.sh
+</span></span></code></pre></div><p>Los mapas se guardan automáticamente en:</p>
+<pre tabindex="0"><code>~/.q3a/q3ut4/
+</code></pre><p>Y la próxima vez que entres a ese servidor ya los tenés. Disfrutá el juego!</p>
 
 </div>
 
