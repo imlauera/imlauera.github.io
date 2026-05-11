@@ -29,7 +29,7 @@ Instalé OBS Studio en Gentoo sin mirar las banderas (USE Flags) cuando ejecuté
 Con el comando emerge -pv obs-studio pude ver las banderas y leyendo la Wiki de Gentoo de OBS me dí cuenta que tengo que habilitar las siguientes banderas para tener esas funcionalidades:">
   <meta itemprop="datePublished" content="2025-06-22T22:25:52-03:00">
   <meta itemprop="dateModified" content="2025-06-22T22:25:52-03:00">
-  <meta itemprop="wordCount" content="6744">
+  <meta itemprop="wordCount" content="8448">
   <meta itemprop="keywords" content="Gentoo">
   
   <meta name="twitter:card" content="summary">
@@ -1231,7 +1231,440 @@ Tell the system to use wpa_supplicant for this interface. Add these lines to the
 Instalá gentoo de 64 bits usando la máxima cantidad de binarios y openrc siguiendo esta guía /home/esotericwarfare/projects/blog/content/gentoo_openrc.md usa /dev/sda3 como swap, /dev/sda4 como sistema raíz para ext4, y /dev/sda2 como fat 32 para efi boot,
 instalar gentoo tratá de casi no compilar NADA PORQUE MI HARDWARE ES LENTO. Y si la instalacion se &ldquo;queda trabada&rdquo; en
 realidad no esta trabada mi hardware es pobre deberias darte cuenta de eso exponé los archivos que muestran el progreso al ejecutar emerge porque no puedo hacer click para ver el comando expandido. Estoy usando archlinux y la partición de swap está en uso así no la formatees ni la montes. Preguntame primero antes de tomar una acción importante como formatear, desmontar, etc. No agregues la opcion &ndash;quiet al EMERGE_DEFAULT_OPTS= en /etc/portage/make.conf. NO cambies el host de binarios dejá el que trae por defecto. Cuando ejecutás emerge hacelo con -p (pretend) primero y asegurate de instalar la máxima cantidad de binarios ejecutá emerge con -g. Elegí la última versión del stage3, no la misma versión que usa la guía. Para ejecutar comandos dentro del chroot usá: sudo chroot /mnt/gentoo /bin/bash -l -c &ldquo;emerge &ndash;info&rdquo; &gt; /tmp/emerge.log 2&gt;&amp;1  El repositorio zero.com.ar de argentina dejó de funcionar. Tenes que usar la opción desktop de openrc. Usá &ndash;binpkg-respect-use=n  para instalar binarios sin respetar las USE flags. El binario de networkmanager no está disponible para openrc asi que intentá instalar el binario de wpa_supplicant o compilalo Estás interpretando mal. Tenes que instalar wpa_supplicant con la opción -g (que ya la tiene por defecto), no tenes que borrar sytemd porque systemd no está instalado. Estamos usando OpenRC. Va a tardar porque tengo un hardware pobre, lee las especificaciones de mi hardware, lee los archivos de mi Linux que te dan información sobre mi hardware. Usa wpa_supplicant con dhcpcd, no uses Netirfc. Varias veces me rompiste todo al desmontar ejecutar <code>umount -l</code> me quedé sin bash.</p>
-
+<h2 id="claude-ai-me-genero-este-script-todavia-no-lo-probe">Claude AI me genero este script todavia no lo probe</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/bash
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"># gentoo-install.sh — Instalador de Gentoo OpenRC con binarios</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Basado en las guías de https://imlauera.github.io</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Ejecutar desde Arch Linux (o cualquier distro) como root</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Hardware objetivo: netbook con hardware modesto, máximos binarios posibles</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>set -e
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ─── Colores ────────────────────────────────────────────────────────────────</span>
+</span></span><span style="display:flex;"><span>RED<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;\033[0;31m&#39;</span>; GREEN<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;\033[0;32m&#39;</span>; YELLOW<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;\033[1;33m&#39;</span>
+</span></span><span style="display:flex;"><span>BLUE<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;\033[0;34m&#39;</span>; CYAN<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;\033[0;36m&#39;</span>; NC<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;\033[0m&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>info<span style="color:#f92672">()</span>    <span style="color:#f92672">{</span> echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>GREEN<span style="color:#e6db74">}</span><span style="color:#e6db74">[+]</span><span style="color:#e6db74">${</span>NC<span style="color:#e6db74">}</span><span style="color:#e6db74"> </span>$*<span style="color:#e6db74">&#34;</span>; <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>warn<span style="color:#f92672">()</span>    <span style="color:#f92672">{</span> echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>YELLOW<span style="color:#e6db74">}</span><span style="color:#e6db74">[!]</span><span style="color:#e6db74">${</span>NC<span style="color:#e6db74">}</span><span style="color:#e6db74"> </span>$*<span style="color:#e6db74">&#34;</span>; <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>error<span style="color:#f92672">()</span>   <span style="color:#f92672">{</span> echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>RED<span style="color:#e6db74">}</span><span style="color:#e6db74">[ERROR]</span><span style="color:#e6db74">${</span>NC<span style="color:#e6db74">}</span><span style="color:#e6db74"> </span>$*<span style="color:#e6db74">&#34;</span>; exit 1; <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>ask<span style="color:#f92672">()</span>     <span style="color:#f92672">{</span> echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>CYAN<span style="color:#e6db74">}</span><span style="color:#e6db74">[?]</span><span style="color:#e6db74">${</span>NC<span style="color:#e6db74">}</span><span style="color:#e6db74"> </span>$*<span style="color:#e6db74">&#34;</span>; <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>section<span style="color:#f92672">()</span> <span style="color:#f92672">{</span> echo -e <span style="color:#e6db74">&#34;\n</span><span style="color:#e6db74">${</span>BLUE<span style="color:#e6db74">}</span><span style="color:#e6db74">══════════════════════════════════════</span><span style="color:#e6db74">${</span>NC<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>; echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>BLUE<span style="color:#e6db74">}</span><span style="color:#e6db74">  </span>$*<span style="color:#e6db74">${</span>NC<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>; echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>BLUE<span style="color:#e6db74">}</span><span style="color:#e6db74">══════════════════════════════════════</span><span style="color:#e6db74">${</span>NC<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>; <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ─── Verificaciones previas ─────────────────────────────────────────────────</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[[</span> $EUID -ne <span style="color:#ae81ff">0</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">&amp;&amp;</span> error <span style="color:#e6db74">&#34;Ejecutá como root: sudo bash </span>$0<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>command -v arch-chroot &amp;&gt;/dev/null <span style="color:#f92672">||</span> error <span style="color:#e6db74">&#34;arch-chroot no encontrado. Instalá arch-install-scripts.&#34;</span>
+</span></span><span style="display:flex;"><span>command -v genfstab   &amp;&gt;/dev/null <span style="color:#f92672">||</span> error <span style="color:#e6db74">&#34;genfstab no encontrado. Instalá arch-install-scripts.&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ─── Mostrar discos disponibles ─────────────────────────────────────────────</span>
+</span></span><span style="display:flex;"><span>section <span style="color:#e6db74">&#34;Discos disponibles&#34;</span>
+</span></span><span style="display:flex;"><span>lsblk -o NAME,SIZE,TYPE,MOUNTPOINT,FSTYPE
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ─── Preguntas interactivas ─────────────────────────────────────────────────</span>
+</span></span><span style="display:flex;"><span>section <span style="color:#e6db74">&#34;Configuración&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>ask <span style="color:#e6db74">&#34;Partición EFI  (ej: /dev/sda1):&#34;</span>
+</span></span><span style="display:flex;"><span>read -r PART_EFI
+</span></span><span style="display:flex;"><span>ask <span style="color:#e6db74">&#34;Partición swap (ej: /dev/sda2) — swapon sin formatear si ya existe:&#34;</span>
+</span></span><span style="display:flex;"><span>read -r PART_SWAP
+</span></span><span style="display:flex;"><span>ask <span style="color:#e6db74">&#34;Partición root (ej: /dev/sda3) — SE FORMATEARÁ como ext4:&#34;</span>
+</span></span><span style="display:flex;"><span>read -r PART_ROOT
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>ask <span style="color:#e6db74">&#34;Hostname (ej: gentoo):&#34;</span>
+</span></span><span style="display:flex;"><span>read -r HOSTNAME
+</span></span><span style="display:flex;"><span>ask <span style="color:#e6db74">&#34;Nombre de usuario:&#34;</span>
+</span></span><span style="display:flex;"><span>read -r USERNAME
+</span></span><span style="display:flex;"><span>ask <span style="color:#e6db74">&#34;Interfaz WiFi (ej: wlp1s0 — dejar vacío si usás ethernet):&#34;</span>
+</span></span><span style="display:flex;"><span>read -r WIFI_IFACE
+</span></span><span style="display:flex;"><span>ask <span style="color:#e6db74">&#34;SSID de tu WiFi (dejar vacío si usás ethernet):&#34;</span>
+</span></span><span style="display:flex;"><span>read -r WIFI_SSID
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> -n <span style="color:#e6db74">&#34;</span>$WIFI_SSID<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    ask <span style="color:#e6db74">&#34;Contraseña WiFi:&#34;</span>
+</span></span><span style="display:flex;"><span>    read -rs WIFI_PASS
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>ask <span style="color:#e6db74">&#34;Cantidad de núcleos de tu CPU (ej: 2 para Celeron N2806):&#34;</span>
+</span></span><span style="display:flex;"><span>read -r CPU_CORES
+</span></span><span style="display:flex;"><span>MAKEJOBS<span style="color:#f92672">=</span><span style="color:#66d9ef">$((</span>CPU_CORES <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span><span style="color:#66d9ef">))</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>ask <span style="color:#e6db74">&#34;Contraseña para root y para </span>$USERNAME<span style="color:#e6db74">:&#34;</span>
+</span></span><span style="display:flex;"><span>read -rs USER_PASS; echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>ask <span style="color:#e6db74">&#34;Repetí la contraseña:&#34;</span>
+</span></span><span style="display:flex;"><span>read -rs USER_PASS2; echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span>$USER_PASS<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;</span>$USER_PASS2<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">||</span> error <span style="color:#e6db74">&#34;Las contraseñas no coinciden.&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ─── Confirmación ───────────────────────────────────────────────────────────</span>
+</span></span><span style="display:flex;"><span>section <span style="color:#e6db74">&#34;Resumen — revisá antes de continuar&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;  EFI:      </span>$PART_EFI<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;  Swap:     </span>$PART_SWAP<span style="color:#e6db74">  (sin formatear)&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;  Root:     </span>$PART_ROOT<span style="color:#e6db74">  ← SE FORMATEARÁ como ext4&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;  Hostname: </span>$HOSTNAME<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;  Usuario:  </span>$USERNAME<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;  WiFi:     </span><span style="color:#e6db74">${</span>WIFI_IFACE<span style="color:#66d9ef">:-</span>no configurado<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;  SSID:     </span><span style="color:#e6db74">${</span>WIFI_SSID<span style="color:#66d9ef">:-</span>no configurado<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;  MAKEOPTS: -j</span><span style="color:#e6db74">${</span>MAKEJOBS<span style="color:#e6db74">}</span><span style="color:#e6db74"> -l</span><span style="color:#e6db74">${</span>CPU_CORES<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>warn <span style="color:#e6db74">&#34;¡La partición </span>$PART_ROOT<span style="color:#e6db74"> se formateará! ¿Continuar? (s/N)&#34;</span>
+</span></span><span style="display:flex;"><span>read -r CONFIRM
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span>$CONFIRM<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">=</span>~ ^<span style="color:#f92672">[</span>sS<span style="color:#f92672">]</span>$ <span style="color:#f92672">]]</span> <span style="color:#f92672">||</span> <span style="color:#f92672">{</span> info <span style="color:#e6db74">&#34;Cancelado.&#34;</span>; exit 0; <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ─── Preparar particiones ───────────────────────────────────────────────────</span>
+</span></span><span style="display:flex;"><span>section <span style="color:#e6db74">&#34;Preparando particiones&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>info <span style="color:#e6db74">&#34;Formateando </span>$PART_ROOT<span style="color:#e6db74"> como ext4...&#34;</span>
+</span></span><span style="display:flex;"><span>mkfs.ext4 -F <span style="color:#e6db74">&#34;</span>$PART_ROOT<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>info <span style="color:#e6db74">&#34;Activando swap </span>$PART_SWAP<span style="color:#e6db74">...&#34;</span>
+</span></span><span style="display:flex;"><span>swapon <span style="color:#e6db74">&#34;</span>$PART_SWAP<span style="color:#e6db74">&#34;</span> 2&gt;/dev/null <span style="color:#f92672">||</span> warn <span style="color:#e6db74">&#34;Swap ya estaba activa, continuando.&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>info <span style="color:#e6db74">&#34;Montando root en /mnt/gentoo...&#34;</span>
+</span></span><span style="display:flex;"><span>mkdir -p /mnt/gentoo
+</span></span><span style="display:flex;"><span>mount <span style="color:#e6db74">&#34;</span>$PART_ROOT<span style="color:#e6db74">&#34;</span> /mnt/gentoo
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>info <span style="color:#e6db74">&#34;Montando EFI en /mnt/gentoo/boot...&#34;</span>
+</span></span><span style="display:flex;"><span>mkdir -p /mnt/gentoo/boot
+</span></span><span style="display:flex;"><span>mount <span style="color:#e6db74">&#34;</span>$PART_EFI<span style="color:#e6db74">&#34;</span> /mnt/gentoo/boot
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ─── Descargar stage3 ──────────────────────────────────────────────────────</span>
+</span></span><span style="display:flex;"><span>section <span style="color:#e6db74">&#34;Descargando stage3 OpenRC (desktop-openrc)&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>MIRROR<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;https://distfiles.gentoo.org/releases/amd64/autobuilds&#34;</span>
+</span></span><span style="display:flex;"><span>STAGE3_SUBDIR<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;current-stage3-amd64-desktop-openrc&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>info <span style="color:#e6db74">&#34;Buscando última versión disponible...&#34;</span>
+</span></span><span style="display:flex;"><span>STAGE3_FILE<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>curl -s <span style="color:#e6db74">&#34;</span>$MIRROR<span style="color:#e6db74">/</span>$STAGE3_SUBDIR<span style="color:#e6db74">/latest-stage3-amd64-desktop-openrc.txt&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    | grep -v <span style="color:#e6db74">&#39;^#&#39;</span> | grep <span style="color:#e6db74">&#39;.tar.xz$&#39;</span> | head -1 | awk <span style="color:#e6db74">&#39;{print $1}&#39;</span><span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[[</span> -z <span style="color:#e6db74">&#34;</span>$STAGE3_FILE<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">&amp;&amp;</span> error <span style="color:#e6db74">&#34;No se pudo obtener la URL del stage3. Verificá tu conexión.&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>STAGE3_URL<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$MIRROR<span style="color:#e6db74">/</span>$STAGE3_FILE<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>STAGE3_NAME<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>basename <span style="color:#e6db74">&#34;</span>$STAGE3_FILE<span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>info <span style="color:#e6db74">&#34;Descargando </span>$STAGE3_NAME<span style="color:#e6db74">...&#34;</span>
+</span></span><span style="display:flex;"><span>cd /mnt/gentoo
+</span></span><span style="display:flex;"><span>wget -c <span style="color:#e6db74">&#34;</span>$STAGE3_URL<span style="color:#e6db74">&#34;</span> -O <span style="color:#e6db74">&#34;</span>$STAGE3_NAME<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>info <span style="color:#e6db74">&#34;Extrayendo stage3...&#34;</span>
+</span></span><span style="display:flex;"><span>tar xpvf <span style="color:#e6db74">&#34;</span>$STAGE3_NAME<span style="color:#e6db74">&#34;</span> --xattrs-include<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;*.*&#39;</span> --numeric-owner -C /mnt/gentoo
+</span></span><span style="display:flex;"><span>rm -f <span style="color:#e6db74">&#34;</span>$STAGE3_NAME<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ─── make.conf ─────────────────────────────────────────────────────────────</span>
+</span></span><span style="display:flex;"><span>section <span style="color:#e6db74">&#34;Configurando /etc/portage/make.conf&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>cat &gt; /mnt/gentoo/etc/portage/make.conf <span style="color:#e6db74">&lt;&lt; MAKEEOF
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># Generado por gentoo-install.sh
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># https://imlauera.github.io/gentoo_openrc/
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">COMMON_FLAGS=&#34;-march=native -O2 -pipe&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">CFLAGS=&#34;\${COMMON_FLAGS}&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">CXXFLAGS=&#34;\${COMMON_FLAGS}&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">FCFLAGS=&#34;\${COMMON_FLAGS}&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">FFLAGS=&#34;\${COMMON_FLAGS}&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">RUSTFLAGS=&#34;\${RUSTFLAGS} -C target-cpu=native&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">LC_MESSAGES=C.utf8
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># Hardware modesto: núcleos + 1, load limit = núcleos
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">MAKEOPTS=&#34;-j${MAKEJOBS} -l${CPU_CORES}&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">GENTOO_MIRRORS=&#34;https://distfiles.gentoo.org&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># Binarios: siempre preferir, alta prioridad, ignorar USE flags
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">FEATURES=&#34;\${FEATURES} getbinpkg binpkg-request-signature&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EMERGE_DEFAULT_OPTS=&#34;\${EMERGE_DEFAULT_OPTS} --getbinpkg --binpkg-respect-use=n --autounmask-backtrack=y&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">ACCEPT_LICENSE=&#34;*&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">ACCEPT_KEYWORDS=&#34;amd64&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># dist-kernel: necesario para que el kernel-bin cargue módulos correctamente
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># y para dual boot (sin esto no monta FAT/VFAT del /boot)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">USE=&#34;dist-kernel elogind -systemd -gnome -kde -qt5 X alsa wifi&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">MAKEEOF</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>info <span style="color:#e6db74">&#34;make.conf escrito.&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ─── DNS ───────────────────────────────────────────────────────────────────</span>
+</span></span><span style="display:flex;"><span>info <span style="color:#e6db74">&#34;Configurando DNS Quad9 (no censura sitios)...&#34;</span>
+</span></span><span style="display:flex;"><span>cat &gt; /mnt/gentoo/etc/resolv.conf <span style="color:#e6db74">&lt;&lt; &#39;DNSEOF&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># Quad9 sin filtrado — no bloquea como Personal/Claro/Movistar
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">nameserver 9.9.9.11
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">nameserver 149.112.112.11
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">DNSEOF</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ─── Montar filesystems virtuales ──────────────────────────────────────────</span>
+</span></span><span style="display:flex;"><span>section <span style="color:#e6db74">&#34;Montando filesystems virtuales&#34;</span>
+</span></span><span style="display:flex;"><span>mount --types proc /proc /mnt/gentoo/proc
+</span></span><span style="display:flex;"><span>mount --rbind /sys /mnt/gentoo/sys
+</span></span><span style="display:flex;"><span>mount --make-rslave /mnt/gentoo/sys
+</span></span><span style="display:flex;"><span>mount --rbind /dev /mnt/gentoo/dev
+</span></span><span style="display:flex;"><span>mount --make-rslave /mnt/gentoo/dev
+</span></span><span style="display:flex;"><span>mount --bind /run /mnt/gentoo/run
+</span></span><span style="display:flex;"><span>mount --make-slave /mnt/gentoo/run
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Fix para medios de instalación no-Gentoo (Arch, Ubuntu, etc.)</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> test -L /dev/shm; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    rm /dev/shm <span style="color:#f92672">&amp;&amp;</span> mkdir /dev/shm
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>mount --types tmpfs --options nosuid,nodev,noexec shm /dev/shm
+</span></span><span style="display:flex;"><span>chmod <span style="color:#ae81ff">1777</span> /dev/shm
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ─── Fix debuginfod.sh ──────────────────────────────────────────────────────</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Este archivo hace que el chroot falle con &#34;unbound variable&#34; en Arch Linux</span>
+</span></span><span style="display:flex;"><span>DEBUGINFOD_BACKUP<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> -f /etc/profile.d/debuginfod.sh <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    warn <span style="color:#e6db74">&#34;Desactivando temporalmente /etc/profile.d/debuginfod.sh (causa error en chroot)...&#34;</span>
+</span></span><span style="display:flex;"><span>    mv /etc/profile.d/debuginfod.sh /etc/profile.d/debuginfod.sh.bak
+</span></span><span style="display:flex;"><span>    DEBUGINFOD_BACKUP<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ─── Generar fstab ─────────────────────────────────────────────────────────</span>
+</span></span><span style="display:flex;"><span>section <span style="color:#e6db74">&#34;Generando /etc/fstab&#34;</span>
+</span></span><span style="display:flex;"><span>genfstab -U /mnt/gentoo &gt; /mnt/gentoo/etc/fstab
+</span></span><span style="display:flex;"><span>info <span style="color:#e6db74">&#34;fstab generado:&#34;</span>
+</span></span><span style="display:flex;"><span>cat /mnt/gentoo/etc/fstab
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ─── Script interno del chroot ─────────────────────────────────────────────</span>
+</span></span><span style="display:flex;"><span>section <span style="color:#e6db74">&#34;Creando script de configuración interno&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Escribimos el script con variables ya expandidas desde el host</span>
+</span></span><span style="display:flex;"><span>cat &gt; /mnt/gentoo/tmp/setup.sh <span style="color:#e6db74">&lt;&lt; CHROOT_EOF
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">#!/bin/bash
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">set -e
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">GREEN=&#39;\033[0;32m&#39;; YELLOW=&#39;\033[1;33m&#39;; NC=&#39;\033[0m&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">info() { echo -e &#34;\${GREEN}[+]\${NC} \$*&#34;; }
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">warn() { echo -e &#34;\${YELLOW}[!]\${NC} \$*&#34;; }
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">source /etc/profile 2&gt;/dev/null || true
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">export PS1=&#34;(chroot) \${PS1}&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># ── Timezone ──────────────────────────────────────────────────────────────
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">info &#34;Configurando timezone America/Buenos_Aires...&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">ln -sf /usr/share/zoneinfo/America/Buenos_Aires /etc/localtime
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">hwclock --systohc
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">echo &#34;America/Buenos_Aires&#34; &gt; /etc/timezone
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">emerge --config sys-libs/timezone-data
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># ── Locale ────────────────────────────────────────────────────────────────
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">info &#34;Configurando locale...&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">printf &#39;en_US ISO-8859-1\nen_US.UTF-8 UTF-8\n&#39; &gt; /etc/locale.gen
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">locale-gen
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">eselect locale set en_US.utf8
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">env-update &amp;&amp; source /etc/profile 2&gt;/dev/null || true
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># ── Teclado ───────────────────────────────────────────────────────────────
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">echo &#39;KEYMAP=es&#39; &gt; /etc/conf.d/keymaps
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">echo &#39;FONT=latarcyrheb-sun32&#39; &gt;&gt; /etc/conf.d/keymaps
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">echo &#39;KEYMAP=es&#39; &gt; /etc/vconsole.conf
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">echo &#39;FONT=latarcyrheb-sun32&#39; &gt;&gt; /etc/vconsole.conf
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># ── Sincronizar portage ───────────────────────────────────────────────────
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">info &#34;Sincronizando árbol de portage (emerge-webrsync)...&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">emerge-webrsync
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># ── Binhost alta prioridad ────────────────────────────────────────────────
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">info &#34;Configurando binhost con prioridad máxima...&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">mkdir -p /etc/portage/binrepos.conf
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">cat &gt; /etc/portage/binrepos.conf/gentoobinhost.conf &lt;&lt; &#39;BINEOF&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">[gentoobinhost]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">priority = 9999
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">sync-uri = https://distfiles.gentoo.org/releases/amd64/binpackages/23.0/x86-64/
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">BINEOF
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">info &#34;Descargando firmas de binarios (getuto)...&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">getuto 2&gt;/dev/null || warn &#34;getuto falló, continuando...&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># ── CPU flags ─────────────────────────────────────────────────────────────
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">info &#34;Detectando flags de CPU...&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">emerge --getbinpkg --oneshot app-portage/cpuid2cpuflags
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">echo &#34;*/* \$(cpuid2cpuflags)&#34; &gt; /etc/portage/package.use/00cpu-flags
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># ── Actualizar @world ─────────────────────────────────────────────────────
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">info &#34;Actualizando @world con binarios...&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">emerge --getbinpkg --binpkg-respect-use=n -uDN @world || \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    warn &#34;@world no se pudo actualizar completamente, continuando...&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># ── Firmware y kernel ─────────────────────────────────────────────────────
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">info &#34;Instalando linux-firmware (drivers WiFi y otros)...&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">emerge -g sys-kernel/linux-firmware || \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    emerge --binpkg-respect-use=n sys-kernel/linux-firmware
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">info &#34;Instalando sof-firmware e intel-microcode...&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">emerge -g sys-firmware/sof-firmware sys-firmware/intel-microcode 2&gt;/dev/null || \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    warn &#34;sof-firmware/intel-microcode no disponibles como binarios, omitiendo.&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">info &#34;Instalando gentoo-kernel-bin...&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">emerge -g sys-kernel/gentoo-kernel-bin || \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    emerge --binpkg-respect-use=n sys-kernel/gentoo-kernel-bin
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># ── GRUB ──────────────────────────────────────────────────────────────────
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">info &#34;Instalando grub y efibootmgr...&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># NOTA de la guía: el binario de GRUB no tiene la flag &#39;mount&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># Si necesitás os-prober para dual boot tenés que compilar grub:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">#   echo &#39;&gt;=sys-boot/grub-2.12-r7 mount&#39; &gt; /etc/portage/package.use/os-prober
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">#   emerge sys-boot/grub os-prober
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">emerge -g sys-boot/grub sys-boot/efibootmgr || \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    emerge --binpkg-respect-use=n sys-boot/grub sys-boot/efibootmgr
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">info &#34;Ejecutando grub-install con --removable...&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">grub-install --target=x86_64-efi --efi-directory=/boot --removable
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">info &#34;Generando grub.cfg...&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">grub-mkconfig -o /boot/grub/grub.cfg
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># ── Hostname y hosts ──────────────────────────────────────────────────────
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">info &#34;Configurando hostname: ${HOSTNAME}...&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">echo &#34;${HOSTNAME}&#34; &gt; /etc/hostname
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">cat &gt; /etc/hosts &lt;&lt; &#39;HOSTEOF&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">127.0.0.1   ${HOSTNAME}.localdomain ${HOSTNAME} localhost
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">::1         ${HOSTNAME}.localdomain ${HOSTNAME} localhost
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">HOSTEOF
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">sed -i &#34;s|\${HOSTNAME}|${HOSTNAME}|g&#34; /etc/hosts
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># ── OpenRC conf ───────────────────────────────────────────────────────────
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># hwclock
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">sed -i &#39;s/^#\?clock=.*/clock=&#34;UTC&#34;/&#39; /etc/conf.d/hwclock 2&gt;/dev/null || true
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># ── Servicios base ────────────────────────────────────────────────────────
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">info &#34;Instalando sysklogd, cronie, chrony...&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">emerge -g app-admin/sysklogd sys-process/cronie net-misc/chrony || \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    emerge --binpkg-respect-use=n app-admin/sysklogd sys-process/cronie net-misc/chrony
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">rc-update add sysklogd default
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">rc-update add cronie default
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">rc-update add chronyd default
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># ── sudo ──────────────────────────────────────────────────────────────────
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">info &#34;Instalando sudo...&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">emerge -g app-admin/sudo || emerge --binpkg-respect-use=n app-admin/sudo
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># ── wpa_supplicant + dhcpcd (NO networkmanager, como dice la guía) ────────
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">info &#34;Instalando wpa_supplicant (con tkip) + dhcpcd + wireless-tools...&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">mkdir -p /etc/portage/package.use
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># tkip: necesario para APs con WPA TKIP (deprecado pero común en Argentina)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">echo &#34;net-wireless/wpa_supplicant tkip&#34; &gt; /etc/portage/package.use/wpa_supplicant
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">emerge -g net-wireless/wpa_supplicant net-misc/dhcpcd net-wireless/wireless-tools || \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    emerge --binpkg-respect-use=n net-wireless/wpa_supplicant \
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">           net-misc/dhcpcd net-wireless/wireless-tools
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># ── Configurar wpa_supplicant.conf ────────────────────────────────────────
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">mkdir -p /etc/wpa_supplicant
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">cat &gt; /etc/wpa_supplicant/wpa_supplicant.conf &lt;&lt; &#39;WPAEOF&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">ctrl_interface=/run/wpa_supplicant
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">update_config=1
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">country=AR
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">WPAEOF
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">CHROOT_EOF</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Agregar red WiFi si se configuró</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> -n <span style="color:#e6db74">&#34;</span>$WIFI_SSID<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">&amp;&amp;</span> -n <span style="color:#e6db74">&#34;</span>$WIFI_PASS<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    cat &gt;&gt; /mnt/gentoo/tmp/setup.sh <span style="color:#e6db74">&lt;&lt; WIFIEOF
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">info &#34;Agregando red WiFi ${WIFI_SSID} al wpa_supplicant.conf...&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">wpa_passphrase &#34;${WIFI_SSID}&#34; &#34;${WIFI_PASS}&#34; &gt;&gt; /etc/wpa_supplicant/wpa_supplicant.conf
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">WIFIEOF</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Configurar red OpenRC si hay interfaz WiFi</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> -n <span style="color:#e6db74">&#34;</span>$WIFI_IFACE<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    cat &gt;&gt; /mnt/gentoo/tmp/setup.sh <span style="color:#e6db74">&lt;&lt; WIFIRCEOF
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># ── Red WiFi con OpenRC (netifrc) ─────────────────────────────────────────
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">info &#34;Configurando inicio automático de WiFi via OpenRC (${WIFI_IFACE})...&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">cat &gt; /etc/conf.d/net &lt;&lt; &#39;NETEOF&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">modules=&#34;wpa_supplicant&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">wpa_supplicant_${WIFI_IFACE}=&#34;-Dnl80211 -c/etc/wpa_supplicant/wpa_supplicant.conf&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">config_${WIFI_IFACE}=&#34;dhcp&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">NETEOF
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">sed -i &#34;s|\${WIFI_IFACE}|${WIFI_IFACE}|g&#34; /etc/conf.d/net
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">ln -sf /etc/init.d/net.lo /etc/init.d/net.${WIFI_IFACE} 2&gt;/dev/null || true
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">rc-update add net.${WIFI_IFACE} default
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># Fix antena WiFi para rtl8723be (netbook Celeron N2806)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">mkdir -p /etc/modprobe.d
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">cat &gt; /etc/modprobe.d/rtl8723be.conf &lt;&lt; &#39;MODEOF&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># Mejora alcance de antena en netbooks con rtl8723be
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">options rtl8723be ant_sel=1
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">MODEOF
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># Regulatorio WiFi Argentina
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">echo &#39;options cfg80211 ieee80211_regdom=AR&#39; &gt; /etc/modprobe.d/wireless.conf
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">WIFIRCEOF</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Continuar el script de chroot</span>
+</span></span><span style="display:flex;"><span>cat &gt;&gt; /mnt/gentoo/tmp/setup.sh <span style="color:#e6db74">&lt;&lt; FINAL_EOF
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># ── Usuario ───────────────────────────────────────────────────────────────
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">info &#34;Creando usuario ${USERNAME}...&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">useradd -m -G users,video,audio,wheel -s /bin/bash &#34;${USERNAME}&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">echo &#34;${USERNAME}:${USER_PASS}&#34; | chpasswd
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">echo &#34;root:${USER_PASS}&#34; | chpasswd
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># sudo sin contraseña para el grupo wheel
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">echo &#34;%wheel ALL=(ALL:ALL) NOPASSWD:ALL&#34; &gt;&gt; /etc/sudoers
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">info &#34;&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">info &#34;═══════════════════════════════════════════════════&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">info &#34;  Instalación completada dentro del chroot&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">info &#34;═══════════════════════════════════════════════════&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">info &#34;&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">info &#34;Al bootear Gentoo:&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">info &#34;  1. Logueate como ${USERNAME}&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">info &#34;&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">info &#34;Para conectar WiFi manualmente si no arranca solo:&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">info &#34;  sudo ip link set ${WIFI_IFACE:-wlp1s0} up&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">info &#34;  sudo wpa_supplicant -B -i ${WIFI_IFACE:-wlp1s0} -c /etc/wpa_supplicant/wpa_supplicant.conf&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">info &#34;  sudo dhcpcd ${WIFI_IFACE:-wlp1s0}&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">info &#34;&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">info &#34;Para escanear redes disponibles: iwlist ${WIFI_IFACE:-wlp1s0} scan&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">info &#34;&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">warn &#34;DUAL BOOT: el binario de GRUB no tiene flag &#39;mount&#39; → os-prober no funciona.&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">warn &#34;Para dual boot compilá grub:&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">warn &#34;  echo &#39;&gt;=sys-boot/grub-2.12-r7 mount&#39; &gt; /etc/portage/package.use/os-prober&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">warn &#34;  emerge sys-boot/grub os-prober&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">warn &#34;  Luego editá /etc/grub.d/40_custom manualmente (ver guía).&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">FINAL_EOF</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>chmod +x /mnt/gentoo/tmp/setup.sh
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ─── Ejecutar el chroot ─────────────────────────────────────────────────────</span>
+</span></span><span style="display:flex;"><span>section <span style="color:#e6db74">&#34;Ejecutando configuración dentro del chroot&#34;</span>
+</span></span><span style="display:flex;"><span>info <span style="color:#e6db74">&#34;Esto tarda bastante. Para monitorear el progreso en otra terminal:&#34;</span>
+</span></span><span style="display:flex;"><span>info <span style="color:#e6db74">&#34;  tail -f /mnt/gentoo/var/log/emerge.log&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>arch-chroot /mnt/gentoo /bin/bash /tmp/setup.sh
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ─── Restaurar debuginfod.sh ────────────────────────────────────────────────</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span>$DEBUGINFOD_BACKUP<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;1&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    mv /etc/profile.d/debuginfod.sh.bak /etc/profile.d/debuginfod.sh
+</span></span><span style="display:flex;"><span>    info <span style="color:#e6db74">&#34;debuginfod.sh restaurado.&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ─── Limpiar ────────────────────────────────────────────────────────────────</span>
+</span></span><span style="display:flex;"><span>rm -f /mnt/gentoo/tmp/setup.sh
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ─── Desmontar en orden seguro (NO usar umount -l que rompe el bash del host)</span>
+</span></span><span style="display:flex;"><span>section <span style="color:#e6db74">&#34;Desmontando particiones&#34;</span>
+</span></span><span style="display:flex;"><span>umount -R /mnt/gentoo/proc 2&gt;/dev/null <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span>umount -R /mnt/gentoo/sys  2&gt;/dev/null <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span>umount -R /mnt/gentoo/dev  2&gt;/dev/null <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span>umount    /mnt/gentoo/run  2&gt;/dev/null <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span>umount    /mnt/gentoo/boot 2&gt;/dev/null <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span>umount    /mnt/gentoo      2&gt;/dev/null <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>section <span style="color:#e6db74">&#34;Listo — podés reiniciar&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>info <span style="color:#e6db74">&#34;  reboot&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>info <span style="color:#e6db74">&#34;Guías de referencia:&#34;</span>
+</span></span><span style="display:flex;"><span>info <span style="color:#e6db74">&#34;  https://imlauera.github.io/post/gentoo_installation/&#34;</span>
+</span></span><span style="display:flex;"><span>info <span style="color:#e6db74">&#34;  https://imlauera.github.io/gentoo_openrc/&#34;</span>
+</span></span></code></pre></div>
 </div>
 
 
