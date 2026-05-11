@@ -29,7 +29,7 @@ Instalé OBS Studio en Gentoo sin mirar las banderas (USE Flags) cuando ejecuté
 Con el comando emerge -pv obs-studio pude ver las banderas y leyendo la Wiki de Gentoo de OBS me dí cuenta que tengo que habilitar las siguientes banderas para tener esas funcionalidades:">
   <meta itemprop="datePublished" content="2025-06-22T22:25:52-03:00">
   <meta itemprop="dateModified" content="2025-06-22T22:25:52-03:00">
-  <meta itemprop="wordCount" content="8448">
+  <meta itemprop="wordCount" content="8851">
   <meta itemprop="keywords" content="Gentoo">
   
   <meta name="twitter:card" content="summary">
@@ -1232,6 +1232,7 @@ Instalá gentoo de 64 bits usando la máxima cantidad de binarios y openrc sigui
 instalar gentoo tratá de casi no compilar NADA PORQUE MI HARDWARE ES LENTO. Y si la instalacion se &ldquo;queda trabada&rdquo; en
 realidad no esta trabada mi hardware es pobre deberias darte cuenta de eso exponé los archivos que muestran el progreso al ejecutar emerge porque no puedo hacer click para ver el comando expandido. Estoy usando archlinux y la partición de swap está en uso así no la formatees ni la montes. Preguntame primero antes de tomar una acción importante como formatear, desmontar, etc. No agregues la opcion &ndash;quiet al EMERGE_DEFAULT_OPTS= en /etc/portage/make.conf. NO cambies el host de binarios dejá el que trae por defecto. Cuando ejecutás emerge hacelo con -p (pretend) primero y asegurate de instalar la máxima cantidad de binarios ejecutá emerge con -g. Elegí la última versión del stage3, no la misma versión que usa la guía. Para ejecutar comandos dentro del chroot usá: sudo chroot /mnt/gentoo /bin/bash -l -c &ldquo;emerge &ndash;info&rdquo; &gt; /tmp/emerge.log 2&gt;&amp;1  El repositorio zero.com.ar de argentina dejó de funcionar. Tenes que usar la opción desktop de openrc. Usá &ndash;binpkg-respect-use=n  para instalar binarios sin respetar las USE flags. El binario de networkmanager no está disponible para openrc asi que intentá instalar el binario de wpa_supplicant o compilalo Estás interpretando mal. Tenes que instalar wpa_supplicant con la opción -g (que ya la tiene por defecto), no tenes que borrar sytemd porque systemd no está instalado. Estamos usando OpenRC. Va a tardar porque tengo un hardware pobre, lee las especificaciones de mi hardware, lee los archivos de mi Linux que te dan información sobre mi hardware. Usa wpa_supplicant con dhcpcd, no uses Netirfc. Varias veces me rompiste todo al desmontar ejecutar <code>umount -l</code> me quedé sin bash.</p>
 <h2 id="claude-ai-me-genero-este-script-todavia-no-lo-probe">Claude AI me genero este script todavia no lo probe</h2>
+<p><code>bash gentoo_install.sh --efi /dev/sdXX --swap /dev/sdXX --root /dev/sdXX --hostname tu_hostname --user tu_usuario --pass XXXX --cores 2 --wifi-iface wlp1s0 --wifi-ssid &quot;XXXXX&quot; --wifi-pass &quot;XXXXX&quot;</code></p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/bash
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e"># gentoo-install.sh — Instalador de Gentoo OpenRC con binarios</span>
 </span></span><span style="display:flex;"><span><span style="color:#75715e"># Basado en las guías de https://imlauera.github.io</span>
@@ -1250,48 +1251,104 @@ realidad no esta trabada mi hardware es pobre deberias darte cuenta de eso expon
 </span></span><span style="display:flex;"><span>ask<span style="color:#f92672">()</span>     <span style="color:#f92672">{</span> echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>CYAN<span style="color:#e6db74">}</span><span style="color:#e6db74">[?]</span><span style="color:#e6db74">${</span>NC<span style="color:#e6db74">}</span><span style="color:#e6db74"> </span>$*<span style="color:#e6db74">&#34;</span>; <span style="color:#f92672">}</span>
 </span></span><span style="display:flex;"><span>section<span style="color:#f92672">()</span> <span style="color:#f92672">{</span> echo -e <span style="color:#e6db74">&#34;\n</span><span style="color:#e6db74">${</span>BLUE<span style="color:#e6db74">}</span><span style="color:#e6db74">══════════════════════════════════════</span><span style="color:#e6db74">${</span>NC<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>; echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>BLUE<span style="color:#e6db74">}</span><span style="color:#e6db74">  </span>$*<span style="color:#e6db74">${</span>NC<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>; echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>BLUE<span style="color:#e6db74">}</span><span style="color:#e6db74">══════════════════════════════════════</span><span style="color:#e6db74">${</span>NC<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>; <span style="color:#f92672">}</span>
 </span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ─── Trap: desmontar todo si el script falla ────────────────────────────────</span>
+</span></span><span style="display:flex;"><span>cleanup<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    local EXIT_CODE<span style="color:#f92672">=</span>$?
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> $EXIT_CODE -ne <span style="color:#ae81ff">0</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        warn <span style="color:#e6db74">&#34;El script falló (código </span>$EXIT_CODE<span style="color:#e6db74">). Desmontando particiones...&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Restaurar debuginfod.sh si lo movimos</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>DEBUGINFOD_BACKUP<span style="color:#66d9ef">:-</span>0<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;1&#34;</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>        mv /etc/profile.d/debuginfod.sh.bak /etc/profile.d/debuginfod.sh 2&gt;/dev/null <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Desmontar en orden — NO tocar swap porque ya estaba en uso</span>
+</span></span><span style="display:flex;"><span>    umount -R /mnt/gentoo/proc 2&gt;/dev/null <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span>    umount -R /mnt/gentoo/sys  2&gt;/dev/null <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span>    umount -R /mnt/gentoo/dev  2&gt;/dev/null <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span>    umount    /mnt/gentoo/run  2&gt;/dev/null <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span>    umount    /mnt/gentoo/boot 2&gt;/dev/null <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span>    umount    /mnt/gentoo      2&gt;/dev/null <span style="color:#f92672">||</span> true
+</span></span><span style="display:flex;"><span>    warn <span style="color:#e6db74">&#34;Particiones desmontadas. Swap intacta.&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>trap cleanup EXIT
+</span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span><span style="color:#75715e"># ─── Verificaciones previas ─────────────────────────────────────────────────</span>
 </span></span><span style="display:flex;"><span><span style="color:#f92672">[[</span> $EUID -ne <span style="color:#ae81ff">0</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">&amp;&amp;</span> error <span style="color:#e6db74">&#34;Ejecutá como root: sudo bash </span>$0<span style="color:#e6db74">&#34;</span>
 </span></span><span style="display:flex;"><span>command -v arch-chroot &amp;&gt;/dev/null <span style="color:#f92672">||</span> error <span style="color:#e6db74">&#34;arch-chroot no encontrado. Instalá arch-install-scripts.&#34;</span>
 </span></span><span style="display:flex;"><span>command -v genfstab   &amp;&gt;/dev/null <span style="color:#f92672">||</span> error <span style="color:#e6db74">&#34;genfstab no encontrado. Instalá arch-install-scripts.&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ─── Parámetros CLI opcionales ──────────────────────────────────────────────</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Uso: bash gentoo-install.sh --efi /dev/sda2 --root /dev/sda4 --swap /dev/sda3 \</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#        --hostname gentoo --user esotericwarfare --cores 2 \</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#        --wifi-iface wlp1s0 --wifi-ssid MiRed --wifi-pass contraseña</span>
+</span></span><span style="display:flex;"><span>PART_EFI<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>; PART_SWAP<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>; PART_ROOT<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>HOSTNAME<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>; USERNAME<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>; USER_PASS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>; USER_PASS2<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>WIFI_IFACE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>; WIFI_SSID<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>; WIFI_PASS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>CPU_CORES<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">while</span> <span style="color:#f92672">[[</span> $# -gt <span style="color:#ae81ff">0</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span> in
+</span></span><span style="display:flex;"><span>        --efi<span style="color:#f92672">)</span>       PART_EFI<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$2<span style="color:#e6db74">&#34;</span>;   shift <span style="color:#ae81ff">2</span> ;;
+</span></span><span style="display:flex;"><span>        --swap<span style="color:#f92672">)</span>      PART_SWAP<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$2<span style="color:#e6db74">&#34;</span>;  shift <span style="color:#ae81ff">2</span> ;;
+</span></span><span style="display:flex;"><span>        --root<span style="color:#f92672">)</span>      PART_ROOT<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$2<span style="color:#e6db74">&#34;</span>;  shift <span style="color:#ae81ff">2</span> ;;
+</span></span><span style="display:flex;"><span>        --hostname<span style="color:#f92672">)</span>  HOSTNAME<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$2<span style="color:#e6db74">&#34;</span>;   shift <span style="color:#ae81ff">2</span> ;;
+</span></span><span style="display:flex;"><span>        --user<span style="color:#f92672">)</span>      USERNAME<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$2<span style="color:#e6db74">&#34;</span>;   shift <span style="color:#ae81ff">2</span> ;;
+</span></span><span style="display:flex;"><span>        --pass<span style="color:#f92672">)</span>      USER_PASS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$2<span style="color:#e6db74">&#34;</span>;  USER_PASS2<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$2<span style="color:#e6db74">&#34;</span>; shift <span style="color:#ae81ff">2</span> ;;
+</span></span><span style="display:flex;"><span>        --cores<span style="color:#f92672">)</span>     CPU_CORES<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$2<span style="color:#e6db74">&#34;</span>;  shift <span style="color:#ae81ff">2</span> ;;
+</span></span><span style="display:flex;"><span>        --wifi-iface<span style="color:#f92672">)</span> WIFI_IFACE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$2<span style="color:#e6db74">&#34;</span>; shift <span style="color:#ae81ff">2</span> ;;
+</span></span><span style="display:flex;"><span>        --wifi-ssid<span style="color:#f92672">)</span>  WIFI_SSID<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$2<span style="color:#e6db74">&#34;</span>;  shift <span style="color:#ae81ff">2</span> ;;
+</span></span><span style="display:flex;"><span>        --wifi-pass<span style="color:#f92672">)</span>  WIFI_PASS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$2<span style="color:#e6db74">&#34;</span>;  shift <span style="color:#ae81ff">2</span> ;;
+</span></span><span style="display:flex;"><span>        --help|-h<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>            echo <span style="color:#e6db74">&#34;Uso: bash </span>$0<span style="color:#e6db74"> [opciones]&#34;</span>
+</span></span><span style="display:flex;"><span>            echo <span style="color:#e6db74">&#34;  --efi       /dev/sdXN   Partición EFI (FAT32)&#34;</span>
+</span></span><span style="display:flex;"><span>            echo <span style="color:#e6db74">&#34;  --swap      /dev/sdXN   Partición swap (no se formatea)&#34;</span>
+</span></span><span style="display:flex;"><span>            echo <span style="color:#e6db74">&#34;  --root      /dev/sdXN   Partición root (SE FORMATEA ext4)&#34;</span>
+</span></span><span style="display:flex;"><span>            echo <span style="color:#e6db74">&#34;  --hostname  nombre      Hostname del sistema&#34;</span>
+</span></span><span style="display:flex;"><span>            echo <span style="color:#e6db74">&#34;  --user      nombre      Usuario a crear&#34;</span>
+</span></span><span style="display:flex;"><span>            echo <span style="color:#e6db74">&#34;  --pass      contraseña  Contraseña para root y usuario&#34;</span>
+</span></span><span style="display:flex;"><span>            echo <span style="color:#e6db74">&#34;  --cores     N           Núcleos de CPU (para MAKEOPTS)&#34;</span>
+</span></span><span style="display:flex;"><span>            echo <span style="color:#e6db74">&#34;  --wifi-iface wlp1s0     Interfaz WiFi&#34;</span>
+</span></span><span style="display:flex;"><span>            echo <span style="color:#e6db74">&#34;  --wifi-ssid  MiRed      SSID de la red&#34;</span>
+</span></span><span style="display:flex;"><span>            echo <span style="color:#e6db74">&#34;  --wifi-pass  pass       Contraseña WiFi&#34;</span>
+</span></span><span style="display:flex;"><span>            echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>            echo <span style="color:#e6db74">&#34;Sin parámetros: modo interactivo.&#34;</span>
+</span></span><span style="display:flex;"><span>            exit <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>            ;;
+</span></span><span style="display:flex;"><span>        *<span style="color:#f92672">)</span> warn <span style="color:#e6db74">&#34;Parámetro desconocido: </span>$1<span style="color:#e6db74">&#34;</span>; shift ;;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">esac</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">done</span>
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span><span style="color:#75715e"># ─── Mostrar discos disponibles ─────────────────────────────────────────────</span>
 </span></span><span style="display:flex;"><span>section <span style="color:#e6db74">&#34;Discos disponibles&#34;</span>
 </span></span><span style="display:flex;"><span>lsblk -o NAME,SIZE,TYPE,MOUNTPOINT,FSTYPE
 </span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;&#34;</span>
 </span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># ─── Preguntas interactivas ─────────────────────────────────────────────────</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ─── Preguntas interactivas (solo lo que falta) ─────────────────────────────</span>
 </span></span><span style="display:flex;"><span>section <span style="color:#e6db74">&#34;Configuración&#34;</span>
 </span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>ask <span style="color:#e6db74">&#34;Partición EFI  (ej: /dev/sda1):&#34;</span>
-</span></span><span style="display:flex;"><span>read -r PART_EFI
-</span></span><span style="display:flex;"><span>ask <span style="color:#e6db74">&#34;Partición swap (ej: /dev/sda2) — swapon sin formatear si ya existe:&#34;</span>
-</span></span><span style="display:flex;"><span>read -r PART_SWAP
-</span></span><span style="display:flex;"><span>ask <span style="color:#e6db74">&#34;Partición root (ej: /dev/sda3) — SE FORMATEARÁ como ext4:&#34;</span>
-</span></span><span style="display:flex;"><span>read -r PART_ROOT
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>ask <span style="color:#e6db74">&#34;Hostname (ej: gentoo):&#34;</span>
-</span></span><span style="display:flex;"><span>read -r HOSTNAME
-</span></span><span style="display:flex;"><span>ask <span style="color:#e6db74">&#34;Nombre de usuario:&#34;</span>
-</span></span><span style="display:flex;"><span>read -r USERNAME
-</span></span><span style="display:flex;"><span>ask <span style="color:#e6db74">&#34;Interfaz WiFi (ej: wlp1s0 — dejar vacío si usás ethernet):&#34;</span>
-</span></span><span style="display:flex;"><span>read -r WIFI_IFACE
-</span></span><span style="display:flex;"><span>ask <span style="color:#e6db74">&#34;SSID de tu WiFi (dejar vacío si usás ethernet):&#34;</span>
-</span></span><span style="display:flex;"><span>read -r WIFI_SSID
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> -n <span style="color:#e6db74">&#34;</span>$WIFI_SSID<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
-</span></span><span style="display:flex;"><span>    ask <span style="color:#e6db74">&#34;Contraseña WiFi:&#34;</span>
-</span></span><span style="display:flex;"><span>    read -rs WIFI_PASS
-</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[[</span> -z <span style="color:#e6db74">&#34;</span>$PART_EFI<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span>  <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">{</span> ask <span style="color:#e6db74">&#34;Partición EFI  (ej: /dev/sda2):&#34;</span>;  read -r PART_EFI; <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[[</span> -z <span style="color:#e6db74">&#34;</span>$PART_SWAP<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">{</span> ask <span style="color:#e6db74">&#34;Partición swap (ej: /dev/sda3) — sin formatear:&#34;</span>; read -r PART_SWAP; <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[[</span> -z <span style="color:#e6db74">&#34;</span>$PART_ROOT<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">{</span> ask <span style="color:#e6db74">&#34;Partición root (ej: /dev/sda4) — SE FORMATEARÁ ext4:&#34;</span>; read -r PART_ROOT; <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[[</span> -z <span style="color:#e6db74">&#34;</span>$HOSTNAME<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span>  <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">{</span> ask <span style="color:#e6db74">&#34;Hostname (ej: gentoo):&#34;</span>; read -r HOSTNAME; <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[[</span> -z <span style="color:#e6db74">&#34;</span>$USERNAME<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span>  <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">{</span> ask <span style="color:#e6db74">&#34;Nombre de usuario:&#34;</span>; read -r USERNAME; <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[[</span> -z <span style="color:#e6db74">&#34;</span>$WIFI_IFACE<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">{</span> ask <span style="color:#e6db74">&#34;Interfaz WiFi (ej: wlp1s0 — Enter para omitir):&#34;</span>; read -r WIFI_IFACE; <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> -n <span style="color:#e6db74">&#34;</span>$WIFI_IFACE<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">&amp;&amp;</span> -z <span style="color:#e6db74">&#34;</span>$WIFI_SSID<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    ask <span style="color:#e6db74">&#34;SSID de tu WiFi:&#34;</span>; read -r WIFI_SSID
 </span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
-</span></span><span style="display:flex;"><span>ask <span style="color:#e6db74">&#34;Cantidad de núcleos de tu CPU (ej: 2 para Celeron N2806):&#34;</span>
-</span></span><span style="display:flex;"><span>read -r CPU_CORES
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> -n <span style="color:#e6db74">&#34;</span>$WIFI_SSID<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">&amp;&amp;</span> -z <span style="color:#e6db74">&#34;</span>$WIFI_PASS<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    ask <span style="color:#e6db74">&#34;Contraseña WiFi:&#34;</span>; read -rs WIFI_PASS; echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[[</span> -z <span style="color:#e6db74">&#34;</span>$CPU_CORES<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">{</span> ask <span style="color:#e6db74">&#34;Núcleos de CPU (ej: 2):&#34;</span>; read -r CPU_CORES; <span style="color:#f92672">}</span>
 </span></span><span style="display:flex;"><span>MAKEJOBS<span style="color:#f92672">=</span><span style="color:#66d9ef">$((</span>CPU_CORES <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span><span style="color:#66d9ef">))</span>
 </span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>ask <span style="color:#e6db74">&#34;Contraseña para root y para </span>$USERNAME<span style="color:#e6db74">:&#34;</span>
-</span></span><span style="display:flex;"><span>read -rs USER_PASS; echo <span style="color:#e6db74">&#34;&#34;</span>
-</span></span><span style="display:flex;"><span>ask <span style="color:#e6db74">&#34;Repetí la contraseña:&#34;</span>
-</span></span><span style="display:flex;"><span>read -rs USER_PASS2; echo <span style="color:#e6db74">&#34;&#34;</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span>$USER_PASS<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;</span>$USER_PASS2<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">||</span> error <span style="color:#e6db74">&#34;Las contraseñas no coinciden.&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> -z <span style="color:#e6db74">&#34;</span>$USER_PASS<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    ask <span style="color:#e6db74">&#34;Contraseña para root y para </span>$USERNAME<span style="color:#e6db74">:&#34;</span>
+</span></span><span style="display:flex;"><span>    read -rs USER_PASS; echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    ask <span style="color:#e6db74">&#34;Repetí la contraseña:&#34;</span>
+</span></span><span style="display:flex;"><span>    read -rs USER_PASS2; echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span>$USER_PASS<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;</span>$USER_PASS2<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">||</span> error <span style="color:#e6db74">&#34;Las contraseñas no coinciden.&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span><span style="color:#75715e"># ─── Confirmación ───────────────────────────────────────────────────────────</span>
 </span></span><span style="display:flex;"><span>section <span style="color:#e6db74">&#34;Resumen — revisá antes de continuar&#34;</span>
@@ -1306,7 +1363,7 @@ realidad no esta trabada mi hardware es pobre deberias darte cuenta de eso expon
 </span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;&#34;</span>
 </span></span><span style="display:flex;"><span>warn <span style="color:#e6db74">&#34;¡La partición </span>$PART_ROOT<span style="color:#e6db74"> se formateará! ¿Continuar? (s/N)&#34;</span>
 </span></span><span style="display:flex;"><span>read -r CONFIRM
-</span></span><span style="display:flex;"><span><span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span>$CONFIRM<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">=</span>~ ^<span style="color:#f92672">[</span>sS<span style="color:#f92672">]</span>$ <span style="color:#f92672">]]</span> <span style="color:#f92672">||</span> <span style="color:#f92672">{</span> info <span style="color:#e6db74">&#34;Cancelado.&#34;</span>; exit 0; <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span>$CONFIRM<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">=</span>~ ^<span style="color:#f92672">[</span>sS<span style="color:#f92672">]</span>$ <span style="color:#f92672">]]</span> <span style="color:#f92672">||</span> <span style="color:#f92672">{</span> info <span style="color:#e6db74">&#34;Cancelado.&#34;</span>; trap - EXIT; exit 0; <span style="color:#f92672">}</span>
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span><span style="color:#75715e"># ─── Preparar particiones ───────────────────────────────────────────────────</span>
 </span></span><span style="display:flex;"><span>section <span style="color:#e6db74">&#34;Preparando particiones&#34;</span>
@@ -1331,13 +1388,15 @@ realidad no esta trabada mi hardware es pobre deberias darte cuenta de eso expon
 </span></span><span style="display:flex;"><span>MIRROR<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;https://distfiles.gentoo.org/releases/amd64/autobuilds&#34;</span>
 </span></span><span style="display:flex;"><span>STAGE3_SUBDIR<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;current-stage3-amd64-desktop-openrc&#34;</span>
 </span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>info <span style="color:#e6db74">&#34;Buscando última versión disponible...&#34;</span>
+</span></span><span style="display:flex;"><span>info <span style="color:#e6db74">&#34;Buscando ultima version disponible...&#34;</span>
+</span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>STAGE3_FILE<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>curl -s <span style="color:#e6db74">&#34;</span>$MIRROR<span style="color:#e6db74">/</span>$STAGE3_SUBDIR<span style="color:#e6db74">/latest-stage3-amd64-desktop-openrc.txt&#34;</span> <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span>    | grep -v <span style="color:#e6db74">&#39;^#&#39;</span> | grep <span style="color:#e6db74">&#39;.tar.xz$&#39;</span> | head -1 | awk <span style="color:#e6db74">&#39;{print $1}&#39;</span><span style="color:#66d9ef">)</span>
+</span></span></span><span style="display:flex;"><span>    | grep -E <span style="color:#e6db74">&#39;^stage3-.*.tar.xz&#39;</span> | head -1 | awk <span style="color:#e6db74">&#39;{print $1}&#39;</span><span style="color:#66d9ef">)</span>
 </span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">[[</span> -z <span style="color:#e6db74">&#34;</span>$STAGE3_FILE<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">&amp;&amp;</span> error <span style="color:#e6db74">&#34;No se pudo obtener la URL del stage3. Verificá tu conexión.&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[[</span> -z <span style="color:#e6db74">&#34;</span>$STAGE3_FILE<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">&amp;&amp;</span> error <span style="color:#e6db74">&#34;No se pudo obtener la URL del stage3. Verifica tu conexion.&#34;</span>
 </span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>STAGE3_URL<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$MIRROR<span style="color:#e6db74">/</span>$STAGE3_FILE<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Aca agregue yo manualmente current-stage3-amd64-desktop-openrc porque sino me tiraba 404 not found.</span>
+</span></span><span style="display:flex;"><span>STAGE3_URL<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$MIRROR<span style="color:#e6db74">/current-stage3-amd64-desktop-openrc/</span>$STAGE3_FILE<span style="color:#e6db74">&#34;</span>
 </span></span><span style="display:flex;"><span>STAGE3_NAME<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>basename <span style="color:#e6db74">&#34;</span>$STAGE3_FILE<span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">)</span>
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>info <span style="color:#e6db74">&#34;Descargando </span>$STAGE3_NAME<span style="color:#e6db74">...&#34;</span>
