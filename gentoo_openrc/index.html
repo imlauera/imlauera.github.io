@@ -29,7 +29,7 @@ Instalé OBS Studio en Gentoo sin mirar las banderas (USE Flags) cuando ejecuté
 Con el comando emerge -pv obs-studio pude ver las banderas y leyendo la Wiki de Gentoo de OBS me dí cuenta que tengo que habilitar las siguientes banderas para tener esas funcionalidades:">
   <meta itemprop="datePublished" content="2025-06-22T22:25:52-03:00">
   <meta itemprop="dateModified" content="2025-06-22T22:25:52-03:00">
-  <meta itemprop="wordCount" content="8461">
+  <meta itemprop="wordCount" content="8496">
   <meta itemprop="keywords" content="Gentoo">
   
   <meta name="twitter:card" content="summary">
@@ -1507,17 +1507,19 @@ realidad no esta trabada mi hardware es pobre deberias darte cuenta de eso expon
 </span></span></span><span style="display:flex;"><span><span style="color:#e6db74">emerge --getbinpkg --oneshot app-portage/cpuid2cpuflags
 </span></span></span><span style="display:flex;"><span><span style="color:#e6db74">echo &#34;*/* $(cpuid2cpuflags)&#34; &gt; /etc/portage/package.use/00cpu-flags
 </span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">info &#34;=== Actualizando @world ===&#34;
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">emerge --getbinpkg --binpkg-respect-use=n -uDN @world || warn &#34;@world no se actualizo completamente.&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">info &#34;=== @world salteado — correr despues del primer boot: emerge -uDN @world ===&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># emerge --getbinpkg --binpkg-respect-use=n -uDN @world
 </span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
 </span></span></span><span style="display:flex;"><span><span style="color:#e6db74">info &#34;=== linux-firmware ===&#34;
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">emerge -g sys-kernel/linux-firmware || emerge --binpkg-respect-use=n sys-kernel/linux-firmware
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">emerge -G --binpkg-respect-use=n sys-kernel/linux-firmware
 </span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
 </span></span></span><span style="display:flex;"><span><span style="color:#e6db74">info &#34;=== sof-firmware / intel-microcode ===&#34;
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">emerge -g sys-firmware/sof-firmware sys-firmware/intel-microcode 2&gt;/dev/null || warn &#34;No disponibles como binarios, omitiendo.&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">emerge -G --binpkg-respect-use=n sys-firmware/sof-firmware sys-firmware/intel-microcode 2&gt;/dev/null || warn &#34;No disponibles como binarios, omitiendo.&#34;
 </span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">info &#34;=== gentoo-kernel-bin ===&#34;
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">emerge -g sys-kernel/gentoo-kernel-bin || emerge --binpkg-respect-use=n sys-kernel/gentoo-kernel-bin
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">info &#34;=== gentoo-kernel-bin (SOLO binario, sin compilar) ===&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># -G = getbinpkg-ONLY: falla si no hay binario en vez de compilar
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># --binpkg-respect-use=n: ignora USE flags del binario para no caer a compilar
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">emerge -G --binpkg-respect-use=n sys-kernel/gentoo-kernel-bin
 </span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
 </span></span></span><span style="display:flex;"><span><span style="color:#e6db74">info &#34;=== GRUB + efibootmgr ===&#34;
 </span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># NOTA: binario de grub sin flag mount -&gt; os-prober no funciona
@@ -1630,6 +1632,8 @@ realidad no esta trabada mi hardware es pobre deberias darte cuenta de eso expon
 </span></span><span style="display:flex;"><span>section <span style="color:#e6db74">&#34;Listo! Podes reiniciar con: reboot&#34;</span>
 </span></span><span style="display:flex;"><span>info <span style="color:#e6db74">&#34;Guias: https://imlauera.github.io/post/gentoo_installation/&#34;</span>
 </span></span><span style="display:flex;"><span>info <span style="color:#e6db74">&#34;       https://imlauera.github.io/gentoo_openrc/&#34;</span>
+</span></span></code></pre></div><p>Despues del primer boot corres:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>emerge -uDN @world
 </span></span></code></pre></div>
 </div>
 
