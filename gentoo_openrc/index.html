@@ -29,7 +29,7 @@ Instalé OBS Studio en Gentoo sin mirar las banderas (USE Flags) cuando ejecuté
 Con el comando emerge -pv obs-studio pude ver las banderas y leyendo la Wiki de Gentoo de OBS me dí cuenta que tengo que habilitar las siguientes banderas para tener esas funcionalidades:">
   <meta itemprop="datePublished" content="2025-06-22T22:25:52-03:00">
   <meta itemprop="dateModified" content="2025-06-22T22:25:52-03:00">
-  <meta itemprop="wordCount" content="8496">
+  <meta itemprop="wordCount" content="8506">
   <meta itemprop="keywords" content="Gentoo">
   
   <meta name="twitter:card" content="summary">
@@ -1414,7 +1414,7 @@ realidad no esta trabada mi hardware es pobre deberias darte cuenta de eso expon
 </span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EMERGE_DEFAULT_OPTS=&#34;\${EMERGE_DEFAULT_OPTS} --getbinpkg --binpkg-respect-use=n --autounmask-backtrack=y&#34;
 </span></span></span><span style="display:flex;"><span><span style="color:#e6db74">ACCEPT_LICENSE=&#34;*&#34;
 </span></span></span><span style="display:flex;"><span><span style="color:#e6db74">ACCEPT_KEYWORDS=&#34;amd64&#34;
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">USE=&#34;dist-kernel elogind -systemd -gnome -kde -qt5 X alsa wifi&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">USE=&#34;elogind -systemd -dist-kernel -gnome -kde -qt5 X alsa wifi&#34;
 </span></span></span><span style="display:flex;"><span><span style="color:#e6db74">MAKEEOF</span>
 </span></span><span style="display:flex;"><span>info <span style="color:#e6db74">&#34;make.conf escrito.&#34;</span>
 </span></span><span style="display:flex;"><span>
@@ -1511,15 +1511,18 @@ realidad no esta trabada mi hardware es pobre deberias darte cuenta de eso expon
 </span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># emerge --getbinpkg --binpkg-respect-use=n -uDN @world
 </span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
 </span></span></span><span style="display:flex;"><span><span style="color:#e6db74">info &#34;=== linux-firmware ===&#34;
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">emerge -G --binpkg-respect-use=n sys-kernel/linux-firmware
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># No esta en el binhost pero no compila nada, solo instala archivos de firmware
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">emerge sys-kernel/linux-firmware
 </span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
 </span></span></span><span style="display:flex;"><span><span style="color:#e6db74">info &#34;=== sof-firmware / intel-microcode ===&#34;
 </span></span></span><span style="display:flex;"><span><span style="color:#e6db74">emerge -G --binpkg-respect-use=n sys-firmware/sof-firmware sys-firmware/intel-microcode 2&gt;/dev/null || warn &#34;No disponibles como binarios, omitiendo.&#34;
 </span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">info &#34;=== gentoo-kernel-bin (SOLO binario, sin compilar) ===&#34;
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># -G = getbinpkg-ONLY: falla si no hay binario en vez de compilar
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># --binpkg-respect-use=n: ignora USE flags del binario para no caer a compilar
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">emerge -G --binpkg-respect-use=n sys-kernel/gentoo-kernel-bin
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">info &#34;=== gentoo-kernel-bin ===&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># Dracut detecta el chroot y necesita un cmdline explicito para generar el initramfs
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># https://wiki.gentoo.org/wiki/Installkernel#Install_chroot_check
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">mkdir -p /etc/cmdline.d
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">echo &#34;root=UUID=$(findmnt -no UUID /) ro quiet&#34; &gt; /etc/cmdline.d/root.conf
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">emerge sys-kernel/gentoo-kernel-bin
 </span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
 </span></span></span><span style="display:flex;"><span><span style="color:#e6db74">info &#34;=== GRUB + efibootmgr ===&#34;
 </span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># NOTA: binario de grub sin flag mount -&gt; os-prober no funciona
