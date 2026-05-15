@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/scraper_imagenes/">
+  <meta property="og:site_name" content="Imlauer">
+  <meta property="og:title" content="Scraper imagenes">
+  <meta property="og:description" content="pip install requests beautifulsoup4
+#!/usr/bin/env python3 &#34;&#34;&#34; Descargador de imágenes para: - nobloatnews.github.io - imlauernews.github.io Funciona con imágenes alojadas en archive.org, blogger, github, y cualquier otro servicio de hosting. Uso: python3 descargar_imagenes.py Las imágenes se guardan en: ./imagenes/nobloatnews/&lt;slug-del-post&gt;/imagen.jpg ./imagenes/imlauernews/&lt;slug-del-post&gt;/imagen.jpg &#34;&#34;&#34; import os import re import time import hashlib import mimetypes import urllib.parse from pathlib import Path import requests from bs4 import BeautifulSoup # ─── Configuración ──────────────────────────────────────────────────────────── SITIOS = [ { &#34;nombre&#34;: &#34;nobloatnews&#34;, &#34;url_base&#34;: &#34;https://nobloatnews.github.io&#34;, &#34;url_indice&#34;: &#34;https://nobloatnews.github.io/index.html&#34;, }, { &#34;nombre&#34;: &#34;imlauernews&#34;, &#34;url_base&#34;: &#34;https://imlauernews.github.io&#34;, &#34;url_indice&#34;: &#34;https://imlauernews.github.io/index.html&#34;, }, ] CARPETA_SALIDA = Path(&#34;imagenes&#34;) # Tiempo de espera entre requests para no sobrecargar los servidores DELAY_ENTRE_POSTS = 1.5 # segundos DELAY_ENTRE_IMAGENES = 0.5 # segundos # Extensiones consideradas imágenes si la URL no tiene extensión clara MIME_A_EXT = { &#34;image/jpeg&#34;: &#34;.jpg&#34;, &#34;image/png&#34;: &#34;.png&#34;, &#34;image/gif&#34;: &#34;.gif&#34;, &#34;image/webp&#34;: &#34;.webp&#34;, &#34;image/avif&#34;: &#34;.avif&#34;, &#34;image/svg&#43;xml&#34;: &#34;.svg&#34;, &#34;image/bmp&#34;: &#34;.bmp&#34;, &#34;image/tiff&#34;: &#34;.tiff&#34;, } HEADERS = { &#34;User-Agent&#34;: ( &#34;Mozilla/5.0 (X11; Linux x86_64; rv:124.0) &#34; &#34;Gecko/20100101 Firefox/124.0&#34; ), &#34;Accept&#34;: &#34;text/html,application/xhtml&#43;xml,application/xml;q=0.9,*/*;q=0.8&#34;, &#34;Accept-Language&#34;: &#34;es-AR,es;q=0.8,en;q=0.5&#34;, &#34;Accept-Encoding&#34;: &#34;gzip, deflate, br&#34;, &#34;Connection&#34;: &#34;keep-alive&#34;, } # ─── Helpers ────────────────────────────────────────────────────────────────── def sesion() -&gt; requests.Session: s = requests.Session() s.headers.update(HEADERS) return s def slug_desde_url(url: str) -&gt; str: &#34;&#34;&#34;Convierte una URL en un nombre de carpeta seguro.&#34;&#34;&#34; path = urllib.parse.urlparse(url).path nombre = Path(path).stem or hashlib.md5(url.encode()).hexdigest()[:8] nombre = re.sub(r&#34;[^\w\-]&#34;, &#34;_&#34;, nombre) return nombre[:80] def extension_desde_url_o_contenido(url: str, content_type: str) -&gt; str: &#34;&#34;&#34;Determina la extensión del archivo.&#34;&#34;&#34; # 1) intentar desde la URL ruta = urllib.parse.urlparse(url).path ext = Path(ruta).suffix.lower() if ext in {&#34;.jpg&#34;, &#34;.jpeg&#34;, &#34;.png&#34;, &#34;.gif&#34;, &#34;.webp&#34;, &#34;.avif&#34;, &#34;.svg&#34;, &#34;.bmp&#34;, &#34;.tiff&#34;}: return ext if ext != &#34;.jpeg&#34; else &#34;.jpg&#34; # 2) desde el Content-Type mime = content_type.split(&#34;;&#34;)[0].strip() return MIME_A_EXT.get(mime, &#34;.jpg&#34;) def es_imagen(url: str, content_type: str) -&gt; bool: ext = extension_desde_url_o_contenido(url, content_type) return ext in {&#34;.jpg&#34;, &#34;.jpeg&#34;, &#34;.png&#34;, &#34;.gif&#34;, &#34;.webp&#34;, &#34;.avif&#34;, &#34;.svg&#34;, &#34;.bmp&#34;, &#34;.tiff&#34;} def nombre_archivo(url: str, content_type: str, index: int) -&gt; str: &#34;&#34;&#34;Genera un nombre de archivo único.&#34;&#34;&#34; ext = extension_desde_url_o_contenido(url, content_type) hash_url = hashlib.md5(url.encode()).hexdigest()[:8] return f&#34;{index:03d}_{hash_url}{ext}&#34; # ─── Lógica principal ───────────────────────────────────────────────────────── def obtener_links_posts(s: requests.Session, url_indice: str, url_base: str) -&gt; list[dict]: &#34;&#34;&#34;Extrae todos los enlaces a posts desde la página índice.&#34;&#34;&#34; print(f&#34;\n Leyendo índice: {url_indice}&#34;) try: r = s.get(url_indice, timeout=15) r.raise_for_status() except Exception as e: print(f&#34; ✗ No se pudo acceder al índice: {e}&#34;) return [] soup = BeautifulSoup(r.text, &#34;html.parser&#34;) posts = [] for a in soup.find_all(&#34;a&#34;, href=True): href = a[&#34;href&#34;].strip() # Resolver URL relativa url_completa = urllib.parse.urljoin(url_base, href) # Solo links internos que sean posts (contienen /posts/) if url_completa.startswith(url_base) and &#34;/posts/&#34; in url_completa: if url_completa not in [p[&#34;url&#34;] for p in posts]: posts.append({ &#34;url&#34;: url_completa, &#34;titulo&#34;: a.get_text(strip=True) or slug_desde_url(url_completa), }) print(f&#34; → {len(posts)} posts encontrados&#34;) return posts def extraer_urls_imagenes(soup: BeautifulSoup, url_post: str) -&gt; list[str]: &#34;&#34;&#34;Extrae todas las URLs de imágenes dentro de una página.&#34;&#34;&#34; urls = set() # &lt;img src=&#34;...&#34;&gt; for img in soup.find_all(&#34;img&#34;): src = img.get(&#34;src&#34;) or img.get(&#34;data-src&#34;) or img.get(&#34;data-lazy-src&#34;) if src: urls.add(urllib.parse.urljoin(url_post, src.strip())) # &lt;a href=&#34;...&#34;&gt; que apunten a archivos de imagen directamente for a in soup.find_all(&#34;a&#34;, href=True): href = a[&#34;href&#34;].strip() ext = Path(urllib.parse.urlparse(href).path).suffix.lower() if ext in {&#34;.jpg&#34;, &#34;.jpeg&#34;, &#34;.png&#34;, &#34;.gif&#34;, &#34;.webp&#34;, &#34;.avif&#34;, &#34;.bmp&#34;, &#34;.tiff&#34;}: urls.add(urllib.parse.urljoin(url_post, href)) # Buscar URLs de imágenes embebidas en atributos style o srcset for tag in soup.find_all(True): srcset = tag.get(&#34;srcset&#34;, &#34;&#34;) for parte in srcset.split(&#34;,&#34;): src = parte.strip().split()[0] if src: urls.add(urllib.parse.urljoin(url_post, src)) style = tag.get(&#34;style&#34;, &#34;&#34;) for m in re.findall(r&#39;url\([&#34;\&#39;]?(https?://[^&#34;\&#39;)\s]&#43;)[&#34;\&#39;]?\)&#39;, style): urls.add(m) return list(urls) def descargar_imagen(s: requests.Session, url_img: str, ruta_destino: Path) -&gt; bool: &#34;&#34;&#34;Descarga una imagen y la guarda en disco. Retorna True si tuvo éxito.&#34;&#34;&#34; try: r = s.get(url_img, timeout=20, stream=True) r.raise_for_status() ct = r.headers.get(&#34;Content-Type&#34;, &#34;image/jpeg&#34;) if not es_imagen(url_img, ct): return False ruta_destino.parent.mkdir(parents=True, exist_ok=True) # Asignar extensión correcta si falta if not ruta_destino.suffix: ext = extension_desde_url_o_contenido(url_img, ct) ruta_destino = ruta_destino.with_suffix(ext) with open(ruta_destino, &#34;wb&#34;) as f: for chunk in r.iter_content(8192): f.write(chunk) return True except Exception as e: print(f&#34; ✗ Error descargando {url_img[:80]}: {e}&#34;) return False def procesar_post(s: requests.Session, post: dict, carpeta_sitio: Path) -&gt; int: &#34;&#34;&#34;Procesa un post y descarga sus imágenes. Retorna cantidad descargada.&#34;&#34;&#34; url = post[&#34;url&#34;] slug = slug_desde_url(url) carpeta_post = carpeta_sitio / slug carpeta_post.mkdir(parents=True, exist_ok=True) print(f&#34;\n 📄 {post[&#39;titulo&#39;][:60]}&#34;) print(f&#34; {url}&#34;) try: r = s.get(url, timeout=15) r.raise_for_status() except Exception as e: print(f&#34; ✗ No se pudo acceder: {e}&#34;) return 0 soup = BeautifulSoup(r.text, &#34;html.parser&#34;) urls_img = extraer_urls_imagenes(soup, url) if not urls_img: print(&#34; (sin imágenes)&#34;) return 0 print(f&#34; → {len(urls_img)} imagen(es) encontrada(s)&#34;) descargadas = 0 for i, url_img in enumerate(urls_img, 1): # Construir nombre de archivo nombre = nombre_archivo(url_img, &#34;&#34;, i) ruta = carpeta_post / nombre # Saltar si ya existe if any(carpeta_post.glob(f&#34;{i:03d}_*&#34;)): archivos = list(carpeta_post.glob(f&#34;{i:03d}_*&#34;)) if archivos: print(f&#34; [{i}/{len(urls_img)}] ya existe, se omite&#34;) descargadas &#43;= 1 continue print(f&#34; [{i}/{len(urls_img)}] {url_img[:70]}&#34;) if descargar_imagen(s, url_img, ruta): descargadas &#43;= 1 time.sleep(DELAY_ENTRE_IMAGENES) print(f&#34; ✓ {descargadas}/{len(urls_img)} descargadas → {carpeta_post}&#34;) return descargadas def procesar_sitio(sitio: dict): s = sesion() nombre = sitio[&#34;nombre&#34;] url_base = sitio[&#34;url_base&#34;] url_indice = sitio[&#34;url_indice&#34;] print(f&#34;\n{&#39;=&#39;*60}&#34;) print(f&#34; SITIO: {nombre}&#34;) print(f&#34;{&#39;=&#39;*60}&#34;) carpeta_sitio = CARPETA_SALIDA / nombre carpeta_sitio.mkdir(parents=True, exist_ok=True) posts = obtener_links_posts(s, url_indice, url_base) if not posts: print(&#34; No se encontraron posts.&#34;) return total_imagenes = 0 for i, post in enumerate(posts, 1): print(f&#34;\n [{i}/{len(posts)}]&#34;, end=&#34;&#34;) n = procesar_post(s, post, carpeta_sitio) total_imagenes &#43;= n time.sleep(DELAY_ENTRE_POSTS) print(f&#34;\n\n ✅ {nombre}: {total_imagenes} imágenes descargadas en total&#34;) print(f&#34; Carpeta: {carpeta_sitio.resolve()}&#34;) # ─── Entry point ────────────────────────────────────────────────────────────── if __name__ == &#34;__main__&#34;: print(&#34;╔══════════════════════════════════════════════════════════╗&#34;) print(&#34;║ Descargador de imágenes - NoBloatNews ║&#34;) print(&#34;╚══════════════════════════════════════════════════════════╝&#34;) # Instalar dependencias si faltan try: import requests from bs4 import BeautifulSoup except ImportError: print(&#34;\n⚠ Instalando dependencias...&#34;) os.system(&#34;pip install requests beautifulsoup4 --quiet&#34;) import requests from bs4 import BeautifulSoup CARPETA_SALIDA.mkdir(exist_ok=True) for sitio in SITIOS: procesar_sitio(sitio) print(&#34;\n\n🎉 ¡Listo! Todas las imágenes fueron descargadas.&#34;) print(f&#34; Carpeta principal: {CARPETA_SALIDA.resolve()}&#34;)">
+  <meta property="og:locale" content="es_es">
+  <meta property="og:type" content="article">
+    <meta property="article:tag" content="Scrapper">
+
+  
+  <meta itemprop="name" content="Scraper imagenes">
+  <meta itemprop="description" content="pip install requests beautifulsoup4
+#!/usr/bin/env python3 &#34;&#34;&#34; Descargador de imágenes para: - nobloatnews.github.io - imlauernews.github.io Funciona con imágenes alojadas en archive.org, blogger, github, y cualquier otro servicio de hosting. Uso: python3 descargar_imagenes.py Las imágenes se guardan en: ./imagenes/nobloatnews/&lt;slug-del-post&gt;/imagen.jpg ./imagenes/imlauernews/&lt;slug-del-post&gt;/imagen.jpg &#34;&#34;&#34; import os import re import time import hashlib import mimetypes import urllib.parse from pathlib import Path import requests from bs4 import BeautifulSoup # ─── Configuración ──────────────────────────────────────────────────────────── SITIOS = [ { &#34;nombre&#34;: &#34;nobloatnews&#34;, &#34;url_base&#34;: &#34;https://nobloatnews.github.io&#34;, &#34;url_indice&#34;: &#34;https://nobloatnews.github.io/index.html&#34;, }, { &#34;nombre&#34;: &#34;imlauernews&#34;, &#34;url_base&#34;: &#34;https://imlauernews.github.io&#34;, &#34;url_indice&#34;: &#34;https://imlauernews.github.io/index.html&#34;, }, ] CARPETA_SALIDA = Path(&#34;imagenes&#34;) # Tiempo de espera entre requests para no sobrecargar los servidores DELAY_ENTRE_POSTS = 1.5 # segundos DELAY_ENTRE_IMAGENES = 0.5 # segundos # Extensiones consideradas imágenes si la URL no tiene extensión clara MIME_A_EXT = { &#34;image/jpeg&#34;: &#34;.jpg&#34;, &#34;image/png&#34;: &#34;.png&#34;, &#34;image/gif&#34;: &#34;.gif&#34;, &#34;image/webp&#34;: &#34;.webp&#34;, &#34;image/avif&#34;: &#34;.avif&#34;, &#34;image/svg&#43;xml&#34;: &#34;.svg&#34;, &#34;image/bmp&#34;: &#34;.bmp&#34;, &#34;image/tiff&#34;: &#34;.tiff&#34;, } HEADERS = { &#34;User-Agent&#34;: ( &#34;Mozilla/5.0 (X11; Linux x86_64; rv:124.0) &#34; &#34;Gecko/20100101 Firefox/124.0&#34; ), &#34;Accept&#34;: &#34;text/html,application/xhtml&#43;xml,application/xml;q=0.9,*/*;q=0.8&#34;, &#34;Accept-Language&#34;: &#34;es-AR,es;q=0.8,en;q=0.5&#34;, &#34;Accept-Encoding&#34;: &#34;gzip, deflate, br&#34;, &#34;Connection&#34;: &#34;keep-alive&#34;, } # ─── Helpers ────────────────────────────────────────────────────────────────── def sesion() -&gt; requests.Session: s = requests.Session() s.headers.update(HEADERS) return s def slug_desde_url(url: str) -&gt; str: &#34;&#34;&#34;Convierte una URL en un nombre de carpeta seguro.&#34;&#34;&#34; path = urllib.parse.urlparse(url).path nombre = Path(path).stem or hashlib.md5(url.encode()).hexdigest()[:8] nombre = re.sub(r&#34;[^\w\-]&#34;, &#34;_&#34;, nombre) return nombre[:80] def extension_desde_url_o_contenido(url: str, content_type: str) -&gt; str: &#34;&#34;&#34;Determina la extensión del archivo.&#34;&#34;&#34; # 1) intentar desde la URL ruta = urllib.parse.urlparse(url).path ext = Path(ruta).suffix.lower() if ext in {&#34;.jpg&#34;, &#34;.jpeg&#34;, &#34;.png&#34;, &#34;.gif&#34;, &#34;.webp&#34;, &#34;.avif&#34;, &#34;.svg&#34;, &#34;.bmp&#34;, &#34;.tiff&#34;}: return ext if ext != &#34;.jpeg&#34; else &#34;.jpg&#34; # 2) desde el Content-Type mime = content_type.split(&#34;;&#34;)[0].strip() return MIME_A_EXT.get(mime, &#34;.jpg&#34;) def es_imagen(url: str, content_type: str) -&gt; bool: ext = extension_desde_url_o_contenido(url, content_type) return ext in {&#34;.jpg&#34;, &#34;.jpeg&#34;, &#34;.png&#34;, &#34;.gif&#34;, &#34;.webp&#34;, &#34;.avif&#34;, &#34;.svg&#34;, &#34;.bmp&#34;, &#34;.tiff&#34;} def nombre_archivo(url: str, content_type: str, index: int) -&gt; str: &#34;&#34;&#34;Genera un nombre de archivo único.&#34;&#34;&#34; ext = extension_desde_url_o_contenido(url, content_type) hash_url = hashlib.md5(url.encode()).hexdigest()[:8] return f&#34;{index:03d}_{hash_url}{ext}&#34; # ─── Lógica principal ───────────────────────────────────────────────────────── def obtener_links_posts(s: requests.Session, url_indice: str, url_base: str) -&gt; list[dict]: &#34;&#34;&#34;Extrae todos los enlaces a posts desde la página índice.&#34;&#34;&#34; print(f&#34;\n Leyendo índice: {url_indice}&#34;) try: r = s.get(url_indice, timeout=15) r.raise_for_status() except Exception as e: print(f&#34; ✗ No se pudo acceder al índice: {e}&#34;) return [] soup = BeautifulSoup(r.text, &#34;html.parser&#34;) posts = [] for a in soup.find_all(&#34;a&#34;, href=True): href = a[&#34;href&#34;].strip() # Resolver URL relativa url_completa = urllib.parse.urljoin(url_base, href) # Solo links internos que sean posts (contienen /posts/) if url_completa.startswith(url_base) and &#34;/posts/&#34; in url_completa: if url_completa not in [p[&#34;url&#34;] for p in posts]: posts.append({ &#34;url&#34;: url_completa, &#34;titulo&#34;: a.get_text(strip=True) or slug_desde_url(url_completa), }) print(f&#34; → {len(posts)} posts encontrados&#34;) return posts def extraer_urls_imagenes(soup: BeautifulSoup, url_post: str) -&gt; list[str]: &#34;&#34;&#34;Extrae todas las URLs de imágenes dentro de una página.&#34;&#34;&#34; urls = set() # &lt;img src=&#34;...&#34;&gt; for img in soup.find_all(&#34;img&#34;): src = img.get(&#34;src&#34;) or img.get(&#34;data-src&#34;) or img.get(&#34;data-lazy-src&#34;) if src: urls.add(urllib.parse.urljoin(url_post, src.strip())) # &lt;a href=&#34;...&#34;&gt; que apunten a archivos de imagen directamente for a in soup.find_all(&#34;a&#34;, href=True): href = a[&#34;href&#34;].strip() ext = Path(urllib.parse.urlparse(href).path).suffix.lower() if ext in {&#34;.jpg&#34;, &#34;.jpeg&#34;, &#34;.png&#34;, &#34;.gif&#34;, &#34;.webp&#34;, &#34;.avif&#34;, &#34;.bmp&#34;, &#34;.tiff&#34;}: urls.add(urllib.parse.urljoin(url_post, href)) # Buscar URLs de imágenes embebidas en atributos style o srcset for tag in soup.find_all(True): srcset = tag.get(&#34;srcset&#34;, &#34;&#34;) for parte in srcset.split(&#34;,&#34;): src = parte.strip().split()[0] if src: urls.add(urllib.parse.urljoin(url_post, src)) style = tag.get(&#34;style&#34;, &#34;&#34;) for m in re.findall(r&#39;url\([&#34;\&#39;]?(https?://[^&#34;\&#39;)\s]&#43;)[&#34;\&#39;]?\)&#39;, style): urls.add(m) return list(urls) def descargar_imagen(s: requests.Session, url_img: str, ruta_destino: Path) -&gt; bool: &#34;&#34;&#34;Descarga una imagen y la guarda en disco. Retorna True si tuvo éxito.&#34;&#34;&#34; try: r = s.get(url_img, timeout=20, stream=True) r.raise_for_status() ct = r.headers.get(&#34;Content-Type&#34;, &#34;image/jpeg&#34;) if not es_imagen(url_img, ct): return False ruta_destino.parent.mkdir(parents=True, exist_ok=True) # Asignar extensión correcta si falta if not ruta_destino.suffix: ext = extension_desde_url_o_contenido(url_img, ct) ruta_destino = ruta_destino.with_suffix(ext) with open(ruta_destino, &#34;wb&#34;) as f: for chunk in r.iter_content(8192): f.write(chunk) return True except Exception as e: print(f&#34; ✗ Error descargando {url_img[:80]}: {e}&#34;) return False def procesar_post(s: requests.Session, post: dict, carpeta_sitio: Path) -&gt; int: &#34;&#34;&#34;Procesa un post y descarga sus imágenes. Retorna cantidad descargada.&#34;&#34;&#34; url = post[&#34;url&#34;] slug = slug_desde_url(url) carpeta_post = carpeta_sitio / slug carpeta_post.mkdir(parents=True, exist_ok=True) print(f&#34;\n 📄 {post[&#39;titulo&#39;][:60]}&#34;) print(f&#34; {url}&#34;) try: r = s.get(url, timeout=15) r.raise_for_status() except Exception as e: print(f&#34; ✗ No se pudo acceder: {e}&#34;) return 0 soup = BeautifulSoup(r.text, &#34;html.parser&#34;) urls_img = extraer_urls_imagenes(soup, url) if not urls_img: print(&#34; (sin imágenes)&#34;) return 0 print(f&#34; → {len(urls_img)} imagen(es) encontrada(s)&#34;) descargadas = 0 for i, url_img in enumerate(urls_img, 1): # Construir nombre de archivo nombre = nombre_archivo(url_img, &#34;&#34;, i) ruta = carpeta_post / nombre # Saltar si ya existe if any(carpeta_post.glob(f&#34;{i:03d}_*&#34;)): archivos = list(carpeta_post.glob(f&#34;{i:03d}_*&#34;)) if archivos: print(f&#34; [{i}/{len(urls_img)}] ya existe, se omite&#34;) descargadas &#43;= 1 continue print(f&#34; [{i}/{len(urls_img)}] {url_img[:70]}&#34;) if descargar_imagen(s, url_img, ruta): descargadas &#43;= 1 time.sleep(DELAY_ENTRE_IMAGENES) print(f&#34; ✓ {descargadas}/{len(urls_img)} descargadas → {carpeta_post}&#34;) return descargadas def procesar_sitio(sitio: dict): s = sesion() nombre = sitio[&#34;nombre&#34;] url_base = sitio[&#34;url_base&#34;] url_indice = sitio[&#34;url_indice&#34;] print(f&#34;\n{&#39;=&#39;*60}&#34;) print(f&#34; SITIO: {nombre}&#34;) print(f&#34;{&#39;=&#39;*60}&#34;) carpeta_sitio = CARPETA_SALIDA / nombre carpeta_sitio.mkdir(parents=True, exist_ok=True) posts = obtener_links_posts(s, url_indice, url_base) if not posts: print(&#34; No se encontraron posts.&#34;) return total_imagenes = 0 for i, post in enumerate(posts, 1): print(f&#34;\n [{i}/{len(posts)}]&#34;, end=&#34;&#34;) n = procesar_post(s, post, carpeta_sitio) total_imagenes &#43;= n time.sleep(DELAY_ENTRE_POSTS) print(f&#34;\n\n ✅ {nombre}: {total_imagenes} imágenes descargadas en total&#34;) print(f&#34; Carpeta: {carpeta_sitio.resolve()}&#34;) # ─── Entry point ────────────────────────────────────────────────────────────── if __name__ == &#34;__main__&#34;: print(&#34;╔══════════════════════════════════════════════════════════╗&#34;) print(&#34;║ Descargador de imágenes - NoBloatNews ║&#34;) print(&#34;╚══════════════════════════════════════════════════════════╝&#34;) # Instalar dependencias si faltan try: import requests from bs4 import BeautifulSoup except ImportError: print(&#34;\n⚠ Instalando dependencias...&#34;) os.system(&#34;pip install requests beautifulsoup4 --quiet&#34;) import requests from bs4 import BeautifulSoup CARPETA_SALIDA.mkdir(exist_ok=True) for sitio in SITIOS: procesar_sitio(sitio) print(&#34;\n\n🎉 ¡Listo! Todas las imágenes fueron descargadas.&#34;) print(f&#34; Carpeta principal: {CARPETA_SALIDA.resolve()}&#34;)">
+  <meta itemprop="wordCount" content="895">
+  <meta itemprop="keywords" content="Scrapper">
+  
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Scraper imagenes">
+  <meta name="twitter:description" content="pip install requests beautifulsoup4
+#!/usr/bin/env python3 &#34;&#34;&#34; Descargador de imágenes para: - nobloatnews.github.io - imlauernews.github.io Funciona con imágenes alojadas en archive.org, blogger, github, y cualquier otro servicio de hosting. Uso: python3 descargar_imagenes.py Las imágenes se guardan en: ./imagenes/nobloatnews/&lt;slug-del-post&gt;/imagen.jpg ./imagenes/imlauernews/&lt;slug-del-post&gt;/imagen.jpg &#34;&#34;&#34; import os import re import time import hashlib import mimetypes import urllib.parse from pathlib import Path import requests from bs4 import BeautifulSoup # ─── Configuración ──────────────────────────────────────────────────────────── SITIOS = [ { &#34;nombre&#34;: &#34;nobloatnews&#34;, &#34;url_base&#34;: &#34;https://nobloatnews.github.io&#34;, &#34;url_indice&#34;: &#34;https://nobloatnews.github.io/index.html&#34;, }, { &#34;nombre&#34;: &#34;imlauernews&#34;, &#34;url_base&#34;: &#34;https://imlauernews.github.io&#34;, &#34;url_indice&#34;: &#34;https://imlauernews.github.io/index.html&#34;, }, ] CARPETA_SALIDA = Path(&#34;imagenes&#34;) # Tiempo de espera entre requests para no sobrecargar los servidores DELAY_ENTRE_POSTS = 1.5 # segundos DELAY_ENTRE_IMAGENES = 0.5 # segundos # Extensiones consideradas imágenes si la URL no tiene extensión clara MIME_A_EXT = { &#34;image/jpeg&#34;: &#34;.jpg&#34;, &#34;image/png&#34;: &#34;.png&#34;, &#34;image/gif&#34;: &#34;.gif&#34;, &#34;image/webp&#34;: &#34;.webp&#34;, &#34;image/avif&#34;: &#34;.avif&#34;, &#34;image/svg&#43;xml&#34;: &#34;.svg&#34;, &#34;image/bmp&#34;: &#34;.bmp&#34;, &#34;image/tiff&#34;: &#34;.tiff&#34;, } HEADERS = { &#34;User-Agent&#34;: ( &#34;Mozilla/5.0 (X11; Linux x86_64; rv:124.0) &#34; &#34;Gecko/20100101 Firefox/124.0&#34; ), &#34;Accept&#34;: &#34;text/html,application/xhtml&#43;xml,application/xml;q=0.9,*/*;q=0.8&#34;, &#34;Accept-Language&#34;: &#34;es-AR,es;q=0.8,en;q=0.5&#34;, &#34;Accept-Encoding&#34;: &#34;gzip, deflate, br&#34;, &#34;Connection&#34;: &#34;keep-alive&#34;, } # ─── Helpers ────────────────────────────────────────────────────────────────── def sesion() -&gt; requests.Session: s = requests.Session() s.headers.update(HEADERS) return s def slug_desde_url(url: str) -&gt; str: &#34;&#34;&#34;Convierte una URL en un nombre de carpeta seguro.&#34;&#34;&#34; path = urllib.parse.urlparse(url).path nombre = Path(path).stem or hashlib.md5(url.encode()).hexdigest()[:8] nombre = re.sub(r&#34;[^\w\-]&#34;, &#34;_&#34;, nombre) return nombre[:80] def extension_desde_url_o_contenido(url: str, content_type: str) -&gt; str: &#34;&#34;&#34;Determina la extensión del archivo.&#34;&#34;&#34; # 1) intentar desde la URL ruta = urllib.parse.urlparse(url).path ext = Path(ruta).suffix.lower() if ext in {&#34;.jpg&#34;, &#34;.jpeg&#34;, &#34;.png&#34;, &#34;.gif&#34;, &#34;.webp&#34;, &#34;.avif&#34;, &#34;.svg&#34;, &#34;.bmp&#34;, &#34;.tiff&#34;}: return ext if ext != &#34;.jpeg&#34; else &#34;.jpg&#34; # 2) desde el Content-Type mime = content_type.split(&#34;;&#34;)[0].strip() return MIME_A_EXT.get(mime, &#34;.jpg&#34;) def es_imagen(url: str, content_type: str) -&gt; bool: ext = extension_desde_url_o_contenido(url, content_type) return ext in {&#34;.jpg&#34;, &#34;.jpeg&#34;, &#34;.png&#34;, &#34;.gif&#34;, &#34;.webp&#34;, &#34;.avif&#34;, &#34;.svg&#34;, &#34;.bmp&#34;, &#34;.tiff&#34;} def nombre_archivo(url: str, content_type: str, index: int) -&gt; str: &#34;&#34;&#34;Genera un nombre de archivo único.&#34;&#34;&#34; ext = extension_desde_url_o_contenido(url, content_type) hash_url = hashlib.md5(url.encode()).hexdigest()[:8] return f&#34;{index:03d}_{hash_url}{ext}&#34; # ─── Lógica principal ───────────────────────────────────────────────────────── def obtener_links_posts(s: requests.Session, url_indice: str, url_base: str) -&gt; list[dict]: &#34;&#34;&#34;Extrae todos los enlaces a posts desde la página índice.&#34;&#34;&#34; print(f&#34;\n Leyendo índice: {url_indice}&#34;) try: r = s.get(url_indice, timeout=15) r.raise_for_status() except Exception as e: print(f&#34; ✗ No se pudo acceder al índice: {e}&#34;) return [] soup = BeautifulSoup(r.text, &#34;html.parser&#34;) posts = [] for a in soup.find_all(&#34;a&#34;, href=True): href = a[&#34;href&#34;].strip() # Resolver URL relativa url_completa = urllib.parse.urljoin(url_base, href) # Solo links internos que sean posts (contienen /posts/) if url_completa.startswith(url_base) and &#34;/posts/&#34; in url_completa: if url_completa not in [p[&#34;url&#34;] for p in posts]: posts.append({ &#34;url&#34;: url_completa, &#34;titulo&#34;: a.get_text(strip=True) or slug_desde_url(url_completa), }) print(f&#34; → {len(posts)} posts encontrados&#34;) return posts def extraer_urls_imagenes(soup: BeautifulSoup, url_post: str) -&gt; list[str]: &#34;&#34;&#34;Extrae todas las URLs de imágenes dentro de una página.&#34;&#34;&#34; urls = set() # &lt;img src=&#34;...&#34;&gt; for img in soup.find_all(&#34;img&#34;): src = img.get(&#34;src&#34;) or img.get(&#34;data-src&#34;) or img.get(&#34;data-lazy-src&#34;) if src: urls.add(urllib.parse.urljoin(url_post, src.strip())) # &lt;a href=&#34;...&#34;&gt; que apunten a archivos de imagen directamente for a in soup.find_all(&#34;a&#34;, href=True): href = a[&#34;href&#34;].strip() ext = Path(urllib.parse.urlparse(href).path).suffix.lower() if ext in {&#34;.jpg&#34;, &#34;.jpeg&#34;, &#34;.png&#34;, &#34;.gif&#34;, &#34;.webp&#34;, &#34;.avif&#34;, &#34;.bmp&#34;, &#34;.tiff&#34;}: urls.add(urllib.parse.urljoin(url_post, href)) # Buscar URLs de imágenes embebidas en atributos style o srcset for tag in soup.find_all(True): srcset = tag.get(&#34;srcset&#34;, &#34;&#34;) for parte in srcset.split(&#34;,&#34;): src = parte.strip().split()[0] if src: urls.add(urllib.parse.urljoin(url_post, src)) style = tag.get(&#34;style&#34;, &#34;&#34;) for m in re.findall(r&#39;url\([&#34;\&#39;]?(https?://[^&#34;\&#39;)\s]&#43;)[&#34;\&#39;]?\)&#39;, style): urls.add(m) return list(urls) def descargar_imagen(s: requests.Session, url_img: str, ruta_destino: Path) -&gt; bool: &#34;&#34;&#34;Descarga una imagen y la guarda en disco. Retorna True si tuvo éxito.&#34;&#34;&#34; try: r = s.get(url_img, timeout=20, stream=True) r.raise_for_status() ct = r.headers.get(&#34;Content-Type&#34;, &#34;image/jpeg&#34;) if not es_imagen(url_img, ct): return False ruta_destino.parent.mkdir(parents=True, exist_ok=True) # Asignar extensión correcta si falta if not ruta_destino.suffix: ext = extension_desde_url_o_contenido(url_img, ct) ruta_destino = ruta_destino.with_suffix(ext) with open(ruta_destino, &#34;wb&#34;) as f: for chunk in r.iter_content(8192): f.write(chunk) return True except Exception as e: print(f&#34; ✗ Error descargando {url_img[:80]}: {e}&#34;) return False def procesar_post(s: requests.Session, post: dict, carpeta_sitio: Path) -&gt; int: &#34;&#34;&#34;Procesa un post y descarga sus imágenes. Retorna cantidad descargada.&#34;&#34;&#34; url = post[&#34;url&#34;] slug = slug_desde_url(url) carpeta_post = carpeta_sitio / slug carpeta_post.mkdir(parents=True, exist_ok=True) print(f&#34;\n 📄 {post[&#39;titulo&#39;][:60]}&#34;) print(f&#34; {url}&#34;) try: r = s.get(url, timeout=15) r.raise_for_status() except Exception as e: print(f&#34; ✗ No se pudo acceder: {e}&#34;) return 0 soup = BeautifulSoup(r.text, &#34;html.parser&#34;) urls_img = extraer_urls_imagenes(soup, url) if not urls_img: print(&#34; (sin imágenes)&#34;) return 0 print(f&#34; → {len(urls_img)} imagen(es) encontrada(s)&#34;) descargadas = 0 for i, url_img in enumerate(urls_img, 1): # Construir nombre de archivo nombre = nombre_archivo(url_img, &#34;&#34;, i) ruta = carpeta_post / nombre # Saltar si ya existe if any(carpeta_post.glob(f&#34;{i:03d}_*&#34;)): archivos = list(carpeta_post.glob(f&#34;{i:03d}_*&#34;)) if archivos: print(f&#34; [{i}/{len(urls_img)}] ya existe, se omite&#34;) descargadas &#43;= 1 continue print(f&#34; [{i}/{len(urls_img)}] {url_img[:70]}&#34;) if descargar_imagen(s, url_img, ruta): descargadas &#43;= 1 time.sleep(DELAY_ENTRE_IMAGENES) print(f&#34; ✓ {descargadas}/{len(urls_img)} descargadas → {carpeta_post}&#34;) return descargadas def procesar_sitio(sitio: dict): s = sesion() nombre = sitio[&#34;nombre&#34;] url_base = sitio[&#34;url_base&#34;] url_indice = sitio[&#34;url_indice&#34;] print(f&#34;\n{&#39;=&#39;*60}&#34;) print(f&#34; SITIO: {nombre}&#34;) print(f&#34;{&#39;=&#39;*60}&#34;) carpeta_sitio = CARPETA_SALIDA / nombre carpeta_sitio.mkdir(parents=True, exist_ok=True) posts = obtener_links_posts(s, url_indice, url_base) if not posts: print(&#34; No se encontraron posts.&#34;) return total_imagenes = 0 for i, post in enumerate(posts, 1): print(f&#34;\n [{i}/{len(posts)}]&#34;, end=&#34;&#34;) n = procesar_post(s, post, carpeta_sitio) total_imagenes &#43;= n time.sleep(DELAY_ENTRE_POSTS) print(f&#34;\n\n ✅ {nombre}: {total_imagenes} imágenes descargadas en total&#34;) print(f&#34; Carpeta: {carpeta_sitio.resolve()}&#34;) # ─── Entry point ────────────────────────────────────────────────────────────── if __name__ == &#34;__main__&#34;: print(&#34;╔══════════════════════════════════════════════════════════╗&#34;) print(&#34;║ Descargador de imágenes - NoBloatNews ║&#34;) print(&#34;╚══════════════════════════════════════════════════════════╝&#34;) # Instalar dependencias si faltan try: import requests from bs4 import BeautifulSoup except ImportError: print(&#34;\n⚠ Instalando dependencias...&#34;) os.system(&#34;pip install requests beautifulsoup4 --quiet&#34;) import requests from bs4 import BeautifulSoup CARPETA_SALIDA.mkdir(exist_ok=True) for sitio in SITIOS: procesar_sitio(sitio) print(&#34;\n\n🎉 ¡Listo! Todas las imágenes fueron descargadas.&#34;) print(f&#34; Carpeta principal: {CARPETA_SALIDA.resolve()}&#34;)">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Scraper imagenes
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/scraper_imagenes/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="pip install requests beautifulsoup4
+#!/usr/bin/env python3
+&#34;&#34;&#34;
+Descargador de imágenes para:
+  - nobloatnews.github.io
+  - imlauernews.github.io
+
+Funciona con imágenes alojadas en archive.org, blogger, github,
+y cualquier otro servicio de hosting.
+
+Uso:
+    python3 descargar_imagenes.py
+
+Las imágenes se guardan en:
+    ./imagenes/nobloatnews/&lt;slug-del-post&gt;/imagen.jpg
+    ./imagenes/imlauernews/&lt;slug-del-post&gt;/imagen.jpg
+&#34;&#34;&#34;
+
+import os
+import re
+import time
+import hashlib
+import mimetypes
+import urllib.parse
+from pathlib import Path
+
+import requests
+from bs4 import BeautifulSoup
+
+# ─── Configuración ────────────────────────────────────────────────────────────
+
+SITIOS = [
+    {
+        &#34;nombre&#34;: &#34;nobloatnews&#34;,
+        &#34;url_base&#34;: &#34;https://nobloatnews.github.io&#34;,
+        &#34;url_indice&#34;: &#34;https://nobloatnews.github.io/index.html&#34;,
+    },
+    {
+        &#34;nombre&#34;: &#34;imlauernews&#34;,
+        &#34;url_base&#34;: &#34;https://imlauernews.github.io&#34;,
+        &#34;url_indice&#34;: &#34;https://imlauernews.github.io/index.html&#34;,
+    },
+]
+
+CARPETA_SALIDA = Path(&#34;imagenes&#34;)
+
+# Tiempo de espera entre requests para no sobrecargar los servidores
+DELAY_ENTRE_POSTS    = 1.5   # segundos
+DELAY_ENTRE_IMAGENES = 0.5   # segundos
+
+# Extensiones consideradas imágenes si la URL no tiene extensión clara
+MIME_A_EXT = {
+    &#34;image/jpeg&#34;: &#34;.jpg&#34;,
+    &#34;image/png&#34;:  &#34;.png&#34;,
+    &#34;image/gif&#34;:  &#34;.gif&#34;,
+    &#34;image/webp&#34;: &#34;.webp&#34;,
+    &#34;image/avif&#34;: &#34;.avif&#34;,
+    &#34;image/svg&#43;xml&#34;: &#34;.svg&#34;,
+    &#34;image/bmp&#34;:  &#34;.bmp&#34;,
+    &#34;image/tiff&#34;: &#34;.tiff&#34;,
+}
+
+HEADERS = {
+    &#34;User-Agent&#34;: (
+        &#34;Mozilla/5.0 (X11; Linux x86_64; rv:124.0) &#34;
+        &#34;Gecko/20100101 Firefox/124.0&#34;
+    ),
+    &#34;Accept&#34;: &#34;text/html,application/xhtml&#43;xml,application/xml;q=0.9,*/*;q=0.8&#34;,
+    &#34;Accept-Language&#34;: &#34;es-AR,es;q=0.8,en;q=0.5&#34;,
+    &#34;Accept-Encoding&#34;: &#34;gzip, deflate, br&#34;,
+    &#34;Connection&#34;: &#34;keep-alive&#34;,
+}
+
+# ─── Helpers ──────────────────────────────────────────────────────────────────
+
+def sesion() -&gt; requests.Session:
+    s = requests.Session()
+    s.headers.update(HEADERS)
+    return s
+
+
+def slug_desde_url(url: str) -&gt; str:
+    &#34;&#34;&#34;Convierte una URL en un nombre de carpeta seguro.&#34;&#34;&#34;
+    path = urllib.parse.urlparse(url).path
+    nombre = Path(path).stem or hashlib.md5(url.encode()).hexdigest()[:8]
+    nombre = re.sub(r&#34;[^\w\-]&#34;, &#34;_&#34;, nombre)
+    return nombre[:80]
+
+
+def extension_desde_url_o_contenido(url: str, content_type: str) -&gt; str:
+    &#34;&#34;&#34;Determina la extensión del archivo.&#34;&#34;&#34;
+    # 1) intentar desde la URL
+    ruta = urllib.parse.urlparse(url).path
+    ext = Path(ruta).suffix.lower()
+    if ext in {&#34;.jpg&#34;, &#34;.jpeg&#34;, &#34;.png&#34;, &#34;.gif&#34;, &#34;.webp&#34;, &#34;.avif&#34;, &#34;.svg&#34;, &#34;.bmp&#34;, &#34;.tiff&#34;}:
+        return ext if ext != &#34;.jpeg&#34; else &#34;.jpg&#34;
+
+    # 2) desde el Content-Type
+    mime = content_type.split(&#34;;&#34;)[0].strip()
+    return MIME_A_EXT.get(mime, &#34;.jpg&#34;)
+
+
+def es_imagen(url: str, content_type: str) -&gt; bool:
+    ext = extension_desde_url_o_contenido(url, content_type)
+    return ext in {&#34;.jpg&#34;, &#34;.jpeg&#34;, &#34;.png&#34;, &#34;.gif&#34;, &#34;.webp&#34;, &#34;.avif&#34;, &#34;.svg&#34;, &#34;.bmp&#34;, &#34;.tiff&#34;}
+
+
+def nombre_archivo(url: str, content_type: str, index: int) -&gt; str:
+    &#34;&#34;&#34;Genera un nombre de archivo único.&#34;&#34;&#34;
+    ext = extension_desde_url_o_contenido(url, content_type)
+    hash_url = hashlib.md5(url.encode()).hexdigest()[:8]
+    return f&#34;{index:03d}_{hash_url}{ext}&#34;
+
+
+# ─── Lógica principal ─────────────────────────────────────────────────────────
+
+def obtener_links_posts(s: requests.Session, url_indice: str, url_base: str) -&gt; list[dict]:
+    &#34;&#34;&#34;Extrae todos los enlaces a posts desde la página índice.&#34;&#34;&#34;
+    print(f&#34;\n  Leyendo índice: {url_indice}&#34;)
+    try:
+        r = s.get(url_indice, timeout=15)
+        r.raise_for_status()
+    except Exception as e:
+        print(f&#34;  ✗ No se pudo acceder al índice: {e}&#34;)
+        return []
+
+    soup = BeautifulSoup(r.text, &#34;html.parser&#34;)
+    posts = []
+
+    for a in soup.find_all(&#34;a&#34;, href=True):
+        href = a[&#34;href&#34;].strip()
+        # Resolver URL relativa
+        url_completa = urllib.parse.urljoin(url_base, href)
+
+        # Solo links internos que sean posts (contienen /posts/)
+        if url_completa.startswith(url_base) and &#34;/posts/&#34; in url_completa:
+            if url_completa not in [p[&#34;url&#34;] for p in posts]:
+                posts.append({
+                    &#34;url&#34;: url_completa,
+                    &#34;titulo&#34;: a.get_text(strip=True) or slug_desde_url(url_completa),
+                })
+
+    print(f&#34;  → {len(posts)} posts encontrados&#34;)
+    return posts
+
+
+def extraer_urls_imagenes(soup: BeautifulSoup, url_post: str) -&gt; list[str]:
+    &#34;&#34;&#34;Extrae todas las URLs de imágenes dentro de una página.&#34;&#34;&#34;
+    urls = set()
+
+    # &lt;img src=&#34;...&#34;&gt;
+    for img in soup.find_all(&#34;img&#34;):
+        src = img.get(&#34;src&#34;) or img.get(&#34;data-src&#34;) or img.get(&#34;data-lazy-src&#34;)
+        if src:
+            urls.add(urllib.parse.urljoin(url_post, src.strip()))
+
+    # &lt;a href=&#34;...&#34;&gt; que apunten a archivos de imagen directamente
+    for a in soup.find_all(&#34;a&#34;, href=True):
+        href = a[&#34;href&#34;].strip()
+        ext = Path(urllib.parse.urlparse(href).path).suffix.lower()
+        if ext in {&#34;.jpg&#34;, &#34;.jpeg&#34;, &#34;.png&#34;, &#34;.gif&#34;, &#34;.webp&#34;, &#34;.avif&#34;, &#34;.bmp&#34;, &#34;.tiff&#34;}:
+            urls.add(urllib.parse.urljoin(url_post, href))
+
+    # Buscar URLs de imágenes embebidas en atributos style o srcset
+    for tag in soup.find_all(True):
+        srcset = tag.get(&#34;srcset&#34;, &#34;&#34;)
+        for parte in srcset.split(&#34;,&#34;):
+            src = parte.strip().split()[0]
+            if src:
+                urls.add(urllib.parse.urljoin(url_post, src))
+
+        style = tag.get(&#34;style&#34;, &#34;&#34;)
+        for m in re.findall(r&#39;url\([&#34;\&#39;]?(https?://[^&#34;\&#39;)\s]&#43;)[&#34;\&#39;]?\)&#39;, style):
+            urls.add(m)
+
+    return list(urls)
+
+
+def descargar_imagen(s: requests.Session, url_img: str, ruta_destino: Path) -&gt; bool:
+    &#34;&#34;&#34;Descarga una imagen y la guarda en disco. Retorna True si tuvo éxito.&#34;&#34;&#34;
+    try:
+        r = s.get(url_img, timeout=20, stream=True)
+        r.raise_for_status()
+        ct = r.headers.get(&#34;Content-Type&#34;, &#34;image/jpeg&#34;)
+        if not es_imagen(url_img, ct):
+            return False
+
+        ruta_destino.parent.mkdir(parents=True, exist_ok=True)
+        # Asignar extensión correcta si falta
+        if not ruta_destino.suffix:
+            ext = extension_desde_url_o_contenido(url_img, ct)
+            ruta_destino = ruta_destino.with_suffix(ext)
+
+        with open(ruta_destino, &#34;wb&#34;) as f:
+            for chunk in r.iter_content(8192):
+                f.write(chunk)
+        return True
+
+    except Exception as e:
+        print(f&#34;      ✗ Error descargando {url_img[:80]}: {e}&#34;)
+        return False
+
+
+def procesar_post(s: requests.Session, post: dict, carpeta_sitio: Path) -&gt; int:
+    &#34;&#34;&#34;Procesa un post y descarga sus imágenes. Retorna cantidad descargada.&#34;&#34;&#34;
+    url = post[&#34;url&#34;]
+    slug = slug_desde_url(url)
+    carpeta_post = carpeta_sitio / slug
+    carpeta_post.mkdir(parents=True, exist_ok=True)
+
+    print(f&#34;\n    📄 {post[&#39;titulo&#39;][:60]}&#34;)
+    print(f&#34;       {url}&#34;)
+
+    try:
+        r = s.get(url, timeout=15)
+        r.raise_for_status()
+    except Exception as e:
+        print(f&#34;       ✗ No se pudo acceder: {e}&#34;)
+        return 0
+
+    soup = BeautifulSoup(r.text, &#34;html.parser&#34;)
+    urls_img = extraer_urls_imagenes(soup, url)
+
+    if not urls_img:
+        print(&#34;       (sin imágenes)&#34;)
+        return 0
+
+    print(f&#34;       → {len(urls_img)} imagen(es) encontrada(s)&#34;)
+    descargadas = 0
+
+    for i, url_img in enumerate(urls_img, 1):
+        # Construir nombre de archivo
+        nombre = nombre_archivo(url_img, &#34;&#34;, i)
+        ruta = carpeta_post / nombre
+
+        # Saltar si ya existe
+        if any(carpeta_post.glob(f&#34;{i:03d}_*&#34;)):
+            archivos = list(carpeta_post.glob(f&#34;{i:03d}_*&#34;))
+            if archivos:
+                print(f&#34;       [{i}/{len(urls_img)}] ya existe, se omite&#34;)
+                descargadas &#43;= 1
+                continue
+
+        print(f&#34;       [{i}/{len(urls_img)}] {url_img[:70]}&#34;)
+        if descargar_imagen(s, url_img, ruta):
+            descargadas &#43;= 1
+        time.sleep(DELAY_ENTRE_IMAGENES)
+
+    print(f&#34;       ✓ {descargadas}/{len(urls_img)} descargadas → {carpeta_post}&#34;)
+    return descargadas
+
+
+def procesar_sitio(sitio: dict):
+    s = sesion()
+    nombre    = sitio[&#34;nombre&#34;]
+    url_base  = sitio[&#34;url_base&#34;]
+    url_indice = sitio[&#34;url_indice&#34;]
+
+    print(f&#34;\n{&#39;=&#39;*60}&#34;)
+    print(f&#34;  SITIO: {nombre}&#34;)
+    print(f&#34;{&#39;=&#39;*60}&#34;)
+
+    carpeta_sitio = CARPETA_SALIDA / nombre
+    carpeta_sitio.mkdir(parents=True, exist_ok=True)
+
+    posts = obtener_links_posts(s, url_indice, url_base)
+    if not posts:
+        print(&#34;  No se encontraron posts.&#34;)
+        return
+
+    total_imagenes = 0
+    for i, post in enumerate(posts, 1):
+        print(f&#34;\n  [{i}/{len(posts)}]&#34;, end=&#34;&#34;)
+        n = procesar_post(s, post, carpeta_sitio)
+        total_imagenes &#43;= n
+        time.sleep(DELAY_ENTRE_POSTS)
+
+    print(f&#34;\n\n  ✅ {nombre}: {total_imagenes} imágenes descargadas en total&#34;)
+    print(f&#34;     Carpeta: {carpeta_sitio.resolve()}&#34;)
+
+
+# ─── Entry point ──────────────────────────────────────────────────────────────
+
+if __name__ == &#34;__main__&#34;:
+    print(&#34;╔══════════════════════════════════════════════════════════╗&#34;)
+    print(&#34;║         Descargador de imágenes - NoBloatNews            ║&#34;)
+    print(&#34;╚══════════════════════════════════════════════════════════╝&#34;)
+
+    # Instalar dependencias si faltan
+    try:
+        import requests
+        from bs4 import BeautifulSoup
+    except ImportError:
+        print(&#34;\n⚠ Instalando dependencias...&#34;)
+        os.system(&#34;pip install requests beautifulsoup4 --quiet&#34;)
+        import requests
+        from bs4 import BeautifulSoup
+
+    CARPETA_SALIDA.mkdir(exist_ok=True)
+
+    for sitio in SITIOS:
+        procesar_sitio(sitio)
+
+    print(&#34;\n\n🎉 ¡Listo! Todas las imágenes fueron descargadas.&#34;)
+    print(f&#34;   Carpeta principal: {CARPETA_SALIDA.resolve()}&#34;)
+">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Scraper imagenes
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='0001-01-01T00:00:00Z'>
+      January 01, 0001
+    </time>
+    
+    <br>
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/scrapper/">Scrapper</a>
+    
+    
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <p>pip install requests beautifulsoup4</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/usr/bin/env python3
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;&#34;&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Descargador de imágenes para:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  - nobloatnews.github.io
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  - imlauernews.github.io
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Funciona con imágenes alojadas en archive.org, blogger, github,
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">y cualquier otro servicio de hosting.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Uso:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    python3 descargar_imagenes.py
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Las imágenes se guardan en:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    ./imagenes/nobloatnews/&lt;slug-del-post&gt;/imagen.jpg
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    ./imagenes/imlauernews/&lt;slug-del-post&gt;/imagen.jpg
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>import os
+</span></span><span style="display:flex;"><span>import re
+</span></span><span style="display:flex;"><span>import time
+</span></span><span style="display:flex;"><span>import hashlib
+</span></span><span style="display:flex;"><span>import mimetypes
+</span></span><span style="display:flex;"><span>import urllib.parse
+</span></span><span style="display:flex;"><span>from pathlib import Path
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>import requests
+</span></span><span style="display:flex;"><span>from bs4 import BeautifulSoup
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ─── Configuración ────────────────────────────────────────────────────────────</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>SITIOS <span style="color:#f92672">=</span> <span style="color:#f92672">[</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;nombre&#34;</span>: <span style="color:#e6db74">&#34;nobloatnews&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;url_base&#34;</span>: <span style="color:#e6db74">&#34;https://nobloatnews.github.io&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;url_indice&#34;</span>: <span style="color:#e6db74">&#34;https://nobloatnews.github.io/index.html&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;nombre&#34;</span>: <span style="color:#e6db74">&#34;imlauernews&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;url_base&#34;</span>: <span style="color:#e6db74">&#34;https://imlauernews.github.io&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;url_indice&#34;</span>: <span style="color:#e6db74">&#34;https://imlauernews.github.io/index.html&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span>,
+</span></span><span style="display:flex;"><span><span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>CARPETA_SALIDA <span style="color:#f92672">=</span> Path<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;imagenes&#34;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Tiempo de espera entre requests para no sobrecargar los servidores</span>
+</span></span><span style="display:flex;"><span>DELAY_ENTRE_POSTS    <span style="color:#f92672">=</span> 1.5   <span style="color:#75715e"># segundos</span>
+</span></span><span style="display:flex;"><span>DELAY_ENTRE_IMAGENES <span style="color:#f92672">=</span> 0.5   <span style="color:#75715e"># segundos</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Extensiones consideradas imágenes si la URL no tiene extensión clara</span>
+</span></span><span style="display:flex;"><span>MIME_A_EXT <span style="color:#f92672">=</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;image/jpeg&#34;</span>: <span style="color:#e6db74">&#34;.jpg&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;image/png&#34;</span>:  <span style="color:#e6db74">&#34;.png&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;image/gif&#34;</span>:  <span style="color:#e6db74">&#34;.gif&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;image/webp&#34;</span>: <span style="color:#e6db74">&#34;.webp&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;image/avif&#34;</span>: <span style="color:#e6db74">&#34;.avif&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;image/svg+xml&#34;</span>: <span style="color:#e6db74">&#34;.svg&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;image/bmp&#34;</span>:  <span style="color:#e6db74">&#34;.bmp&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;image/tiff&#34;</span>: <span style="color:#e6db74">&#34;.tiff&#34;</span>,
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>HEADERS <span style="color:#f92672">=</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;User-Agent&#34;</span>: <span style="color:#f92672">(</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;Mozilla/5.0 (X11; Linux x86_64; rv:124.0) &#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;Gecko/20100101 Firefox/124.0&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">)</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;Accept&#34;</span>: <span style="color:#e6db74">&#34;text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;Accept-Language&#34;</span>: <span style="color:#e6db74">&#34;es-AR,es;q=0.8,en;q=0.5&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;Accept-Encoding&#34;</span>: <span style="color:#e6db74">&#34;gzip, deflate, br&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;Connection&#34;</span>: <span style="color:#e6db74">&#34;keep-alive&#34;</span>,
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ─── Helpers ──────────────────────────────────────────────────────────────────</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>def sesion<span style="color:#f92672">()</span> -&gt; requests.Session:
+</span></span><span style="display:flex;"><span>    s <span style="color:#f92672">=</span> requests.Session<span style="color:#f92672">()</span>
+</span></span><span style="display:flex;"><span>    s.headers.update<span style="color:#f92672">(</span>HEADERS<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> s
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>def slug_desde_url<span style="color:#f92672">(</span>url: str<span style="color:#f92672">)</span> -&gt; str:
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;&#34;&#34;Convierte una URL en un nombre de carpeta seguro.&#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    path <span style="color:#f92672">=</span> urllib.parse.urlparse<span style="color:#f92672">(</span>url<span style="color:#f92672">)</span>.path
+</span></span><span style="display:flex;"><span>    nombre <span style="color:#f92672">=</span> Path<span style="color:#f92672">(</span>path<span style="color:#f92672">)</span>.stem or hashlib.md5<span style="color:#f92672">(</span>url.encode<span style="color:#f92672">())</span>.hexdigest<span style="color:#f92672">()[</span>:8<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>    nombre <span style="color:#f92672">=</span> re.sub<span style="color:#f92672">(</span>r<span style="color:#e6db74">&#34;[^\w\-]&#34;</span>, <span style="color:#e6db74">&#34;_&#34;</span>, nombre<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> nombre<span style="color:#f92672">[</span>:80<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>def extension_desde_url_o_contenido<span style="color:#f92672">(</span>url: str, content_type: str<span style="color:#f92672">)</span> -&gt; str:
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;&#34;&#34;Determina la extensión del archivo.&#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># 1) intentar desde la URL</span>
+</span></span><span style="display:flex;"><span>    ruta <span style="color:#f92672">=</span> urllib.parse.urlparse<span style="color:#f92672">(</span>url<span style="color:#f92672">)</span>.path
+</span></span><span style="display:flex;"><span>    ext <span style="color:#f92672">=</span> Path<span style="color:#f92672">(</span>ruta<span style="color:#f92672">)</span>.suffix.lower<span style="color:#f92672">()</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> ext in <span style="color:#f92672">{</span><span style="color:#e6db74">&#34;.jpg&#34;</span>, <span style="color:#e6db74">&#34;.jpeg&#34;</span>, <span style="color:#e6db74">&#34;.png&#34;</span>, <span style="color:#e6db74">&#34;.gif&#34;</span>, <span style="color:#e6db74">&#34;.webp&#34;</span>, <span style="color:#e6db74">&#34;.avif&#34;</span>, <span style="color:#e6db74">&#34;.svg&#34;</span>, <span style="color:#e6db74">&#34;.bmp&#34;</span>, <span style="color:#e6db74">&#34;.tiff&#34;</span><span style="color:#f92672">}</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> ext <span style="color:#66d9ef">if</span> ext !<span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;.jpeg&#34;</span> <span style="color:#66d9ef">else</span> <span style="color:#e6db74">&#34;.jpg&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># 2) desde el Content-Type</span>
+</span></span><span style="display:flex;"><span>    mime <span style="color:#f92672">=</span> content_type.split<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;;&#34;</span><span style="color:#f92672">)[</span>0<span style="color:#f92672">]</span>.strip<span style="color:#f92672">()</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> MIME_A_EXT.get<span style="color:#f92672">(</span>mime, <span style="color:#e6db74">&#34;.jpg&#34;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>def es_imagen<span style="color:#f92672">(</span>url: str, content_type: str<span style="color:#f92672">)</span> -&gt; bool:
+</span></span><span style="display:flex;"><span>    ext <span style="color:#f92672">=</span> extension_desde_url_o_contenido<span style="color:#f92672">(</span>url, content_type<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> ext in <span style="color:#f92672">{</span><span style="color:#e6db74">&#34;.jpg&#34;</span>, <span style="color:#e6db74">&#34;.jpeg&#34;</span>, <span style="color:#e6db74">&#34;.png&#34;</span>, <span style="color:#e6db74">&#34;.gif&#34;</span>, <span style="color:#e6db74">&#34;.webp&#34;</span>, <span style="color:#e6db74">&#34;.avif&#34;</span>, <span style="color:#e6db74">&#34;.svg&#34;</span>, <span style="color:#e6db74">&#34;.bmp&#34;</span>, <span style="color:#e6db74">&#34;.tiff&#34;</span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>def nombre_archivo<span style="color:#f92672">(</span>url: str, content_type: str, index: int<span style="color:#f92672">)</span> -&gt; str:
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;&#34;&#34;Genera un nombre de archivo único.&#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    ext <span style="color:#f92672">=</span> extension_desde_url_o_contenido<span style="color:#f92672">(</span>url, content_type<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    hash_url <span style="color:#f92672">=</span> hashlib.md5<span style="color:#f92672">(</span>url.encode<span style="color:#f92672">())</span>.hexdigest<span style="color:#f92672">()[</span>:8<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> f<span style="color:#e6db74">&#34;{index:03d}_{hash_url}{ext}&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ─── Lógica principal ─────────────────────────────────────────────────────────</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>def obtener_links_posts<span style="color:#f92672">(</span>s: requests.Session, url_indice: str, url_base: str<span style="color:#f92672">)</span> -&gt; list<span style="color:#f92672">[</span>dict<span style="color:#f92672">]</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;&#34;&#34;Extrae todos los enlaces a posts desde la página índice.&#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    print<span style="color:#f92672">(</span>f<span style="color:#e6db74">&#34;\n  Leyendo índice: {url_indice}&#34;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    try:
+</span></span><span style="display:flex;"><span>        r <span style="color:#f92672">=</span> s.get<span style="color:#f92672">(</span>url_indice, timeout<span style="color:#f92672">=</span>15<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        r.raise_for_status<span style="color:#f92672">()</span>
+</span></span><span style="display:flex;"><span>    except Exception as e:
+</span></span><span style="display:flex;"><span>        print<span style="color:#f92672">(</span>f<span style="color:#e6db74">&#34;  ✗ No se pudo acceder al índice: {e}&#34;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#f92672">[]</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    soup <span style="color:#f92672">=</span> BeautifulSoup<span style="color:#f92672">(</span>r.text, <span style="color:#e6db74">&#34;html.parser&#34;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    posts <span style="color:#f92672">=</span> <span style="color:#f92672">[]</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> a in soup.find_all<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;a&#34;</span>, href<span style="color:#f92672">=</span>True<span style="color:#f92672">)</span>:
+</span></span><span style="display:flex;"><span>        href <span style="color:#f92672">=</span> a<span style="color:#f92672">[</span><span style="color:#e6db74">&#34;href&#34;</span><span style="color:#f92672">]</span>.strip<span style="color:#f92672">()</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># Resolver URL relativa</span>
+</span></span><span style="display:flex;"><span>        url_completa <span style="color:#f92672">=</span> urllib.parse.urljoin<span style="color:#f92672">(</span>url_base, href<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># Solo links internos que sean posts (contienen /posts/)</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> url_completa.startswith<span style="color:#f92672">(</span>url_base<span style="color:#f92672">)</span> and <span style="color:#e6db74">&#34;/posts/&#34;</span> in url_completa:
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> url_completa not in <span style="color:#f92672">[</span>p<span style="color:#f92672">[</span><span style="color:#e6db74">&#34;url&#34;</span><span style="color:#f92672">]</span> <span style="color:#66d9ef">for</span> p in posts<span style="color:#f92672">]</span>:
+</span></span><span style="display:flex;"><span>                posts.append<span style="color:#f92672">({</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#e6db74">&#34;url&#34;</span>: url_completa,
+</span></span><span style="display:flex;"><span>                    <span style="color:#e6db74">&#34;titulo&#34;</span>: a.get_text<span style="color:#f92672">(</span>strip<span style="color:#f92672">=</span>True<span style="color:#f92672">)</span> or slug_desde_url<span style="color:#f92672">(</span>url_completa<span style="color:#f92672">)</span>,
+</span></span><span style="display:flex;"><span>                <span style="color:#f92672">})</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    print<span style="color:#f92672">(</span>f<span style="color:#e6db74">&#34;  → {len(posts)} posts encontrados&#34;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> posts
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>def extraer_urls_imagenes<span style="color:#f92672">(</span>soup: BeautifulSoup, url_post: str<span style="color:#f92672">)</span> -&gt; list<span style="color:#f92672">[</span>str<span style="color:#f92672">]</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;&#34;&#34;Extrae todas las URLs de imágenes dentro de una página.&#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    urls <span style="color:#f92672">=</span> set<span style="color:#f92672">()</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># &lt;img src=&#34;...&#34;&gt;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> img in soup.find_all<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;img&#34;</span><span style="color:#f92672">)</span>:
+</span></span><span style="display:flex;"><span>        src <span style="color:#f92672">=</span> img.get<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;src&#34;</span><span style="color:#f92672">)</span> or img.get<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;data-src&#34;</span><span style="color:#f92672">)</span> or img.get<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;data-lazy-src&#34;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> src:
+</span></span><span style="display:flex;"><span>            urls.add<span style="color:#f92672">(</span>urllib.parse.urljoin<span style="color:#f92672">(</span>url_post, src.strip<span style="color:#f92672">()))</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># &lt;a href=&#34;...&#34;&gt; que apunten a archivos de imagen directamente</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> a in soup.find_all<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;a&#34;</span>, href<span style="color:#f92672">=</span>True<span style="color:#f92672">)</span>:
+</span></span><span style="display:flex;"><span>        href <span style="color:#f92672">=</span> a<span style="color:#f92672">[</span><span style="color:#e6db74">&#34;href&#34;</span><span style="color:#f92672">]</span>.strip<span style="color:#f92672">()</span>
+</span></span><span style="display:flex;"><span>        ext <span style="color:#f92672">=</span> Path<span style="color:#f92672">(</span>urllib.parse.urlparse<span style="color:#f92672">(</span>href<span style="color:#f92672">)</span>.path<span style="color:#f92672">)</span>.suffix.lower<span style="color:#f92672">()</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> ext in <span style="color:#f92672">{</span><span style="color:#e6db74">&#34;.jpg&#34;</span>, <span style="color:#e6db74">&#34;.jpeg&#34;</span>, <span style="color:#e6db74">&#34;.png&#34;</span>, <span style="color:#e6db74">&#34;.gif&#34;</span>, <span style="color:#e6db74">&#34;.webp&#34;</span>, <span style="color:#e6db74">&#34;.avif&#34;</span>, <span style="color:#e6db74">&#34;.bmp&#34;</span>, <span style="color:#e6db74">&#34;.tiff&#34;</span><span style="color:#f92672">}</span>:
+</span></span><span style="display:flex;"><span>            urls.add<span style="color:#f92672">(</span>urllib.parse.urljoin<span style="color:#f92672">(</span>url_post, href<span style="color:#f92672">))</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Buscar URLs de imágenes embebidas en atributos style o srcset</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> tag in soup.find_all<span style="color:#f92672">(</span>True<span style="color:#f92672">)</span>:
+</span></span><span style="display:flex;"><span>        srcset <span style="color:#f92672">=</span> tag.get<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;srcset&#34;</span>, <span style="color:#e6db74">&#34;&#34;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> parte in srcset.split<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;,&#34;</span><span style="color:#f92672">)</span>:
+</span></span><span style="display:flex;"><span>            src <span style="color:#f92672">=</span> parte.strip<span style="color:#f92672">()</span>.split<span style="color:#f92672">()[</span>0<span style="color:#f92672">]</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> src:
+</span></span><span style="display:flex;"><span>                urls.add<span style="color:#f92672">(</span>urllib.parse.urljoin<span style="color:#f92672">(</span>url_post, src<span style="color:#f92672">))</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        style <span style="color:#f92672">=</span> tag.get<span style="color:#f92672">(</span><span style="color:#e6db74">&#34;style&#34;</span>, <span style="color:#e6db74">&#34;&#34;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> m in re.findall<span style="color:#f92672">(</span>r<span style="color:#e6db74">&#39;url\([&#34;\&#39;</span><span style="color:#f92672">]</span>?<span style="color:#f92672">(</span>https?://<span style="color:#f92672">[</span>^<span style="color:#e6db74">&#34;\&#39;)\s]+)[&#34;</span><span style="color:#ae81ff">\&#39;</span><span style="color:#f92672">]</span>?<span style="color:#ae81ff">\)</span><span style="color:#e6db74">&#39;, style):
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            urls.add(m)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    return list(urls)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">def descargar_imagen(s: requests.Session, url_img: str, ruta_destino: Path) -&gt; bool:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    &#34;&#34;&#34;Descarga una imagen y la guarda en disco. Retorna True si tuvo éxito.&#34;&#34;&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    try:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        r = s.get(url_img, timeout=20, stream=True)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        r.raise_for_status()
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        ct = r.headers.get(&#34;Content-Type&#34;, &#34;image/jpeg&#34;)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        if not es_imagen(url_img, ct):
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            return False
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        ruta_destino.parent.mkdir(parents=True, exist_ok=True)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        # Asignar extensión correcta si falta
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        if not ruta_destino.suffix:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            ext = extension_desde_url_o_contenido(url_img, ct)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            ruta_destino = ruta_destino.with_suffix(ext)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        with open(ruta_destino, &#34;wb&#34;) as f:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            for chunk in r.iter_content(8192):
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">                f.write(chunk)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        return True
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    except Exception as e:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        print(f&#34;      ✗ Error descargando {url_img[:80]}: {e}&#34;)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        return False
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">def procesar_post(s: requests.Session, post: dict, carpeta_sitio: Path) -&gt; int:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    &#34;&#34;&#34;Procesa un post y descarga sus imágenes. Retorna cantidad descargada.&#34;&#34;&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    url = post[&#34;url&#34;]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    slug = slug_desde_url(url)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    carpeta_post = carpeta_sitio / slug
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    carpeta_post.mkdir(parents=True, exist_ok=True)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    print(f&#34;\n    📄 {post[&#39;</span>titulo<span style="color:#e6db74">&#39;][:60]}&#34;)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    print(f&#34;       {url}&#34;)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    try:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        r = s.get(url, timeout=15)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        r.raise_for_status()
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    except Exception as e:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        print(f&#34;       ✗ No se pudo acceder: {e}&#34;)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        return 0
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    soup = BeautifulSoup(r.text, &#34;html.parser&#34;)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    urls_img = extraer_urls_imagenes(soup, url)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    if not urls_img:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        print(&#34;       (sin imágenes)&#34;)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        return 0
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    print(f&#34;       → {len(urls_img)} imagen(es) encontrada(s)&#34;)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    descargadas = 0
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    for i, url_img in enumerate(urls_img, 1):
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        # Construir nombre de archivo
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        nombre = nombre_archivo(url_img, &#34;&#34;, i)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        ruta = carpeta_post / nombre
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        # Saltar si ya existe
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        if any(carpeta_post.glob(f&#34;{i:03d}_*&#34;)):
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            archivos = list(carpeta_post.glob(f&#34;{i:03d}_*&#34;))
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            if archivos:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">                print(f&#34;       [{i}/{len(urls_img)}] ya existe, se omite&#34;)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">                descargadas += 1
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">                continue
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        print(f&#34;       [{i}/{len(urls_img)}] {url_img[:70]}&#34;)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        if descargar_imagen(s, url_img, ruta):
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            descargadas += 1
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        time.sleep(DELAY_ENTRE_IMAGENES)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    print(f&#34;       ✓ {descargadas}/{len(urls_img)} descargadas → {carpeta_post}&#34;)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    return descargadas
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">def procesar_sitio(sitio: dict):
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    s = sesion()
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    nombre    = sitio[&#34;nombre&#34;]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    url_base  = sitio[&#34;url_base&#34;]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    url_indice = sitio[&#34;url_indice&#34;]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    print(f&#34;\n{&#39;</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#39;*60}&#34;)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    print(f&#34;  SITIO: {nombre}&#34;)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    print(f&#34;{&#39;</span><span style="color:#f92672">=</span><span style="color:#960050;background-color:#1e0010">&#39;</span>*60<span style="color:#f92672">}</span><span style="color:#e6db74">&#34;)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    carpeta_sitio = CARPETA_SALIDA / nombre
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    carpeta_sitio.mkdir(parents=True, exist_ok=True)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    posts = obtener_links_posts(s, url_indice, url_base)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    if not posts:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        print(&#34;</span>  No se encontraron posts.<span style="color:#e6db74">&#34;)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        return
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    total_imagenes = 0
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    for i, post in enumerate(posts, 1):
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        print(f&#34;</span><span style="color:#ae81ff">\n</span>  <span style="color:#f92672">[{</span>i<span style="color:#f92672">}</span>/<span style="color:#f92672">{</span>len<span style="color:#f92672">(</span>posts<span style="color:#f92672">)}]</span><span style="color:#e6db74">&#34;, end=&#34;&#34;)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        n = procesar_post(s, post, carpeta_sitio)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        total_imagenes += n
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        time.sleep(DELAY_ENTRE_POSTS)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    print(f&#34;</span><span style="color:#ae81ff">\n\n</span>  ✅ <span style="color:#f92672">{</span>nombre<span style="color:#f92672">}</span>: <span style="color:#f92672">{</span>total_imagenes<span style="color:#f92672">}</span> imágenes descargadas en total<span style="color:#e6db74">&#34;)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    print(f&#34;</span>     Carpeta: <span style="color:#f92672">{</span>carpeta_sitio.resolve<span style="color:#f92672">()}</span><span style="color:#e6db74">&#34;)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74"># ─── Entry point ──────────────────────────────────────────────────────────────
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">if __name__ == &#34;</span>__main__<span style="color:#e6db74">&#34;:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    print(&#34;</span>╔══════════════════════════════════════════════════════════╗<span style="color:#e6db74">&#34;)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    print(&#34;</span>║         Descargador de imágenes - NoBloatNews            ║<span style="color:#e6db74">&#34;)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    print(&#34;</span>╚══════════════════════════════════════════════════════════╝<span style="color:#e6db74">&#34;)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    # Instalar dependencias si faltan
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    try:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        import requests
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        from bs4 import BeautifulSoup
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    except ImportError:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        print(&#34;</span><span style="color:#ae81ff">\n</span>⚠ Instalando dependencias...<span style="color:#e6db74">&#34;)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        os.system(&#34;</span>pip install requests beautifulsoup4 --quiet<span style="color:#e6db74">&#34;)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        import requests
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        from bs4 import BeautifulSoup
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    CARPETA_SALIDA.mkdir(exist_ok=True)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    for sitio in SITIOS:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        procesar_sitio(sitio)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    print(&#34;</span><span style="color:#ae81ff">\n\n</span>🎉 ¡Listo! Todas las imágenes fueron descargadas.<span style="color:#e6db74">&#34;)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    print(f&#34;</span>   Carpeta principal: <span style="color:#f92672">{</span>CARPETA_SALIDA.resolve<span style="color:#f92672">()}</span><span style="color:#e6db74">&#34;)
+</span></span></span></code></pre></div>
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+
+</footer>
+
+
+</body>
+</html>
