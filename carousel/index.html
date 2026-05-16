@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/carousel/">
+  <meta property="og:site_name" content="Imlauer">
+  <meta property="og:title" content="Carousel">
+  <meta property="og:description" content="#!/usr/bin/env python3 &#34;&#34;&#34; Genera carousel.html en la carpeta que le pases como argumento. Solo flechas &lt; &gt;, sin miniaturas, sin JavaScript. Uso: python3 generar_carousel.py /home/esotericwarfare/samba/miinstagram.github.io/cursoelectricidad python3 generar_carousel.py fotos/ &#34;&#34;&#34; import sys from pathlib import Path EXT_OK = {&#34;.jpg&#34;, &#34;.jpeg&#34;, &#34;.png&#34;, &#34;.gif&#34;, &#34;.webp&#34;, &#34;.avif&#34;, &#34;.bmp&#34;} def main(): if len(sys.argv) &lt; 2: print(&#34;Uso: python3 generar_carousel.py &lt;carpeta&gt;&#34;) sys.exit(1) carpeta = Path(sys.argv[1]).resolve() if not carpeta.exists(): print(&#34;No existe la carpeta: &#34; &#43; str(carpeta)) sys.exit(1) # Solo imágenes, excluir thumbs fotos = sorted( p for p in carpeta.iterdir() if p.suffix.lower() in EXT_OK and not p.name.startswith(&#34;thumb-&#34;) and not p.name.startswith(&#34;thumb_&#34;) ) if not fotos: print(&#34;No hay imágenes en &#34; &#43; str(carpeta)) sys.exit(1) n = len(fotos) print(&#34;Imágenes encontradas: &#34; &#43; str(n)) L = [] # líneas del HTML L.append(&#34;&lt;!DOCTYPE html&gt;&#34;) L.append(&#39;&lt;html lang=&#34;es&#34;&gt;&#39;) L.append(&#34;&lt;head&gt;&#34;) L.append(&#39;&lt;meta charset=&#34;UTF-8&#34;&gt;&#39;) L.append(&#39;&lt;meta name=&#34;viewport&#34; content=&#34;width=device-width, initial-scale=1&#34;&gt;&#39;) L.append(&#34;&lt;title&gt;Fotos (&#34; &#43; str(n) &#43; &#34;)&lt;/title&gt;&#34;) L.append(&#34;&lt;style&gt;&#34;) L.append(&#34;* { box-sizing: border-box; margin: 0; padding: 0; }&#34;) L.append(&#34;body { background: #111; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }&#34;) L.append(&#34;input[type=radio] { position: absolute; opacity: 0; pointer-events: none; }&#34;) L.append(&#34;.wrap { position: relative; width: 100vw; max-width: 1100px; height: 90vh; display: flex; align-items: center; justify-content: center; }&#34;) L.append(&#34;.slide { display: none; width: 100%; height: 100%; align-items: center; justify-content: center; }&#34;) L.append(&#34;.slide img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }&#34;) L.append(&#34;.arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 54px; height: 54px; background: rgba(255,255,255,.10); border: 1px solid rgba(255,255,255,.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.8rem; color: #fff; transition: background .15s; z-index: 10; user-select: none; }&#34;) L.append(&#34;.arrow:hover { background: rgba(255,255,255,.25); }&#34;) L.append(&#34;.arrow.prev { left: 1rem; }&#34;) L.append(&#34;.arrow.next { right: 1rem; }&#34;) L.append(&#34;.counter { position: fixed; bottom: 1rem; left: 50%; transform: translateX(-50%); font-size: .75rem; color: rgba(255,255,255,.35); letter-spacing: .1em; font-family: sans-serif; pointer-events: none; }&#34;) # slide visible cuando su radio está checked for i in range(1, n &#43; 1): L.append(&#34;#s&#34; &#43; str(i) &#43; &#34;:checked ~ .wrap .slide:nth-child(&#34; &#43; str(i) &#43; &#34;) { display: flex; }&#34;) # contador for i in range(1, n &#43; 1): L.append(&#34;#s&#34; &#43; str(i) &#43; &#34;:checked ~ .counter::before { content: &#39;&#34; &#43; str(i) &#43; &#34; / &#34; &#43; str(n) &#43; &#34;&#39;; }&#34;) L.append(&#34;&lt;/style&gt;&#34;) # radios (fuera del body, antes de .wrap, así el ~ selector funciona) for i in range(1, n &#43; 1): checked = &#34; checked&#34; if i == 1 else &#34;&#34; L.append(&#39;&lt;input type=&#34;radio&#34; name=&#34;c&#34; id=&#34;s&#39; &#43; str(i) &#43; &#39;&#34;&#39; &#43; checked &#43; &#34;&gt;&#34;) L.append(&#34;&lt;body&gt;&#34;) L.append(&#39;&lt;div class=&#34;wrap&#34;&gt;&#39;) for i, foto in enumerate(fotos, 1): prev_id = n if i == 1 else i - 1 next_id = 1 if i == n else i &#43; 1 L.append(&#39; &lt;div class=&#34;slide&#34;&gt;&#39;) L.append(&#39; &lt;label class=&#34;arrow prev&#34; for=&#34;s&#39; &#43; str(prev_id) &#43; &#39;&#34;&gt;&amp;#8249;&lt;/label&gt;&#39;) L.append(&#39; &lt;img src=&#34;&#39; &#43; foto.name &#43; &#39;&#34; loading=&#34;lazy&#34;&gt;&#39;) L.append(&#39; &lt;label class=&#34;arrow next&#34; for=&#34;s&#39; &#43; str(next_id) &#43; &#39;&#34;&gt;&amp;#8250;&lt;/label&gt;&#39;) L.append(&#39; &lt;/div&gt;&#39;) L.append(&#34;&lt;/div&gt;&#34;) L.append(&#39;&lt;div class=&#34;counter&#34;&gt;&lt;/div&gt;&#39;) L.append(&#34;&lt;/body&gt;&#34;) L.append(&#34;&lt;/html&gt;&#34;) salida = carpeta / &#34;carousel.html&#34; salida.write_text(&#34;\n&#34;.join(L), encoding=&#34;utf-8&#34;) print(&#34;Generado: &#34; &#43; str(salida)) if __name__ == &#34;__main__&#34;: main()">
+  <meta property="og:locale" content="es_es">
+  <meta property="og:type" content="article">
+    <meta property="article:published_time" content="2026-05-15T21:09:00-03:00">
+    <meta property="article:modified_time" content="2026-05-15T21:09:00-03:00">
+    <meta property="article:tag" content="Carousel">
+
+  
+  <meta itemprop="name" content="Carousel">
+  <meta itemprop="description" content="#!/usr/bin/env python3 &#34;&#34;&#34; Genera carousel.html en la carpeta que le pases como argumento. Solo flechas &lt; &gt;, sin miniaturas, sin JavaScript. Uso: python3 generar_carousel.py /home/esotericwarfare/samba/miinstagram.github.io/cursoelectricidad python3 generar_carousel.py fotos/ &#34;&#34;&#34; import sys from pathlib import Path EXT_OK = {&#34;.jpg&#34;, &#34;.jpeg&#34;, &#34;.png&#34;, &#34;.gif&#34;, &#34;.webp&#34;, &#34;.avif&#34;, &#34;.bmp&#34;} def main(): if len(sys.argv) &lt; 2: print(&#34;Uso: python3 generar_carousel.py &lt;carpeta&gt;&#34;) sys.exit(1) carpeta = Path(sys.argv[1]).resolve() if not carpeta.exists(): print(&#34;No existe la carpeta: &#34; &#43; str(carpeta)) sys.exit(1) # Solo imágenes, excluir thumbs fotos = sorted( p for p in carpeta.iterdir() if p.suffix.lower() in EXT_OK and not p.name.startswith(&#34;thumb-&#34;) and not p.name.startswith(&#34;thumb_&#34;) ) if not fotos: print(&#34;No hay imágenes en &#34; &#43; str(carpeta)) sys.exit(1) n = len(fotos) print(&#34;Imágenes encontradas: &#34; &#43; str(n)) L = [] # líneas del HTML L.append(&#34;&lt;!DOCTYPE html&gt;&#34;) L.append(&#39;&lt;html lang=&#34;es&#34;&gt;&#39;) L.append(&#34;&lt;head&gt;&#34;) L.append(&#39;&lt;meta charset=&#34;UTF-8&#34;&gt;&#39;) L.append(&#39;&lt;meta name=&#34;viewport&#34; content=&#34;width=device-width, initial-scale=1&#34;&gt;&#39;) L.append(&#34;&lt;title&gt;Fotos (&#34; &#43; str(n) &#43; &#34;)&lt;/title&gt;&#34;) L.append(&#34;&lt;style&gt;&#34;) L.append(&#34;* { box-sizing: border-box; margin: 0; padding: 0; }&#34;) L.append(&#34;body { background: #111; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }&#34;) L.append(&#34;input[type=radio] { position: absolute; opacity: 0; pointer-events: none; }&#34;) L.append(&#34;.wrap { position: relative; width: 100vw; max-width: 1100px; height: 90vh; display: flex; align-items: center; justify-content: center; }&#34;) L.append(&#34;.slide { display: none; width: 100%; height: 100%; align-items: center; justify-content: center; }&#34;) L.append(&#34;.slide img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }&#34;) L.append(&#34;.arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 54px; height: 54px; background: rgba(255,255,255,.10); border: 1px solid rgba(255,255,255,.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.8rem; color: #fff; transition: background .15s; z-index: 10; user-select: none; }&#34;) L.append(&#34;.arrow:hover { background: rgba(255,255,255,.25); }&#34;) L.append(&#34;.arrow.prev { left: 1rem; }&#34;) L.append(&#34;.arrow.next { right: 1rem; }&#34;) L.append(&#34;.counter { position: fixed; bottom: 1rem; left: 50%; transform: translateX(-50%); font-size: .75rem; color: rgba(255,255,255,.35); letter-spacing: .1em; font-family: sans-serif; pointer-events: none; }&#34;) # slide visible cuando su radio está checked for i in range(1, n &#43; 1): L.append(&#34;#s&#34; &#43; str(i) &#43; &#34;:checked ~ .wrap .slide:nth-child(&#34; &#43; str(i) &#43; &#34;) { display: flex; }&#34;) # contador for i in range(1, n &#43; 1): L.append(&#34;#s&#34; &#43; str(i) &#43; &#34;:checked ~ .counter::before { content: &#39;&#34; &#43; str(i) &#43; &#34; / &#34; &#43; str(n) &#43; &#34;&#39;; }&#34;) L.append(&#34;&lt;/style&gt;&#34;) # radios (fuera del body, antes de .wrap, así el ~ selector funciona) for i in range(1, n &#43; 1): checked = &#34; checked&#34; if i == 1 else &#34;&#34; L.append(&#39;&lt;input type=&#34;radio&#34; name=&#34;c&#34; id=&#34;s&#39; &#43; str(i) &#43; &#39;&#34;&#39; &#43; checked &#43; &#34;&gt;&#34;) L.append(&#34;&lt;body&gt;&#34;) L.append(&#39;&lt;div class=&#34;wrap&#34;&gt;&#39;) for i, foto in enumerate(fotos, 1): prev_id = n if i == 1 else i - 1 next_id = 1 if i == n else i &#43; 1 L.append(&#39; &lt;div class=&#34;slide&#34;&gt;&#39;) L.append(&#39; &lt;label class=&#34;arrow prev&#34; for=&#34;s&#39; &#43; str(prev_id) &#43; &#39;&#34;&gt;&amp;#8249;&lt;/label&gt;&#39;) L.append(&#39; &lt;img src=&#34;&#39; &#43; foto.name &#43; &#39;&#34; loading=&#34;lazy&#34;&gt;&#39;) L.append(&#39; &lt;label class=&#34;arrow next&#34; for=&#34;s&#39; &#43; str(next_id) &#43; &#39;&#34;&gt;&amp;#8250;&lt;/label&gt;&#39;) L.append(&#39; &lt;/div&gt;&#39;) L.append(&#34;&lt;/div&gt;&#34;) L.append(&#39;&lt;div class=&#34;counter&#34;&gt;&lt;/div&gt;&#39;) L.append(&#34;&lt;/body&gt;&#34;) L.append(&#34;&lt;/html&gt;&#34;) salida = carpeta / &#34;carousel.html&#34; salida.write_text(&#34;\n&#34;.join(L), encoding=&#34;utf-8&#34;) print(&#34;Generado: &#34; &#43; str(salida)) if __name__ == &#34;__main__&#34;: main()">
+  <meta itemprop="datePublished" content="2026-05-15T21:09:00-03:00">
+  <meta itemprop="dateModified" content="2026-05-15T21:09:00-03:00">
+  <meta itemprop="wordCount" content="475">
+  <meta itemprop="keywords" content="Carousel">
+  
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Carousel">
+  <meta name="twitter:description" content="#!/usr/bin/env python3 &#34;&#34;&#34; Genera carousel.html en la carpeta que le pases como argumento. Solo flechas &lt; &gt;, sin miniaturas, sin JavaScript. Uso: python3 generar_carousel.py /home/esotericwarfare/samba/miinstagram.github.io/cursoelectricidad python3 generar_carousel.py fotos/ &#34;&#34;&#34; import sys from pathlib import Path EXT_OK = {&#34;.jpg&#34;, &#34;.jpeg&#34;, &#34;.png&#34;, &#34;.gif&#34;, &#34;.webp&#34;, &#34;.avif&#34;, &#34;.bmp&#34;} def main(): if len(sys.argv) &lt; 2: print(&#34;Uso: python3 generar_carousel.py &lt;carpeta&gt;&#34;) sys.exit(1) carpeta = Path(sys.argv[1]).resolve() if not carpeta.exists(): print(&#34;No existe la carpeta: &#34; &#43; str(carpeta)) sys.exit(1) # Solo imágenes, excluir thumbs fotos = sorted( p for p in carpeta.iterdir() if p.suffix.lower() in EXT_OK and not p.name.startswith(&#34;thumb-&#34;) and not p.name.startswith(&#34;thumb_&#34;) ) if not fotos: print(&#34;No hay imágenes en &#34; &#43; str(carpeta)) sys.exit(1) n = len(fotos) print(&#34;Imágenes encontradas: &#34; &#43; str(n)) L = [] # líneas del HTML L.append(&#34;&lt;!DOCTYPE html&gt;&#34;) L.append(&#39;&lt;html lang=&#34;es&#34;&gt;&#39;) L.append(&#34;&lt;head&gt;&#34;) L.append(&#39;&lt;meta charset=&#34;UTF-8&#34;&gt;&#39;) L.append(&#39;&lt;meta name=&#34;viewport&#34; content=&#34;width=device-width, initial-scale=1&#34;&gt;&#39;) L.append(&#34;&lt;title&gt;Fotos (&#34; &#43; str(n) &#43; &#34;)&lt;/title&gt;&#34;) L.append(&#34;&lt;style&gt;&#34;) L.append(&#34;* { box-sizing: border-box; margin: 0; padding: 0; }&#34;) L.append(&#34;body { background: #111; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }&#34;) L.append(&#34;input[type=radio] { position: absolute; opacity: 0; pointer-events: none; }&#34;) L.append(&#34;.wrap { position: relative; width: 100vw; max-width: 1100px; height: 90vh; display: flex; align-items: center; justify-content: center; }&#34;) L.append(&#34;.slide { display: none; width: 100%; height: 100%; align-items: center; justify-content: center; }&#34;) L.append(&#34;.slide img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }&#34;) L.append(&#34;.arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 54px; height: 54px; background: rgba(255,255,255,.10); border: 1px solid rgba(255,255,255,.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.8rem; color: #fff; transition: background .15s; z-index: 10; user-select: none; }&#34;) L.append(&#34;.arrow:hover { background: rgba(255,255,255,.25); }&#34;) L.append(&#34;.arrow.prev { left: 1rem; }&#34;) L.append(&#34;.arrow.next { right: 1rem; }&#34;) L.append(&#34;.counter { position: fixed; bottom: 1rem; left: 50%; transform: translateX(-50%); font-size: .75rem; color: rgba(255,255,255,.35); letter-spacing: .1em; font-family: sans-serif; pointer-events: none; }&#34;) # slide visible cuando su radio está checked for i in range(1, n &#43; 1): L.append(&#34;#s&#34; &#43; str(i) &#43; &#34;:checked ~ .wrap .slide:nth-child(&#34; &#43; str(i) &#43; &#34;) { display: flex; }&#34;) # contador for i in range(1, n &#43; 1): L.append(&#34;#s&#34; &#43; str(i) &#43; &#34;:checked ~ .counter::before { content: &#39;&#34; &#43; str(i) &#43; &#34; / &#34; &#43; str(n) &#43; &#34;&#39;; }&#34;) L.append(&#34;&lt;/style&gt;&#34;) # radios (fuera del body, antes de .wrap, así el ~ selector funciona) for i in range(1, n &#43; 1): checked = &#34; checked&#34; if i == 1 else &#34;&#34; L.append(&#39;&lt;input type=&#34;radio&#34; name=&#34;c&#34; id=&#34;s&#39; &#43; str(i) &#43; &#39;&#34;&#39; &#43; checked &#43; &#34;&gt;&#34;) L.append(&#34;&lt;body&gt;&#34;) L.append(&#39;&lt;div class=&#34;wrap&#34;&gt;&#39;) for i, foto in enumerate(fotos, 1): prev_id = n if i == 1 else i - 1 next_id = 1 if i == n else i &#43; 1 L.append(&#39; &lt;div class=&#34;slide&#34;&gt;&#39;) L.append(&#39; &lt;label class=&#34;arrow prev&#34; for=&#34;s&#39; &#43; str(prev_id) &#43; &#39;&#34;&gt;&amp;#8249;&lt;/label&gt;&#39;) L.append(&#39; &lt;img src=&#34;&#39; &#43; foto.name &#43; &#39;&#34; loading=&#34;lazy&#34;&gt;&#39;) L.append(&#39; &lt;label class=&#34;arrow next&#34; for=&#34;s&#39; &#43; str(next_id) &#43; &#39;&#34;&gt;&amp;#8250;&lt;/label&gt;&#39;) L.append(&#39; &lt;/div&gt;&#39;) L.append(&#34;&lt;/div&gt;&#34;) L.append(&#39;&lt;div class=&#34;counter&#34;&gt;&lt;/div&gt;&#39;) L.append(&#34;&lt;/body&gt;&#34;) L.append(&#34;&lt;/html&gt;&#34;) salida = carpeta / &#34;carousel.html&#34; salida.write_text(&#34;\n&#34;.join(L), encoding=&#34;utf-8&#34;) print(&#34;Generado: &#34; &#43; str(salida)) if __name__ == &#34;__main__&#34;: main()">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Carousel
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/carousel/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="#!/usr/bin/env python3
+&#34;&#34;&#34;
+Genera carousel.html en la carpeta que le pases como argumento.
+Solo flechas &lt; &gt;, sin miniaturas, sin JavaScript.
+
+Uso:
+    python3 generar_carousel.py /home/esotericwarfare/samba/miinstagram.github.io/cursoelectricidad
+    python3 generar_carousel.py fotos/
+&#34;&#34;&#34;
+
+import sys
+from pathlib import Path
+
+EXT_OK = {&#34;.jpg&#34;, &#34;.jpeg&#34;, &#34;.png&#34;, &#34;.gif&#34;, &#34;.webp&#34;, &#34;.avif&#34;, &#34;.bmp&#34;}
+
+
+def main():
+    if len(sys.argv) &lt; 2:
+        print(&#34;Uso: python3 generar_carousel.py &lt;carpeta&gt;&#34;)
+        sys.exit(1)
+
+    carpeta = Path(sys.argv[1]).resolve()
+    if not carpeta.exists():
+        print(&#34;No existe la carpeta: &#34; &#43; str(carpeta))
+        sys.exit(1)
+
+    # Solo imágenes, excluir thumbs
+    fotos = sorted(
+        p for p in carpeta.iterdir()
+        if p.suffix.lower() in EXT_OK
+        and not p.name.startswith(&#34;thumb-&#34;)
+        and not p.name.startswith(&#34;thumb_&#34;)
+    )
+
+    if not fotos:
+        print(&#34;No hay imágenes en &#34; &#43; str(carpeta))
+        sys.exit(1)
+
+    n = len(fotos)
+    print(&#34;Imágenes encontradas: &#34; &#43; str(n))
+
+    L = []  # líneas del HTML
+
+    L.append(&#34;&lt;!DOCTYPE html&gt;&#34;)
+    L.append(&#39;&lt;html lang=&#34;es&#34;&gt;&#39;)
+    L.append(&#34;&lt;head&gt;&#34;)
+    L.append(&#39;&lt;meta charset=&#34;UTF-8&#34;&gt;&#39;)
+    L.append(&#39;&lt;meta name=&#34;viewport&#34; content=&#34;width=device-width, initial-scale=1&#34;&gt;&#39;)
+    L.append(&#34;&lt;title&gt;Fotos (&#34; &#43; str(n) &#43; &#34;)&lt;/title&gt;&#34;)
+    L.append(&#34;&lt;style&gt;&#34;)
+    L.append(&#34;* { box-sizing: border-box; margin: 0; padding: 0; }&#34;)
+    L.append(&#34;body { background: #111; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }&#34;)
+    L.append(&#34;input[type=radio] { position: absolute; opacity: 0; pointer-events: none; }&#34;)
+    L.append(&#34;.wrap { position: relative; width: 100vw; max-width: 1100px; height: 90vh; display: flex; align-items: center; justify-content: center; }&#34;)
+    L.append(&#34;.slide { display: none; width: 100%; height: 100%; align-items: center; justify-content: center; }&#34;)
+    L.append(&#34;.slide img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }&#34;)
+    L.append(&#34;.arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 54px; height: 54px; background: rgba(255,255,255,.10); border: 1px solid rgba(255,255,255,.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.8rem; color: #fff; transition: background .15s; z-index: 10; user-select: none; }&#34;)
+    L.append(&#34;.arrow:hover { background: rgba(255,255,255,.25); }&#34;)
+    L.append(&#34;.arrow.prev { left: 1rem; }&#34;)
+    L.append(&#34;.arrow.next { right: 1rem; }&#34;)
+    L.append(&#34;.counter { position: fixed; bottom: 1rem; left: 50%; transform: translateX(-50%); font-size: .75rem; color: rgba(255,255,255,.35); letter-spacing: .1em; font-family: sans-serif; pointer-events: none; }&#34;)
+
+    # slide visible cuando su radio está checked
+    for i in range(1, n &#43; 1):
+        L.append(&#34;#s&#34; &#43; str(i) &#43; &#34;:checked ~ .wrap .slide:nth-child(&#34; &#43; str(i) &#43; &#34;) { display: flex; }&#34;)
+
+    # contador
+    for i in range(1, n &#43; 1):
+        L.append(&#34;#s&#34; &#43; str(i) &#43; &#34;:checked ~ .counter::before { content: &#39;&#34; &#43; str(i) &#43; &#34; / &#34; &#43; str(n) &#43; &#34;&#39;; }&#34;)
+
+    L.append(&#34;&lt;/style&gt;&#34;)
+
+    # radios (fuera del body, antes de .wrap, así el ~ selector funciona)
+    for i in range(1, n &#43; 1):
+        checked = &#34; checked&#34; if i == 1 else &#34;&#34;
+        L.append(&#39;&lt;input type=&#34;radio&#34; name=&#34;c&#34; id=&#34;s&#39; &#43; str(i) &#43; &#39;&#34;&#39; &#43; checked &#43; &#34;&gt;&#34;)
+
+    L.append(&#34;&lt;body&gt;&#34;)
+    L.append(&#39;&lt;div class=&#34;wrap&#34;&gt;&#39;)
+
+    for i, foto in enumerate(fotos, 1):
+        prev_id = n if i == 1 else i - 1
+        next_id = 1 if i == n else i &#43; 1
+        L.append(&#39;  &lt;div class=&#34;slide&#34;&gt;&#39;)
+        L.append(&#39;    &lt;label class=&#34;arrow prev&#34; for=&#34;s&#39; &#43; str(prev_id) &#43; &#39;&#34;&gt;&amp;#8249;&lt;/label&gt;&#39;)
+        L.append(&#39;    &lt;img src=&#34;&#39; &#43; foto.name &#43; &#39;&#34; loading=&#34;lazy&#34;&gt;&#39;)
+        L.append(&#39;    &lt;label class=&#34;arrow next&#34; for=&#34;s&#39; &#43; str(next_id) &#43; &#39;&#34;&gt;&amp;#8250;&lt;/label&gt;&#39;)
+        L.append(&#39;  &lt;/div&gt;&#39;)
+
+    L.append(&#34;&lt;/div&gt;&#34;)
+    L.append(&#39;&lt;div class=&#34;counter&#34;&gt;&lt;/div&gt;&#39;)
+    L.append(&#34;&lt;/body&gt;&#34;)
+    L.append(&#34;&lt;/html&gt;&#34;)
+
+    salida = carpeta / &#34;carousel.html&#34;
+    salida.write_text(&#34;\n&#34;.join(L), encoding=&#34;utf-8&#34;)
+    print(&#34;Generado: &#34; &#43; str(salida))
+
+
+if __name__ == &#34;__main__&#34;:
+    main()
+">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Carousel
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2026-05-15T21:09:00-03:00'>
+      May 15, 2026
+    </time>
+    
+    <br>
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/carousel/">Carousel</a>
+    
+    
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#75715e">#!/usr/bin/env python3</span>
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;&#34;&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Genera carousel.html en la carpeta que le pases como argumento.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Solo flechas &lt; &gt;, sin miniaturas, sin JavaScript.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Uso:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    python3 generar_carousel.py /home/esotericwarfare/samba/miinstagram.github.io/cursoelectricidad
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    python3 generar_carousel.py fotos/
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> sys
+</span></span><span style="display:flex;"><span><span style="color:#f92672">from</span> pathlib <span style="color:#f92672">import</span> Path
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>EXT_OK <span style="color:#f92672">=</span> {<span style="color:#e6db74">&#34;.jpg&#34;</span>, <span style="color:#e6db74">&#34;.jpeg&#34;</span>, <span style="color:#e6db74">&#34;.png&#34;</span>, <span style="color:#e6db74">&#34;.gif&#34;</span>, <span style="color:#e6db74">&#34;.webp&#34;</span>, <span style="color:#e6db74">&#34;.avif&#34;</span>, <span style="color:#e6db74">&#34;.bmp&#34;</span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">main</span>():
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> len(sys<span style="color:#f92672">.</span>argv) <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">2</span>:
+</span></span><span style="display:flex;"><span>        print(<span style="color:#e6db74">&#34;Uso: python3 generar_carousel.py &lt;carpeta&gt;&#34;</span>)
+</span></span><span style="display:flex;"><span>        sys<span style="color:#f92672">.</span>exit(<span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    carpeta <span style="color:#f92672">=</span> Path(sys<span style="color:#f92672">.</span>argv[<span style="color:#ae81ff">1</span>])<span style="color:#f92672">.</span>resolve()
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> carpeta<span style="color:#f92672">.</span>exists():
+</span></span><span style="display:flex;"><span>        print(<span style="color:#e6db74">&#34;No existe la carpeta: &#34;</span> <span style="color:#f92672">+</span> str(carpeta))
+</span></span><span style="display:flex;"><span>        sys<span style="color:#f92672">.</span>exit(<span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Solo imágenes, excluir thumbs</span>
+</span></span><span style="display:flex;"><span>    fotos <span style="color:#f92672">=</span> sorted(
+</span></span><span style="display:flex;"><span>        p <span style="color:#66d9ef">for</span> p <span style="color:#f92672">in</span> carpeta<span style="color:#f92672">.</span>iterdir()
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> p<span style="color:#f92672">.</span>suffix<span style="color:#f92672">.</span>lower() <span style="color:#f92672">in</span> EXT_OK
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">and</span> <span style="color:#f92672">not</span> p<span style="color:#f92672">.</span>name<span style="color:#f92672">.</span>startswith(<span style="color:#e6db74">&#34;thumb-&#34;</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">and</span> <span style="color:#f92672">not</span> p<span style="color:#f92672">.</span>name<span style="color:#f92672">.</span>startswith(<span style="color:#e6db74">&#34;thumb_&#34;</span>)
+</span></span><span style="display:flex;"><span>    )
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> fotos:
+</span></span><span style="display:flex;"><span>        print(<span style="color:#e6db74">&#34;No hay imágenes en &#34;</span> <span style="color:#f92672">+</span> str(carpeta))
+</span></span><span style="display:flex;"><span>        sys<span style="color:#f92672">.</span>exit(<span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    n <span style="color:#f92672">=</span> len(fotos)
+</span></span><span style="display:flex;"><span>    print(<span style="color:#e6db74">&#34;Imágenes encontradas: &#34;</span> <span style="color:#f92672">+</span> str(n))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    L <span style="color:#f92672">=</span> []  <span style="color:#75715e"># líneas del HTML</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    L<span style="color:#f92672">.</span>append(<span style="color:#e6db74">&#34;&lt;!DOCTYPE html&gt;&#34;</span>)
+</span></span><span style="display:flex;"><span>    L<span style="color:#f92672">.</span>append(<span style="color:#e6db74">&#39;&lt;html lang=&#34;es&#34;&gt;&#39;</span>)
+</span></span><span style="display:flex;"><span>    L<span style="color:#f92672">.</span>append(<span style="color:#e6db74">&#34;&lt;head&gt;&#34;</span>)
+</span></span><span style="display:flex;"><span>    L<span style="color:#f92672">.</span>append(<span style="color:#e6db74">&#39;&lt;meta charset=&#34;UTF-8&#34;&gt;&#39;</span>)
+</span></span><span style="display:flex;"><span>    L<span style="color:#f92672">.</span>append(<span style="color:#e6db74">&#39;&lt;meta name=&#34;viewport&#34; content=&#34;width=device-width, initial-scale=1&#34;&gt;&#39;</span>)
+</span></span><span style="display:flex;"><span>    L<span style="color:#f92672">.</span>append(<span style="color:#e6db74">&#34;&lt;title&gt;Fotos (&#34;</span> <span style="color:#f92672">+</span> str(n) <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;)&lt;/title&gt;&#34;</span>)
+</span></span><span style="display:flex;"><span>    L<span style="color:#f92672">.</span>append(<span style="color:#e6db74">&#34;&lt;style&gt;&#34;</span>)
+</span></span><span style="display:flex;"><span>    L<span style="color:#f92672">.</span>append(<span style="color:#e6db74">&#34;* { box-sizing: border-box; margin: 0; padding: 0; }&#34;</span>)
+</span></span><span style="display:flex;"><span>    L<span style="color:#f92672">.</span>append(<span style="color:#e6db74">&#34;body { background: #111; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }&#34;</span>)
+</span></span><span style="display:flex;"><span>    L<span style="color:#f92672">.</span>append(<span style="color:#e6db74">&#34;input[type=radio] { position: absolute; opacity: 0; pointer-events: none; }&#34;</span>)
+</span></span><span style="display:flex;"><span>    L<span style="color:#f92672">.</span>append(<span style="color:#e6db74">&#34;.wrap { position: relative; width: 100vw; max-width: 1100px; height: 90vh; display: flex; align-items: center; justify-content: center; }&#34;</span>)
+</span></span><span style="display:flex;"><span>    L<span style="color:#f92672">.</span>append(<span style="color:#e6db74">&#34;.slide { display: none; width: 100%; height: 100%; align-items: center; justify-content: center; }&#34;</span>)
+</span></span><span style="display:flex;"><span>    L<span style="color:#f92672">.</span>append(<span style="color:#e6db74">&#34;.slide img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }&#34;</span>)
+</span></span><span style="display:flex;"><span>    L<span style="color:#f92672">.</span>append(<span style="color:#e6db74">&#34;.arrow { position: absolute; top: 50%; transform: translateY(-50%); width: 54px; height: 54px; background: rgba(255,255,255,.10); border: 1px solid rgba(255,255,255,.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.8rem; color: #fff; transition: background .15s; z-index: 10; user-select: none; }&#34;</span>)
+</span></span><span style="display:flex;"><span>    L<span style="color:#f92672">.</span>append(<span style="color:#e6db74">&#34;.arrow:hover { background: rgba(255,255,255,.25); }&#34;</span>)
+</span></span><span style="display:flex;"><span>    L<span style="color:#f92672">.</span>append(<span style="color:#e6db74">&#34;.arrow.prev { left: 1rem; }&#34;</span>)
+</span></span><span style="display:flex;"><span>    L<span style="color:#f92672">.</span>append(<span style="color:#e6db74">&#34;.arrow.next { right: 1rem; }&#34;</span>)
+</span></span><span style="display:flex;"><span>    L<span style="color:#f92672">.</span>append(<span style="color:#e6db74">&#34;.counter { position: fixed; bottom: 1rem; left: 50%; transform: translateX(-50%); font-size: .75rem; color: rgba(255,255,255,.35); letter-spacing: .1em; font-family: sans-serif; pointer-events: none; }&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># slide visible cuando su radio está checked</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> i <span style="color:#f92672">in</span> range(<span style="color:#ae81ff">1</span>, n <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>):
+</span></span><span style="display:flex;"><span>        L<span style="color:#f92672">.</span>append(<span style="color:#e6db74">&#34;#s&#34;</span> <span style="color:#f92672">+</span> str(i) <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;:checked ~ .wrap .slide:nth-child(&#34;</span> <span style="color:#f92672">+</span> str(i) <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;) { display: flex; }&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># contador</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> i <span style="color:#f92672">in</span> range(<span style="color:#ae81ff">1</span>, n <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>):
+</span></span><span style="display:flex;"><span>        L<span style="color:#f92672">.</span>append(<span style="color:#e6db74">&#34;#s&#34;</span> <span style="color:#f92672">+</span> str(i) <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;:checked ~ .counter::before { content: &#39;&#34;</span> <span style="color:#f92672">+</span> str(i) <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34; / &#34;</span> <span style="color:#f92672">+</span> str(n) <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;&#39;; }&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    L<span style="color:#f92672">.</span>append(<span style="color:#e6db74">&#34;&lt;/style&gt;&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># radios (fuera del body, antes de .wrap, así el ~ selector funciona)</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> i <span style="color:#f92672">in</span> range(<span style="color:#ae81ff">1</span>, n <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>):
+</span></span><span style="display:flex;"><span>        checked <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34; checked&#34;</span> <span style="color:#66d9ef">if</span> i <span style="color:#f92672">==</span> <span style="color:#ae81ff">1</span> <span style="color:#66d9ef">else</span> <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>        L<span style="color:#f92672">.</span>append(<span style="color:#e6db74">&#39;&lt;input type=&#34;radio&#34; name=&#34;c&#34; id=&#34;s&#39;</span> <span style="color:#f92672">+</span> str(i) <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;&#34;&#39;</span> <span style="color:#f92672">+</span> checked <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;&gt;&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    L<span style="color:#f92672">.</span>append(<span style="color:#e6db74">&#34;&lt;body&gt;&#34;</span>)
+</span></span><span style="display:flex;"><span>    L<span style="color:#f92672">.</span>append(<span style="color:#e6db74">&#39;&lt;div class=&#34;wrap&#34;&gt;&#39;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> i, foto <span style="color:#f92672">in</span> enumerate(fotos, <span style="color:#ae81ff">1</span>):
+</span></span><span style="display:flex;"><span>        prev_id <span style="color:#f92672">=</span> n <span style="color:#66d9ef">if</span> i <span style="color:#f92672">==</span> <span style="color:#ae81ff">1</span> <span style="color:#66d9ef">else</span> i <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>        next_id <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span> <span style="color:#66d9ef">if</span> i <span style="color:#f92672">==</span> n <span style="color:#66d9ef">else</span> i <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>        L<span style="color:#f92672">.</span>append(<span style="color:#e6db74">&#39;  &lt;div class=&#34;slide&#34;&gt;&#39;</span>)
+</span></span><span style="display:flex;"><span>        L<span style="color:#f92672">.</span>append(<span style="color:#e6db74">&#39;    &lt;label class=&#34;arrow prev&#34; for=&#34;s&#39;</span> <span style="color:#f92672">+</span> str(prev_id) <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;&#34;&gt;&amp;#8249;&lt;/label&gt;&#39;</span>)
+</span></span><span style="display:flex;"><span>        L<span style="color:#f92672">.</span>append(<span style="color:#e6db74">&#39;    &lt;img src=&#34;&#39;</span> <span style="color:#f92672">+</span> foto<span style="color:#f92672">.</span>name <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;&#34; loading=&#34;lazy&#34;&gt;&#39;</span>)
+</span></span><span style="display:flex;"><span>        L<span style="color:#f92672">.</span>append(<span style="color:#e6db74">&#39;    &lt;label class=&#34;arrow next&#34; for=&#34;s&#39;</span> <span style="color:#f92672">+</span> str(next_id) <span style="color:#f92672">+</span> <span style="color:#e6db74">&#39;&#34;&gt;&amp;#8250;&lt;/label&gt;&#39;</span>)
+</span></span><span style="display:flex;"><span>        L<span style="color:#f92672">.</span>append(<span style="color:#e6db74">&#39;  &lt;/div&gt;&#39;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    L<span style="color:#f92672">.</span>append(<span style="color:#e6db74">&#34;&lt;/div&gt;&#34;</span>)
+</span></span><span style="display:flex;"><span>    L<span style="color:#f92672">.</span>append(<span style="color:#e6db74">&#39;&lt;div class=&#34;counter&#34;&gt;&lt;/div&gt;&#39;</span>)
+</span></span><span style="display:flex;"><span>    L<span style="color:#f92672">.</span>append(<span style="color:#e6db74">&#34;&lt;/body&gt;&#34;</span>)
+</span></span><span style="display:flex;"><span>    L<span style="color:#f92672">.</span>append(<span style="color:#e6db74">&#34;&lt;/html&gt;&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    salida <span style="color:#f92672">=</span> carpeta <span style="color:#f92672">/</span> <span style="color:#e6db74">&#34;carousel.html&#34;</span>
+</span></span><span style="display:flex;"><span>    salida<span style="color:#f92672">.</span>write_text(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span><span style="color:#f92672">.</span>join(L), encoding<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;utf-8&#34;</span>)
+</span></span><span style="display:flex;"><span>    print(<span style="color:#e6db74">&#34;Generado: &#34;</span> <span style="color:#f92672">+</span> str(salida))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> __name__ <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;__main__&#34;</span>:
+</span></span><span style="display:flex;"><span>    main()
+</span></span></code></pre></div>
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+
+</footer>
+
+
+</body>
+</html>
