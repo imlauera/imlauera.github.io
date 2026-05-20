@@ -29,7 +29,7 @@ Vamos a aclarar el enredo:
 1. La verdad sobre Llama (Facebook) Llama SÍ libera los “pesos” (weights). Si te bajas Llama 3, te bajas un archivo gigante (los pesos) que te permite correr el modelo en tu PC. Técnicamente, puedes usar ollama run llama3 sin problemas.">
   <meta itemprop="datePublished" content="2026-03-13T07:01:32-03:00">
   <meta itemprop="dateModified" content="2026-03-13T07:01:32-03:00">
-  <meta itemprop="wordCount" content="3191">
+  <meta itemprop="wordCount" content="4058">
   <meta itemprop="keywords" content="Ai">
   
   <meta name="twitter:card" content="summary">
@@ -384,6 +384,71 @@ Los modelos que él menciona (Qwen de Alibaba, MiniMax, Kimi, y Z.ai que suele s
 <li><strong>La prueba del &ldquo;Local&rdquo;:</strong> Si quieres saber si algo es bueno de verdad en este mundo, pregúntate: <em>&quot;¿Puedo correr esto yo mismo en mi PC?&quot;</em>. Si la respuesta es sí (como los modelos chinos que menciona Hotz), es tecnología real. Si la respuesta es &ldquo;necesito pagarle a una app&rdquo;, probablemente sea una capa de extracción de dinero (&ldquo;rent seeking&rdquo;).</li>
 </ol>
 <p><strong>En resumen:</strong> Hotz no buscó &ldquo;apps&rdquo;, buscó <strong>modelos abiertos</strong> en plataformas técnicas (OpenRouter/Hugging Face) y verificó que las empresas chinas detrás tuvieran incentivos estratégicos reales para regalar esa tecnología, en lugar de solo cobrar por ella como las apps occidentales.</p>
+<p>Entiendo la mezcla de asombro y entusiasmo. Primero, la idea de que “todo el conocimiento humano se comprimió en un LLM de 500 GB” suena como un titular llamativo, y tiene parte de verdad y parte de ciencia ficción. Vamos por partes, y después te cuento <strong>exactamente cómo podés descargar y correr DeepSeek en tu PC</strong>.</p>
+<hr>
+<h2 id="1-realmente-cabe-todo-el-conocimiento-humano-en-500-gb">1. ¿Realmente cabe “todo el conocimiento humano” en 500 GB?</h2>
+<p><strong>Respuesta corta:</strong> No exactamente, pero es una forma poética de describir algo impresionante.</p>
+<ul>
+<li><strong>Los modelos de lenguaje (LLMs) no almacenan hechos como una base de datos</strong>; aprenden patrones estadísticos del lenguaje a partir de una cantidad gigantesca de texto (libros, webs, código, artículos, etc.). “Comprimir” es una metáfora: los terabytes de texto de entrenamiento se reducen a los pesos de una red neuronal. En ese sentido, sí, hubo una compresión masiva de información textual.</li>
+<li>Lo que se entrena es una representación de cómo los humanos hablamos, escribimos y razonamos, no una enciclopedia perfecta. El modelo puede recordar muchísimos datos, pero también inventar, tener huecos y sesgos.</li>
+<li>500 GB es un tamaño plausible para un modelo <strong>muy grande</strong>, como el DeepSeek-V3 completo (671 mil millones de parámetros) o R1. En formato de 16 bits (sin cuantizar), pesa alrededor de <strong>1.3 TB</strong>. Pero aplicando cuantización (reduciendo precisión), se puede bajar a ~400–500 GB con calidad aceptable. Así que el número 500 GB es coherente con una versión cuantizada de un modelo enorme, no con “todo el conocimiento”.</li>
+<li><strong>¿Todo el conocimiento?</strong> No. El entrenamiento incluye una porción enorme del texto disponible en internet, pero no cubre toda la experiencia humana, la ciencia más reciente, datos privados ni todas las culturas e idiomas por igual. Sí es una hazaña que modelos así tengan una cultura general comparable a la de un experto en muchos temas.</li>
+</ul>
+<p>En resumen: es una exageración fascinante, pero un modelo de 500 GB efectivamente almacena una cantidad alucinante de patrones textuales que imitan un conocimiento amplísimo.</p>
+<hr>
+<h2 id="2-cómo-bajar-deepseek-y-ejecutarlo-localmente">2. Cómo bajar DeepSeek y ejecutarlo localmente</h2>
+<p>DeepSeek tiene varios modelos abiertos. Elegir cuál depende de tu hardware y de si querés el <em>moonshot</em> completo o una versión más modesta pero funcional.</p>
+<h3 id="-hardware-necesario-brutal-para-el-modelo-grande">⚠️ Hardware necesario (brutal para el modelo grande)</h3>
+<ul>
+<li><strong>DeepSeek-V3 / R1 (671B parámetros):</strong> Incluso cuantizado a 4 bits (~400 GB), necesitás un monstruo. Ejemplo: varias GPUs con mucha VRAM (8x A100 80GB o H100) o, en su defecto, <strong>más de 512 GB de RAM de sistema</strong> para correrlo por CPU (muy lento). En una PC típica no es viable.</li>
+<li><strong>Modelos destilados (1.5B, 7B, 8B, 14B, 32B, 70B):</strong> Son versiones más chicas y accesibles (basadas en arquitecturas como Qwen o Llama), con un rendimiento sorprendente. Corren en una PC gamer con buena GPU, e incluso algunos en CPU con suficiente RAM.</li>
+</ul>
+<h3 id="-métodos-para-bajarlos-y-ejecutarlos">🧰 Métodos para bajarlos y ejecutarlos</h3>
+<h4 id="-la-vía-más-fácil-ollama-recomendada">🥇 La vía más fácil: <strong>Ollama</strong> (recomendada)</h4>
+<p>Ollama es un gestor de modelos local con un solo comando.</p>
+<ol>
+<li>Instalá Ollama desde <a href="https://ollama.com">ollama.com</a> (Windows, macOS, Linux).</li>
+<li>Abrí la terminal y ejecutá:
+<ul>
+<li>Para un modelo liviano (7B, ideal para empezar):
+<code>ollama run deepseek-r1:7b</code></li>
+<li>Para uno más potente pero posible en hardware entusiasta (14B/32B):
+<code>ollama run deepseek-r1:14b</code> o <code>ollama run deepseek-r1:32b</code></li>
+<li>Si de verdad querés el gigante de 671B (cuantizado, ~400 GB, solo para servidores):
+<code>ollama run deepseek-v3:671b</code> (Ollama descargará la versión cuantizada más alta, de ~400 GB, y necesitás la RAM/GPU mencionada antes; la mayoría de las PCs normales no pueden ni cargarlo).</li>
+</ul>
+</li>
+<li>¡Listo! Ya podés chatear en la terminal o usarlo como API local (<code>http://localhost:11434</code>).</li>
+</ol>
+<h4 id="-vía-manual-con-hugging-face--lm-studio--llamacpp">🥈 Vía manual con Hugging Face + LM Studio / llama.cpp</h4>
+<ul>
+<li>Descargar los archivos GGUF (cuantizados) desde el repositorio oficial de DeepSeek en Hugging Face:
+<a href="https://huggingface.co/deepseek-ai">https://huggingface.co/deepseek-ai</a>
+Por ejemplo, <code>DeepSeek-R1-Distill-Qwen-7B-GGUF</code> para el peque.</li>
+<li>Usar <strong>LM Studio</strong> (interfaz gráfica fácil para Windows/Mac/Linux) o <strong>llama.cpp</strong> (más técnica) para cargar el archivo GGUF y ejecutar.</li>
+</ul>
+<h4 id="-opciones-más-específicas">🥉 Opciones más específicas</h4>
+<ul>
+<li><strong>ExLlamaV2 / vLLM</strong> si tenés GPUs modernas y querés máxima velocidad de inferencia (solo para usuarios avanzados).</li>
+<li><strong>DeepSeek también ofrece una interfaz web y app oficiales</strong> (gratis, sin descargar nada) para probar el modelo completo. Pero tu pregunta es sobre correrlo 100 % local, lo cual es genial por privacidad y experimentación.</li>
+</ul>
+<h3 id="-resumen-práctico-para-tu-pc">📌 Resumen práctico para tu PC</h3>
+<p>Si tu PC es normal (por ej., 16–32 GB RAM, tarjeta gráfica con 8–12 GB VRAM):</p>
+<ul>
+<li>Empezá con <strong>DeepSeek-R1-Distill-Qwen-7B</strong> o <strong>14B</strong> a través de Ollama. Vas a tener un modelo pequeño pero muy capaz, que corre fluido.</li>
+<li>Si tenés 64 GB de RAM y mucha paciencia, podrías probar con la versión Q4 del modelo de 70B, pero sin GPU va a ser muy lento.</li>
+<li>El modelo de 671B “completo” en local es hoy por hoy solo para entusiastas con estaciones de trabajo o servidores.</li>
+</ul>
+<hr>
+<h2 id="3-es-seguro-es-realmente-deepseek">3. ¿Es seguro? ¿Es realmente DeepSeek?</h2>
+<p>Sí, los modelos abiertos son oficiales. DeepSeek liberó pesos bajo licencias permisivas (como MIT). Para no caer en versiones truchas, usá siempre:</p>
+<ul>
+<li>Hugging Face oficial (<code>deepseek-ai</code>)</li>
+<li>Ollama (las imágenes están validadas)</li>
+<li>Los enlaces proporcionados por DeepSeek en sus anuncios oficiales.</li>
+</ul>
+<hr>
+<p>Si me contás qué hardware tenés (RAM, GPU, espacio en disco), te puedo recomendar exactamente qué modelo y cuantización descargar para que corra bien en tu máquina. Y si querés, también charlamos sobre si realmente “cabe todo el conocimiento” o solo es una bella metáfora técnica. ¡La puerta está abierta!</p>
 
 </div>
 
