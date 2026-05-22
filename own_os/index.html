@@ -23,7 +23,7 @@ Bootloader (Stage 1) — 512 bytes de assembly que la BIOS carga en 0x7C00 Kerne
 Bootloader (Stage 1) — 512 bytes de assembly que la BIOS carga en 0x7C00 Kernel mínimo — entra en modo protegido 32-bit e imprime en pantalla Linker script — organiza la memoria Makefile — compila todo y genera la imagen de disco Script de prueba — corre todo en QEMU Todo en un solo proyecto. Vamos.✅ Compiló perfecto. Ahora ejecutar en QEMU y capturar el framebuffer VGA:Todo está compilado y verificado. Ahora copiar al output:—">
   <meta itemprop="datePublished" content="2026-05-22T16:10:42-03:00">
   <meta itemprop="dateModified" content="2026-05-22T16:10:42-03:00">
-  <meta itemprop="wordCount" content="340">
+  <meta itemprop="wordCount" content="2037">
   <meta itemprop="keywords" content="Os-Developing">
   
   <meta name="twitter:card" content="summary">
@@ -139,6 +139,520 @@ Todo en un solo proyecto. Vamos.✅ Compiló perfecto. Ahora ejecutar en QEMU y 
 </span></span><span style="display:flex;"><span><span style="color:#75715e"># Correr en QEMU con ventana gráfica</span>
 </span></span><span style="display:flex;"><span>make run-gui
 </span></span></code></pre></div><p>La pantalla que verías: fondo azul, borde en cian, <strong>&ldquo;Hola Mundo&rdquo;</strong> en verde brillante, y el diagnóstico completo del sistema en gris.</p>
+<p>Acá va todo el código completo, copiable y pegable archivo por archivo.</p>
+<hr>
+<h2 id="estructura-de-carpetas-primero">Estructura de carpetas primero</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mkdir -p own_os/boot own_os/kernel own_os/build
+</span></span><span style="display:flex;"><span>cd own_os
+</span></span></code></pre></div><hr>
+<h2 id="archivo-1-bootbootloaderasm">ARCHIVO 1: <code>boot/bootloader.asm</code></h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-nasm" data-lang="nasm"><span style="display:flex;"><span><span style="color:#75715e">; =============================================================================</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">; BOOTLOADER — Stage 1 con LBA (compatible con pendrives y hardware real)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">; La BIOS lo carga en 0x7C00. Tiene exactamente 512 bytes.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">; =============================================================================</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">[</span><span style="color:#66d9ef">BITS</span> <span style="color:#ae81ff">16</span>]
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">[</span><span style="color:#66d9ef">ORG</span> <span style="color:#ae81ff">0x7C00</span>]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>start:
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">cli</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">xor</span> ax, ax
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">mov</span> ds, ax
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">mov</span> es, ax
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">mov</span> ss, ax
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">mov</span> sp, <span style="color:#ae81ff">0x7C00</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">sti</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">mov</span> [boot_drive], dl
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">mov</span> si, msg_loading
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">call</span> print_string_16
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">call</span> load_kernel
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">lgdt</span> [gdt_descriptor]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">mov</span> eax, cr0
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">or</span>  eax, <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">mov</span> cr0, eax
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">jmp</span> CODE_SEG:init_pm
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">; -----------------------------------------------------------------------------</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">; PRINT STRING modo real (INT 10h)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">; -----------------------------------------------------------------------------</span>
+</span></span><span style="display:flex;"><span>print_string_16:
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">pusha</span>
+</span></span><span style="display:flex;"><span>.loop:
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">lodsb</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">test</span> al, al
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">jz</span> .done
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">mov</span> ah, <span style="color:#ae81ff">0x0E</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">int</span> <span style="color:#ae81ff">0x10</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">jmp</span> .loop
+</span></span><span style="display:flex;"><span>.done:
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">popa</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">ret</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">; -----------------------------------------------------------------------------</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">; LOAD KERNEL via LBA (INT 13h extendida AH=42h)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">; Mas compatible con pendrives y hardware moderno que CHS</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">; -----------------------------------------------------------------------------</span>
+</span></span><span style="display:flex;"><span>load_kernel:
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">pusha</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">; Verificar que la BIOS soporta LBA</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">mov</span> ah, <span style="color:#ae81ff">0x41</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">mov</span> bx, <span style="color:#ae81ff">0x55AA</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">mov</span> dl, [boot_drive]
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">int</span> <span style="color:#ae81ff">0x13</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">jc</span>  .no_lba
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">; Configurar el DAP (Disk Address Packet)</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">mov</span> <span style="color:#66d9ef">word</span> [dap.count],   <span style="color:#ae81ff">15</span>        <span style="color:#75715e">; leer 15 sectores</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">mov</span> <span style="color:#66d9ef">word</span> [dap.offset],  <span style="color:#ae81ff">0x0000</span>    <span style="color:#75715e">; destino: 0x0000</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">mov</span> <span style="color:#66d9ef">word</span> [dap.segment], <span style="color:#ae81ff">0x0100</span>    <span style="color:#75715e">; segmento: 0x0100 * 16 = 0x1000</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">mov</span> <span style="color:#66d9ef">dword</span> [dap.lba_lo], <span style="color:#ae81ff">1</span>         <span style="color:#75715e">; empezar en sector LBA 1 (el 2do sector)</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">mov</span> <span style="color:#66d9ef">dword</span> [dap.lba_hi], <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">mov</span> ah, <span style="color:#ae81ff">0x42</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">mov</span> si, dap
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">mov</span> dl, [boot_drive]
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">int</span> <span style="color:#ae81ff">0x13</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">jc</span>  .disk_error
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">popa</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">ret</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>.no_lba:
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">mov</span> si, msg_no_lba
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">call</span> print_string_16
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">jmp</span> .hang
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>.disk_error:
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">mov</span> si, msg_disk_err
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">call</span> print_string_16
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>.hang:
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">cli</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">hlt</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">jmp</span> .hang
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">; -----------------------------------------------------------------------------</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">; DAP — Disk Address Packet (estructura para LBA)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">; -----------------------------------------------------------------------------</span>
+</span></span><span style="display:flex;"><span>dap:
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">db</span>  <span style="color:#ae81ff">0x10</span>        <span style="color:#75715e">; tamaño del DAP (16 bytes)</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">db</span>  <span style="color:#ae81ff">0x00</span>        <span style="color:#75715e">; reservado</span>
+</span></span><span style="display:flex;"><span>.count:
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">dw</span>  <span style="color:#ae81ff">0</span>           <span style="color:#75715e">; cantidad de sectores a leer</span>
+</span></span><span style="display:flex;"><span>.offset:
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">dw</span>  <span style="color:#ae81ff">0</span>           <span style="color:#75715e">; offset del buffer destino</span>
+</span></span><span style="display:flex;"><span>.segment:
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">dw</span>  <span style="color:#ae81ff">0</span>           <span style="color:#75715e">; segmento del buffer destino</span>
+</span></span><span style="display:flex;"><span>.lba_lo:
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">dd</span>  <span style="color:#ae81ff">0</span>           <span style="color:#75715e">; LBA bajo (32 bits)</span>
+</span></span><span style="display:flex;"><span>.lba_hi:
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">dd</span>  <span style="color:#ae81ff">0</span>           <span style="color:#75715e">; LBA alto (32 bits, para discos &gt;2TB)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">; -----------------------------------------------------------------------------</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">; [32-BIT] — modo protegido activo</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">; -----------------------------------------------------------------------------</span>
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">[</span><span style="color:#66d9ef">BITS</span> <span style="color:#ae81ff">32</span>]
+</span></span><span style="display:flex;"><span>init_pm:
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">mov</span> ax, DATA_SEG
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">mov</span> ds, ax
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">mov</span> ss, ax
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">mov</span> es, ax
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">mov</span> fs, ax
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">mov</span> gs, ax
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">mov</span> ebp, <span style="color:#ae81ff">0x90000</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">mov</span> esp, ebp
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">jmp</span> CODE_SEG:<span style="color:#ae81ff">0x1000</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">; =============================================================================</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">; GDT — Global Descriptor Table</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">; =============================================================================</span>
+</span></span><span style="display:flex;"><span>gdt_start:
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>gdt_null:
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">dd</span> <span style="color:#ae81ff">0x0</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">dd</span> <span style="color:#ae81ff">0x0</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>gdt_code:
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">dw</span> <span style="color:#ae81ff">0xFFFF</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">dw</span> <span style="color:#ae81ff">0x0000</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">db</span> <span style="color:#ae81ff">0x00</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">db</span> <span style="color:#ae81ff">10011010b</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">db</span> <span style="color:#ae81ff">11001111b</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">db</span> <span style="color:#ae81ff">0x00</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>gdt_data:
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">dw</span> <span style="color:#ae81ff">0xFFFF</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">dw</span> <span style="color:#ae81ff">0x0000</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">db</span> <span style="color:#ae81ff">0x00</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">db</span> <span style="color:#ae81ff">10010010b</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">db</span> <span style="color:#ae81ff">11001111b</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">db</span> <span style="color:#ae81ff">0x00</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>gdt_end:
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>gdt_descriptor:
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">dw</span> gdt_end <span style="color:#f92672">-</span> gdt_start <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">dd</span> gdt_start
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">CODE_SEG</span><span style="color:#66d9ef"> equ</span> gdt_code <span style="color:#f92672">-</span> gdt_start
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">DATA_SEG</span><span style="color:#66d9ef"> equ</span> gdt_data <span style="color:#f92672">-</span> gdt_start
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">; =============================================================================</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">; DATOS</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">; =============================================================================</span>
+</span></span><span style="display:flex;"><span>boot_drive:   <span style="color:#66d9ef">db</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>msg_loading:  <span style="color:#66d9ef">db</span> <span style="color:#e6db74">&#39;Bootloader OK - Cargando kernel...&#39;</span>, <span style="color:#ae81ff">13</span>, <span style="color:#ae81ff">10</span>, <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>msg_disk_err: <span style="color:#66d9ef">db</span> <span style="color:#e6db74">&#39;ERROR: Fallo lectura de disco!&#39;</span>, <span style="color:#ae81ff">13</span>, <span style="color:#ae81ff">10</span>, <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>msg_no_lba:   <span style="color:#66d9ef">db</span> <span style="color:#e6db74">&#39;ERROR: BIOS no soporta LBA!&#39;</span>, <span style="color:#ae81ff">13</span>, <span style="color:#ae81ff">10</span>, <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">; =============================================================================</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">; BOOT SIGNATURE</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">; =============================================================================</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">times</span> <span style="color:#ae81ff">510</span> <span style="color:#f92672">-</span> (<span style="color:#66d9ef">$</span> <span style="color:#f92672">-</span> <span style="color:#66d9ef">$$</span>) db <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">dw</span> <span style="color:#ae81ff">0xAA55</span>
+</span></span></code></pre></div><hr>
+<h2 id="archivo-2-kernelkernel_entryasm">ARCHIVO 2: <code>kernel/kernel_entry.asm</code></h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-nasm" data-lang="nasm"><span style="display:flex;"><span><span style="color:#75715e">; =============================================================================</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">; KERNEL ENTRY — puente entre bootloader y kmain() en C</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">; =============================================================================</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">[</span><span style="color:#66d9ef">BITS</span> <span style="color:#ae81ff">32</span>]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">extern</span> kmain
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">global</span> _start
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>_start:
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">call</span> kmain
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>.hang:
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">cli</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">hlt</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">jmp</span> .hang
+</span></span></code></pre></div><hr>
+<h2 id="archivo-3-kernelkernelc">ARCHIVO 3: <code>kernel/kernel.c</code></h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">/*
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * =============================================================================
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * KERNEL — HolaMundOS
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * Corre en modo protegido 32-bit. Sin stdlib. Sin OS debajo.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * Escribe directo en el framebuffer VGA: 0xB8000
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * Pantalla de texto: 80 columnas x 25 filas
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * Cada celda = 2 bytes: [ASCII][color]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * Color = (fondo &lt;&lt; 4) | frente
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> * =============================================================================
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"> */</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">char</span>  u8;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">short</span> u16;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">int</span>   u32;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#define VGA_BASE  ((u16*)0xB8000)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define VGA_COLS  80
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define VGA_ROWS  25
+</span></span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">/* Colores VGA */</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#define BLACK        0
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define BLUE         1
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define GREEN        2
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define CYAN         3
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define RED          4
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define MAGENTA      5
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define BROWN        6
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define LIGHT_GREY   7
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define DARK_GREY    8
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define LIGHT_BLUE   9
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define LIGHT_GREEN  10
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define LIGHT_CYAN   11
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define LIGHT_RED    12
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define LIGHT_MAG    13
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define LIGHT_BROWN  14
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#define WHITE        15
+</span></span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">static</span> <span style="color:#66d9ef">int</span> cursor_x <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">static</span> <span style="color:#66d9ef">int</span> cursor_y <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">static</span> <span style="color:#66d9ef">inline</span> u16 <span style="color:#a6e22e">vga_entry</span>(<span style="color:#66d9ef">char</span> c, u8 fg, u8 bg) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> (u16)c <span style="color:#f92672">|</span> ((u16)((bg <span style="color:#f92672">&lt;&lt;</span> <span style="color:#ae81ff">4</span>) <span style="color:#f92672">|</span> fg) <span style="color:#f92672">&lt;&lt;</span> <span style="color:#ae81ff">8</span>);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">vga_clear</span>(u8 fg, u8 bg) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">int</span> y <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; y <span style="color:#f92672">&lt;</span> VGA_ROWS; y<span style="color:#f92672">++</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">int</span> x <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; x <span style="color:#f92672">&lt;</span> VGA_COLS; x<span style="color:#f92672">++</span>)
+</span></span><span style="display:flex;"><span>            VGA_BASE[y <span style="color:#f92672">*</span> VGA_COLS <span style="color:#f92672">+</span> x] <span style="color:#f92672">=</span> <span style="color:#a6e22e">vga_entry</span>(<span style="color:#e6db74">&#39; &#39;</span>, fg, bg);
+</span></span><span style="display:flex;"><span>    cursor_x <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>    cursor_y <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">vga_scroll</span>(<span style="color:#66d9ef">void</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">int</span> y <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; y <span style="color:#f92672">&lt;</span> VGA_ROWS <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>; y<span style="color:#f92672">++</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">int</span> x <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; x <span style="color:#f92672">&lt;</span> VGA_COLS; x<span style="color:#f92672">++</span>)
+</span></span><span style="display:flex;"><span>            VGA_BASE[y <span style="color:#f92672">*</span> VGA_COLS <span style="color:#f92672">+</span> x] <span style="color:#f92672">=</span> VGA_BASE[(y<span style="color:#f92672">+</span><span style="color:#ae81ff">1</span>) <span style="color:#f92672">*</span> VGA_COLS <span style="color:#f92672">+</span> x];
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">int</span> x <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; x <span style="color:#f92672">&lt;</span> VGA_COLS; x<span style="color:#f92672">++</span>)
+</span></span><span style="display:flex;"><span>        VGA_BASE[(VGA_ROWS<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>) <span style="color:#f92672">*</span> VGA_COLS <span style="color:#f92672">+</span> x] <span style="color:#f92672">=</span> <span style="color:#a6e22e">vga_entry</span>(<span style="color:#e6db74">&#39; &#39;</span>, WHITE, BLACK);
+</span></span><span style="display:flex;"><span>    cursor_y <span style="color:#f92672">=</span> VGA_ROWS <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">vga_putchar</span>(<span style="color:#66d9ef">char</span> c, u8 fg, u8 bg) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (c <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;\n&#39;</span>) {
+</span></span><span style="display:flex;"><span>        cursor_x <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>        cursor_y<span style="color:#f92672">++</span>;
+</span></span><span style="display:flex;"><span>    } <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (c <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;\r&#39;</span>) {
+</span></span><span style="display:flex;"><span>        cursor_x <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>    } <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (c <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;\t&#39;</span>) {
+</span></span><span style="display:flex;"><span>        cursor_x <span style="color:#f92672">=</span> (cursor_x <span style="color:#f92672">+</span> <span style="color:#ae81ff">8</span>) <span style="color:#f92672">&amp;</span> <span style="color:#f92672">~</span><span style="color:#ae81ff">7</span>;
+</span></span><span style="display:flex;"><span>    } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>        VGA_BASE[cursor_y <span style="color:#f92672">*</span> VGA_COLS <span style="color:#f92672">+</span> cursor_x] <span style="color:#f92672">=</span> <span style="color:#a6e22e">vga_entry</span>(c, fg, bg);
+</span></span><span style="display:flex;"><span>        cursor_x<span style="color:#f92672">++</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (cursor_x <span style="color:#f92672">&gt;=</span> VGA_COLS) {
+</span></span><span style="display:flex;"><span>        cursor_x <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>        cursor_y<span style="color:#f92672">++</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (cursor_y <span style="color:#f92672">&gt;=</span> VGA_ROWS)
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">vga_scroll</span>();
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">print</span>(<span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>s, u8 fg, u8 bg) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> (<span style="color:#f92672">*</span>s) <span style="color:#a6e22e">vga_putchar</span>(<span style="color:#f92672">*</span>s<span style="color:#f92672">++</span>, fg, bg);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">println</span>(<span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>s, u8 fg, u8 bg) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">print</span>(s, fg, bg);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">vga_putchar</span>(<span style="color:#e6db74">&#39;\n&#39;</span>, fg, bg);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">print_hex</span>(u32 n, u8 fg, u8 bg) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> buf[<span style="color:#ae81ff">11</span>];
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>hex <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;0123456789ABCDEF&#34;</span>;
+</span></span><span style="display:flex;"><span>    buf[<span style="color:#ae81ff">0</span>] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;0&#39;</span>; buf[<span style="color:#ae81ff">1</span>] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;x&#39;</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">int</span> i <span style="color:#f92672">=</span> <span style="color:#ae81ff">9</span>; i <span style="color:#f92672">&gt;=</span> <span style="color:#ae81ff">2</span>; i<span style="color:#f92672">--</span>) {
+</span></span><span style="display:flex;"><span>        buf[i] <span style="color:#f92672">=</span> hex[n <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xF</span>];
+</span></span><span style="display:flex;"><span>        n <span style="color:#f92672">&gt;&gt;=</span> <span style="color:#ae81ff">4</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    buf[<span style="color:#ae81ff">10</span>] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;\0&#39;</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">print</span>(buf, fg, bg);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">draw_border</span>(u8 fg, u8 bg) {
+</span></span><span style="display:flex;"><span>    VGA_BASE[<span style="color:#ae81ff">0</span>] <span style="color:#f92672">=</span> <span style="color:#a6e22e">vga_entry</span>(<span style="color:#e6db74">&#39;+&#39;</span>, fg, bg);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">int</span> x <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>; x <span style="color:#f92672">&lt;</span> VGA_COLS<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>; x<span style="color:#f92672">++</span>)
+</span></span><span style="display:flex;"><span>        VGA_BASE[x] <span style="color:#f92672">=</span> <span style="color:#a6e22e">vga_entry</span>(<span style="color:#e6db74">&#39;-&#39;</span>, fg, bg);
+</span></span><span style="display:flex;"><span>    VGA_BASE[VGA_COLS<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>] <span style="color:#f92672">=</span> <span style="color:#a6e22e">vga_entry</span>(<span style="color:#e6db74">&#39;+&#39;</span>, fg, bg);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">int</span> y <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>; y <span style="color:#f92672">&lt;</span> VGA_ROWS<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>; y<span style="color:#f92672">++</span>) {
+</span></span><span style="display:flex;"><span>        VGA_BASE[y <span style="color:#f92672">*</span> VGA_COLS]              <span style="color:#f92672">=</span> <span style="color:#a6e22e">vga_entry</span>(<span style="color:#e6db74">&#39;|&#39;</span>, fg, bg);
+</span></span><span style="display:flex;"><span>        VGA_BASE[y <span style="color:#f92672">*</span> VGA_COLS <span style="color:#f92672">+</span> VGA_COLS<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>] <span style="color:#f92672">=</span> <span style="color:#a6e22e">vga_entry</span>(<span style="color:#e6db74">&#39;|&#39;</span>, fg, bg);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    VGA_BASE[(VGA_ROWS<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>)<span style="color:#f92672">*</span>VGA_COLS] <span style="color:#f92672">=</span> <span style="color:#a6e22e">vga_entry</span>(<span style="color:#e6db74">&#39;+&#39;</span>, fg, bg);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">int</span> x <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>; x <span style="color:#f92672">&lt;</span> VGA_COLS<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>; x<span style="color:#f92672">++</span>)
+</span></span><span style="display:flex;"><span>        VGA_BASE[(VGA_ROWS<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>)<span style="color:#f92672">*</span>VGA_COLS <span style="color:#f92672">+</span> x] <span style="color:#f92672">=</span> <span style="color:#a6e22e">vga_entry</span>(<span style="color:#e6db74">&#39;-&#39;</span>, fg, bg);
+</span></span><span style="display:flex;"><span>    VGA_BASE[(VGA_ROWS<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>)<span style="color:#f92672">*</span>VGA_COLS <span style="color:#f92672">+</span> VGA_COLS<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>] <span style="color:#f92672">=</span> <span style="color:#a6e22e">vga_entry</span>(<span style="color:#e6db74">&#39;+&#39;</span>, fg, bg);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">kmain</span>(<span style="color:#66d9ef">void</span>) {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">vga_clear</span>(WHITE, BLUE);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">draw_border</span>(LIGHT_CYAN, BLUE);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    cursor_x <span style="color:#f92672">=</span> <span style="color:#ae81ff">2</span>; cursor_y <span style="color:#f92672">=</span> <span style="color:#ae81ff">2</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">print</span>(<span style="color:#e6db74">&#34;&gt;&gt;&gt; HolaMundOS v0.1 &lt;&lt;&lt;&#34;</span>, LIGHT_BROWN, BLUE);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    cursor_x <span style="color:#f92672">=</span> <span style="color:#ae81ff">2</span>; cursor_y <span style="color:#f92672">=</span> <span style="color:#ae81ff">3</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">print</span>(<span style="color:#e6db74">&#34;Sistema Operativo minimo en C + ASM&#34;</span>, LIGHT_GREY, BLUE);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    cursor_x <span style="color:#f92672">=</span> <span style="color:#ae81ff">2</span>; cursor_y <span style="color:#f92672">=</span> <span style="color:#ae81ff">4</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">int</span> i <span style="color:#f92672">=</span> <span style="color:#ae81ff">2</span>; i <span style="color:#f92672">&lt;</span> VGA_COLS<span style="color:#f92672">-</span><span style="color:#ae81ff">2</span>; i<span style="color:#f92672">++</span>)
+</span></span><span style="display:flex;"><span>        VGA_BASE[<span style="color:#ae81ff">4</span> <span style="color:#f92672">*</span> VGA_COLS <span style="color:#f92672">+</span> i] <span style="color:#f92672">=</span> <span style="color:#a6e22e">vga_entry</span>(<span style="color:#e6db74">&#39;=&#39;</span>, DARK_GREY, BLUE);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    cursor_x <span style="color:#f92672">=</span> <span style="color:#ae81ff">2</span>; cursor_y <span style="color:#f92672">=</span> <span style="color:#ae81ff">6</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">print</span>(<span style="color:#e6db74">&#34;  Hola Mundo  &#34;</span>, LIGHT_GREEN, BLUE);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    cursor_x <span style="color:#f92672">=</span> <span style="color:#ae81ff">2</span>; cursor_y <span style="color:#f92672">=</span> <span style="color:#ae81ff">8</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">println</span>(<span style="color:#e6db74">&#34;Estado del sistema:&#34;</span>, LIGHT_CYAN, BLUE);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    cursor_x <span style="color:#f92672">=</span> <span style="color:#ae81ff">4</span>; cursor_y <span style="color:#f92672">=</span> <span style="color:#ae81ff">9</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">print</span>(<span style="color:#e6db74">&#34;[OK] Bootloader LBA ejecutado   (0x7C00)&#34;</span>, LIGHT_GREY, BLUE);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    cursor_x <span style="color:#f92672">=</span> <span style="color:#ae81ff">4</span>; cursor_y <span style="color:#f92672">=</span> <span style="color:#ae81ff">10</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">print</span>(<span style="color:#e6db74">&#34;[OK] Modo protegido 32-bit       activo&#34;</span>, LIGHT_GREY, BLUE);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    cursor_x <span style="color:#f92672">=</span> <span style="color:#ae81ff">4</span>; cursor_y <span style="color:#f92672">=</span> <span style="color:#ae81ff">11</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">print</span>(<span style="color:#e6db74">&#34;[OK] GDT configurada             CODE=0x08 DATA=0x10&#34;</span>, LIGHT_GREY, BLUE);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    cursor_x <span style="color:#f92672">=</span> <span style="color:#ae81ff">4</span>; cursor_y <span style="color:#f92672">=</span> <span style="color:#ae81ff">12</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">print</span>(<span style="color:#e6db74">&#34;[OK] Kernel cargado en           &#34;</span>, LIGHT_GREY, BLUE);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">print_hex</span>(<span style="color:#ae81ff">0x1000</span>, LIGHT_BROWN, BLUE);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    cursor_x <span style="color:#f92672">=</span> <span style="color:#ae81ff">4</span>; cursor_y <span style="color:#f92672">=</span> <span style="color:#ae81ff">13</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">print</span>(<span style="color:#e6db74">&#34;[OK] VGA framebuffer en          &#34;</span>, LIGHT_GREY, BLUE);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">print_hex</span>(<span style="color:#ae81ff">0xB8000</span>, LIGHT_BROWN, BLUE);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    cursor_x <span style="color:#f92672">=</span> <span style="color:#ae81ff">4</span>; cursor_y <span style="color:#f92672">=</span> <span style="color:#ae81ff">14</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">print</span>(<span style="color:#e6db74">&#34;[OK] Stack en                    &#34;</span>, LIGHT_GREY, BLUE);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">print_hex</span>(<span style="color:#ae81ff">0x90000</span>, LIGHT_BROWN, BLUE);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    cursor_x <span style="color:#f92672">=</span> <span style="color:#ae81ff">4</span>; cursor_y <span style="color:#f92672">=</span> <span style="color:#ae81ff">15</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">print</span>(<span style="color:#e6db74">&#34;[OK] Lectura de disco            LBA mode&#34;</span>, LIGHT_GREY, BLUE);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    cursor_x <span style="color:#f92672">=</span> <span style="color:#ae81ff">2</span>; cursor_y <span style="color:#f92672">=</span> <span style="color:#ae81ff">17</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">println</span>(<span style="color:#e6db74">&#34;Arquitectura:&#34;</span>, LIGHT_CYAN, BLUE);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    cursor_x <span style="color:#f92672">=</span> <span style="color:#ae81ff">4</span>; cursor_y <span style="color:#f92672">=</span> <span style="color:#ae81ff">18</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">print</span>(<span style="color:#e6db74">&#34;BIOS -&gt; MBR (0x7C00) -&gt; LBA load -&gt; PM32 -&gt; kmain()&#34;</span>, LIGHT_GREY, BLUE);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    cursor_x <span style="color:#f92672">=</span> <span style="color:#ae81ff">4</span>; cursor_y <span style="color:#f92672">=</span> <span style="color:#ae81ff">19</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">print</span>(<span style="color:#e6db74">&#34;bootloader.asm -&gt; kernel_entry.asm -&gt; kernel.c -&gt; VGA&#34;</span>, LIGHT_GREY, BLUE);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    cursor_x <span style="color:#f92672">=</span> <span style="color:#ae81ff">2</span>; cursor_y <span style="color:#f92672">=</span> VGA_ROWS <span style="color:#f92672">-</span> <span style="color:#ae81ff">2</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">print</span>(<span style="color:#e6db74">&#34;NASM + GCC + LD | Sin stdlib | BIOS Legacy | LBA&#34;</span>, DARK_GREY, BLUE);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (;;) {
+</span></span><span style="display:flex;"><span>        __asm__ <span style="color:#66d9ef">volatile</span> (<span style="color:#e6db74">&#34;hlt&#34;</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><hr>
+<h2 id="archivo-4-kernelkernelld">ARCHIVO 4: <code>kernel/kernel.ld</code></h2>
+<pre tabindex="0"><code class="language-ld" data-lang="ld">OUTPUT_FORMAT(&#34;binary&#34;)
+
+ENTRY(_start)
+
+SECTIONS {
+    . = 0x1000;
+
+    .text : {
+        *(.text._start)
+        *(.text*)
+    }
+
+    .data : {
+        *(.data*)
+    }
+
+    .rodata : {
+        *(.rodata*)
+    }
+
+    .bss : {
+        *(.bss*)
+        *(COMMON)
+    }
+}
+</code></pre><hr>
+<h2 id="archivo-5-makefile">ARCHIVO 5: <code>Makefile</code></h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-makefile" data-lang="makefile"><span style="display:flex;"><span>NASM   <span style="color:#f92672">:=</span> nasm
+</span></span><span style="display:flex;"><span>GCC    <span style="color:#f92672">:=</span> gcc
+</span></span><span style="display:flex;"><span>LD     <span style="color:#f92672">:=</span> ld
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>CFLAGS <span style="color:#f92672">:=</span> -m32 -ffreestanding -fno-pie -nostdlib -nostdinc -O2 -Wall -fno-stack-protector
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>LDFLAGS <span style="color:#f92672">:=</span> -m elf_i386 -T kernel/kernel.ld --oformat binary
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>BUILD  <span style="color:#f92672">:=</span> build
+</span></span><span style="display:flex;"><span>BOOT   <span style="color:#f92672">:=</span> boot
+</span></span><span style="display:flex;"><span>KERNEL <span style="color:#f92672">:=</span> kernel
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>BOOT_BIN   <span style="color:#f92672">:=</span> <span style="color:#66d9ef">$(</span>BUILD<span style="color:#66d9ef">)</span>/bootloader.bin
+</span></span><span style="display:flex;"><span>ENTRY_OBJ  <span style="color:#f92672">:=</span> <span style="color:#66d9ef">$(</span>BUILD<span style="color:#66d9ef">)</span>/kernel_entry.o
+</span></span><span style="display:flex;"><span>KERNEL_OBJ <span style="color:#f92672">:=</span> <span style="color:#66d9ef">$(</span>BUILD<span style="color:#66d9ef">)</span>/kernel.o
+</span></span><span style="display:flex;"><span>KERNEL_BIN <span style="color:#f92672">:=</span> <span style="color:#66d9ef">$(</span>BUILD<span style="color:#66d9ef">)</span>/kernel.bin
+</span></span><span style="display:flex;"><span>OS_IMG     <span style="color:#f92672">:=</span> <span style="color:#66d9ef">$(</span>BUILD<span style="color:#66d9ef">)</span>/os.img
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">.PHONY</span><span style="color:#f92672">:</span> all run run-gui pendrive clean
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">all</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">$(</span>OS_IMG<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">$(BOOT_BIN)</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">$(</span>BOOT<span style="color:#66d9ef">)</span>/bootloader.asm
+</span></span><span style="display:flex;"><span>	@mkdir -p <span style="color:#66d9ef">$(</span>BUILD<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>	@echo <span style="color:#e6db74">&#34;[NASM]  </span>$<span style="color:#e6db74">&lt; -&gt; </span>$@<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">$(</span>NASM<span style="color:#66d9ef">)</span> -f bin $&lt; -o $@
+</span></span><span style="display:flex;"><span>	@size<span style="color:#f92672">=</span>$$<span style="color:#f92672">(</span>wc -c &lt; $@<span style="color:#f92672">)</span>; <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> $$size -ne <span style="color:#ae81ff">512</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>		echo <span style="color:#e6db74">&#34;ERROR: bootloader tiene </span>$$<span style="color:#e6db74">size bytes (debe ser 512)&#34;</span>; exit 1; <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>	@echo <span style="color:#e6db74">&#34;       Bootloader: 512 bytes OK&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">$(ENTRY_OBJ)</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">$(</span>KERNEL<span style="color:#66d9ef">)</span>/kernel_entry.asm
+</span></span><span style="display:flex;"><span>	@mkdir -p <span style="color:#66d9ef">$(</span>BUILD<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>	@echo <span style="color:#e6db74">&#34;[NASM]  </span>$<span style="color:#e6db74">&lt; -&gt; </span>$@<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">$(</span>NASM<span style="color:#66d9ef">)</span> -f elf32 $&lt; -o $@
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">$(KERNEL_OBJ)</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">$(</span>KERNEL<span style="color:#66d9ef">)</span>/kernel.c
+</span></span><span style="display:flex;"><span>	@mkdir -p <span style="color:#66d9ef">$(</span>BUILD<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>	@echo <span style="color:#e6db74">&#34;[GCC]   </span>$<span style="color:#e6db74">&lt; -&gt; </span>$@<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">$(</span>GCC<span style="color:#66d9ef">)</span> <span style="color:#66d9ef">$(</span>CFLAGS<span style="color:#66d9ef">)</span> -c $&lt; -o $@
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">$(KERNEL_BIN)</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">$(</span>ENTRY_OBJ<span style="color:#66d9ef">)</span> <span style="color:#66d9ef">$(</span>KERNEL_OBJ<span style="color:#66d9ef">)</span> <span style="color:#66d9ef">$(</span>KERNEL<span style="color:#66d9ef">)</span>/kernel.ld
+</span></span><span style="display:flex;"><span>	@echo <span style="color:#e6db74">&#34;[LD]    kernel_entry + kernel -&gt; </span>$@<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">$(</span>LD<span style="color:#66d9ef">)</span> <span style="color:#66d9ef">$(</span>LDFLAGS<span style="color:#66d9ef">)</span> -o $@ <span style="color:#66d9ef">$(</span>ENTRY_OBJ<span style="color:#66d9ef">)</span> <span style="color:#66d9ef">$(</span>KERNEL_OBJ<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>	@size<span style="color:#f92672">=</span>$$<span style="color:#f92672">(</span>wc -c &lt; $@<span style="color:#f92672">)</span>; echo <span style="color:#e6db74">&#34;       Kernel: </span>$$<span style="color:#e6db74">size bytes&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">$(OS_IMG)</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">$(</span>BOOT_BIN<span style="color:#66d9ef">)</span> <span style="color:#66d9ef">$(</span>KERNEL_BIN<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>	@echo <span style="color:#e6db74">&#34;[IMG]   Creando imagen de disco: </span>$@<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>	dd <span style="color:#66d9ef">if</span><span style="color:#f92672">=</span>/dev/zero    of<span style="color:#f92672">=</span>$@ bs<span style="color:#f92672">=</span><span style="color:#ae81ff">512</span> count<span style="color:#f92672">=</span><span style="color:#ae81ff">2880</span> 2&gt;/dev/null
+</span></span><span style="display:flex;"><span>	dd <span style="color:#66d9ef">if</span><span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>BOOT_BIN<span style="color:#66d9ef">)</span>  of<span style="color:#f92672">=</span>$@ bs<span style="color:#f92672">=</span><span style="color:#ae81ff">512</span> seek<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span> conv<span style="color:#f92672">=</span>notrunc 2&gt;/dev/null
+</span></span><span style="display:flex;"><span>	dd <span style="color:#66d9ef">if</span><span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>KERNEL_BIN<span style="color:#66d9ef">)</span> of<span style="color:#f92672">=</span>$@ bs<span style="color:#f92672">=</span><span style="color:#ae81ff">512</span> seek<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span> conv<span style="color:#f92672">=</span>notrunc 2&gt;/dev/null
+</span></span><span style="display:flex;"><span>	@echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>	@echo <span style="color:#e6db74">&#34;============================================&#34;</span>
+</span></span><span style="display:flex;"><span>	@echo <span style="color:#e6db74">&#34;  Imagen lista: </span><span style="color:#66d9ef">$(</span>OS_IMG<span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>	@echo <span style="color:#e6db74">&#34;  QEMU:    make run&#34;</span>
+</span></span><span style="display:flex;"><span>	@echo <span style="color:#e6db74">&#34;  Pendrive: make pendrive DEV=/dev/sdX&#34;</span>
+</span></span><span style="display:flex;"><span>	@echo <span style="color:#e6db74">&#34;============================================&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">run</span><span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>	qemu-system-i386 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>		-drive file<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>OS_IMG<span style="color:#66d9ef">)</span>,format<span style="color:#f92672">=</span>raw,index<span style="color:#f92672">=</span>0,if<span style="color:#f92672">=</span>floppy <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>		-boot a -m 32M -display none -serial stdio <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>		-no-reboot -no-shutdown
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">run-gui</span><span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>	qemu-system-i386 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>		-drive file<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>OS_IMG<span style="color:#66d9ef">)</span>,format<span style="color:#f92672">=</span>raw,index<span style="color:#f92672">=</span>0,if<span style="color:#f92672">=</span>floppy <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>		-boot a -m 32M -no-reboot
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Grabar en pendrive: make pendrive DEV=/dev/sdX
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"># ⚠️  CUIDADO: borra TODO el dispositivo
+</span></span></span><span style="display:flex;"><span><span style="color:#a6e22e">pendrive</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">$(</span>OS_IMG<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>	@if <span style="color:#f92672">[</span> -z <span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>DEV<span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>		echo <span style="color:#e6db74">&#34;ERROR: especifica el dispositivo: make pendrive DEV=/dev/sdX&#34;</span>; <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>		exit 1; <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>	@echo <span style="color:#e6db74">&#34;⚠️  Escribiendo en </span><span style="color:#66d9ef">$(</span>DEV<span style="color:#66d9ef">)</span><span style="color:#e6db74"> — esto borra todo el dispositivo&#34;</span>
+</span></span><span style="display:flex;"><span>	@echo <span style="color:#e6db74">&#34;Presiona Ctrl+C para cancelar, Enter para continuar...&#34;</span>
+</span></span><span style="display:flex;"><span>	@read _confirm
+</span></span><span style="display:flex;"><span>	sudo dd <span style="color:#66d9ef">if</span><span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>OS_IMG<span style="color:#66d9ef">)</span> of<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>DEV<span style="color:#66d9ef">)</span> bs<span style="color:#f92672">=</span><span style="color:#ae81ff">512</span> conv<span style="color:#f92672">=</span>fsync
+</span></span><span style="display:flex;"><span>	sudo sync
+</span></span><span style="display:flex;"><span>	@echo <span style="color:#e6db74">&#34;Listo. Pendrive grabado.&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">clean</span><span style="color:#f92672">:</span>
+</span></span><span style="display:flex;"><span>	rm -rf <span style="color:#66d9ef">$(</span>BUILD<span style="color:#66d9ef">)</span>
+</span></span></code></pre></div><hr>
+<h2 id="compilar-y-grabar">Compilar y grabar</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Compilar todo</span>
+</span></span><span style="display:flex;"><span>make
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Probar en QEMU con ventana</span>
+</span></span><span style="display:flex;"><span>make run-gui
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Grabar en pendrive (cambiá sdX por tu dispositivo, ej: sdb)</span>
+</span></span><span style="display:flex;"><span>make pendrive DEV<span style="color:#f92672">=</span>/dev/sdb
+</span></span></code></pre></div><hr>
+<h2 id="para-bootear-en-la-pc">Para bootear en la PC</h2>
+<ol>
+<li>Insertá el pendrive</li>
+<li>Reiniciá y entrá al boot menu (<strong>F12</strong> / <strong>F11</strong> / <strong>F8</strong> / <strong>Esc</strong> según la placa)</li>
+<li>Si ves opciones UEFI y Legacy, elegí <strong>Legacy</strong> o <strong>CSM</strong></li>
+<li>Seleccioná el pendrive</li>
+<li>Deberías ver la pantalla azul con <strong>&ldquo;Hola Mundo&rdquo;</strong> en verde</li>
+</ol>
 
 </div>
 
