@@ -21,7 +21,7 @@
   <meta itemprop="description" content="Abrir links en tu Android TV desde Arch Linux por ADB Paso 1: Instalar ADB en Arch Linux sudo pacman -S android-tools Paso 2: Activar ADB en el TV En el TV ir a Configuración → Preferencias del dispositivo → Acerca de Buscar “Número de compilación” y presionarlo 7 veces hasta que diga “Ya eres desarrollador” Volver a Configuración → entrar a Opciones de desarrollador Activar “Depuración por USB” (o cualquier opción de depuración disponible) Paso 3: Conectar desde la PC adb connect 192.168.0.230 adb connect 192.168.0.230:5555 adb connect 192.168.0.230:4321 adb connect 192.168.0.230:7777 adb connect 192.168.0.230:5555 El TV va a mostrar un cuadro pidiendo que aceptes la conexión — confirmarlo con el control remoto.">
   <meta itemprop="datePublished" content="2026-05-22T18:09:23-03:00">
   <meta itemprop="dateModified" content="2026-05-22T18:09:23-03:00">
-  <meta itemprop="wordCount" content="228">
+  <meta itemprop="wordCount" content="491">
   <meta itemprop="keywords" content="Android">
   
   <meta name="twitter:card" content="summary">
@@ -143,7 +143,54 @@ El TV va a mostrar un cuadro pidiendo que aceptes la conexión — confirmarlo c
 </span></span><span style="display:flex;"><span>adb shell ps | grep -v root
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>adb shell am kill-all
-</span></span></code></pre></div>
+</span></span></code></pre></div><p>Con ADB en tu Smart TV podés hacer un montón de cosas:</p>
+<h2 id="-control-remoto-desde-terminal">📱 Control remoto desde terminal</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Subir/bajar volumen</span>
+</span></span><span style="display:flex;"><span>adb shell input keyevent KEYCODE_VOLUME_UP
+</span></span><span style="display:flex;"><span>adb shell input keyevent KEYCODE_VOLUME_DOWN
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Pause/Play</span>
+</span></span><span style="display:flex;"><span>adb shell input keyevent KEYCODE_MEDIA_PLAY_PAUSE
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Apagar/prender pantalla</span>
+</span></span><span style="display:flex;"><span>adb shell input keyevent KEYCODE_POWER
+</span></span></code></pre></div><h2 id="-instalar-apks-apps-no-disponibles-en-tu-tienda">📦 Instalar APKs (apps no disponibles en tu tienda)</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>adb install mi-app.apk
+</span></span></code></pre></div><h2 id="-desinstalar-bloatware">🗑️ Desinstalar bloatware</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Ver todas las apps instaladas</span>
+</span></span><span style="display:flex;"><span>adb shell pm list packages
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Desinstalar una app del sistema (sin root)</span>
+</span></span><span style="display:flex;"><span>adb shell pm uninstall --user <span style="color:#ae81ff">0</span> com.app.bloatware
+</span></span></code></pre></div><h2 id="-captura-de-pantalla">📸 Captura de pantalla</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>adb shell screencap /sdcard/screen.png <span style="color:#f92672">&amp;&amp;</span> adb pull /sdcard/screen.png
+</span></span></code></pre></div><h2 id="-grabar-la-pantalla">🎥 Grabar la pantalla</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>adb shell screenrecord /sdcard/video.mp4
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Ctrl+C para parar</span>
+</span></span><span style="display:flex;"><span>adb pull /sdcard/video.mp4
+</span></span></code></pre></div><h2 id="-ver-consumo-de-recursos">📊 Ver consumo de recursos</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># CPU y memoria en tiempo real</span>
+</span></span><span style="display:flex;"><span>adb shell top
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Memoria disponible</span>
+</span></span><span style="display:flex;"><span>adb shell cat /proc/meminfo
+</span></span></code></pre></div><h2 id="-ver-el-tráfico-de-red--ips-conectadas">🌐 Ver el tráfico de red / IPs conectadas</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>adb shell netstat
+</span></span></code></pre></div><h2 id="-escribir-texto-directamente">🔤 Escribir texto directamente</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>adb shell input text <span style="color:#e6db74">&#34;hola mundo&#34;</span>
+</span></span></code></pre></div><h2 id="-simular-clicks-en-coordenadas">🖱️ Simular clicks en coordenadas</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>adb shell input tap <span style="color:#ae81ff">500</span> <span style="color:#ae81ff">300</span>
+</span></span></code></pre></div><hr>
+<h3 id="-alias-útiles-para-agregar">💡 Alias útiles para agregar</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>alias tvshot<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;adb connect 192.168.0.230:5555 &amp;&amp; adb shell screencap /sdcard/screen.png &amp;&amp; adb pull /sdcard/screen.png&#39;</span>
+</span></span><span style="display:flex;"><span>alias tvvol<span style="color:#f92672">+=</span><span style="color:#e6db74">&#39;adb connect 192.168.0.230:5555 &amp;&amp; adb shell input keyevent KEYCODE_VOLUME_UP&#39;</span>
+</span></span><span style="display:flex;"><span>alias tvvol-<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;adb connect 192.168.0.230:5555 &amp;&amp; adb shell input keyevent KEYCODE_VOLUME_DOWN&#39;</span>
+</span></span><span style="display:flex;"><span>alias tvpause<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;adb connect 192.168.0.230:5555 &amp;&amp; adb shell input keyevent KEYCODE_MEDIA_PLAY_PAUSE&#39;</span>
+</span></span><span style="display:flex;"><span>alias tvpkg<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;adb connect 192.168.0.230:5555 &amp;&amp; adb shell pm list packages&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>alias dazn<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;adb connect 192.168.0.230:5555 &amp;&amp; adb shell input tap 960 540 &amp;&amp; sleep 2 &amp;&amp; adb shell input tap 1420 1050&#39;</span>
+</span></span></code></pre></div><p>¿Querés que te arme un script interactivo con un menú para controlar todo desde la terminal?</p>
+
 </div>
 
 
