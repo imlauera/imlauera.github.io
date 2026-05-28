@@ -23,7 +23,7 @@ El problema que los repositorios resuelven En Windows, instalar un programa impl
 El problema que los repositorios resuelven En Windows, instalar un programa implica confiar en que el sitio web del que lo descargaste no fue comprometido, que el binario no fue alterado en tránsito, y que el instalador no viene con “extras”. Esa cadena de confianza depende de que nada salga mal en ningún punto, y no hay ningún mecanismo técnico que lo garantice. El antivirus intenta compensar ese hueco después del hecho, buscando patrones conocidos de malware.">
 	<meta itemprop="datePublished" content="2026-05-28T03:22:58-03:00">
 	<meta itemprop="dateModified" content="2026-05-28T03:22:58-03:00">
-	<meta itemprop="wordCount" content="1221">
+	<meta itemprop="wordCount" content="2092">
 	<meta itemprop="keywords" content="Linux">
   
 	<meta name="twitter:card" content="summary">
@@ -149,6 +149,39 @@ En Windows, instalar un programa implica confiar en que el sitio web del que lo 
 <li><strong>Stallman</strong> (el moralista del código libre): el antivirus es un parche sobre el problema real, que es que no tenés control ni visibilidad sobre el sistema que usás.</li>
 </ul>
 <p>Linux no necesita antivirus porque está diseñado de manera que el problema nunca debería surgir. Windows necesita antivirus porque está diseñado de una manera que hace que el problema sea inevitable, y resulta conveniente para varias empresas que así siga siendo.</p>
+<p>Perfecto. Ahora sí tengo todo para darte el análisis completo que te merecés.</p>
+<hr>
+<h2 id="el-negocio-real-del-antivirus-gratis-sos-el-producto">El negocio real del antivirus &ldquo;gratis&rdquo;: sos el producto</h2>
+<h3 id="el-caso-avastjumpshot-el-escándalo-más-documentado">El caso Avast/Jumpshot: el escándalo más documentado</h3>
+<p>Avast recolectó los hábitos de navegación online de millones de clientes durante años, incluyendo búsquedas y sitios visitados, usando sus propias extensiones de navegador, que la empresa afirmaba que iban a &ldquo;proteger tu privacidad&rdquo; bloqueando cookies de tracking. Pero la FTC alegó que Avast vendía esos datos de navegación a través de su subsidiaria Jumpshot a más de cien empresas, generando decenas de millones de dólares en ingresos.</p>
+<p>El detalle que hace esto especialmente cínico: la FTC encontró que Jumpshot acumuló más de ocho petabytes de datos de navegación. Los datos incluían información sobre estado de salud, creencias religiosas, posiciones políticas, finanzas y más. El director de la Oficina de Protección al Consumidor de la FTC dijo: &ldquo;Avast prometió a los usuarios que sus productos protegerían la privacidad de sus datos de navegación, pero hizo exactamente lo contrario.&rdquo;</p>
+<p>¿Quiénes compraban esa data? La lista incluía Google, Microsoft, Home Depot, Expedia, Intuit, Keurig, Condé Nast, L&rsquo;Oreal y más.</p>
+<p>¿Y cuánto pagaban? Una empresa de marketing llamada Omnicom Media Group pagó a Jumpshot 2.075.000 dólares por acceso a datos en 2019. El contrato contemplaba pagos de 2.225.000 para 2020 y 2.275.000 para 2021.</p>
+<p>El producto que vendían se llamaba internamente el <strong>&ldquo;All Clicks Feed&rdquo;</strong>: los datos podían mostrar cómo alguien con Avast instalado buscó un producto en Google, clickeó un link a Amazon, agregó algo al carrito en otro sitio, y finalmente compró en otro. El rastro completo de intención de compra de millones de personas.</p>
+<h3 id="el-problema-estructural-el-antivirus-necesita-ser-el-malware-para-combatir-el-malware">El problema estructural: el antivirus necesita ser el malware para combatir el malware</h3>
+<p>Acá está la parte más oscura, la que nadie menciona suficientemente.</p>
+<p>Para que un antivirus pueda protegerse de ataques, tiene que operar a nivel de kernel. Tiene que escanear continuamente qué comandos se están ejecutando y qué direcciones de memoria se están accediendo.</p>
+<p>Un atacante o programa malicioso puede manipular recursos críticos del sistema con privilegios a nivel kernel. Esto incluye cambiar la memoria, controlar el hardware, y acceder a información sensible que normalmente estaría fuera del alcance de programas regulares.</p>
+<p>Traducido al español sin eufemismos: <strong>un antivirus tiene los mismos privilegios que un rootkit</strong>. La diferencia entre un antivirus y un spyware, técnicamente, es cero. Es exactamente el mismo nivel de acceso. La única diferencia es la <em>intención declarada</em> de quien lo distribuye. Y como el software es propietario y cerrado, no podés verificar esa intención.</p>
+<p>La mayoría de los antivirus comerciales actuales son soluciones de código cerrado. En la práctica, poco se sabe sobre sus interioridades reales: información como el tamaño de la base de datos típica, los métodos de detección efectivamente usados, y con qué frecuencia se actualizan son todavía desconocidos.</p>
+<h3 id="el-caso-kaspersky-cuando-el-antivirus-trabaja-para-un-gobierno">El caso Kaspersky: cuando el antivirus trabaja para un gobierno</h3>
+<p>La forma en que el software antivirus funciona en las computadoras donde está instalado requiere control significativo de esa computadora para descubrir malware. El software antivirus puede recuperar, eliminar o modificar cualquier archivo en cualquier computadora. En la revisión del código fuente de Kaspersky, nada sobresaldría como problemático porque estas son características estándar y funcionalidades rutinarias de todos los productos antivirus en el proceso de cazar virus o malware. Estas características no crearían ninguna señal de alerta en ninguna revisión de código fuente.</p>
+<p>Según la ley rusa, el gobierno ruso puede obligar a Kaspersky a asistir en la interceptación de comunicaciones que circulen por redes informáticas rusas.</p>
+<p>Y lo que pasó concretamente: los funcionarios estadounidenses creen que el escaneo antivirus realizado por el software de Kaspersky en la computadora del contratista ayudó a hackers rusos a identificar los archivos que contenían información sensible de la NSA. Se especuló que la práctica del antivirus de subir archivos sospechosos a los servidores de la empresa, ubicados en Rusia, puede haber otorgado acceso ruso a esos archivos.</p>
+<h3 id="el-caso-ccleaner-el-software-de-limpieza-que-era-un-vector-de-ataque">El caso CCleaner: el software de limpieza que era un vector de ataque</h3>
+<p>En septiembre de 2017 se descubrió que CCleaner, propiedad de Avast, contenía malware. Los hackers tomaron el programa legítimo e insertaron código malicioso diseñado para robar datos de usuarios. Convirtieron una herramienta diseñada para limpiar tu computadora de malware en una seria amenaza para información personal y sensible.</p>
+<hr>
+<h2 id="la-síntesis-que-faltaba">La síntesis que faltaba</h2>
+<p>El modelo de negocio del antivirus gratis tiene una lógica perfectamente perversa:</p>
+<ol>
+<li><strong>Te ofrecen protección gratis</strong> → instalás algo con acceso total a tu sistema</li>
+<li><strong>Ese acceso total les permite ver todo lo que hacés</strong> → historial de navegación, archivos, comportamiento</li>
+<li><strong>Esa data vale millones</strong> → la venden a brokers, corporaciones, firmas de marketing</li>
+<li><strong>Te prometieron privacidad</strong> → estaban haciendo exactamente lo contrario</li>
+</ol>
+<p>Es literalmente la misma arquitectura que un spyware, con un logo más amigable y un acuerdo de usuario que nadie lee donde técnicamente &ldquo;consentiste&rdquo;.</p>
+<p>Stallman lo diría así: instalaste software propietario que te pedió acceso de root. ¿De qué te sorprendés? McAfee lo diría distinto: &ldquo;el antivirus es el malware más exitoso de la historia porque convenciste a la gente de instalarlo ellos mismos.&rdquo;</p>
+<p>Linux con repositorios firmados no solo evita el malware externo. Evita que necesites instalar este tipo de &ldquo;protección&rdquo; que es, en sí misma, el problema.</p>
 
 </div>
 
