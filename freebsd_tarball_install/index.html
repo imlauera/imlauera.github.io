@@ -7,32 +7,32 @@
 
 <head>
   <meta property="og:url" content="https://imlauera.github.io/freebsd_tarball_install/">
-  <meta property="og:site_name" content="Imlauer">
-  <meta property="og:title" content="Freebsd manual install from a tarball">
-  <meta property="og:description" content="Instalación de FreeBSD desde tarball (estilo Arch Linux) Tags: FreeBSD, Installation
+	<meta property="og:site_name" content="Imlauer">
+	<meta property="og:title" content="Freebsd manual install from a tarball">
+	<meta property="og:description" content="Instalación de FreeBSD desde tarball (estilo Arch Linux) Tags: FreeBSD, Installation
 ANTES DE EMPEZAR: Esta guía asume que instalás desde un live de Arch Linux o cualquier Linux con acceso a gdisk, zfs-utils y wget. Si venís de mi guía de Arch, el flujo va a ser familiar.
 Paso 0: Preparar el entorno loadkeys es timedatectl set-ntp true Instalá las herramientas necesarias:
 sudo pacman -S gptfdisk dosfstools zfs-utils sudo modprobe zfs Nota sobre UFS vs ZFS: Desde un live de Arch, formatear con UFS es difícil porque ufsutils no está en los repos oficiales. ZFS en cambio sí está disponible con zfs-utils. Esta guía usa ZFS, que además es la opción recomendada en FreeBSD de todas formas.">
-  <meta property="og:locale" content="es_es">
-  <meta property="og:type" content="article">
-    <meta property="article:published_time" content="2026-05-08T16:59:52-03:00">
-    <meta property="article:modified_time" content="2026-05-08T16:59:52-03:00">
-    <meta property="article:tag" content="Freebsd">
+	<meta property="og:locale" content="es_es">
+	<meta property="og:type" content="article">
+		<meta property="article:published_time" content="2026-05-08T16:59:52-03:00">
+		<meta property="article:modified_time" content="2026-05-08T16:59:52-03:00">
+		<meta property="article:tag" content="Freebsd">
 
   
-  <meta itemprop="name" content="Freebsd manual install from a tarball">
-  <meta itemprop="description" content="Instalación de FreeBSD desde tarball (estilo Arch Linux) Tags: FreeBSD, Installation
+	<meta itemprop="name" content="Freebsd manual install from a tarball">
+	<meta itemprop="description" content="Instalación de FreeBSD desde tarball (estilo Arch Linux) Tags: FreeBSD, Installation
 ANTES DE EMPEZAR: Esta guía asume que instalás desde un live de Arch Linux o cualquier Linux con acceso a gdisk, zfs-utils y wget. Si venís de mi guía de Arch, el flujo va a ser familiar.
 Paso 0: Preparar el entorno loadkeys es timedatectl set-ntp true Instalá las herramientas necesarias:
 sudo pacman -S gptfdisk dosfstools zfs-utils sudo modprobe zfs Nota sobre UFS vs ZFS: Desde un live de Arch, formatear con UFS es difícil porque ufsutils no está en los repos oficiales. ZFS en cambio sí está disponible con zfs-utils. Esta guía usa ZFS, que además es la opción recomendada en FreeBSD de todas formas.">
-  <meta itemprop="datePublished" content="2026-05-08T16:59:52-03:00">
-  <meta itemprop="dateModified" content="2026-05-08T16:59:52-03:00">
-  <meta itemprop="wordCount" content="952">
-  <meta itemprop="keywords" content="Freebsd">
+	<meta itemprop="datePublished" content="2026-05-08T16:59:52-03:00">
+	<meta itemprop="dateModified" content="2026-05-08T16:59:52-03:00">
+	<meta itemprop="wordCount" content="952">
+	<meta itemprop="keywords" content="Freebsd">
   
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="Freebsd manual install from a tarball">
-  <meta name="twitter:description" content="Instalación de FreeBSD desde tarball (estilo Arch Linux) Tags: FreeBSD, Installation
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:title" content="Freebsd manual install from a tarball">
+	<meta name="twitter:description" content="Instalación de FreeBSD desde tarball (estilo Arch Linux) Tags: FreeBSD, Installation
 ANTES DE EMPEZAR: Esta guía asume que instalás desde un live de Arch Linux o cualquier Linux con acceso a gdisk, zfs-utils y wget. Si venís de mi guía de Arch, el flujo va a ser familiar.
 Paso 0: Preparar el entorno loadkeys es timedatectl set-ntp true Instalá las herramientas necesarias:
 sudo pacman -S gptfdisk dosfstools zfs-utils sudo modprobe zfs Nota sobre UFS vs ZFS: Desde un live de Arch, formatear con UFS es difícil porque ufsutils no está en los repos oficiales. ZFS en cambio sí está disponible con zfs-utils. Esta guía usa ZFS, que además es la opción recomendada en FreeBSD de todas formas.">
@@ -321,90 +321,90 @@ pkg info                # equivalente a pacman -Qe
 </code></pre><hr>
 <h2 id="diferencias-clave-con-arch-linux">Diferencias clave con Arch Linux</h2>
 <table>
-  <thead>
-      <tr>
-          <th>Arch Linux</th>
-          <th>FreeBSD</th>
-      </tr>
-  </thead>
-  <tbody>
-      <tr>
-          <td><code>pacstrap</code></td>
-          <td><code>tar xvJf base.txz</code></td>
-      </tr>
-      <tr>
-          <td><code>genfstab</code></td>
-          <td>Editás <code>/etc/fstab</code> manualmente</td>
-      </tr>
-      <tr>
-          <td><code>grub-install</code></td>
-          <td>Copiás <code>loader.efi</code> a la EFI</td>
-      </tr>
-      <tr>
-          <td><code>arch-chroot</code></td>
-          <td><code>chroot /mnt /bin/sh</code> (manual)</td>
-      </tr>
-      <tr>
-          <td><code>systemctl enable servicio</code></td>
-          <td><code>echo 'servicio_enable=&quot;YES&quot;' &gt;&gt; /etc/rc.conf</code></td>
-      </tr>
-      <tr>
-          <td><code>pacman -S</code></td>
-          <td><code>pkg install</code></td>
-      </tr>
-      <tr>
-          <td><code>mkinitcpio</code></td>
-          <td>No existe — el kernel incluye los módulos necesarios</td>
-      </tr>
-      <tr>
-          <td><code>ext4</code></td>
-          <td>UFS o ZFS (ZFS nativo y recomendado)</td>
-      </tr>
-      <tr>
-          <td><code>/etc/hostname</code></td>
-          <td><code>hostname=</code> en <code>/etc/rc.conf</code></td>
-      </tr>
-      <tr>
-          <td><code>locale-gen</code></td>
-          <td><code>/etc/login.conf</code> (diferente sistema de locales)</td>
-      </tr>
-  </tbody>
+	<thead>
+			<tr>
+					<th>Arch Linux</th>
+					<th>FreeBSD</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td><code>pacstrap</code></td>
+					<td><code>tar xvJf base.txz</code></td>
+			</tr>
+			<tr>
+					<td><code>genfstab</code></td>
+					<td>Editás <code>/etc/fstab</code> manualmente</td>
+			</tr>
+			<tr>
+					<td><code>grub-install</code></td>
+					<td>Copiás <code>loader.efi</code> a la EFI</td>
+			</tr>
+			<tr>
+					<td><code>arch-chroot</code></td>
+					<td><code>chroot /mnt /bin/sh</code> (manual)</td>
+			</tr>
+			<tr>
+					<td><code>systemctl enable servicio</code></td>
+					<td><code>echo 'servicio_enable=&quot;YES&quot;' &gt;&gt; /etc/rc.conf</code></td>
+			</tr>
+			<tr>
+					<td><code>pacman -S</code></td>
+					<td><code>pkg install</code></td>
+			</tr>
+			<tr>
+					<td><code>mkinitcpio</code></td>
+					<td>No existe — el kernel incluye los módulos necesarios</td>
+			</tr>
+			<tr>
+					<td><code>ext4</code></td>
+					<td>UFS o ZFS (ZFS nativo y recomendado)</td>
+			</tr>
+			<tr>
+					<td><code>/etc/hostname</code></td>
+					<td><code>hostname=</code> en <code>/etc/rc.conf</code></td>
+			</tr>
+			<tr>
+					<td><code>locale-gen</code></td>
+					<td><code>/etc/login.conf</code> (diferente sistema de locales)</td>
+			</tr>
+	</tbody>
 </table>
 <hr>
 <h2 id="troubleshooting">Troubleshooting</h2>
 <table>
-  <thead>
-      <tr>
-          <th>Problema</th>
-          <th>Solución</th>
-      </tr>
-  </thead>
-  <tbody>
-      <tr>
-          <td>No bootea, UEFI no encuentra el loader</td>
-          <td>Verificá que <code>BOOTX64.efi</code> esté en <code>/EFI/BOOT/</code>. Algunos firmwares también buscan en <code>/EFI/freebsd/</code>.</td>
-      </tr>
-      <tr>
-          <td>En el boot aparece <code>OK</code> y se cuelga</td>
-          <td>Estás en el loader prompt. Ejecutá: <code>set vfs.root.mountfrom=&quot;zfs:zroot/ROOT/default&quot;</code> y luego <code>boot</code></td>
-      </tr>
-      <tr>
-          <td>No hay red después de bootear</td>
-          <td>Ejecutá <code>ifconfig</code> para ver el nombre real de la interfaz. Ajustá <code>/etc/rc.conf</code> con <code>ifconfig_em0=&quot;DHCP&quot;</code> (o el nombre que corresponda).</td>
-      </tr>
-      <tr>
-          <td><code>pkg</code> no encuentra repos</td>
-          <td>Ejecutá <code>pkg bootstrap -f</code> o revisá <code>/etc/pkg/FreeBSD.conf</code></td>
-      </tr>
-      <tr>
-          <td>ZFS pool no importa al boot</td>
-          <td>Desde el loader prompt: <code>zpool import -f zroot</code> luego <code>boot</code></td>
-      </tr>
-      <tr>
-          <td>Querés compilar desde ports</td>
-          <td>Descargá <code>src.txz</code>, extraelo en <code>/usr/src</code>, y usá <code>make buildworld buildkernel installkernel installworld</code></td>
-      </tr>
-  </tbody>
+	<thead>
+			<tr>
+					<th>Problema</th>
+					<th>Solución</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>No bootea, UEFI no encuentra el loader</td>
+					<td>Verificá que <code>BOOTX64.efi</code> esté en <code>/EFI/BOOT/</code>. Algunos firmwares también buscan en <code>/EFI/freebsd/</code>.</td>
+			</tr>
+			<tr>
+					<td>En el boot aparece <code>OK</code> y se cuelga</td>
+					<td>Estás en el loader prompt. Ejecutá: <code>set vfs.root.mountfrom=&quot;zfs:zroot/ROOT/default&quot;</code> y luego <code>boot</code></td>
+			</tr>
+			<tr>
+					<td>No hay red después de bootear</td>
+					<td>Ejecutá <code>ifconfig</code> para ver el nombre real de la interfaz. Ajustá <code>/etc/rc.conf</code> con <code>ifconfig_em0=&quot;DHCP&quot;</code> (o el nombre que corresponda).</td>
+			</tr>
+			<tr>
+					<td><code>pkg</code> no encuentra repos</td>
+					<td>Ejecutá <code>pkg bootstrap -f</code> o revisá <code>/etc/pkg/FreeBSD.conf</code></td>
+			</tr>
+			<tr>
+					<td>ZFS pool no importa al boot</td>
+					<td>Desde el loader prompt: <code>zpool import -f zroot</code> luego <code>boot</code></td>
+			</tr>
+			<tr>
+					<td>Querés compilar desde ports</td>
+					<td>Descargá <code>src.txz</code>, extraelo en <code>/usr/src</code>, y usá <code>make buildworld buildkernel installkernel installworld</code></td>
+			</tr>
+	</tbody>
 </table>
 
 </div>
