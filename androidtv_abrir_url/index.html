@@ -21,7 +21,7 @@
 	<meta itemprop="description" content="Abrir links en tu Android TV desde Arch Linux por ADB Paso 1: Instalar ADB en Arch Linux sudo pacman -S android-tools Paso 2: Activar ADB en el TV En el TV ir a Configuración → Preferencias del dispositivo → Acerca de Buscar “Número de compilación” y presionarlo 7 veces hasta que diga “Ya eres desarrollador” Volver a Configuración → entrar a Opciones de desarrollador Activar “Depuración por USB” (o cualquier opción de depuración disponible) Paso 3: Conectar desde la PC adb connect 192.168.0.230 adb connect 192.168.0.230:5555 adb connect 192.168.0.230:4321 adb connect 192.168.0.230:7777 adb connect 192.168.0.230:5555 El TV va a mostrar un cuadro pidiendo que aceptes la conexión — confirmarlo con el control remoto.">
 	<meta itemprop="datePublished" content="2026-05-22T18:09:23-03:00">
 	<meta itemprop="dateModified" content="2026-05-22T18:09:23-03:00">
-	<meta itemprop="wordCount" content="491">
+	<meta itemprop="wordCount" content="951">
 	<meta itemprop="keywords" content="Android">
   
 	<meta name="twitter:card" content="summary">
@@ -190,6 +190,86 @@ El TV va a mostrar un cuadro pidiendo que aceptes la conexión — confirmarlo c
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>alias dazn<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;adb connect 192.168.0.230:5555 &amp;&amp; adb shell input tap 960 540 &amp;&amp; sleep 2 &amp;&amp; adb shell input tap 1420 1050&#39;</span>
 </span></span></code></pre></div><p>¿Querés que te arme un script interactivo con un menú para controlar todo desde la terminal?</p>
+<p>[smartube]$ adb install SmartTube_stable_31.73_armeabi-v7a.apk
+Performing Streamed Install
+Success</p>
+<p>That means it installed successfully ? How do I open it im from my computer</p>
+<p>Yes, that <strong>Success</strong> message means the APK installed successfully on your Android device! 🎉</p>
+<h2 id="how-to-open-it-from-your-computer-via-adb">How to open it from your computer via ADB</h2>
+<p>Run this command to launch SmartTube:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>adb shell monkey -p com.liskovsoft.smarttubetv.beta <span style="color:#ae81ff">1</span>
+</span></span></code></pre></div><p>Or use the <code>am start</code> command:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>adb shell am start -n com.liskovsoft.smarttubetv.beta/.SplashScreen
+</span></span></code></pre></div><hr>
+<h2 id="if-those-dont-work-wrong-package-name">If those don&rsquo;t work (wrong package name)</h2>
+<p>First, find the exact package name:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>adb shell pm list packages | grep -i smart
+</span></span></code></pre></div><p>That will output something like <code>package:com.liskovsoft.smarttubetv.beta</code> — then use that name in the launch command above.</p>
+<hr>
+<h2 id="even-simpler">Even simpler</h2>
+<p>Just <strong>grab your remote or navigate on your TV/device</strong> — SmartTube should now appear in your apps list and you can open it from there directly. ADB launching is usually only needed when you don&rsquo;t have easy UI access.</p>
+<pre tabindex="0"><code>bash arg: 1
+args: [-p, com.liskovsoft.smarttubetv.beta, 1]
+ arg: &#34;-p&#34;
+ arg: &#34;com.liskovsoft.smarttubetv.beta&#34;
+ arg: &#34;1&#34;
+data=&#34;com.liskovsoft.smarttubetv.beta&#34;
+** No activities found to run, monkey aborted.
+[smartube]$ adb shell pm list packages | grep -i smart
+package:org.smarttube.stable
+package:com.smartdevice.epopplayer
+package:com.smartdevice.duplebluetooth
+package:com.teamsmart.videomanager.tv
+package:com.smartdevice.acr.recommendation
+package:com.smartdevice.factory
+package:com.smartdevice.livetv
+package:com.smartdevice.firewall
+package:com.smartdevice.dtv.icast
+package:com.Smartdevice.emanual
+package:com.smartdevice.tvworkwithalexa
+package:com.smartdevice.recommendation
+package:com.smartdevice.leanbacklauncher.customizer
+[smartube]$ adb shell monkey -p package:org.smarttube.stable 1
+  bash arg: -p
+  bash arg: package:org.smarttube.stable
+  bash arg: 1
+args: [-p, package:org.smarttube.stable, 1]
+ arg: &#34;-p&#34;
+ arg: &#34;package:org.smarttube.stable&#34;
+ arg: &#34;1&#34;
+data=&#34;package:org.smarttube.stable&#34;
+** No activities found to run, monkey aborted.
+</code></pre><p>The package name is <code>org.smarttube.stable</code> (without the <code>package:</code> prefix). Try this:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>adb shell monkey -p org.smarttube.stable <span style="color:#ae81ff">1</span>
+</span></span></code></pre></div><p>If that still fails, launch it with <code>am start</code> instead:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>adb shell am start -a android.intent.action.MAIN -c android.intent.category.LEANBACK_LAUNCHER -p org.smarttube.stable
+</span></span></code></pre></div><p>Or try:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>adb shell am start -a android.intent.action.MAIN -c android.intent.category.LAUNCHER org.smarttube.stable
+</span></span></code></pre></div><hr>
+<p>If none of those work, check what the app&rsquo;s main activity is called:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>adb shell dumpsys package org.smarttube.stable | grep -i activity
+</span></span></code></pre></div><p>Paste the output here and I&rsquo;ll give you the exact launch command.</p>
+<p>Puedo mandar un enter o ir a la derecha izquierda con adb ?</p>
+<p>¡Sí! Podés enviar teclas con <code>adb shell input keyevent</code>. Acá los comandos más útiles:</p>
+<h2 id="navegación">Navegación</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>adb shell input keyevent KEYCODE_DPAD_UP       <span style="color:#75715e"># Arriba</span>
+</span></span><span style="display:flex;"><span>adb shell input keyevent KEYCODE_DPAD_DOWN     <span style="color:#75715e"># Abajo</span>
+</span></span><span style="display:flex;"><span>adb shell input keyevent KEYCODE_DPAD_LEFT     <span style="color:#75715e"># Izquierda</span>
+</span></span><span style="display:flex;"><span>adb shell input keyevent KEYCODE_DPAD_RIGHT    <span style="color:#75715e"># Derecha</span>
+</span></span><span style="display:flex;"><span>adb shell input keyevent KEYCODE_DPAD_CENTER   <span style="color:#75715e"># Enter / OK</span>
+</span></span></code></pre></div><h2 id="otros-útiles">Otros útiles</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>adb shell input keyevent KEYCODE_ENTER         <span style="color:#75715e"># Enter</span>
+</span></span><span style="display:flex;"><span>adb shell input keyevent KEYCODE_BACK          <span style="color:#75715e"># Botón Atrás</span>
+</span></span><span style="display:flex;"><span>adb shell input keyevent KEYCODE_HOME          <span style="color:#75715e"># Botón Home</span>
+</span></span><span style="display:flex;"><span>adb shell input keyevent KEYCODE_MENU          <span style="color:#75715e"># Menú</span>
+</span></span></code></pre></div><h2 id="reproducción">Reproducción</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>adb shell input keyevent KEYCODE_MEDIA_PLAY_PAUSE  <span style="color:#75715e"># Play/Pausa</span>
+</span></span><span style="display:flex;"><span>adb shell input keyevent KEYCODE_MEDIA_NEXT        <span style="color:#75715e"># Siguiente</span>
+</span></span><span style="display:flex;"><span>adb shell input keyevent KEYCODE_MEDIA_PREVIOUS    <span style="color:#75715e"># Anterior</span>
+</span></span></code></pre></div><h2 id="escribir-texto">Escribir texto</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>adb shell input text <span style="color:#e6db74">&#34;hola&#34;</span>   <span style="color:#75715e"># Escribe texto en un campo</span>
+</span></span></code></pre></div><hr>
+<p>Con esto básicamente podés <strong>controlar tu TV/dispositivo completamente desde la PC</strong> sin tocar el control remoto. 🎮</p>
 
 </div>
 
