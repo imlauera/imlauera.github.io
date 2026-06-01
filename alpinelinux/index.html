@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/alpinelinux/">
+	<meta property="og:site_name" content="Imlauer">
+	<meta property="og:title" content="Alpinelinux like archlinux">
+	<meta property="og:description" content="Instalación Alpine Linux — Mini Root FS Bootstrap Particionado (UEFI/GPT) fdisk -l # identificá el disco destino, asumimos /dev/sdb cfdisk /dev/sdb # seleccioná gpt # EFI: 300M, Swap: 4G, Root: resto Con fdisk si preferís:
+fdisk /dev/sdb g n; 1; 2048; &#43;300M; t; 1; 1 # EFI n; 2; default; &#43;4G; t; 2; swap n; 3; default; default w Formateo y montado mkfs.ext4 /dev/sdb3 mkswap /dev/sdb2 mkfs.fat -F 32 /dev/sdb1 mount /dev/sdb3 /mnt mkdir -p /mnt/boot/efi mount /dev/sdb1 /mnt/boot/efi swapon /dev/sdb2 Bootstrap: descargar y extraer el tarball wget https://dl-cdn.alpinelinux.org/alpine/v3.21/releases/x86_64/alpine-minirootfs-3.21.3-x86_64.tar.gz # el flag -p es OBLIGATORIO, sin el los permisos quedan mal tar -xzpf alpine-minirootfs-3.21.3-x86_64.tar.gz -C /mnt Versión más reciente siempre en: https://alpinelinux.org/downloads/">
+	<meta property="og:locale" content="es_es">
+	<meta property="og:type" content="article">
+		<meta property="article:published_time" content="2026-06-01T07:35:07-03:00">
+		<meta property="article:modified_time" content="2026-06-01T07:35:07-03:00">
+		<meta property="article:tag" content="Linux">
+
+  
+	<meta itemprop="name" content="Alpinelinux like archlinux">
+	<meta itemprop="description" content="Instalación Alpine Linux — Mini Root FS Bootstrap Particionado (UEFI/GPT) fdisk -l # identificá el disco destino, asumimos /dev/sdb cfdisk /dev/sdb # seleccioná gpt # EFI: 300M, Swap: 4G, Root: resto Con fdisk si preferís:
+fdisk /dev/sdb g n; 1; 2048; &#43;300M; t; 1; 1 # EFI n; 2; default; &#43;4G; t; 2; swap n; 3; default; default w Formateo y montado mkfs.ext4 /dev/sdb3 mkswap /dev/sdb2 mkfs.fat -F 32 /dev/sdb1 mount /dev/sdb3 /mnt mkdir -p /mnt/boot/efi mount /dev/sdb1 /mnt/boot/efi swapon /dev/sdb2 Bootstrap: descargar y extraer el tarball wget https://dl-cdn.alpinelinux.org/alpine/v3.21/releases/x86_64/alpine-minirootfs-3.21.3-x86_64.tar.gz # el flag -p es OBLIGATORIO, sin el los permisos quedan mal tar -xzpf alpine-minirootfs-3.21.3-x86_64.tar.gz -C /mnt Versión más reciente siempre en: https://alpinelinux.org/downloads/">
+	<meta itemprop="datePublished" content="2026-06-01T07:35:07-03:00">
+	<meta itemprop="dateModified" content="2026-06-01T07:35:07-03:00">
+	<meta itemprop="wordCount" content="611">
+	<meta itemprop="keywords" content="Linux">
+  
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:title" content="Alpinelinux like archlinux">
+	<meta name="twitter:description" content="Instalación Alpine Linux — Mini Root FS Bootstrap Particionado (UEFI/GPT) fdisk -l # identificá el disco destino, asumimos /dev/sdb cfdisk /dev/sdb # seleccioná gpt # EFI: 300M, Swap: 4G, Root: resto Con fdisk si preferís:
+fdisk /dev/sdb g n; 1; 2048; &#43;300M; t; 1; 1 # EFI n; 2; default; &#43;4G; t; 2; swap n; 3; default; default w Formateo y montado mkfs.ext4 /dev/sdb3 mkswap /dev/sdb2 mkfs.fat -F 32 /dev/sdb1 mount /dev/sdb3 /mnt mkdir -p /mnt/boot/efi mount /dev/sdb1 /mnt/boot/efi swapon /dev/sdb2 Bootstrap: descargar y extraer el tarball wget https://dl-cdn.alpinelinux.org/alpine/v3.21/releases/x86_64/alpine-minirootfs-3.21.3-x86_64.tar.gz # el flag -p es OBLIGATORIO, sin el los permisos quedan mal tar -xzpf alpine-minirootfs-3.21.3-x86_64.tar.gz -C /mnt Versión más reciente siempre en: https://alpinelinux.org/downloads/">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Alpinelinux like archlinux
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/alpinelinux/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="Instalación Alpine Linux — Mini Root FS Bootstrap
+Particionado (UEFI/GPT)
+fdisk -l  # identificá el disco destino, asumimos /dev/sdb
+cfdisk /dev/sdb  # seleccioná gpt
+# EFI: 300M, Swap: 4G, Root: resto
+Con fdisk si preferís:
+fdisk /dev/sdb
+g
+n; 1; 2048; &#43;300M; t; 1; 1   # EFI
+n; 2; default; &#43;4G; t; 2; swap
+n; 3; default; default
+w
+
+Formateo y montado
+mkfs.ext4 /dev/sdb3
+mkswap /dev/sdb2
+mkfs.fat -F 32 /dev/sdb1
+mount /dev/sdb3 /mnt
+mkdir -p /mnt/boot/efi
+mount /dev/sdb1 /mnt/boot/efi
+swapon /dev/sdb2
+
+Bootstrap: descargar y extraer el tarball
+wget https://dl-cdn.alpinelinux.org/alpine/v3.21/releases/x86_64/alpine-minirootfs-3.21.3-x86_64.tar.gz
+
+# el flag -p es OBLIGATORIO, sin el los permisos quedan mal
+tar -xzpf alpine-minirootfs-3.21.3-x86_64.tar.gz -C /mnt
+Versión más reciente siempre en: https://alpinelinux.org/downloads/">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Alpinelinux like archlinux
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2026-06-01T07:35:07-03:00'>
+      June 01, 2026
+    </time>
+    
+    <br>
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/linux/">Linux</a>
+    
+    
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <h1 id="instalación-alpine-linux--mini-root-fs-bootstrap">Instalación Alpine Linux — Mini Root FS Bootstrap</h1>
+<h2 id="particionado-uefigpt">Particionado (UEFI/GPT)</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>fdisk -l  <span style="color:#75715e"># identificá el disco destino, asumimos /dev/sdb</span>
+</span></span><span style="display:flex;"><span>cfdisk /dev/sdb  <span style="color:#75715e"># seleccioná gpt</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># EFI: 300M, Swap: 4G, Root: resto</span>
+</span></span></code></pre></div><p>Con <code>fdisk</code> si preferís:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>fdisk /dev/sdb
+</span></span><span style="display:flex;"><span>g
+</span></span><span style="display:flex;"><span>n; 1; 2048; +300M; t; 1; <span style="color:#ae81ff">1</span>   <span style="color:#75715e"># EFI</span>
+</span></span><span style="display:flex;"><span>n; 2; default; +4G; t; 2; swap
+</span></span><span style="display:flex;"><span>n; 3; default; default
+</span></span><span style="display:flex;"><span>w
+</span></span></code></pre></div><hr>
+<h2 id="formateo-y-montado">Formateo y montado</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mkfs.ext4 /dev/sdb3
+</span></span><span style="display:flex;"><span>mkswap /dev/sdb2
+</span></span><span style="display:flex;"><span>mkfs.fat -F <span style="color:#ae81ff">32</span> /dev/sdb1
+</span></span><span style="display:flex;"><span>mount /dev/sdb3 /mnt
+</span></span><span style="display:flex;"><span>mkdir -p /mnt/boot/efi
+</span></span><span style="display:flex;"><span>mount /dev/sdb1 /mnt/boot/efi
+</span></span><span style="display:flex;"><span>swapon /dev/sdb2
+</span></span></code></pre></div><hr>
+<h2 id="bootstrap-descargar-y-extraer-el-tarball">Bootstrap: descargar y extraer el tarball</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>wget https://dl-cdn.alpinelinux.org/alpine/v3.21/releases/x86_64/alpine-minirootfs-3.21.3-x86_64.tar.gz
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># el flag -p es OBLIGATORIO, sin el los permisos quedan mal</span>
+</span></span><span style="display:flex;"><span>tar -xzpf alpine-minirootfs-3.21.3-x86_64.tar.gz -C /mnt
+</span></span></code></pre></div><p>Versión más reciente siempre en: <a href="https://alpinelinux.org/downloads/">https://alpinelinux.org/downloads/</a></p>
+<hr>
+<h2 id="preparar-el-chroot">Preparar el chroot</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mount -t proc none /mnt/proc
+</span></span><span style="display:flex;"><span>mount -t sysfs none /mnt/sys
+</span></span><span style="display:flex;"><span>mount --bind /dev /mnt/dev
+</span></span><span style="display:flex;"><span>mount --bind /dev/pts /mnt/dev/pts
+</span></span><span style="display:flex;"><span>cp /etc/resolv.conf /mnt/etc/resolv.conf
+</span></span><span style="display:flex;"><span>chroot /mnt /bin/sh
+</span></span></code></pre></div><p>Si tenés <code>arch-chroot</code> disponible en el host, reemplaza todo lo anterior con:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>arch-chroot /mnt
+</span></span></code></pre></div><hr>
+<h2 id="dentro-del-chroot">Dentro del chroot</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Repositorios</span>
+</span></span><span style="display:flex;"><span>cat &gt; /etc/apk/repositories <span style="color:#e6db74">&lt;&lt; EOF
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">https://dl-cdn.alpinelinux.org/alpine/v3.21/main
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">https://dl-cdn.alpinelinux.org/alpine/v3.21/community
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOF</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>apk update
+</span></span><span style="display:flex;"><span>apk add alpine-base linux-lts linux-firmware
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Timezone</span>
+</span></span><span style="display:flex;"><span>apk add tzdata
+</span></span><span style="display:flex;"><span>cp /usr/share/zoneinfo/America/Argentina/Buenos_Aires /etc/localtime
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;America/Argentina/Buenos_Aires&#34;</span> &gt; /etc/timezone
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Hostname</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;alpine&#34;</span> &gt; /etc/hostname
+</span></span><span style="display:flex;"><span>cat &gt; /etc/hosts <span style="color:#e6db74">&lt;&lt; EOF
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">127.0.0.1   localhost
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">::1         localhost
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">127.0.1.1   alpine.localdomain  alpine
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOF</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Teclado español</span>
+</span></span><span style="display:flex;"><span>apk add kbd-bkeymaps
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;KEYMAP=es&#34;</span> &gt; /etc/conf.d/keymaps
+</span></span><span style="display:flex;"><span>rc-update add keymaps default
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Password root</span>
+</span></span><span style="display:flex;"><span>passwd
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># fstab — mirá los UUID con blkid y completá</span>
+</span></span><span style="display:flex;"><span>blkid
+</span></span><span style="display:flex;"><span>cat &gt; /etc/fstab <span style="color:#e6db74">&lt;&lt; EOF
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">UUID=&lt;uuid-sdb3&gt;  /          ext4  defaults,noatime  0 1
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">UUID=&lt;uuid-sdb1&gt;  /boot/efi  vfat  defaults          0 2
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">UUID=&lt;uuid-sdb2&gt;  none       swap  sw                0 0
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOF</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Servicios base (OpenRC, no systemd)</span>
+</span></span><span style="display:flex;"><span>rc-update add devfs sysinit
+</span></span><span style="display:flex;"><span>rc-update add dmesg sysinit
+</span></span><span style="display:flex;"><span>rc-update add mdev sysinit
+</span></span><span style="display:flex;"><span>rc-update add hwclock boot
+</span></span><span style="display:flex;"><span>rc-update add modules boot
+</span></span><span style="display:flex;"><span>rc-update add sysctl boot
+</span></span><span style="display:flex;"><span>rc-update add hostname boot
+</span></span><span style="display:flex;"><span>rc-update add bootmisc boot
+</span></span><span style="display:flex;"><span>rc-update add syslog boot
+</span></span><span style="display:flex;"><span>rc-update add mount-ro shutdown
+</span></span><span style="display:flex;"><span>rc-update add killprocs shutdown
+</span></span><span style="display:flex;"><span>rc-update add savecache shutdown
+</span></span></code></pre></div><hr>
+<h2 id="grub-uefi">GRUB (UEFI)</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>apk add grub grub-efi efibootmgr
+</span></span><span style="display:flex;"><span>grub-install --target<span style="color:#f92672">=</span>x86_64-efi --efi-directory<span style="color:#f92672">=</span>/boot/efi --bootloader-id<span style="color:#f92672">=</span>alpine
+</span></span><span style="display:flex;"><span>grub-mkconfig -o /boot/grub/grub.cfg
+</span></span></code></pre></div><blockquote>
+<p>Si el firmware tiene bugs y borra la entrada EFI:
+<code>grub-install --target=x86_64-efi --efi-directory=/boot/efi --removable</code></p>
+</blockquote>
+<p>BIOS/MBR legacy:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>apk add grub
+</span></span><span style="display:flex;"><span>grub-install /dev/sdb
+</span></span><span style="display:flex;"><span>grub-mkconfig -o /boot/grub/grub.cfg
+</span></span></code></pre></div><hr>
+<h2 id="salir-y-reiniciar">Salir y reiniciar</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>exit
+</span></span><span style="display:flex;"><span>umount -R /mnt
+</span></span><span style="display:flex;"><span>reboot
+</span></span></code></pre></div><hr>
+<h2 id="post-instalación-ya-en-alpine">Post-instalación (ya en Alpine)</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Usuario</span>
+</span></span><span style="display:flex;"><span>adduser -G users,video,audio tu_usuario
+</span></span><span style="display:flex;"><span>addgroup tu_usuario wheel
+</span></span><span style="display:flex;"><span>apk add sudo
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;%wheel ALL=(ALL:ALL) ALL&#34;</span> &gt; /etc/sudoers.d/wheel
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Shell</span>
+</span></span><span style="display:flex;"><span>apk add bash fish
+</span></span><span style="display:flex;"><span>chsh -s /bin/bash tu_usuario
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Wifi</span>
+</span></span><span style="display:flex;"><span>apk add networkmanager networkmanager-wifi wpa_supplicant
+</span></span><span style="display:flex;"><span>rc-update add networkmanager default
+</span></span><span style="display:flex;"><span>rc-service networkmanager start
+</span></span><span style="display:flex;"><span>nmtui  <span style="color:#75715e"># para conectarse</span>
+</span></span></code></pre></div><hr>
+<h2 id="paquetes">Paquetes</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>apk add <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  vim tmux git curl wget rsync openssh bash fish bash-completion <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    man-db man-pages htop btop fastfetch <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>      mpv yt-dlp imagemagick <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>        w3m lynx irssi fzf tree <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>          unzip unrar zip <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            python3 py3-pip <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>              alsa-utils pipewire pipewire-pulse <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>                sway foot wl-clipboard grim <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>                  xdg-desktop-portal xdg-desktop-portal-wlr wmenu <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>                    networkmanager docker docker-compose <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>                      samba acpi bc translate-shell <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>                        noto-fonts font-terminus
+</span></span><span style="display:flex;"><span>                        <span style="color:#e6db74">```</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                        ---
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                        <span style="color:#75715e">## OpenRC vs systemd — equivalencias</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                        | systemd <span style="color:#f92672">(</span>Arch<span style="color:#f92672">)</span>              | OpenRC <span style="color:#f92672">(</span>Alpine<span style="color:#f92672">)</span>                    |
+</span></span><span style="display:flex;"><span>                        |-----------------------------|------------------------------------|
+</span></span><span style="display:flex;"><span>                        | <span style="color:#e6db74">`</span>systemctl enable X<span style="color:#e6db74">`</span>        | <span style="color:#e6db74">`</span>rc-update add X default<span style="color:#e6db74">`</span>          |
+</span></span><span style="display:flex;"><span>                        | <span style="color:#e6db74">`</span>systemctl start X<span style="color:#e6db74">`</span>         | <span style="color:#e6db74">`</span>rc-service X start<span style="color:#e6db74">`</span>               |
+</span></span><span style="display:flex;"><span>                        | <span style="color:#e6db74">`</span>systemctl disable X<span style="color:#e6db74">`</span>       | <span style="color:#e6db74">`</span>rc-update del X default<span style="color:#e6db74">`</span>          |
+</span></span><span style="display:flex;"><span>                        | <span style="color:#e6db74">`</span>systemctl status X<span style="color:#e6db74">`</span>        | <span style="color:#e6db74">`</span>rc-service X status<span style="color:#e6db74">`</span>              |
+</span></span><span style="display:flex;"><span>                        | <span style="color:#e6db74">`</span>systemctl restart X<span style="color:#e6db74">`</span>       | <span style="color:#e6db74">`</span>rc-service X restart<span style="color:#e6db74">`</span>             |
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                        ---
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                        <span style="color:#75715e">## apk vs pacman — equivalencias</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>                        | pacman <span style="color:#f92672">(</span>Arch<span style="color:#f92672">)</span>    | apk <span style="color:#f92672">(</span>Alpine<span style="color:#f92672">)</span>                  |
+</span></span><span style="display:flex;"><span>                        |------------------|-------------------------------|
+</span></span><span style="display:flex;"><span>                        | <span style="color:#e6db74">`</span>pacman -Syu<span style="color:#e6db74">`</span>    | <span style="color:#e6db74">`</span>apk upgrade<span style="color:#e6db74">`</span>                 |
+</span></span><span style="display:flex;"><span>                        | <span style="color:#e6db74">`</span>pacman -S pkg<span style="color:#e6db74">`</span>  | <span style="color:#e6db74">`</span>apk add pkg<span style="color:#e6db74">`</span>                 |
+</span></span><span style="display:flex;"><span>                        | <span style="color:#e6db74">`</span>pacman -Rcs<span style="color:#e6db74">`</span>    | <span style="color:#e6db74">`</span>apk del pkg<span style="color:#e6db74">`</span>                 |
+</span></span><span style="display:flex;"><span>                        | <span style="color:#e6db74">`</span>pacman -Ss<span style="color:#e6db74">`</span>     | <span style="color:#e6db74">`</span>apk search<span style="color:#e6db74">`</span>                  |
+</span></span><span style="display:flex;"><span>                        | <span style="color:#e6db74">`</span>pacman -Si<span style="color:#e6db74">`</span>     | <span style="color:#e6db74">`</span>apk info pkg<span style="color:#e6db74">`</span>                |
+</span></span><span style="display:flex;"><span>                        | <span style="color:#e6db74">`</span>pacman -Qe<span style="color:#e6db74">`</span>     | <span style="color:#e6db74">`</span>apk list --installed<span style="color:#e6db74">`</span>        |
+</span></span><span style="display:flex;"><span>                        | <span style="color:#e6db74">`</span>pacman -Ql<span style="color:#e6db74">`</span>     | <span style="color:#e6db74">`</span>apk info --contents pkg<span style="color:#e6db74">`</span>     |
+</span></span><span style="display:flex;"><span>                        | <span style="color:#e6db74">`</span>pacman -Scc<span style="color:#e6db74">`</span>    | <span style="color:#e6db74">`</span>apk cache clean<span style="color:#e6db74">`</span>             |
+</span></span></code></pre></div>
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+
+</footer>
+
+
+</body>
+</html>
