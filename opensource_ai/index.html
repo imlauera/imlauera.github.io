@@ -29,7 +29,7 @@ Vamos a aclarar el enredo:
 1. La verdad sobre Llama (Facebook) Llama SÍ libera los “pesos” (weights). Si te bajas Llama 3, te bajas un archivo gigante (los pesos) que te permite correr el modelo en tu PC. Técnicamente, puedes usar ollama run llama3 sin problemas.">
 	<meta itemprop="datePublished" content="2026-03-13T07:01:32-03:00">
 	<meta itemprop="dateModified" content="2026-03-13T07:01:32-03:00">
-	<meta itemprop="wordCount" content="4060">
+	<meta itemprop="wordCount" content="4186">
 	<meta itemprop="keywords" content="Ai">
   
 	<meta name="twitter:card" content="summary">
@@ -450,6 +450,22 @@ Por ejemplo, <code>DeepSeek-R1-Distill-Qwen-7B-GGUF</code> para el peque.</li>
 </ul>
 <hr>
 <p>Si me contás qué hardware tenés (RAM, GPU, espacio en disco), te puedo recomendar exactamente qué modelo y cuantización descargar para que corra bien en tu máquina. Y si querés, también charlamos sobre si realmente “cabe todo el conocimiento” o solo es una bella metáfora técnica. ¡La puerta está abierta!</p>
+<p>No se borró el modelo, lo que pasó es que <strong>Ollama no arranca solo</strong> cuando reiniciás la máquina. El modelo sigue ahí guardado.</p>
+<h2 id="lo-que-necesitás-es-habilitar-el-servicio">Lo que necesitás es habilitar el servicio</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo systemctl enable ollama
+</span></span><span style="display:flex;"><span>sudo systemctl start ollama
+</span></span></code></pre></div><p>Con eso Ollama arranca automáticamente en cada inicio del sistema. Después simplemente hacés:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ollama run deepseek-r1:7b
+</span></span></code></pre></div><p>Y ya está, sin reinstalar nada.</p>
+<hr>
+<h2 id="para-verificar-que-el-modelo-sigue-instalado">Para verificar que el modelo sigue instalado</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ollama list
+</span></span></code></pre></div><p>Eso te muestra todos los modelos que ya tenés descargados. El <code>deepseek-r1:7b</code> debería aparecer ahí.</p>
+<hr>
+<h2 id="dónde-se-guardan-los-modelos">¿Dónde se guardan los modelos?</h2>
+<p>En <code>~/.ollama/models/</code> — mientras no hagas <code>ollama rm deepseek-r1:7b</code> o borres esa carpeta, los modelos quedan para siempre.</p>
+<hr>
+<p><strong>TL;DR:</strong> No se borró nada, solo faltaba <code>systemctl enable ollama</code>. Probá primero <code>ollama list</code> y contame qué te muestra.</p>
 
 </div>
 
