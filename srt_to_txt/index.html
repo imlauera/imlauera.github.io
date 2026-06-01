@@ -23,7 +23,7 @@ yt-dlp --ignore-config --write-subs --write-auto-sub --sub-lang en --sub-format 
 yt-dlp --ignore-config --write-subs --write-auto-sub --sub-lang en --sub-format &#34;srt&#34; --skip-download https://www.youtube.com/watch?v=VIDEO_ID sed -E &#39;/^[0-9]&#43;$|^$/d; /^[0-9]{2}:/d&#39; video.en.srt &gt; subtitles.txt Estaba descargando los subtitulos de un canal (los subtitulos generados automaticamente) pero en vez de bajar los subtitulos generados auomaticamente me genero los subtitulos que tenia el video que eran del chat de twitch, no quiero eso. Como hago para que forzar subtitulos automaticos no los manuales con yt-dlp">
 	<meta itemprop="datePublished" content="2025-08-02T09:39:33-03:00">
 	<meta itemprop="dateModified" content="2025-08-02T09:39:33-03:00">
-	<meta itemprop="wordCount" content="273">
+	<meta itemprop="wordCount" content="295">
 	<meta itemprop="keywords" content="Subtitles">
   
 	<meta name="twitter:card" content="summary">
@@ -105,6 +105,11 @@ Estaba descargando los subtitulos de un canal (los subtitulos generados automati
 <h3 id="vtt-y-sin-subtitulos-manuales">VTT y sin subtitulos manuales.</h3>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>yt-dlp --ignore-config --no-write-subs --write-auto-sub --sub-lang en --sub-format <span style="color:#e6db74">&#34;vtt&#34;</span> --skip-download <span style="color:#e6db74">&#34;https://www.youtube.com/channel/UCwgKmJM4ZJQRJ-U5NjvR2dg&#34;</span>  -o <span style="color:#e6db74">&#39;%(autonumber)s%(id)s.%(ext)s&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Para que no repita los subtitulos.</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>sed -E <span style="color:#e6db74">&#39;/^WEBVTT$/d; /^Kind:/d; /^Language:/d; /^[0-9]+$/d; /^$/d; /^[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3} --&gt;/d; s/&lt;[^&gt;]+&gt;//g&#39;</span> video.en.vtt | uniq &gt; subtitles.txt
+</span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>sed -E <span style="color:#e6db74">&#39;/^WEBVTT$/d; /^Kind:/d; /^Language:/d; /^[0-9]+$/d; /^$/d; /^[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{3} --&gt;/d; s/&lt;[^&gt;]+&gt;//g&#39;</span> video.en.vtt &gt; subtitles.txt
 </span></span></code></pre></div><p>Con <code>yt-dlp</code> podés forzar los subtítulos automáticos con estas opciones:</p>
