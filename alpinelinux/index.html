@@ -25,7 +25,7 @@ Instalación Alpine Linux — Mini Root FS Bootstrap Particionado (UEFI/GPT) fdi
 fdisk /dev/sdb g n; 1; 2048; &#43;300M; t; 1; 1 # EFI n; 2; default; &#43;4G; t; 2; swap n; 3; default; default w Formateo y montado mkfs.ext4 /dev/sdb3 mkswap /dev/sdb2 mkfs.fat -F 32 /dev/sdb1 mount /dev/sdb3 /mnt mkdir -p /mnt/boot/efi mount /dev/sdb1 /mnt/boot/efi swapon /dev/sdb2 Bootstrap wget https://dl-cdn.alpinelinux.org/alpine/v3.21/releases/x86_64/alpine-minirootfs-3.21.3-x86_64.tar.gz # -p es OBLIGATORIO para preservar permisos tar -xzpf alpine-minirootfs-3.21.3-x86_64.tar.gz -C /mnt Última versión en: https://alpinelinux.org/downloads/">
 	<meta itemprop="datePublished" content="2026-06-01T07:35:07-03:00">
 	<meta itemprop="dateModified" content="2026-06-01T07:35:07-03:00">
-	<meta itemprop="wordCount" content="826">
+	<meta itemprop="wordCount" content="853">
 	<meta itemprop="keywords" content="Linux">
   
 	<meta name="twitter:card" content="summary">
@@ -161,12 +161,22 @@ tar -xzpf alpine-minirootfs-3.21.3-x86_64.tar.gz -C /mnt
 </span></span></code></pre></div><p>Última versión en: <a href="https://alpinelinux.org/downloads/">https://alpinelinux.org/downloads/</a></p>
 <hr>
 <h2 id="chroot">Chroot</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mount -t proc proc /mnt/proc
+</span></span><span style="display:flex;"><span>mount --rbind /sys /mnt/sys
+</span></span><span style="display:flex;"><span>mount --rbind /dev /mnt/dev
+</span></span><span style="display:flex;"><span>mount --rbind /run /mnt/run
+</span></span></code></pre></div><hr>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mount -t proc none /mnt/proc
 </span></span><span style="display:flex;"><span>mount -t sysfs none /mnt/sys
 </span></span><span style="display:flex;"><span>mount --bind /dev /mnt/dev
 </span></span><span style="display:flex;"><span>mount --bind /dev/pts /mnt/dev/pts
 </span></span><span style="display:flex;"><span>cp /etc/resolv.conf /mnt/etc/resolv.conf
 </span></span><span style="display:flex;"><span>chroot /mnt /bin/sh
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>PATH<span style="color:#f92672">=</span>$PATH:/sbin:/bin
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>/bin/busybox ls
+</span></span><span style="display:flex;"><span>/sbin/apk
 </span></span></code></pre></div><p>Si tenés <code>arch-chroot</code>:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>arch-chroot /mnt
 </span></span></code></pre></div><hr>
@@ -183,6 +193,8 @@ tar -xzpf alpine-minirootfs-3.21.3-x86_64.tar.gz -C /mnt
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>apk add tzdata
 </span></span><span style="display:flex;"><span>cp /usr/share/zoneinfo/America/Argentina/Buenos_Aires /etc/localtime
 </span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;America/Argentina/Buenos_Aires&#34;</span> &gt; /etc/timezone
+</span></span><span style="display:flex;"><span>rc-service ntpd start
+</span></span><span style="display:flex;"><span>rc-update add ntpd
 </span></span></code></pre></div><h3 id="hostname-y-hosts">Hostname y hosts</h3>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;alpine&#34;</span> &gt; /etc/hostname
 </span></span><span style="display:flex;"><span>
