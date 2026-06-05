@@ -25,7 +25,7 @@ Si estas haciendo dual-boot lee lo ultimo como hay que configurar el /etc/grud.d
 Instalación Alpine Linux — Mini Root FS Bootstrap Particionado (UEFI/GPT) fdisk -l # identificá disco destino, asumimos /dev/sdb cfdisk /dev/sdb # EFI: 300M tipo EFI System # Swap: 4G tipo Linux swap # Root: resto tipo Linux filesystem O manualmente:">
 	<meta itemprop="datePublished" content="2026-06-01T07:35:07-03:00">
 	<meta itemprop="dateModified" content="2026-06-01T07:35:07-03:00">
-	<meta itemprop="wordCount" content="1799">
+	<meta itemprop="wordCount" content="2027">
 	<meta itemprop="keywords" content="Linux">
   
 	<meta name="twitter:card" content="summary">
@@ -650,6 +650,52 @@ initrd (hd0,gpt2)/initramfs-lts
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>grub-mkconfig -o /boot/grub/grub.cfg
 </span></span></code></pre></div><p>Así confirmás que todo quedó consistente.</p>
 <p>Yo ejecuto el <code>grub-mkconfig</code> desde ArchLinux.</p>
+<p>Yo: Yo ejecuto el grub-mkconfig desde Arch Linux y el os-prober siempre me detecta mal cuando tengo 2 distros de linux instaladas, siempre tengo que configura manualmente la entrada del grub de la 2da distro en <code>/etc/grub.d/40_custom</code></p>
+<p>Sí, eso pasa bastante seguido con <code>os-prober</code>, especialmente cuando:</p>
+<ul>
+<li>tenés <code>/boot</code> separado,</li>
+<li>usás varias distros Linux,</li>
+<li>una distro usa UUID raros,</li>
+<li>o una distro minimalista como Alpine.</li>
+</ul>
+<p><code>os-prober</code> suele asumir que el kernel y el root están en la misma partición, y cuando detecta:</p>
+<ul>
+<li>kernel en <code>sda2</code></li>
+<li>root en <code>sda4</code></li>
+</ul>
+<p>arma mezclas incorrectas como la que te hizo.</p>
+<p>También Alpine es medio “atípico” comparado con Arch/Debian/Fedora porque:</p>
+<ul>
+<li>usa <code>mkinitfs</code> en vez de <code>mkinitcpio</code> o <code>dracut</code></li>
+<li>a veces usa syslinux/extlinux</li>
+<li>muchos setups Alpine ni siquiera usan GRUB</li>
+</ul>
+<p>Entonces <code>os-prober</code> no siempre entiende bien la estructura.</p>
+<p>La verdad, lo que hacés vos (<code>40_custom</code>) es más limpio y confiable para multiboot serio.</p>
+<p>Muchos usuarios avanzados directamente:</p>
+<ul>
+<li>desactivan <code>os-prober</code></li>
+<li>y mantienen entradas manuales.</li>
+</ul>
+<p>Tu entrada minimalista actual está perfecta:</p>
+<pre tabindex="0"><code class="language-grub" data-lang="grub">menuentry &#34;Alpine Linux&#34; {
+    set root=(hd0,gpt2)
+    linux /vmlinuz-lts root=/dev/sda4 rw
+    initrd /initramfs-lts
+}
+</code></pre><p>Incluso podrías hacerla más robusta usando UUID:</p>
+<pre tabindex="0"><code class="language-grub" data-lang="grub">menuentry &#34;Alpine Linux&#34; {
+    search --fs-uuid --set=root 444E-B591
+    linux /vmlinuz-lts root=UUID=c0b5f3cf-332b-481b-bac5-06cbe6d18f4c rw
+    initrd /initramfs-lts
+}
+</code></pre><p>Eso evita problemas si:</p>
+<ul>
+<li>cambia el orden de discos,</li>
+<li>enchufás otro SATA/USB,</li>
+<li>o el kernel renombra <code>sda</code> → <code>sdb</code>.</li>
+</ul>
+<p>Pero si tu setup es fijo y simple, <code>/dev/sdaX</code> está bien también.</p>
 
 </div>
 
