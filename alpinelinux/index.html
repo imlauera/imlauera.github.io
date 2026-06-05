@@ -25,7 +25,7 @@ Si estas haciendo dual-boot lee lo ultimo como hay que configurar el /etc/grud.d
 Instalación Alpine Linux — Mini Root FS Bootstrap Particionado (UEFI/GPT) fdisk -l # identificá disco destino, asumimos /dev/sdb cfdisk /dev/sdb # EFI: 300M tipo EFI System # Swap: 4G tipo Linux swap # Root: resto tipo Linux filesystem O manualmente:">
 	<meta itemprop="datePublished" content="2026-06-01T07:35:07-03:00">
 	<meta itemprop="dateModified" content="2026-06-01T07:35:07-03:00">
-	<meta itemprop="wordCount" content="2155">
+	<meta itemprop="wordCount" content="2547">
 	<meta itemprop="keywords" content="Linux">
   
 	<meta name="twitter:card" content="summary">
@@ -145,6 +145,15 @@ O manualmente:">
 </span></span><span style="display:flex;"><span>mount --rbind /sys /mnt/sys
 </span></span><span style="display:flex;"><span>mount --rbind /dev /mnt/dev
 </span></span><span style="display:flex;"><span>mount --rbind /run /mnt/run
+</span></span></code></pre></div><h3 id="o-asi">O asi</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mount /dev/sda4 /mnt
+</span></span><span style="display:flex;"><span>mount /dev/sda2 /mnt/boot
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>mount --bind /dev /mnt/dev
+</span></span><span style="display:flex;"><span>mount --bind /proc /mnt/proc
+</span></span><span style="display:flex;"><span>mount --bind /sys /mnt/sys
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>chroot /mnt /bin/sh
 </span></span></code></pre></div><hr>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mount -t proc none /mnt/proc
 </span></span><span style="display:flex;"><span>mount -t sysfs none /mnt/sys
@@ -168,9 +177,11 @@ O manualmente:">
 </span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOF</span>
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>apk update
-</span></span><span style="display:flex;"><span>apk add alpine-base linux-lts linux-firmware
+</span></span><span style="display:flex;"><span>apk add alpine-base linux-lts linux-firmware mkinitfs e2fsprogs
+</span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>ls /lib/modules/
 </span></span><span style="display:flex;"><span>mkinitfs 6.18.34-0-lts
+</span></span><span style="display:flex;"><span>mkinitfs -F <span style="color:#e6db74">&#34;ata base ext4 scsi usb virtio&#34;</span> 6.18.34-0-lts
 </span></span></code></pre></div><h3 id="timezone">Timezone</h3>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>apk add tzdata
 </span></span><span style="display:flex;"><span>cp /usr/share/zoneinfo/America/Argentina/Buenos_Aires /etc/localtime
@@ -730,6 +741,103 @@ UUID=fd6ce3b4-6f69-4a98-98fe-7f147d492f4b none swap defaults 0 0
 </span></span></code></pre></div><p>or:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>findmnt
 </span></span></code></pre></div><p>You’ll notice Linux often ends up using the same effective options anyway.</p>
+<h1 id="archlinux-es-mas-facil-que-alpine-">ArchLinux es mas facil que AlPine :)</h1>
+<p>Sí podés comprobar bastante antes de rebootear.</p>
+<p>Desde Arch, con Alpine montado en <code>/mnt</code>, verificá estas cosas:</p>
+<ol>
+<li>Que existan módulos del kernel Alpine:</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>ls /mnt/lib/modules
+</span></span></code></pre></div><p>debería mostrar:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>6.18.34-0-lts
+</span></span></code></pre></div><ol start="2">
+<li>Que el initramfs realmente tenga drivers ext4 y SATA:</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>lsinitfs /mnt/boot/initramfs-lts | grep ext4
+</span></span></code></pre></div><p>y:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>lsinitfs /mnt/boot/initramfs-lts | grep ahci
+</span></span></code></pre></div><p>También:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>lsinitfs /mnt/boot/initramfs-lts | grep sd_mod
+</span></span></code></pre></div><p>Si no aparece nada, ahí está el problema.</p>
+<ol start="3">
+<li>Verificá el config de mkinitfs:</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>cat /mnt/etc/mkinitfs/mkinitfs.conf
+</span></span></code></pre></div><p>y fijate que tenga algo tipo:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>features=&#34;ata base ext4 scsi usb&#34;
+</span></span></code></pre></div><ol start="4">
+<li>Podés incluso probar si Alpine puede montar su root desde el chroot:</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>mkdir /tmp/testroot
+</span></span><span style="display:flex;"><span>mount -t ext4 /dev/sda4 /tmp/testroot
+</span></span></code></pre></div><p>si eso funciona, ext4 está OK a nivel sistema.</p>
+<ol start="5">
+<li>Y MUY útil:</li>
+</ol>
+<p>Entrá al initramfs manualmente desde GRUB para debuggear.</p>
+<p>En GRUB:</p>
+<ul>
+<li>apretá <code>e</code></li>
+<li>al final de la línea <code>linux</code> agregá:</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>break
+</span></span></code></pre></div><p>o:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>single
+</span></span></code></pre></div><p>Entonces vas a caer en el shell early boot y podés probar:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>ls /dev/sd*
+</span></span><span style="display:flex;"><span>mount -t ext4 /dev/sda4 /sysroot
+</span></span></code></pre></div><p>Eso te diría EXACTAMENTE qué está fallando.</p>
+<p>Ok, ahora sí encontré algo MUY importante en la documentación oficial de Alpine Linux y en reportes de usuarios.</p>
+<p>Tu error exacto:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>mounting /dev/sda4 on /sysroot failed: No such file or directory
+</span></span></code></pre></div><p>MUCHAS veces en Alpine NO significa:</p>
+<ul>
+<li>partición corrupta,</li>
+<li>GRUB roto,</li>
+<li>ni initramfs faltante.</li>
+</ul>
+<p>Significa que Alpine intentó hacer:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>mount /dev/sda4 /sysroot
+</span></span></code></pre></div><p>SIN especificar el tipo de filesystem. (<a href="https://wiki.alpinelinux.org/wiki/System_Disk_Mode?utm_source=chatgpt.com" title="System Disk Mode - Alpine Linux">Alpine Linux</a>)</p>
+<p>Y hay varios casos donde eso falla, pero:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>mount -t ext4 /dev/sda4 /sysroot
+</span></span></code></pre></div><p>FUNCIONA. (<a href="https://www.reddit.com/r/AlpineLinux/comments/m99ksm?utm_source=chatgpt.com" title="Booting issues after upgrade (mounting /dev/sda on /sysroot failed)">Reddit</a>)</p>
+<p>Eso encaja PERFECTAMENTE con tu caso:</p>
+<ul>
+<li>tu ext4 funciona,</li>
+<li>vos ya pudiste montar <code>/dev/sda4</code>,</li>
+<li>mkinitfs.conf está bien,</li>
+<li>GRUB parece bien,</li>
+<li>y el error sigue igual.</li>
+</ul>
+<p>Entonces ahora la solución más probable es esta:</p>
+<p>Tu entrada GRUB NECESITA:</p>
+<pre tabindex="0"><code class="language-grub" data-lang="grub">rootfstype=ext4
+</code></pre><p>y probablemente también:</p>
+<pre tabindex="0"><code class="language-grub" data-lang="grub">modules=sd-mod,ext4
+</code></pre><p>La wiki oficial de Alpine literalmente muestra eso como solución para este error. (<a href="https://wiki.alpinelinux.org/wiki/Install_to_disk?utm_source=chatgpt.com" title="System Disk Mode - Alpine Linux">Alpine Linux</a>)</p>
+<p>Probá EXACTAMENTE esto:</p>
+<pre tabindex="0"><code class="language-grub" data-lang="grub">menuentry &#34;Alpine Linux&#34; {
+    set root=(hd0,gpt2)
+    linux /vmlinuz-lts root=/dev/sda4 modules=sd-mod,ext4 rootfstype=ext4 rw
+    initrd /initramfs-lts
+}
+</code></pre><p>Después:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>grub-mkconfig -o /boot/grub/grub.cfg
+</span></span></code></pre></div><p>Y reboot.</p>
+<p>De hecho, encontré un caso prácticamente idéntico al tuyo:</p>
+<ul>
+<li>ext4,</li>
+<li>Alpine,</li>
+<li>GRUB/os-prober,</li>
+<li><code>/sysroot failed</code>,</li>
+<li>y se arregló agregando:</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>modules=sd-mod,usb-storage,ext4 quiet rootfstype=ext4
+</span></span></code></pre></div><p>al kernel cmdline. (<a href="https://www.reddit.com/r/AlpineLinux/comments/10zpksk?utm_source=chatgpt.com" title="Root partition startup mounting failed.">Reddit</a>)</p>
+<p>Yo probaría primero:</p>
+<pre tabindex="0"><code class="language-grub" data-lang="grub">modules=sd-mod,ext4 rootfstype=ext4
+</code></pre><p>porque vos no necesitás <code>usb-storage</code>.</p>
 
 </div>
 
