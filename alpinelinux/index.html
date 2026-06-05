@@ -25,7 +25,7 @@ Si estas haciendo dual-boot lee lo ultimo como hay que configurar el /etc/grud.d
 Instalación Alpine Linux — Mini Root FS Bootstrap Particionado (UEFI/GPT) fdisk -l # identificá disco destino, asumimos /dev/sdb cfdisk /dev/sdb # EFI: 300M tipo EFI System # Swap: 4G tipo Linux swap # Root: resto tipo Linux filesystem O manualmente:">
 	<meta itemprop="datePublished" content="2026-06-01T07:35:07-03:00">
 	<meta itemprop="dateModified" content="2026-06-01T07:35:07-03:00">
-	<meta itemprop="wordCount" content="2752">
+	<meta itemprop="wordCount" content="2848">
 	<meta itemprop="keywords" content="Linux">
   
 	<meta name="twitter:card" content="summary">
@@ -293,14 +293,14 @@ Va en <code>/etc/conf.d/keymaps</code>:</p>
 </span></span></code></pre></div><h3 id="shell">Shell</h3>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>apk add bash fish
 </span></span><span style="display:flex;"><span>chsh -s /bin/bash tu_usuario
-</span></span></code></pre></div><h3 id="wifi-con-networkmanager-nooo-funciona-mal-usa-wpa_supplicant">Wifi con NetworkManager (NOOO funciona mal, usa wpa_supplicant)</h3>
+</span></span></code></pre></div><h3 id="wifi-con-networkmanager-nooo-funciona-mal-usa-wpa_supplicant-abajo-lo-explique">Wifi con NetworkManager (NOOO funciona mal, usa wpa_supplicant) (abajo lo explique)</h3>
 <p>En OpenRC <strong>no</strong> se usa <code>systemctl</code>. Se usa <code>rc-update</code> y <code>rc-service</code>:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>apk add wireless-tools wpa_supplicant iw
 </span></span><span style="display:flex;"><span>iw reg set AR
 </span></span><span style="display:flex;"><span>ip link set wlan0 up
 </span></span><span style="display:flex;"><span>iw dev wlan0 scan | grep SSID
-</span></span><span style="display:flex;"><span>wpa_passphrase <span style="color:#e6db74">&#34;SSID&#34;</span> <span style="color:#e6db74">&#34;TU_PASSWORD&#34;</span> &gt; /etc/wpa_supplicant/home.conf
-</span></span><span style="display:flex;"><span>wpa_supplicant -B -Dnl80211 -iwlan0 -c /etc/wpa_supplicant/home.conf
+</span></span><span style="display:flex;"><span>wpa_passphrase <span style="color:#e6db74">&#34;SSID&#34;</span> <span style="color:#e6db74">&#34;TU_PASSWORD&#34;</span> &gt; /etc/wpa_supplicant/wpa_supplicant.conf
+</span></span><span style="display:flex;"><span>wpa_supplicant -B -Dnl80211 -iwlan0 -c /etc/wpa_supplicant/wpa_supplicant.conf
 </span></span><span style="display:flex;"><span>udhcpc -i wlan0
 </span></span></code></pre></div><hr>
 <h2 id="paquetes">Paquetes</h2>
@@ -889,7 +889,43 @@ UUID=fd6ce3b4-6f69-4a98-98fe-7f147d492f4b none swap defaults 0 0
 <p>También probá:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>depmod -a
 </span></span></code></pre></div><p>y reboot.</p>
-
+<hr>
+<h1 id="no-uses-networkmanager">NO USES NETWORKMANAGER</h1>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># 1. Sacar NetworkManager</span>
+</span></span><span style="display:flex;"><span>rc-service networkmanager stop
+</span></span><span style="display:flex;"><span>rc-update del networkmanager default
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 2. Crear config de wpa_supplicant</span>
+</span></span><span style="display:flex;"><span>mkdir -p /etc/wpa_supplicant
+</span></span><span style="display:flex;"><span>wpa_passphrase <span style="color:#e6db74">&#34;TU_SSID&#34;</span> <span style="color:#e6db74">&#34;TU_PASSWORD&#34;</span> &gt; /etc/wpa_supplicant/wpa_supplicant.conf
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 3. Agregar country al config (IMPORTANTE)</span>
+</span></span><span style="display:flex;"><span>cat &gt;&gt; /etc/wpa_supplicant/wpa_supplicant.conf <span style="color:#e6db74">&lt;&lt;EOF
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">ctrl_interface=/var/run/wpa_supplicant
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">update_config=1
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">country=AR
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOF</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 4. Configurar interfaces</span>
+</span></span><span style="display:flex;"><span>cat &gt; /etc/network/interfaces <span style="color:#e6db74">&lt;&lt;EOF
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">auto lo
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">iface lo inet loopback
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">auto wlan0
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">iface wlan0 inet dhcp
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    wpa-conf /etc/wpa_supplicant/wpa_supplicant.conf
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOF</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 5. Asegurar servicios al arranque</span>
+</span></span><span style="display:flex;"><span>rc-update add networking boot
+</span></span><span style="display:flex;"><span>rc-update add modules-load boot
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 6. Probar ahora</span>
+</span></span><span style="display:flex;"><span>rc-service networking restart
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 7. Verificar</span>
+</span></span><span style="display:flex;"><span>ping -c3 alpine.org
+</span></span></code></pre></div>
 </div>
 
 
