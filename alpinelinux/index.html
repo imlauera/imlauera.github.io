@@ -25,7 +25,7 @@ Si estas haciendo dual-boot lee lo ultimo como hay que configurar el /etc/grud.d
 Instalación Alpine Linux — Mini Root FS Bootstrap Particionado (UEFI/GPT) fdisk -l # identificá disco destino, asumimos /dev/sdb cfdisk /dev/sdb # EFI: 300M tipo EFI System # Swap: 4G tipo Linux swap # Root: resto tipo Linux filesystem O manualmente:">
 	<meta itemprop="datePublished" content="2026-06-01T07:35:07-03:00">
 	<meta itemprop="dateModified" content="2026-06-01T07:35:07-03:00">
-	<meta itemprop="wordCount" content="2728">
+	<meta itemprop="wordCount" content="2752">
 	<meta itemprop="keywords" content="Linux">
   
 	<meta name="twitter:card" content="summary">
@@ -293,20 +293,15 @@ Va en <code>/etc/conf.d/keymaps</code>:</p>
 </span></span></code></pre></div><h3 id="shell">Shell</h3>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>apk add bash fish
 </span></span><span style="display:flex;"><span>chsh -s /bin/bash tu_usuario
-</span></span></code></pre></div><h3 id="wifi-con-networkmanager">Wifi con NetworkManager</h3>
+</span></span></code></pre></div><h3 id="wifi-con-networkmanager-nooo-funciona-mal-usa-wpa_supplicant">Wifi con NetworkManager (NOOO funciona mal, usa wpa_supplicant)</h3>
 <p>En OpenRC <strong>no</strong> se usa <code>systemctl</code>. Se usa <code>rc-update</code> y <code>rc-service</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>apk add networkmanager networkmanager-wifi wpa_supplicant
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>rc-update add networkmanager default
-</span></span><span style="display:flex;"><span>rc-service networkmanager start
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>nmtui   <span style="color:#75715e"># para conectarse</span>
-</span></span></code></pre></div><p>Cambiar DNS (para que NetworkManager no sobreescriba):</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nmcli connection show
-</span></span><span style="display:flex;"><span>nmcli connection modify <span style="color:#e6db74">&#34;nombre_conexion&#34;</span> ipv4.dns <span style="color:#e6db74">&#34;9.9.9.9 149.112.112.112&#34;</span>
-</span></span><span style="display:flex;"><span>nmcli connection modify <span style="color:#e6db74">&#34;nombre_conexion&#34;</span> ipv4.ignore-auto-dns yes
-</span></span><span style="display:flex;"><span>nmcli connection down <span style="color:#e6db74">&#34;nombre_conexion&#34;</span>
-</span></span><span style="display:flex;"><span>nmcli connection up <span style="color:#e6db74">&#34;nombre_conexion&#34;</span>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>apk add wireless-tools wpa_supplicant iw
+</span></span><span style="display:flex;"><span>iw reg set AR
+</span></span><span style="display:flex;"><span>ip link set wlan0 up
+</span></span><span style="display:flex;"><span>iw dev wlan0 scan | grep SSID
+</span></span><span style="display:flex;"><span>wpa_passphrase <span style="color:#e6db74">&#34;SSID&#34;</span> <span style="color:#e6db74">&#34;TU_PASSWORD&#34;</span> &gt; /etc/wpa_supplicant/home.conf
+</span></span><span style="display:flex;"><span>wpa_supplicant -B -Dnl80211 -iwlan0 -c /etc/wpa_supplicant/home.conf
+</span></span><span style="display:flex;"><span>udhcpc -i wlan0
 </span></span></code></pre></div><hr>
 <h2 id="paquetes">Paquetes</h2>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>apk add <span style="color:#ae81ff">\
@@ -444,25 +439,26 @@ Va en <code>/etc/conf.d/keymaps</code>:</p>
 <h1 id="todo-escribir-mas-resumido-esto">TODO: Escribir mas resumido esto.</h1>
 <h1 id="el-problema-con-os-prober-dual-boot">El problema con os-prober dual boot</h1>
 <p>Instale alpine en /dev/sda4, la boot partition en /dev/sda2 y swap /dev/sda3 esta bien configurado eso?</p>
-<p>#!/bin/sh
-exec tail -n +3 $0</p>
-<h1 id="this-file-provides-an-easy-way-to-add-custom-menu-entries--simply-type-the">This file provides an easy way to add custom menu entries.  Simply type the</h1>
-<h1 id="menu-entries-you-want-to-add-after-this-comment--be-careful-not-to-change">menu entries you want to add after this comment.  Be careful not to change</h1>
-<h1 id="the-exec-tail-line-above">the &rsquo;exec tail&rsquo; line above.</h1>
-<h1></h1>
-<p>menuentry &lsquo;Alpine Linux v3.23 (on /dev/sda4)&rsquo; &ndash;class alpine &ndash;class gnu-linux &ndash;class gnu &ndash;class os $menuentry_id_option &lsquo;osprober-gnulinux-simple-c0b5f3cf-332b-481b-bac5-06cbe6d18f4c&rsquo; {
-insmod part_gpt
-insmod ext2
-set root=&lsquo;hd0,gpt4&rsquo;
-if [ x$feature_platform_search_hint = xy ]; then
-search &ndash;no-floppy &ndash;fs-uuid &ndash;set=root &ndash;hint-bios=hd0,gpt4 &ndash;hint-efi=hd0,gpt4 &ndash;hint-baremetal=ahci0,gpt4  c0b5f3cf-332b-481b-bac5-06cbe6d18f4c
-else
-search &ndash;no-floppy &ndash;fs-uuid &ndash;set=root c0b5f3cf-332b-481b-bac5-06cbe6d18f4c
-fi
-linux (hd0,gpt2)/vmlinuz-lts root=/dev/sda2
-initrd (hd0,gpt2)/initramfs-lts root=/dev/sda2
-}</p>
-<h3 id="chatgpt">ChatGPT:</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/sh
+</span></span></span><span style="display:flex;"><span>exec tail -n +3 $0
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># This file provides an easy way to add custom menu entries.  Simply type the</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># menu entries you want to add after this comment.  Be careful not to change</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># the &#39;exec tail&#39; line above.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>menuentry <span style="color:#e6db74">&#39;Alpine Linux v3.23 (on /dev/sda4)&#39;</span> --class alpine --class gnu-linux --class gnu --class os $menuentry_id_option <span style="color:#e6db74">&#39;osprober-gnulinux-simple-c0b5f3cf-332b-481b-bac5-06cbe6d18f4c&#39;</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        insmod part_gpt
+</span></span><span style="display:flex;"><span>        insmod ext2
+</span></span><span style="display:flex;"><span>        set root<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;hd0,gpt4&#39;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> x$feature_platform_search_hint <span style="color:#f92672">=</span> xy <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>          search --no-floppy --fs-uuid --set<span style="color:#f92672">=</span>root --hint-bios<span style="color:#f92672">=</span>hd0,gpt4 --hint-efi<span style="color:#f92672">=</span>hd0,gpt4 --hint-baremetal<span style="color:#f92672">=</span>ahci0,gpt4  c0b5f3cf-332b-481b-bac5-06cbe6d18f4c
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>          search --no-floppy --fs-uuid --set<span style="color:#f92672">=</span>root c0b5f3cf-332b-481b-bac5-06cbe6d18f4c
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>        linux <span style="color:#f92672">(</span>hd0,gpt2<span style="color:#f92672">)</span>/vmlinuz-lts root<span style="color:#f92672">=</span>/dev/sda2
+</span></span><span style="display:flex;"><span>        initrd <span style="color:#f92672">(</span>hd0,gpt2<span style="color:#f92672">)</span>/initramfs-lts root<span style="color:#f92672">=</span>/dev/sda2
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><h3 id="chatgpt">ChatGPT:</h3>
 <p>No, ahí hay un problema importante. Tu entrada de GRUB está apuntando mal el <code>root=</code>.</p>
 <p>Vos dijiste:</p>
 <ul>
@@ -879,6 +875,13 @@ UUID=fd6ce3b4-6f69-4a98-98fe-7f147d492f4b none swap defaults 0 0
 <p>entonces sospecho que Alpine no está cargando módulos PCI automáticamente.</p>
 <p>Probá:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>lsmod
+</span></span><span style="display:flex;"><span>modprobe rtl8723be
+</span></span><span style="display:flex;"><span>modprobe rtl8723be ant_sel<span style="color:#f92672">=</span><span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>modprobe r8169
+</span></span><span style="display:flex;"><span>echo rtl8723be &gt;&gt; /etc/modules
+</span></span><span style="display:flex;"><span>echo r8169 &gt;&gt; /etc/modules
+</span></span><span style="display:flex;"><span>arch:/# rc-update add modules boot
+</span></span><span style="display:flex;"><span> * service modules added to runlevel boot
 </span></span></code></pre></div><p>Si casi no aparece nada, ahí está.</p>
 <p>Y otra MUY importante:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>ls /lib/modules/<span style="color:#66d9ef">$(</span>uname -r<span style="color:#66d9ef">)</span>/kernel/drivers/net
