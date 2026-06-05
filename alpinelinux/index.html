@@ -25,7 +25,7 @@ Si estas haciendo dual-boot lee lo ultimo como hay que configurar el /etc/grud.d
 Instalación Alpine Linux — Mini Root FS Bootstrap Particionado (UEFI/GPT) fdisk -l # identificá disco destino, asumimos /dev/sdb cfdisk /dev/sdb # EFI: 300M tipo EFI System # Swap: 4G tipo Linux swap # Root: resto tipo Linux filesystem O manualmente:">
 	<meta itemprop="datePublished" content="2026-06-01T07:35:07-03:00">
 	<meta itemprop="dateModified" content="2026-06-01T07:35:07-03:00">
-	<meta itemprop="wordCount" content="2547">
+	<meta itemprop="wordCount" content="2728">
 	<meta itemprop="keywords" content="Linux">
   
 	<meta name="twitter:card" content="summary">
@@ -838,6 +838,54 @@ UUID=fd6ce3b4-6f69-4a98-98fe-7f147d492f4b none swap defaults 0 0
 <p>Yo probaría primero:</p>
 <pre tabindex="0"><code class="language-grub" data-lang="grub">modules=sd-mod,ext4 rootfstype=ext4
 </code></pre><p>porque vos no necesitás <code>usb-storage</code>.</p>
+<h4 id="ahora-si-pude-bootearlo-pero-no-tenia-red-d">Ahora si pude bootearlo pero no tenia red :D</h4>
+<p>Entonces el problema probablemente NO es firmware.</p>
+<p>Si <code>ip a</code> solo muestra <code>lo</code>, eso significa que el kernel ni siquiera creó las interfaces de red. O sea:</p>
+<ul>
+<li>el driver no cargó,</li>
+<li>o los módulos de red no están instalados.</li>
+</ul>
+<p>Y esto en Alpine pasa MUCHO cuando instalás solo:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>linux-lts
+</span></span></code></pre></div><p>pero NO instalás el paquete de módulos extra.</p>
+<p>Probá esto:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>apk add linux-lts
+</span></span><span style="display:flex;"><span>apk add linux-firmware
+</span></span><span style="display:flex;"><span>apk add pciutils
+</span></span></code></pre></div><p>Después:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>lspci -k
+</span></span></code></pre></div><p>Eso es CLAVE. Va a mostrar:</p>
+<ul>
+<li>qué controlador Ethernet/WiFi tenés,</li>
+<li>y qué kernel module debería usarse.</li>
+</ul>
+<p>Ejemplo:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>Kernel driver in use: r8169
+</span></span><span style="display:flex;"><span>Kernel modules: r8169
+</span></span></code></pre></div><p>o:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>Kernel modules: iwlwifi
+</span></span></code></pre></div><p>Después cargalo manualmente:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>modprobe iwlwifi
+</span></span></code></pre></div><p>o:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>modprobe r8169
+</span></span></code></pre></div><p>y mirá:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>ip a
+</span></span></code></pre></div><p>Pero hay otra pista MUY fuerte:</p>
+<p>Si NO aparece NINGUNA interfaz:</p>
+<ul>
+<li>ni ethernet,</li>
+<li>ni wifi,</li>
+</ul>
+<p>entonces sospecho que Alpine no está cargando módulos PCI automáticamente.</p>
+<p>Probá:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>lsmod
+</span></span></code></pre></div><p>Si casi no aparece nada, ahí está.</p>
+<p>Y otra MUY importante:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>ls /lib/modules/<span style="color:#66d9ef">$(</span>uname -r<span style="color:#66d9ef">)</span>/kernel/drivers/net
+</span></span></code></pre></div><p>Si esa carpeta está vacía o incompleta, entonces el kernel/modules quedaron mal instalados.</p>
+<p>También probá:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>depmod -a
+</span></span></code></pre></div><p>y reboot.</p>
 
 </div>
 
