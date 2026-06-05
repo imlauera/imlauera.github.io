@@ -25,7 +25,7 @@ Si estas haciendo dual-boot lee lo ultimo como hay que configurar el /etc/grud.d
 Instalación Alpine Linux — Mini Root FS Bootstrap Particionado (UEFI/GPT) fdisk -l # identificá disco destino, asumimos /dev/sdb cfdisk /dev/sdb # EFI: 300M tipo EFI System # Swap: 4G tipo Linux swap # Root: resto tipo Linux filesystem O manualmente:">
 	<meta itemprop="datePublished" content="2026-06-01T07:35:07-03:00">
 	<meta itemprop="dateModified" content="2026-06-01T07:35:07-03:00">
-	<meta itemprop="wordCount" content="2027">
+	<meta itemprop="wordCount" content="2151">
 	<meta itemprop="keywords" content="Linux">
   
 	<meta name="twitter:card" content="summary">
@@ -696,6 +696,38 @@ initrd (hd0,gpt2)/initramfs-lts
 <li>o el kernel renombra <code>sda</code> → <code>sdb</code>.</li>
 </ul>
 <p>Pero si tu setup es fijo y simple, <code>/dev/sdaX</code> está bien también.</p>
+<h3 id="etcfstab-less-verbose"><code>/etc/fstab</code> less verbose</h3>
+<p>You can simplify it a lot. Most of those mount options are just kernel defaults or auto-generated noise.</p>
+<p>A clean version would be:</p>
+<pre tabindex="0"><code class="language-fstab" data-lang="fstab">UUID=86dca421-2f17-44a5-b22d-a799847be7f9  /      ext4  defaults  0 1
+UUID=B2BE-3F4C                             /boot  vfat  defaults  0 2
+UUID=fd6ce3b4-6f69-4a98-98fe-7f147d492f4b none   swap  defaults  0 0
+</code></pre><p>or even:</p>
+<pre tabindex="0"><code class="language-fstab" data-lang="fstab">UUID=86dca421-2f17-44a5-b22d-a799847be7f9 / ext4 defaults 0 1
+UUID=B2BE-3F4C /boot vfat defaults 0 2
+UUID=fd6ce3b4-6f69-4a98-98fe-7f147d492f4b none swap defaults 0 0
+</code></pre><p><code>defaults</code> already includes the usual sane options:</p>
+<ul>
+<li><code>rw</code></li>
+<li><code>relatime</code></li>
+<li><code>exec</code></li>
+<li><code>auto</code></li>
+<li><code>nouser</code></li>
+<li><code>async</code></li>
+</ul>
+<p>For VFAT <code>/boot</code>, all that:</p>
+<ul>
+<li><code>codepage=437</code></li>
+<li><code>iocharset=ascii</code></li>
+<li><code>shortname=mixed</code></li>
+<li>etc</li>
+</ul>
+<p>is usually unnecessary unless you specifically care about weird filename compatibility.</p>
+<p>You can verify what the kernel actually mounted with:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>mount | grep boot
+</span></span></code></pre></div><p>or:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>findmnt
+</span></span></code></pre></div><p>You’ll notice Linux often ends up using the same effective options anyway.</p>
 
 </div>
 
