@@ -25,7 +25,7 @@ La mentalidad de George Hotz
 Lo que más define a Hotz no es la habilidad técnica sino la actitud: se obsesiona con un problema hasta resolverlo, sin importar el costo en tiempo o sueño. Con el iPhone trabajó noches enteras, dormía de día, ignoraba a todos. No lo hizo por dinero ni por fama, lo hizo porque era divertido y porque creía genuinamente que la información debe ser libre. Cuando pudo vender el método de unlock, lo publicó gratis en su blog. Eso es consistente con su filosofía, no es pose.">
 	<meta itemprop="datePublished" content="2026-06-02T01:59:28-03:00">
 	<meta itemprop="dateModified" content="2026-06-02T01:59:28-03:00">
-	<meta itemprop="wordCount" content="27517">
+	<meta itemprop="wordCount" content="28457">
 	<meta itemprop="keywords" content="Hacking">
   
 	<meta name="twitter:card" content="summary">
@@ -576,6 +576,42 @@ Lo que más define a Hotz no es la habilidad técnica sino la actitud: se obsesi
 <p>Lo más caro que Meta construyó en su historia y nadie sabe qué es. Carmack le dijo a Zuckerberg &ldquo;haceme el czar del metaverse, yo lo arreglo&rdquo; y Zuckerberg dijo &ldquo;no es como funcemos las cosas&rdquo;. Carmack se fue. Hotz dice que con Carmack hubiera quedado algo bueno. Lo que destruyó el metaverse fue el mismo patrón que destruyó tantas cosas: toma de decisiones por comité, representación equitativa de todas las ideas, incapacidad de distinguir buenas de malas ideas. Mientras una empresa diga &ldquo;hay que asegurarse de que todos estén representados&rdquo; antes de elegir entre ideas, ese no es un lugar para él.</p>
 <p><strong>Personal de este batch</strong></p>
 <p>Confirma que está comprado en Crypto desde los tiempos de Silk Road. Pasó dos semanas en Nueva York con gente de crypto y lo encontró igual de asqueroso que el mundo startup. El entorno de la gente de Twitter también lo dejó. Afirma que Comma tiene runway &ldquo;considerablemente más largo que cuatro meses&rdquo; cuando Elon revela que Twitter tenía solo un mes de cash runway sin cambios. Usa Vim con cero plugins durante años, ahora VS Code pero en el modo más bare-bones posible. Odia el autocomplete, la única excepción es el autocomplete de texto en el teléfono porque escribir en un teléfono es molesto.</p>
+<p>ASLR (Address Space Layout Randomization, o <strong>Randomización del Espacio de Direcciones</strong>) es un mecanismo de seguridad de software utilizado por sistemas operativos modernos (como Windows, Linux y macOS) para proteger la memoria de un proceso contra ciertos tipos de ataques de explotación.</p>
+<p>Su función principal es <strong>randomizar las ubicaciones</strong> donde se cargan en memoria las partes clave del programa, como:</p>
+<ul>
+<li>La pila (stack).</li>
+<li>El montículo (heap).</li>
+<li>Las bibliotecas compartidas (librerías).</li>
+<li>El código ejecutable (binario).</li>
+</ul>
+<h3 id="por-qué-es-importante-en-el-contexto-del-hacking">¿Por qué es importante en el contexto del hacking?</h3>
+<ol>
+<li><strong>Dificulta la explotación de vulnerabilidades</strong>: Muchos ataques dependen de conocer la dirección exacta de una función o un bloque de memoria para inyectar código malicioso o saltar a una parte específica del programa. Al variar estas direcciones en cada ejecución, ASLR hace que sea muy difícil para un atacante predecir dónde se encuentra el código que necesita atacar.</li>
+<li><strong>Aumenta la complejidad técnica</strong>: Como mencionas en tu consulta, para un hacker moderno, saltarse ASLR es solo una de las muchas barreras. A menudo, ASLR debe combinarse con otras técnicas (como <em>infoleaks</em> o <em>ROP gadgets</em>) y junto con otras protecciones (como <em>DEP/NX</em> o <em>CFG</em>) para que un exploit sea efectivo. Esto explica por qué los exploits modernos suelen requerir &ldquo;encadenar&rdquo; múltiples vulnerabilidades o técnicas de evasión.</li>
+<li><strong>Evolución generacional</strong>: Para generaciones anteriores de hackers (como la de Charlie Miller, activo en la década de 2000), ASLR era una novedad frustrante que rompía sus exploits simples. Para la generación actual, ASLR es un estándar asumido, y su habilidad se mide por la capacidad de superar no solo ASLR, sino también otras capas de seguridad modernas, lo que justifica la observación de que el &ldquo;valor&rdquo; de un exploit ha subido porque requiere una ingeniería mucho más compleja y costosa de desarrollar.</li>
+</ol>
+<p>En resumen, <strong>ASLR es una defensa que hace que los ataques basados en memoria sean mucho más impredecibles y difíciles de ejecutar con éxito</strong>, elevando la barrera técnica y, por ende, el costo y la experiencia necesaria para desarrollar exploits que la superen.</p>
+<p>La diferencia de perspectiva entre Charlie Miller y George Hotz (geohot) respecto a ASLR no se debe necesariamente a que uno lo considere un problema técnico insuperable y el otro no, sino a sus <strong>contextos generacionales, objetivos y filosofías de hacking</strong>:</p>
+<h3 id="1-el-contexto-de-charlie-miller-la-barrera-de-la-implementación-temprana">1. El contexto de Charlie Miller: La barrera de la implementación temprana</h3>
+<p>Charlie Miller, activo prominentemente a finales de los 2000 y principios de 2010 (famoso por sus hacks en Pwn2Own), operaba en una época donde ASLR era una <strong>novedad inconsistente</strong>.</p>
+<ul>
+<li><strong>Implementación defectuosa:</strong> Miller se quejaba de ASLR porque en sus primeros años (ej. en Mac OS X Leopard o Windows Vista inicial) la implementación era parcial o débil. A menudo, no todas las bibliotecas o el ejecutable principal se aleatorizaban correctamente, o existían fugas de información (<em>infoleaks</em>) que revelaban las direcciones de memoria.</li>
+<li><strong>El obstáculo práctico:</strong> Para un investigador de seguridad que buscaba exploits fiables y reproducibles (como en competiciones Pwn2Own), ASLR representaba una <strong>barrera de fiabilidad</strong>. Antes de ASLR, un exploit funcionaba casi siempre; con ASLR, requería pasos adicionales complejos (como encontrar una fuga de memoria primero) que a menudo fallaban o dependían de condiciones muy específicas. Su queja reflejaba la frustración de que una defensa, aunque imperfecta, rompía la certeza de sus métodos tradicionales.</li>
+<li><strong>Visión del mercado:</strong> Miller veía el aumento de seguridad (ASLR, DEP, Sandboxing) como un factor que encarecía y dificultaba la creación de exploits fiables, validando su tesis de que &ldquo;lo que importa es el costo&rdquo;.</li>
+</ul>
+<h3 id="2-el-contexto-de-george-hotz-la-mentalidad-de-todo-es-solucionable">2. El contexto de George Hotz: La mentalidad de &ldquo;todo es solucionable&rdquo;</h3>
+<p>George Hotz, representante de una generación ligeramente posterior y con un enfoque más orientado al <em>jailbreaking</em> y a la ingeniería inversa agresiva (ej. iPhone, PlayStation 3), adopta una postura diferente:</p>
+<ul>
+<li><strong>ASLR como un dato, no un muro:</strong> Para Hotz y su generación, ASLR no es una queja, sino un <strong>requisito base</strong>. No se detienen a lamentar su existencia; asumen que está ahí y buscan inmediatamente la forma de evadirlo (mediante <em>brute-force</em> si es débil, o encadenando vulnerabilidades para leer la memoria primero).</li>
+<li><strong>Enfoque en la cadena de exploits:</strong> La observación que mencionas (&ldquo;necesitan encadenar nueve exploits&rdquo;) es típica de este enfoque. Hotz no dice que ASLR no exista, sino que su presencia es irrelevante si eres lo suficientemente bueno encontrando <em>otras</em> fallas que te permitan saltártelo. Para él, la dificultad no es la defensa en sí, sino la creatividad requerida para construir la cadena de ataque.</li>
+<li><strong>Herramientas sobre quejas:</strong> Hotz tiende a centrarse en construir herramientas y métodos nuevos (como sus trabajos con <em>comma.ai</em> o sus <em>jailbreaks</em>) en lugar de debatir sobre la dificultad teórica de las defensas. Su famosa frase implícita sería: &ldquo;Si el sistema tiene ASLR, encuentro una forma de leer la memoria; si tiene sandbox, salgo de ella con otro bug&rdquo;.</li>
+</ul>
+<h3 id="conclusión-evolución-de-la-dificultad">Conclusión: Evolución de la dificultad</h3>
+<ul>
+<li><strong>Miller (Generación de transición):</strong> Vivió el cambio de &ldquo;no hay defensa&rdquo; a &ldquo;hay una defensa molesta e inconsistente&rdquo;. Su queja era legítima porque ASLR rompía sus exploits existentes sin ofrecer una seguridad perfecta todavía.</li>
+<li><strong>Hotz (Generación nativa de defensas):</strong> Creció en un entorno donde ASLR, DEP y Sandboxing son el estándar. Para él, preguntar &ldquo;¿es más difícil?&rdquo; es irrelevante; la pregunta es &ldquo;¿cuál es el siguiente eslabón de la cadena?&rdquo;.</li>
+</ul>
+<p>En resumen, Miller veía ASLR como un <strong>problema que aumentaba el costo y la incertidumbre</strong> de sus exploits en esa época, mientras que Hotz lo ve como un <strong>obstáculo técnico más</strong> en un rompecabezas que siempre tiene solución si se tiene la habilidad suficiente. La &ldquo;dificultad&rdquo; no ha cambiado tanto técnicamente para los mejores, pero el <strong>costo de entrada</strong> para lograr un exploit fiable sí se ha disparado, validando la visión económica de Miller.</p>
 
 </div>
 
