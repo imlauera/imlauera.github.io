@@ -29,7 +29,7 @@ Vamos a aclarar el enredo:
 1. La verdad sobre Llama (Facebook) Llama SÍ libera los “pesos” (weights). Si te bajas Llama 3, te bajas un archivo gigante (los pesos) que te permite correr el modelo en tu PC. Técnicamente, puedes usar ollama run llama3 sin problemas.">
 	<meta itemprop="datePublished" content="2026-03-13T07:01:32-03:00">
 	<meta itemprop="dateModified" content="2026-03-13T07:01:32-03:00">
-	<meta itemprop="wordCount" content="4192">
+	<meta itemprop="wordCount" content="4413">
 	<meta itemprop="keywords" content="Ai">
   
 	<meta name="twitter:card" content="summary">
@@ -432,6 +432,7 @@ Los modelos que él menciona (Qwen de Alibaba, MiniMax, Kimi, y Z.ai que suele s
 Por ejemplo, <code>DeepSeek-R1-Distill-Qwen-7B-GGUF</code> para el peque.</li>
 <li>Usar <strong>LM Studio</strong> (interfaz gráfica fácil para Windows/Mac/Linux) o <strong>llama.cpp</strong> (más técnica) para cargar el archivo GGUF y ejecutar.</li>
 </ul>
+<p>(Explico al final de todo como hacerlo)</p>
 <h4 id="-opciones-más-específicas">🥉 Opciones más específicas</h4>
 <ul>
 <li><strong>ExLlamaV2 / vLLM</strong> si tenés GPUs modernas y querés máxima velocidad de inferencia (solo para usuarios avanzados).</li>
@@ -470,6 +471,65 @@ Por ejemplo, <code>DeepSeek-R1-Distill-Qwen-7B-GGUF</code> para el peque.</li>
 <p>En <code>~/.ollama/models/</code> — mientras no hagas <code>ollama rm deepseek-r1:7b</code> o borres esa carpeta, los modelos quedan para siempre.</p>
 <hr>
 <p><strong>TL;DR:</strong> No se borró nada, solo faltaba <code>systemctl enable ollama</code>. Probá primero <code>ollama list</code> y contame qué te muestra.</p>
+<p>Sí. Ollama puede usar modelos de Hugging Face, pero no descarga directamente cualquier repo “tal cual”. Normalmente tenés que:</p>
+<ol>
+<li>descargar el archivo <code>.gguf</code></li>
+<li>crear un <code>Modelfile</code></li>
+<li>importarlo en Ollama</li>
+</ol>
+<p>Por ejemplo con <a href="https://huggingface.co/deepseek-ai?utm_source=chatgpt.com">Hugging Face DeepSeek AI</a>.</p>
+<p>Si querés usar algo como <code>DeepSeek-R1-Distill-Qwen-7B-GGUF</code>, hacés esto:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mkdir -p ~/ollama/deepseek
+</span></span><span style="display:flex;"><span>cd ~/ollama/deepseek
+</span></span></code></pre></div><p>Descargás el GGUF desde Hugging Face. Por ejemplo:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>wget https://huggingface.co/deepseek-ai/DeepSeek-R1-Distill-Qwen-7B-GGUF/resolve/main/deepseek-r1-distill-qwen-7b-q4_k_m.gguf
+</span></span></code></pre></div><p>(o usando <code>curl -L -O</code>)</p>
+<p>Después creás un archivo llamado <code>Modelfile</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nano Modelfile
+</span></span></code></pre></div><p>Y adentro ponés:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>FROM ./deepseek-r1-distill-qwen-7b-q4_k_m.gguf
+</span></span></code></pre></div><p>Guardás y luego:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ollama create deepseek-local -f Modelfile
+</span></span></code></pre></div><p>Y listo. Lo ejecutás con:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ollama run deepseek-local
+</span></span></code></pre></div><p>También podés usar modelos de otros repos GGUF como:</p>
+<ul>
+<li><a href="https://huggingface.co/TheBloke?utm_source=chatgpt.com">TheBloke Hugging Face</a></li>
+<li><a href="https://huggingface.co/bartowski?utm_source=chatgpt.com">bartowski Hugging Face</a></li>
+</ul>
+<p>que suelen tener cuantizaciones ya preparadas para llama.cpp/Ollama (<code>Q4_K_M</code>, <code>Q5_K_M</code>, etc).</p>
+<p>Algunas cosas importantes:</p>
+<ul>
+<li>Ollama NO usa modelos Transformers normales (<code>.safetensors</code>) directamente.</li>
+<li>Necesitás formato GGUF.</li>
+<li>Cuanto más chica la cuantización (<code>Q2</code>, <code>Q3</code>, <code>Q4</code>), menos RAM usa pero peor calidad.</li>
+<li><code>Q4_K_M</code> suele ser el mejor equilibrio.</li>
+</ul>
+<p>En tu PC vieja o teléfono:</p>
+<ul>
+<li>
+<p>TinyLlama 1.1B → corre bastante fácil</p>
+</li>
+<li>
+<p>Qwen 1.5B / 3B → también</p>
+</li>
+<li>
+<p>DeepSeek 7B → ya necesita bastante RAM</p>
+</li>
+<li>
+<p>Un Moto G4 probablemente no aguante un 7B usablemente. Ahí conviene algo tipo:</p>
+<ul>
+<li>TinyLlama</li>
+<li>Qwen 1.5B</li>
+<li>Gemma 2B</li>
+</ul>
+</li>
+</ul>
+<p>Para ver modelos listos para Ollama directamente:</p>
+<p><a href="https://ollama.com/library?utm_source=chatgpt.com">Ollama Library</a></p>
+<p>Ejemplo:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ollama run tinyllama
+</span></span></code></pre></div><p>y Ollama lo descarga solo.</p>
 
 </div>
 
