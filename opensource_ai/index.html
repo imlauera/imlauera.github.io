@@ -29,7 +29,7 @@ Vamos a aclarar el enredo:
 1. La verdad sobre Llama (Facebook) Llama SÍ libera los “pesos” (weights). Si te bajas Llama 3, te bajas un archivo gigante (los pesos) que te permite correr el modelo en tu PC. Técnicamente, puedes usar ollama run llama3 sin problemas.">
 	<meta itemprop="datePublished" content="2026-03-13T07:01:32-03:00">
 	<meta itemprop="dateModified" content="2026-03-13T07:01:32-03:00">
-	<meta itemprop="wordCount" content="4413">
+	<meta itemprop="wordCount" content="6042">
 	<meta itemprop="keywords" content="Ai">
   
 	<meta name="twitter:card" content="summary">
@@ -530,6 +530,588 @@ Por ejemplo, <code>DeepSeek-R1-Distill-Qwen-7B-GGUF</code> para el peque.</li>
 <p>Ejemplo:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ollama run tinyllama
 </span></span></code></pre></div><p>y Ollama lo descarga solo.</p>
+<p>GGUF es básicamente el “archivo ejecutable” del modelo para programas como:</p>
+<ul>
+<li><a href="https://github.com/ggml-org/llama.cpp?utm_source=chatgpt.com">llama.cpp GitHub</a></li>
+<li><a href="https://ollama.com?utm_source=chatgpt.com">Ollama</a></li>
+<li><a href="https://lmstudio.ai?utm_source=chatgpt.com">LM Studio</a></li>
+</ul>
+<p>El modelo original de Hugging Face normalmente viene en archivos como:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>model.safetensors
+</span></span><span style="display:flex;"><span>pytorch_model.bin
+</span></span><span style="display:flex;"><span>tokenizer.json
+</span></span><span style="display:flex;"><span>config.json
+</span></span></code></pre></div><p>Eso está pensado para Python + PyTorch + GPUs grandes.</p>
+<p>GGUF en cambio es un formato especial optimizado para correr localmente en CPU o hardware limitado. Lo usa llama.cpp.</p>
+<p>Podés pensarlo así:</p>
+<table>
+	<thead>
+			<tr>
+					<th>Formato</th>
+					<th>Para qué sirve</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td><code>.safetensors</code></td>
+					<td>entrenamiento / PyTorch</td>
+			</tr>
+			<tr>
+					<td><code>.gguf</code></td>
+					<td>inferencia local rápida</td>
+			</tr>
+	</tbody>
+</table>
+<p>GGUF además puede venir cuantizado.</p>
+<p>Por ejemplo:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>model-q4_k_m.gguf
+</span></span></code></pre></div><p>Eso significa que comprimieron el modelo para que:</p>
+<ul>
+<li>use menos RAM</li>
+<li>cargue más rápido</li>
+<li>funcione en CPUs comunes</li>
+</ul>
+<p>A cambio pierde algo de precisión.</p>
+<p>Ejemplo aproximado para un 7B:</p>
+<table>
+	<thead>
+			<tr>
+					<th>Tipo</th>
+					<th>RAM aprox</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>FP16 original</td>
+					<td>~14 GB</td>
+			</tr>
+			<tr>
+					<td>Q8 GGUF</td>
+					<td>~8 GB</td>
+			</tr>
+			<tr>
+					<td>Q4 GGUF</td>
+					<td>~4-5 GB</td>
+			</tr>
+	</tbody>
+</table>
+<p>Por eso GGUF explotó tanto: permitió correr LLMs en PCs normales.</p>
+<p>Internamente GGUF contiene:</p>
+<ul>
+<li>pesos del modelo</li>
+<li>tokenizer</li>
+<li>metadata</li>
+<li>configuración</li>
+<li>cuantización</li>
+</ul>
+<p>Todo en un solo archivo.</p>
+<p>Por eso en Ollama hacés:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>FROM modelo.gguf
+</span></span></code></pre></div><p>y ya funciona sin Transformers ni Python.</p>
+<p>El nombre viene de:</p>
+<ul>
+<li>GGML → vieja librería</li>
+<li>GGMF/GGJT → formatos anteriores</li>
+<li>GGUF = “GGML Unified Format”</li>
+</ul>
+<p>Hoy GGUF es el estándar de facto para correr modelos locales livianos.</p>
+<p>No. Muchos modelos NO vienen originalmente en GGUF.</p>
+<p>La mayoría de los modelos en <a href="https://huggingface.co?utm_source=chatgpt.com">Hugging Face</a> están publicados en formato para entrenamiento/inferencia con PyTorch:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>.safetensors
+</span></span><span style="display:flex;"><span>.bin
+</span></span><span style="display:flex;"><span>.pt
+</span></span></code></pre></div><p>y después alguien los convierte a GGUF.</p>
+<p>Por ejemplo:</p>
+<ul>
+<li>Meta publica Llama en safetensors</li>
+<li>Mistral AI publica Mistral en safetensors</li>
+<li>DeepSeek muchas veces publica normal y además GGUF en algunos repos</li>
+</ul>
+<p>Luego comunidades como:</p>
+<ul>
+<li><a href="https://huggingface.co/TheBloke?utm_source=chatgpt.com">TheBloke Hugging Face</a></li>
+<li><a href="https://huggingface.co/bartowski?utm_source=chatgpt.com">bartowski Hugging Face</a></li>
+</ul>
+<p>hacen:</p>
+<ol>
+<li>conversión a GGUF</li>
+<li>cuantización</li>
+<li>uploads listos para llama.cpp/Ollama</li>
+</ol>
+<p>Por eso vas a ver:</p>
+<ul>
+<li>repos “originales”</li>
+<li>repos “GGUF”</li>
+</ul>
+<p>Ejemplo:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>meta-llama/Llama-3-8B
+</span></span></code></pre></div><p>(original)</p>
+<p>y otro:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>bartowski/Llama-3-8B-GGUF
+</span></span></code></pre></div><p>(convertido para local)</p>
+<p>Incluso algunos modelos NO pueden convertirse fácilmente:</p>
+<ul>
+<li>arquitecturas raras</li>
+<li>modelos multimodales complejos</li>
+<li>modelos nuevos sin soporte en llama.cpp</li>
+</ul>
+<p>Entonces:</p>
+<ul>
+<li>no todos tienen GGUF</li>
+<li>no todos son compatibles con Ollama</li>
+<li>pero los modelos populares casi siempre terminan teniendo una versión GGUF hecha por la comunidad</li>
+</ul>
+<p>Si buscás modelos para Ollama, fijate que diga:</p>
+<ul>
+<li>GGUF</li>
+<li>llama.cpp compatible</li>
+<li>Ollama compatible</li>
+</ul>
+<p>Si ves solamente:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>model.safetensors
+</span></span></code></pre></div><p>entonces probablemente NO podés cargarlo directamente en Ollama sin convertirlo antes.</p>
+<p>La idea es esta: Hugging Face normalmente guarda los modelos en formato “de entrenamiento” para PyTorch. Ollama no entiende eso. Ollama entiende GGUF. Entonces hay que hacer una traducción/conversión.</p>
+<p>El flujo real es:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>HuggingFace model (.safetensors)
+</span></span><span style="display:flex;"><span>        ↓
+</span></span><span style="display:flex;"><span>convertir a GGUF
+</span></span><span style="display:flex;"><span>        ↓
+</span></span><span style="display:flex;"><span>cuantizar (opcional)
+</span></span><span style="display:flex;"><span>        ↓
+</span></span><span style="display:flex;"><span>usar en Ollama
+</span></span></code></pre></div><p>Supongamos que querés convertir un modelo cualquiera.</p>
+<p>Primero necesitás descargar el repo del modelo. Por ejemplo uno de Qwen.</p>
+<p>Instalás git-lfs porque Hugging Face usa eso para archivos grandes:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo apt install git-lfs
+</span></span><span style="display:flex;"><span>git lfs install
+</span></span></code></pre></div><p>Clonás el modelo:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>git clone https://huggingface.co/Qwen/Qwen2-1.5B
+</span></span></code></pre></div><p>Ahora tenés una carpeta llena de <code>.safetensors</code>.</p>
+<p>Después necesitás llama.cpp:</p>
+<p><a href="https://github.com/ggml-org/llama.cpp?utm_source=chatgpt.com">llama.cpp GitHub</a></p>
+<p>Lo compilás:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>git clone https://github.com/ggml-org/llama.cpp
+</span></span><span style="display:flex;"><span>cd llama.cpp
+</span></span><span style="display:flex;"><span>cmake -B build
+</span></span><span style="display:flex;"><span>cmake --build build -j
+</span></span></code></pre></div><p>Ahora viene la parte importante. llama.cpp trae scripts de conversión.</p>
+<p>Volvés a la carpeta del repo llama.cpp y hacés algo así:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>python convert_hf_to_gguf.py ../Qwen2-1.5B
+</span></span></code></pre></div><p>y eso genera algo como:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>Qwen2-1.5B-F16.gguf
+</span></span></code></pre></div><p>Ese archivo todavía es enorme porque está en FP16.</p>
+<p>Entonces lo cuantizás:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>./build/bin/llama-quantize <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>Qwen2-1.5B-F16.gguf <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>Qwen2-1.5B-Q4_K_M.gguf <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>Q4_K_M
+</span></span></code></pre></div><p>Ahora sí tenés el GGUF comprimido.</p>
+<p>Después hacés:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mkdir mymodel
+</span></span><span style="display:flex;"><span>cd mymodel
+</span></span></code></pre></div><p>Creás:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>Modelfile
+</span></span></code></pre></div><p>con:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>FROM ./Qwen2-1.5B-Q4_K_M.gguf
+</span></span></code></pre></div><p>y:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ollama create qwen-local -f Modelfile
+</span></span></code></pre></div><p>Después:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ollama run qwen-local
+</span></span></code></pre></div><p>Y listo.</p>
+<p>Pero acá viene la parte importante que nadie explica bien: NO todos los modelos funcionan automáticamente.</p>
+<p>Porque cada arquitectura necesita soporte en llama.cpp.</p>
+<p>Modelos compatibles suelen ser:</p>
+<ul>
+<li>Llama</li>
+<li>Mistral</li>
+<li>Qwen</li>
+<li>Gemma</li>
+<li>Phi</li>
+<li>DeepSeek derivados</li>
+</ul>
+<p>Modelos raros o nuevos:</p>
+<ul>
+<li>capaz no convierten</li>
+<li>convierten pero rompen</li>
+<li>convierten pero no generan bien</li>
+</ul>
+<p>Entonces “correr cualquier modelo de Hugging Face” no existe literalmente. Depende de si llama.cpp soporta esa arquitectura.</p>
+<p>La forma fácil de saberlo es:</p>
+<ul>
+<li>si existe un repo GGUF del modelo → probablemente funciona</li>
+<li>si nadie hizo GGUF → probablemente todavía no</li>
+</ul>
+<p>Por eso mucha gente directamente baja GGUF ya hecho desde:</p>
+<ul>
+<li><a href="https://huggingface.co/bartowski?utm_source=chatgpt.com">bartowski Hugging Face</a></li>
+<li><a href="https://huggingface.co/TheBloke?utm_source=chatgpt.com">TheBloke Hugging Face</a></li>
+</ul>
+<p>y se ahorra toda la conversión.</p>
+<p>Con 4 GB de RAM estás bastante limitado, pero todavía podés correr cosas útiles si usás GGUF cuantizado (<code>Q4</code>, <code>Q3</code>, etc).</p>
+<p>La clave NO es solamente el tamaño “B” del modelo. Lo importante es cuánto pesa el archivo GGUF y cuánta RAM real consume al cargar.</p>
+<p>Regla aproximada:</p>
+<table>
+	<thead>
+			<tr>
+					<th>Modelo</th>
+					<th>RAM mínima usable</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>1B–2B Q4</td>
+					<td>~1–2 GB</td>
+			</tr>
+			<tr>
+					<td>3B Q4</td>
+					<td>~2–3 GB</td>
+			</tr>
+			<tr>
+					<td>7B Q4</td>
+					<td>~5–6 GB</td>
+			</tr>
+			<tr>
+					<td>13B Q4</td>
+					<td>~10+ GB</td>
+			</tr>
+	</tbody>
+</table>
+<p>Con 4 GB:</p>
+<ul>
+<li>1B y 2B → bien</li>
+<li>3B → probablemente sí</li>
+<li>7B → muy justo o imposible</li>
+<li>13B → no</li>
+</ul>
+<p>En <a href="https://huggingface.co?utm_source=chatgpt.com">Hugging Face</a> mirá:</p>
+<ol>
+<li>que diga GGUF</li>
+<li>el tamaño del archivo</li>
+<li>la cuantización</li>
+</ol>
+<p>Por ejemplo:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>TinyLlama-1.1B-Q4_K_M.gguf
+</span></span></code></pre></div><p>capaz pesa ~700 MB → perfecto para vos.</p>
+<p>Pero:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>Llama-3-8B-Q4_K_M.gguf
+</span></span></code></pre></div><p>puede pesar 4.5 GB → ya no entra cómodamente.</p>
+<p>La cuantización importa muchísimo:</p>
+<table>
+	<thead>
+			<tr>
+					<th>Tipo</th>
+					<th>Calidad</th>
+					<th>RAM</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>Q2</td>
+					<td>baja</td>
+					<td>muy poca</td>
+			</tr>
+			<tr>
+					<td>Q3</td>
+					<td>ok</td>
+					<td>poca</td>
+			</tr>
+			<tr>
+					<td>Q4_K_M</td>
+					<td>buena</td>
+					<td>media</td>
+			</tr>
+			<tr>
+					<td>Q5</td>
+					<td>mejor</td>
+					<td>más RAM</td>
+			</tr>
+			<tr>
+					<td>Q8</td>
+					<td>casi full</td>
+					<td>mucha RAM</td>
+			</tr>
+	</tbody>
+</table>
+<p>Para 4 GB te conviene:</p>
+<ul>
+<li><code>Q4_K_M</code></li>
+<li>o <code>Q3_K_M</code></li>
+</ul>
+<p>y modelos:</p>
+<ul>
+<li>1B</li>
+<li>2B</li>
+<li>3B máximo</li>
+</ul>
+<p>Estos suelen andar bien:</p>
+<ul>
+<li>TinyLlama 1.1B</li>
+<li>Qwen 1.5B</li>
+<li>Gemma 2B</li>
+<li>Phi-2</li>
+<li>Qwen2 0.5B</li>
+<li>SmolLM</li>
+</ul>
+<p>En Hugging Face buscás literalmente:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>Qwen2 1.5B GGUF
+</span></span></code></pre></div><p>o:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>TinyLlama GGUF
+</span></span></code></pre></div><p>y mirás el tamaño del <code>.gguf</code>.</p>
+<p>Si pesa:</p>
+<ul>
+<li>menos de 2 GB → probablemente funcione</li>
+<li>3–4 GB → muy justo</li>
+<li>más de 4 GB → olvidate</li>
+</ul>
+<p>Además Linux consume RAM también. Si tenés 4 GB físicos, capaz solo te quedan 2.5–3 GB libres reales.</p>
+<p>Por eso TinyLlama o Qwen 1.5B son más realistas para tu máquina.</p>
+<p>Models
+google/gemma-4-12B-it-qat-q4_0-gguf
+google/gemma-4-31B-it-qat-q4_0-gguf
+google/gemma-4-26B-A4B-it-qat-q4_0-gguf
+google/gemma-3-12b-it-qat-q4_0-unquantized
+RDson/Qwen3.6-27B-MTP-Q4_K_M-GGUF
+google/gemma-4-12B-it-qat-q4_0-unquantized
+See 16417 model results for &ldquo;q4&rdquo;
+Datasets</p>
+<p>Esos modelos que encontraste son gigantes para 4 GB de RAM. No importa que digan <code>q4</code>.</p>
+<p>El problema es el número antes de la B:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>12B
+</span></span><span style="display:flex;"><span>26B
+</span></span><span style="display:flex;"><span>31B
+</span></span><span style="display:flex;"><span>27B
+</span></span></code></pre></div><p>La “B” significa miles de millones de parámetros.</p>
+<p>Con 4 GB:</p>
+<ul>
+<li>12B → imposible o extremadamente swap-lento</li>
+<li>27B → imposible</li>
+<li>31B → imposible total</li>
+</ul>
+<p>Incluso cuantizados Q4 siguen siendo enormes.</p>
+<p>Por ejemplo aproximado:</p>
+<table>
+	<thead>
+			<tr>
+					<th>Modelo</th>
+					<th>GGUF Q4 aprox</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>1B</td>
+					<td>~0.7 GB</td>
+			</tr>
+			<tr>
+					<td>2B</td>
+					<td>~1.5 GB</td>
+			</tr>
+			<tr>
+					<td>3B</td>
+					<td>~2 GB</td>
+			</tr>
+			<tr>
+					<td>7B</td>
+					<td>~4.5 GB</td>
+			</tr>
+			<tr>
+					<td>12B</td>
+					<td>~7–8 GB</td>
+			</tr>
+			<tr>
+					<td>27B</td>
+					<td>~16+ GB</td>
+			</tr>
+			<tr>
+					<td>31B</td>
+					<td>~20 GB</td>
+			</tr>
+	</tbody>
+</table>
+<p>O sea ese:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>google/gemma-4-12B-it-qat-q4_0-gguf
+</span></span></code></pre></div><p>probablemente necesite 8 GB o más reales.</p>
+<p>Además Ollama y llama.cpp necesitan RAM extra para:</p>
+<ul>
+<li>contexto</li>
+<li>KV cache</li>
+<li>tokenizer</li>
+<li>sistema operativo</li>
+</ul>
+<p>Entonces un modelo de “4 GB” en disco puede terminar usando 6 GB reales.</p>
+<p>Para tu máquina buscá cosas así:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>1B
+</span></span><span style="display:flex;"><span>2B
+</span></span><span style="display:flex;"><span>3B
+</span></span></code></pre></div><p>y GGUF Q4.</p>
+<p>Ejemplos realistas:</p>
+<ul>
+<li>Gemma 2B</li>
+<li>Qwen2 1.5B</li>
+<li>TinyLlama 1.1B</li>
+<li>SmolLM</li>
+<li>Phi-2</li>
+</ul>
+<p>En Hugging Face buscá literalmente:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>Qwen2-1.5B-GGUF
+</span></span></code></pre></div><p>o:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>gemma-2b-gguf
+</span></span></code></pre></div><p>o:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>tinyllama gguf
+</span></span></code></pre></div><p>y fijate el tamaño REAL del <code>.gguf</code>.</p>
+<p>También hay otra trampa: algunos repos dicen:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>unquantized
+</span></span></code></pre></div><p>Eso significa que NO está realmente comprimido aunque diga q4 en el nombre raro del repo.</p>
+<p>Vos querés archivos concretos como:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>model-Q4_K_M.gguf
+</span></span></code></pre></div><p>y mirar cuánto pesa el archivo exacto. No el repo. El archivo.</p>
+<p>Si querés, puedo recomendarte modelos específicos que sí van a correr en tus 4 GB y decirte exactamente cuál descargar.</p>
+<p>nvidia/LocateAnything-3B
+HauhauCS/Qwen3.6-35B-A3B-Uncensored-HauhauCS-Aggressive
+unsloth/Qwen3.6-35B-A3B-MTP-GGUF
+Qwen/Qwen3.6-35B-A3B
+tencent/Hy-MT2-30B-A3B
+unsloth/Qwen3.6-35B-A3B-GGUF
+See 55156 model results for &ldquo;3B&rdquo;
+Datasets</p>
+<p>Ahí el buscador te está engañando porque buscaste <code>&quot;3B&quot;</code> y te devuelve cualquier cosa que tenga “3B” en el nombre aunque el modelo real sea enorme.</p>
+<p>Por ejemplo:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>Qwen3.6-35B-A3B
+</span></span></code></pre></div><p>NO es un modelo 3B.</p>
+<p>Es un modelo de 35B con una arquitectura MoE rara (“A3B”). Sigue siendo gigantesco para tu PC.</p>
+<p>El único de esa lista que podría llegar a interesarte es:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>nvidia/LocateAnything-3B
+</span></span></code></pre></div><p>porque realmente dice 3B.</p>
+<p>Pero además hay otro problema: no todos los modelos “3B” son chatbots normales. Algunos son:</p>
+<ul>
+<li>visión</li>
+<li>embeddings</li>
+<li>multimodales</li>
+<li>detección</li>
+<li>research</li>
+</ul>
+<p><code>LocateAnything</code> parece ser de visión/multimodal, no un chat tipo ChatGPT.</p>
+<p>Vos querés modelos “instruct/chat”.</p>
+<p>Buscá mejor así en <a href="https://huggingface.co?utm_source=chatgpt.com">Hugging Face</a>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>1.5B instruct gguf
+</span></span></code></pre></div><p>o:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>2B chat gguf
+</span></span></code></pre></div><p>o directamente:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>tinyllama gguf
+</span></span></code></pre></div><p>Modelos REALISTAS para 4 GB:</p>
+<ul>
+<li>TinyLlama 1.1B</li>
+<li>Qwen2 1.5B Instruct</li>
+<li>Gemma 2B</li>
+<li>Phi-2</li>
+<li>SmolLM2</li>
+</ul>
+<p>Evitá:</p>
+<ul>
+<li>7B+</li>
+<li>“MoE”</li>
+<li>multimodal</li>
+<li>vision-language</li>
+<li>12B/27B/35B</li>
+<li>“reasoning gigantic”</li>
+<li>“agentic”</li>
+</ul>
+<p>Porque aunque arranquen:</p>
+<ul>
+<li>van a swapear</li>
+<li>tardar 2 minutos por token</li>
+<li>congelar Linux</li>
+</ul>
+<p>La mejor forma de saber si sirve para vos es mirar el archivo GGUF real.</p>
+<p>Si ves algo así:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>Qwen2-1.5B-Instruct-Q4_K_M.gguf
+</span></span><span style="display:flex;"><span>1.2 GB
+</span></span></code></pre></div><p>eso probablemente corre.</p>
+<p>Pero:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>Qwen3.6-35B-A3B-Q4.gguf
+</span></span><span style="display:flex;"><span>20 GB
+</span></span></code></pre></div><p>ni cerca.</p>
+<p>También podés estimar rápido:</p>
+<p>Con 4 GB, tu zona segura es hasta 3B.</p>
+<p>RAM aproximada necesaria para modelos GGUF Q4</p>
+<p>Estimación típica para correr modelos localmente en CPU.</p>
+<p>model	ram
+1B	1
+2B	2
+3B	3
+7B	6
+12B	9
+35B	22</p>
+<p>Models</p>
+<pre tabindex="0"><code>mradermacher/Atlas-Chat-2B-GGUF
+RichardErkhov/jstredacted_-_gamma-2b-instruct-ft-awesome-chatgpt-prompts-gguf
+RichardErkhov/khairulhabs_-_gemma-2b-chat-doctor-gguf
+dagbs/gemma-2b-it_oasst2_chatML_Cluster2_aya_multilingual-GGUF
+mradermacher/Schaapje-2B-Chat-SFT-V1.0-i1-GGUF
+RichardErkhov/MBZUAI-Paris_-_Atlas-Chat-2B-gguf
+</code></pre><p>Ahora sí, esos ya tienen más sentido para tu máquina porque son 2B y además muchos ya vienen en GGUF listo para usar.</p>
+<p>Pero ojo: esos nombres raros suelen ser “fine-tunes” hechos por gente random. A veces funcionan bien, a veces son inestables, censurados raro, repetitivos o directamente malos.</p>
+<p>Por ejemplo:</p>
+<ul>
+<li><code>Atlas-Chat-2B</code></li>
+<li><code>gamma-2b-instruct-ft-awesome-chatgpt-prompts</code></li>
+<li><code>chat-doctor</code></li>
+<li><code>Schaapje</code></li>
+</ul>
+<p>son variantes modificadas encima de otro modelo base.</p>
+<p>Para empezar, te conviene algo más estándar y conocido.</p>
+<p>Yo iría primero por:</p>
+<ul>
+<li>Gemma 2B</li>
+<li>Qwen2 1.5B Instruct</li>
+<li>TinyLlama Chat</li>
+</ul>
+<p>porque:</p>
+<ul>
+<li>hay más soporte</li>
+<li>funcionan mejor en llama.cpp/Ollama</li>
+<li>menos bugs</li>
+<li>mejores prompts</li>
+</ul>
+<p>Esos repos GGUF que encontraste igual probablemente sí corran en tu PC si elegís:</p>
+<ul>
+<li><code>Q4_K_M</code></li>
+<li><code>Q3_K_M</code></li>
+</ul>
+<p>y el archivo pesa ~1–2 GB.</p>
+<p>Por ejemplo si entrás a:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>mradermacher/Atlas-Chat-2B-GGUF
+</span></span></code></pre></div><p>vas a ver muchos archivos:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>Q2_K.gguf
+</span></span><span style="display:flex;"><span>Q3_K_M.gguf
+</span></span><span style="display:flex;"><span>Q4_K_M.gguf
+</span></span><span style="display:flex;"><span>Q5_K_M.gguf
+</span></span></code></pre></div><p>Vos elegís según RAM/calidad.</p>
+<p>Con 4 GB:</p>
+<ul>
+<li><code>Q4_K_M</code> ideal</li>
+<li><code>Q3_K_M</code> si explota la RAM</li>
+</ul>
+<p>Después literalmente hacés:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>wget ARCHIVO.gguf
+</span></span></code></pre></div><p>creás:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>Modelfile
+</span></span></code></pre></div><p>con:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>FROM ./modelo.gguf
+</span></span></code></pre></div><p>y:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ollama create mi-modelo -f Modelfile
+</span></span><span style="display:flex;"><span>ollama run mi-modelo
+</span></span></code></pre></div><p>Y listo.</p>
+<p>Otra cosa importante: algunos GGUF están hechos para llama.cpp pero NO perfectamente para Ollama. Si uno falla:</p>
+<ul>
+<li>no significa que tu PC no pueda</li>
+<li>significa que el GGUF está roto o raro</li>
+</ul>
+<p>Por eso modelos populares son más seguros.</p>
+<p>Si querés algo que probablemente funcione bien YA con 4 GB, buscaría algo tipo:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>Qwen2-1.5B-Instruct-GGUF
+</span></span></code></pre></div><p>o:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>gemma-2b-it-GGUF
+</span></span></code></pre></div><p>antes que esos fine-tunes extraños.</p>
 
 </div>
 
