@@ -29,7 +29,7 @@ deja márgenes chicos (1cm) usa fuente de 8pt Si querés todavía más compacto:
 pandoc archivo.md -o archivo.pdf \ -V geometry:margin=0.5cm \ -V fontsize=7pt 7pt suele ser el límite de “todavía legible” en papel común.">
 	<meta itemprop="datePublished" content="2026-06-09T12:09:08-03:00">
 	<meta itemprop="dateModified" content="2026-06-09T12:09:08-03:00">
-	<meta itemprop="wordCount" content="198">
+	<meta itemprop="wordCount" content="543">
 	<meta itemprop="keywords" content="Cli">
   
 	<meta name="twitter:card" content="summary">
@@ -180,6 +180,35 @@ pandoc archivo.md -o archivo.pdf \
 <li>márgenes mínimos</li>
 </ul>
 <p>Pero normalmente <code>pandoc</code> + PDF alcanza.</p>
+<p>Tenés razón en varias críticas.</p>
+<p>Las columnas <strong>no siempre ahorran espacio</strong>. Fueron una técnica histórica para código fuente porque mejoran la legibilidad, pero si tu objetivo es <strong>máxima densidad lineal de caracteres por hoja</strong>, una sola columna suele aprovechar mejor el ancho útil del A4.</p>
+<p>Y también tenés razón con los acentos: muchas herramientas viejas como <code>a2ps</code>, <code>enscript</code> o algunas configuraciones de LaTeX pueden romper UTF-8 si no se configuran correctamente.</p>
+<p>Si estás en Linux, lo que yo probaría primero no es Pandoc ni LaTeX sino algo mucho más simple: imprimir texto plano directamente mediante CUPS.</p>
+<p>Convertís el markdown a texto:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pandoc archivo.md -t plain -o texto.txt
+</span></span></code></pre></div><p>Y después generás un PDF usando una fuente monoespaciada pequeña con márgenes mínimos.</p>
+<p>Por ejemplo con Pango:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>paps --font<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;DejaVu Sans Mono 5&#34;</span> texto.txt &gt; salida.ps
+</span></span><span style="display:flex;"><span>ps2pdf salida.ps salida.pdf
+</span></span></code></pre></div><p><code>paps</code> maneja UTF-8 correctamente, así que los acentos salen bien.</p>
+<p>Otra herramienta que mucha gente usa para &ldquo;imprimir biblias de documentación&rdquo; es <code>mpage</code>, que permite controlar márgenes, tamaño de letra y disposición sin inventar formatos raros.</p>
+<p>También existe una solución más extrema: olvidarte del PDF y generar directamente PostScript ajustando caracteres por línea y líneas por página.</p>
+<p>Por ejemplo:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>fmt -w <span style="color:#ae81ff">300</span> texto.txt &gt; compacto.txt
+</span></span></code></pre></div><p>Eso rehace los párrafos a 300 caracteres de ancho antes de imprimir.</p>
+<p>Lo que me hace ruido de tu descripción es esto:</p>
+<blockquote>
+<p>el texto queda afuera de la página y no me toma el A4</p>
+</blockquote>
+<p>Eso no es un problema de columnas sino de la cadena completa PDF → visor → driver HP PSC 1400. Muchas veces el PDF está bien y el visor lo está imprimiendo como Letter o con escalado.</p>
+<p>Decime:</p>
+<ul>
+<li>¿Qué distribución usás?</li>
+<li>¿Imprimís desde Evince, Okular, Firefox o directamente con <code>lp</code>?</li>
+<li>¿Tenés instalado CUPS?</li>
+<li>¿Querés preservar los saltos de párrafo o te da igual mientras entre más texto?</li>
+</ul>
+<p>Porque si el objetivo es <strong>&ldquo;250 páginas Markdown → la menor cantidad posible de hojas A4 legibles&rdquo;</strong>, puedo indicarte herramientas específicas usadas para imprimir manuales técnicos (como <code>psutils</code>, <code>paps</code>, <code>enscript</code>, <code>groff</code>, <code>pr</code>, etc.) y decirte cuál realmente comprime más texto sin romper UTF-8.</p>
 
 </div>
 
