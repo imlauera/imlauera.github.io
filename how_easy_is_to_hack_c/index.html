@@ -23,7 +23,7 @@
 Índice Integer Overflow → Heap Overflow Off-By-One gets() — función removida con razón Uninitialized Memory Null Pointer Dereference Dangling Pointer a Variable Local Heap Overflow (directo) Stack Overflow via Recursión Race Condition / TOCTOU Signed/Unsigned Mismatch Out-of-Bounds Read (OOB Read) Improper String Termination Type Confusion Signal Handler Reentrancy Path Traversal / Directory Traversal 1. Integer Overflow → Heap Overflow CWE-190 / CWE-122 — Crítico">
 	<meta itemprop="datePublished" content="2026-06-16T20:42:27-03:00">
 	<meta itemprop="dateModified" content="2026-06-16T20:42:27-03:00">
-	<meta itemprop="wordCount" content="7654">
+	<meta itemprop="wordCount" content="7899">
 	<meta itemprop="keywords" content="C">
   
 	<meta name="twitter:card" content="summary">
@@ -2016,6 +2016,16 @@ $2 = 0x5555555592a0
 <li><strong>Cómo desactivar ASLR</strong> en el demo (<code>setarch -R ./exploit</code>)</li>
 </ul>
 <p>¿Vamos con eso o preferís ajustar algo del exploit primero?</p>
+<p>Muy buena pregunta — y la respuesta es matizada. Te la explico con precisión técnica.La respuesta corta es: <strong>Rust elimina ~10/15 por diseño del lenguaje; Coq puede eliminar las 15 y más, pero a un costo altísimo.</strong></p>
+<hr>
+<h2 id="la-diferencia-conceptual-fundamental">La diferencia conceptual fundamental</h2>
+<p>Rust y Coq operan en paradigmas completamente distintos:</p>
+<p><strong>Rust</strong> trabaja con <em>tipos</em> — el compilador rechaza código que viola las reglas de ownership, borrowing y lifetimes. Es automático: no tenés que hacer nada extra, simplemente escribe Rust seguro y los bugs de memoria desaparecen.</p>
+<p><strong>Coq</strong> trabaja con <em>pruebas matemáticas</em> — vos escribís una especificación formal (ej: &ldquo;esta función nunca retorna un índice fuera de bounds&rdquo;) y luego <em>demostras</em> que el código la cumple. Si la prueba compila, la propiedad es matemáticamente cierta. Pero Coq solo prueba lo que le pedís probar. Una spec incompleta deja gaps.</p>
+<hr>
+<h2 id="el-límite-de-ambos-los-bugs-lógicos">El límite de ambos: los bugs lógicos</h2>
+<p>Ni Rust ni Coq pueden evitar lo que el programador no consideró. Por ejemplo, <strong>path traversal</strong> (<code>../../../etc/passwd</code>) no es un bug de memoria — es lógica incorrecta. Rust compila ese código perfectamente. Coq lo probaría seguro si la especificación no incluye &ldquo;el path nunca debe salir del directorio base&rdquo;.</p>
+<p>En la práctica el stack óptimo para sistemas críticos hoy es <strong>Rust + análisis estático + fuzzing</strong>, y para software absolutamente crítico (aviónica, marcapasos, criptografía) <strong>Coq o Isabelle/HOL</strong> para las partes más sensibles. CompCert es el ejemplo clásico: un compilador C formalmente verificado en Coq que no introduce bugs en la compilación.</p>
 
 </div>
 
