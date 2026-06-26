@@ -21,7 +21,7 @@
 	<meta itemprop="description" content="Shell El shell por defecto para root y usuarios nuevos es ksh (la versión OpenBSD de pdksh, no bash). Bash/zsh/fish están disponibles como paquetes pero no vienen instalados. Sistema X / display manager OpenBSD trae su propio fork de X.org llamado Xenocara (basado en Xorg server, en 7.9 sobre Xserver 21.1.21). El display manager recomendado y que se instala si activás X en la instalación es xenodm (su propio fork de XDM, simple, sin temas bonitos). No hay soporte fuerte de Wayland por defecto; el ecosistema sigue centrado en X11. Hay quien corre sway/labwc a mano, pero no es el camino estándar. Window manager (la parte que sorprende a la gente) Si instalás los sets de X y no configurás nada en ~/.xsession o ~/.xinitrc, lo que arranca es fvwm (versión 2.2.5, vieja) más un xterm. Literalmente es el default técnico. Sin embargo, en la comunidad casi nadie usa fvwm a propósito. El window manager “de facto” preferido por usuarios de OpenBSD es cwm (Calm Window Manager), que también viene en el sistema base — es minimalista, manejado por teclado, con tiling básico, y es obra de los propios desarrolladores de OpenBSD. Es lo más parecido a un “estándar no oficial”. También viene twm en el set base, pero casi nadie lo usa a diario. No hay GNOME, KDE, Xfce, MATE ni LXQt instalados por defecto — son paquetes que instalás aparte (pkg_add gnome, etc.). En la 7.9 están disponibles GNOME 49, KDE Plasma 6.6, MATE 1.28, Xfce 4.20 y LXQt 2.2, pero ninguno es “el” entorno oficial. Resumen de lo que verías recién instalado xenodm (login) → fvwm &#43; xterm (sesión). Eso es todo. Sin barra de tareas, sin iconos, sin nada.">
 	<meta itemprop="datePublished" content="2026-06-24T02:09:12-03:00">
 	<meta itemprop="dateModified" content="2026-06-24T02:09:12-03:00">
-	<meta itemprop="wordCount" content="660">
+	<meta itemprop="wordCount" content="1143">
 	<meta itemprop="keywords" content="Unix">
   
 	<meta name="twitter:card" content="summary">
@@ -155,6 +155,40 @@ No hay un navegador &ldquo;oficial por defecto&rdquo; como tal.</li>
 </ul>
 <p>La versión actual es <strong>OpenBSD 7.9</strong> (mayo 2026), así que si instalás ahora es lo que vas a tener de base.</p>
 <p>Si querés, te puedo armar una guía de configuración típica post-instalación (xenodm + cwm + sndio + Firefox) con los archivos de dotfiles más comunes que usa la gente.</p>
+<p>Streaming from OpenBSD works, but the path is different than on Linux — there&rsquo;s no PulseAudio/ALSA and no out-of-the-box OBS Studio. The reliable route is <code>ffmpeg</code> talking directly to OpenBSD&rsquo;s native audio/video layers (<code>sndio</code> and <code>video(4)</code>). Here&rsquo;s the practical setup.</p>
+<h3 id="1-enable-capture-disabled-by-default-for-privacy">1. Enable capture (disabled by default for privacy)</h3>
+<p>OpenBSD disables video recording by default for privacy reasons, and you enable it via the kern.video.record sysctl. The same applies to audio capture — it&rsquo;s disabled by default and enabled with kern.audio.record=1.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>doas sysctl kern.video.record<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>doas sysctl kern.audio.record<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;kern.video.record=1&#34;</span> | doas tee -a /etc/sysctl.conf
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;kern.audio.record=1&#34;</span> | doas tee -a /etc/sysctl.conf
+</span></span></code></pre></div><h3 id="2-check-your-devices">2. Check your devices</h3>
+<ul>
+<li><strong>Webcam</strong>: USB webcams following the UVC spec are handled by the uvideo(4) driver and exposed through the video(4) layer, showing up in dmesg and becoming accessible as /dev/video0. Run <code>dmesg | grep video</code> to confirm, and you may need <code>chown $USER /dev/video0</code>.</li>
+<li><strong>Microphone/audio</strong>: managed by <code>sndiod(8)</code>. Run <code>sndioctl</code> to see controls, and check <code>dmesg | grep audio</code> — devices appear as <code>snd/0</code>, <code>snd/1</code>, etc.</li>
+</ul>
+<h3 id="3-install-ffmpeg">3. Install ffmpeg</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>doas pkg_add ffmpeg
+</span></span></code></pre></div><h3 id="4-stream-to-twitchyoutube">4. Stream to Twitch/YouTube</h3>
+<p>A typical setup grabs your desktop with <code>x11grab</code>, your mic with <code>sndio</code>, encodes with libx264, and pushes RTMP:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>ffmpeg <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -f x11grab -framerate <span style="color:#ae81ff">30</span> -s 1920x1080 -i :0.0 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -f sndio -i snd/0 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -c:v libx264 -preset veryfast -b:v 3000k -pix_fmt yuv420p <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -c:a aac -b:a 160k <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -f flv rtmp://live.twitch.tv/app/YOUR_STREAM_KEY
+</span></span></code></pre></div><p>For YouTube, swap the URL for <code>rtmp://a.rtmp.youtube.com/live2/YOUR_STREAM_KEY</code>.</p>
+<p>To pull in a webcam instead of/alongside the desktop, point at the device — on a recent OpenBSD build that&rsquo;s <code>-f v4l2 -i /dev/video0</code>, similar to Linux despite there being no actual V4L2 subsystem under the hood.</p>
+<h3 id="5-about-obs-studio">5. About OBS Studio</h3>
+<p>Worth knowing up front: OBS doesn&rsquo;t have an official OpenBSD package. A developer added preliminary OpenBSD support to OBS Studio starting around release 26.1.0, including a native sndio plugin for lower-latency audio, but as of that work it hadn&rsquo;t been submitted to the ports tree — it&rsquo;s still sitting in a <a href="https://github.com/jasperla/openbsd-wip/tree/master/multimedia/obs-studio">WIP ports overlay</a> rather than something you can <code>pkg_add</code>. So <code>ffmpeg</code> is the realistic default tool right now.</p>
+<h3 id="6-skip-the-raw-command-line-if-you-want">6. Skip the raw command-line if you want</h3>
+<p>A couple of community wrapper scripts exist specifically to smooth over OpenBSD&rsquo;s quirks (no built-in screencast tool, ffmpeg threading limits, syncing audio/video):</p>
+<ul>
+<li><strong><a href="https://github.com/rfht/fauxstream">fauxstream</a></strong> — runs parallel ffmpeg pipes to work around single-threaded bottlenecks, handles mixing mic + monitor audio.</li>
+<li><strong><a href="https://github.com/OpenBSDGuy/ffmpeg_openbsd">ffmpeg_openbsd</a></strong> — scripts geared specifically at YouTube live streaming, reads your stream key from a file.</li>
+</ul>
+<p>Both are just convenience layers over the same <code>ffmpeg</code> + <code>sndio</code> + <code>x11grab</code> approach above.</p>
+<p>One gotcha to know about going in: capturing desktop audio (not just mic) requires setting up a sndio &ldquo;monitor&rdquo; sub-device (<code>rcctl set sndiod flags -s default -m play,mon -s mon</code>) since OpenBSD doesn&rsquo;t expose a loopback device the way PulseAudio does — happy to walk through that if you want to stream game/system audio rather than just your voice.</p>
 
 </div>
 
