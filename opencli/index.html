@@ -23,7 +23,7 @@ The big one: OpenCLI There’s a tool called OpenCLI whose entire purpose is “
 The big one: OpenCLI There’s a tool called OpenCLI whose entire purpose is “yt-dlp, but for every website.” It turns a website into a deterministic CLI command instead of you opening a browser tab. It comes with built-in adapters for sites like Bilibili, Zhihu, Reddit, HackerNews, and Twitter/X, plus desktop apps like Cursor and ChatGPT, and reuses your logged-in Chrome session so you don’t re-auth. It connects to Chrome through a small browser-bridge extension and a local daemon that auto-starts when needed.">
 	<meta itemprop="datePublished" content="2026-06-28T05:19:06-03:00">
 	<meta itemprop="dateModified" content="2026-06-28T05:19:06-03:00">
-	<meta itemprop="wordCount" content="513">
+	<meta itemprop="wordCount" content="1058">
 	<meta itemprop="keywords" content="Cli">
   
 	<meta name="twitter:card" content="summary">
@@ -159,6 +159,54 @@ opencli github repo jackwener/opencli --format table
 </span></span><span style="display:flex;"><span>    <span style="color:#f92672">api_key</span>: <span style="color:#ae81ff">your-key-from-z.ai</span>
 </span></span></code></pre></div><p>Get the key by signing up at z.ai or open.bigmodel.cn — no card needed for the free Flash models.</p>
 <p>Want me to also dig up the exact config syntax/model name strings aichat expects for ZhipuAI (their docs sometimes shuffle naming between <code>zhipuai</code>, <code>glm</code>, and <code>z.ai</code>)?</p>
+<p>Short answer: technically yes, but the project&rsquo;s own docs steer you away from true headless mode — and for a good reason.</p>
+<p><strong>Why not pure <code>--headless</code>:</strong> OpenCLI&rsquo;s main selling point is reusing your already-logged-in browser session plus a set of anti-detection patches (spoofing <code>navigator.webdriver</code>, fake plugin lists, etc.). Real headless Chromium has a slightly different fingerprint than headed Chrome, which can trip the very anti-bot/Cloudflare-style detection those patches are trying to dodge — so sites may start blocking or logging you out. That&rsquo;s likely why their own CI/CD guide doesn&rsquo;t tell you to use <code>--headless</code>; instead they recommend running a normal headed Chrome inside a virtual display.</p>
+<p><strong>What actually works (no visible window, no real headless either):</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>xvfb-run --auto-servernum google-chrome <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --remote-debugging-port<span style="color:#f92672">=</span><span style="color:#ae81ff">9222</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --user-data-dir<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$HOME<span style="color:#e6db74">/chrome-debug-profile&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --remote-allow-origins<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;*&#34;</span> &amp;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>export OPENCLI_CDP_ENDPOINT<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;http://127.0.0.1:9222&#34;</span>
+</span></span><span style="display:flex;"><span>opencli doctor
+</span></span></code></pre></div><p><code>xvfb-run</code> gives Chrome a fake virtual display, so it never actually opens a window on your screen, but the browser is still &ldquo;headed&rdquo; as far as the page/site can tell — fingerprint stays normal. This is exactly the pattern from their CI/CD docs (<code>browser-actions/setup-chrome</code> + <code>xvfb-run</code>).</p>
+<p><strong>If you want to try real <code>--headless</code> anyway:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>google-chrome --headless<span style="color:#f92672">=</span>new <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --remote-debugging-port<span style="color:#f92672">=</span><span style="color:#ae81ff">9222</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --user-data-dir<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$HOME<span style="color:#e6db74">/chrome-debug-profile&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --remote-allow-origins<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;*&#34;</span> &amp;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>export OPENCLI_CDP_ENDPOINT<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;http://127.0.0.1:9222&#34;</span>
+</span></span><span style="display:flex;"><span>opencli doctor
+</span></span></code></pre></div><p>CDP works identically over headless, so <code>opencli doctor</code>/your commands should connect fine — just expect some site adapters (especially login-gated ones like Bilibili/Zhihu/Reddit) to be more prone to bot checks or session weirdness.</p>
+<p>One thing worth double-checking before you go further: their CDP/remote docs are written around the <strong>Browser Bridge extension + daemon</strong> flow, not the extension itself, when you go this route — so make sure you&rsquo;re not also trying to run the Chrome extension at the same time as a CDP-only headless instance, since the daemon picks one connection method.</p>
+<p>If you tell me your setup (local machine vs. server, which OS, are you doing this for CI) I can give you the exact one-liner for your case.</p>
+<p>En Arch el binario se llama simplemente <code>chromium</code> (no <code>google-chrome</code>), y necesitás el paquete <code>xorg-server-xvfb</code> para lo de la pantalla virtual.</p>
+<p><strong>Instalar xvfb (si no lo tenés):</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo pacman -S xorg-server-xvfb
+</span></span></code></pre></div><p><strong>Lanzar Chromium &ldquo;headed&rdquo; dentro de un display virtual (recomendado, evita el fingerprint de headless):</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>xvfb-run --auto-servernum chromium <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --remote-debugging-port<span style="color:#f92672">=</span><span style="color:#ae81ff">9222</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --user-data-dir<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$HOME<span style="color:#e6db74">/chrome-debug-profile&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --remote-allow-origins<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;*&#34;</span> &amp;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>export OPENCLI_CDP_ENDPOINT<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;http://127.0.0.1:9222&#34;</span>
+</span></span><span style="display:flex;"><span>opencli doctor
+</span></span></code></pre></div><p><strong>Si preferís probar con headless real igual:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>chromium --headless<span style="color:#f92672">=</span>new <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --remote-debugging-port<span style="color:#f92672">=</span><span style="color:#ae81ff">9222</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --user-data-dir<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$HOME<span style="color:#e6db74">/chrome-debug-profile&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --remote-allow-origins<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;*&#34;</span> &amp;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>export OPENCLI_CDP_ENDPOINT<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;http://127.0.0.1:9222&#34;</span>
+</span></span><span style="display:flex;"><span>opencli doctor
+</span></span></code></pre></div><p>Un par de cosas específicas de Arch a tener en cuenta:</p>
+<ul>
+<li>El paquete <code>chromium</code> de Arch a veces necesita la flag <code>--no-sandbox</code> si lo corrés como root o dentro de ciertos contenedores/sandboxes, aunque en un entorno normal de usuario no debería hacer falta.</li>
+<li>Si usás Wayland (es lo default en muchas instalaciones recientes de Arch), Chromium puede intentar usar el backend Wayland nativo en vez de X11, lo cual puede interferir con xvfb. Si <code>xvfb-run</code> no funciona como esperás, forzá X11 agregando <code>--ozone-platform=x11</code> al comando de chromium.</li>
+<li>Si tenés systemd, te conviene correr esto como un servicio (<code>systemd --user</code>) en vez de un <code>&amp;</code> suelto, para que sobreviva si cerrás la terminal — avisame si querés el <code>.service</code> para eso.</li>
+</ul>
+<p>Después de correr cualquiera de los dos, <code>opencli doctor</code> te va a confirmar si la conexión CDP funcionó. Contame qué te tira esa salida si algo no anda.</p>
 
 </div>
 
