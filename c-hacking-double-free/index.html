@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/c-hacking-double-free/">
+	<meta property="og:site_name" content="Imlauer">
+	<meta property="og:title" content="C Hacking Double-Free">
+	<meta property="og:description" content="Si usas doble-free en C tu programa ya es hackeable XD.
+George trabaja en explotar una vulnerabilidad crítica en font config, un programa que vive en todos los sistemas Linux y genera cachés de fuentes. El CVE específico permite crear ataques de double-free modificando archivos de caché corrupto. Lo fundamental es que los offsets en estos archivos no están validados adecuadamente, lo que permite pasar punteros arbitrarios. El ataque puede bypasear ASLR (Address Space Layout Randomization) porque si los datos están en un archivo mapeado en memoria, los offsets relativos se mantienen constantes incluso cuando los espacios de memoria son aleatorizados.">
+	<meta property="og:locale" content="es_es">
+	<meta property="og:type" content="article">
+		<meta property="article:published_time" content="2026-07-03T02:59:37-03:00">
+		<meta property="article:modified_time" content="2026-07-03T02:59:37-03:00">
+		<meta property="article:tag" content="Hacking">
+
+  
+	<meta itemprop="name" content="C Hacking Double-Free">
+	<meta itemprop="description" content="Si usas doble-free en C tu programa ya es hackeable XD.
+George trabaja en explotar una vulnerabilidad crítica en font config, un programa que vive en todos los sistemas Linux y genera cachés de fuentes. El CVE específico permite crear ataques de double-free modificando archivos de caché corrupto. Lo fundamental es que los offsets en estos archivos no están validados adecuadamente, lo que permite pasar punteros arbitrarios. El ataque puede bypasear ASLR (Address Space Layout Randomization) porque si los datos están en un archivo mapeado en memoria, los offsets relativos se mantienen constantes incluso cuando los espacios de memoria son aleatorizados.">
+	<meta itemprop="datePublished" content="2026-07-03T02:59:37-03:00">
+	<meta itemprop="dateModified" content="2026-07-03T02:59:37-03:00">
+	<meta itemprop="wordCount" content="1461">
+	<meta itemprop="keywords" content="Hacking">
+  
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:title" content="C Hacking Double-Free">
+	<meta name="twitter:description" content="Si usas doble-free en C tu programa ya es hackeable XD.
+George trabaja en explotar una vulnerabilidad crítica en font config, un programa que vive en todos los sistemas Linux y genera cachés de fuentes. El CVE específico permite crear ataques de double-free modificando archivos de caché corrupto. Lo fundamental es que los offsets en estos archivos no están validados adecuadamente, lo que permite pasar punteros arbitrarios. El ataque puede bypasear ASLR (Address Space Layout Randomization) porque si los datos están en un archivo mapeado en memoria, los offsets relativos se mantienen constantes incluso cuando los espacios de memoria son aleatorizados.">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    C Hacking Double-Free
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/c-hacking-double-free/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="Si usas doble-free en C tu programa ya es hackeable XD.
+George trabaja en explotar una vulnerabilidad crítica en font config, un programa que vive en todos los sistemas Linux y genera cachés de fuentes. El CVE específico permite crear ataques de double-free modificando archivos de caché corrupto. Lo fundamental es que los offsets en estos archivos no están validados adecuadamente, lo que permite pasar punteros arbitrarios. El ataque puede bypasear ASLR (Address Space Layout Randomization) porque si los datos están en un archivo mapeado en memoria, los offsets relativos se mantienen constantes incluso cuando los espacios de memoria son aleatorizados.">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    C Hacking Double-Free
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2026-07-03T02:59:37-03:00'>
+      July 03, 2026
+    </time>
+    
+    <br>
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/hacking/">Hacking</a>
+    
+    
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <p>Si usas doble-free en C tu programa ya es hackeable XD.</p>
+<p>George trabaja en explotar una vulnerabilidad crítica en font config, un programa que vive en todos los sistemas Linux y genera cachés de fuentes. El CVE específico permite crear ataques de double-free modificando archivos de caché corrupto. Lo fundamental es que los offsets en estos archivos no están validados adecuadamente, lo que permite pasar punteros arbitrarios. El ataque puede bypasear ASLR (Address Space Layout Randomization) porque si los datos están en un archivo mapeado en memoria, los offsets relativos se mantienen constantes incluso cuando los espacios de memoria son aleatorizados.</p>
+<p>Mientras intenta construir un exploit, George reflexiona sobre cómo malloc usa diferentes estrategias: para asignaciones grandes usa mmap, pero para pequeñas usa brk. Esto es importante porque cambia cómo se puede explotar la memoria. El problema real de lograr el double-free es que necesita apuntar dos objetos a la misma estructura de valor en el caché, pero todo está mapeado en memoria, lo que complica el ataque. No está claro si puede obtener suficiente control en memoria heap para hacer lo que necesita, especialmente considerando mitigaciones modernas.</p>
+<p>Un double-free (doble liberación) es una vulnerabilidad de seguridad y un error de programación que ocurre cuando un programa intenta liberar la misma dirección de memoria dinámica dos veces seguidas mediante la función free(), sin que haya habido una asignación (malloc, calloc, etc.) intermedia.</p>
+<p>En el lenguaje C, la gestión de memoria es manual. Cuando liberas memoria, el gestor de la memoria dinámica (el heap) actualiza sus estructuras internas para saber qué bloques están vacíos y listos para ser reutilizados. Si le dices que libere el mismo bloque dos veces, rompes esas estructuras internas.</p>
+<h4 id="ejemplo-básico-de-un-double-free">Ejemplo básico de un Double-Free</h4>
+<p>Este es el escenario de libro de texto en C:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdlib.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 1. Reservamos memoria para un puntero
+</span></span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> <span style="color:#f92672">*</span>ptr <span style="color:#f92672">=</span> (<span style="color:#66d9ef">int</span> <span style="color:#f92672">*</span>)<span style="color:#a6e22e">malloc</span>(<span style="color:#66d9ef">sizeof</span>(<span style="color:#66d9ef">int</span>) <span style="color:#f92672">*</span> <span style="color:#ae81ff">10</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (ptr <span style="color:#f92672">==</span> NULL) <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// ... Se usa la memoria aquí ...
+</span></span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 2. Primera liberación (Correcto)
+</span></span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">free</span>(ptr);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// ... Pasan muchas líneas de código intermedio ...
+</span></span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 3. Segunda liberación (¡ERROR - Double Free!)
+</span></span></span><span style="display:flex;"><span>    <span style="color:#75715e">// El programa intenta liberar &#39;ptr&#39; de nuevo, pero esa memoria ya no le pertenece.
+</span></span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">free</span>(ptr);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>¿Por qué es peligroso? El mecanismo interno</p>
+<p>Cuando el gestor de memoria (como glibc en Linux) procesa un free(), a menudo mete ese bloque de memoria en una lista enlazada interna (llamada fastbins o tcache en Linux) para poder entregarla rápido si el programa pide más memoria en el futuro.</p>
+<p>Si haces un double-free, puedes lograr que el gestor de memoria añada el mismo bloque dos veces a la lista de disponibles.</p>
+<p>Esto provoca un caos estructural en el heap:</p>
+<p>Si el programa pide memoria de nuevo, recibirá el bloque A.</p>
+<p>Si el programa (o un atacante) escribe datos en A, estará sobreescribiendo los punteros internos de la lista enlazada del propio gestor de memoria que aún apuntan a A.</p>
+<p>La siguiente vez que el programa pida memoria, el gestor leerá el puntero manipulado y le entregará al programa una dirección de memoria arbitraria elegida por el atacante (por ejemplo, donde se guardan variables de control de flujo o direcciones de retorno).</p>
+<p>A partir de ahí, el atacante puede lograr Ejecución Remota de Código (RCE).</p>
+<p>Ejemplo en estructuras de datos (Más realista)</p>
+<p>En programas reales, el double-free rara vez es tan obvio como dos free() seguidos. Suele ocurrir debido a malas lógicas en el manejo de errores o alias de punteros (dos variables apuntando al mismo sitio).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;stdlib.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">#include</span> <span style="color:#75715e">&lt;string.h&gt;</span><span style="color:#75715e">
+</span></span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>nombre;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">int</span> ID;
+</span></span><span style="display:flex;"><span>} Usuario;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">limpiar_usuario</span>(Usuario <span style="color:#f92672">*</span>u) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (u<span style="color:#f92672">-&gt;</span>nombre <span style="color:#f92672">!=</span> NULL) {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">free</span>(u<span style="color:#f92672">-&gt;</span>nombre); <span style="color:#75715e">// Primera liberación
+</span></span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">free</span>(u);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>    Usuario <span style="color:#f92672">*</span>usr1 <span style="color:#f92672">=</span> (Usuario <span style="color:#f92672">*</span>)<span style="color:#a6e22e">malloc</span>(<span style="color:#66d9ef">sizeof</span>(Usuario));
+</span></span><span style="display:flex;"><span>    usr1<span style="color:#f92672">-&gt;</span>nombre <span style="color:#f92672">=</span> (<span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>)<span style="color:#a6e22e">malloc</span>(<span style="color:#ae81ff">20</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">strcpy</span>(usr1<span style="color:#f92672">-&gt;</span>nombre, <span style="color:#e6db74">&#34;George&#34;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Creas un alias: usr2 apunta exactamente a la misma memoria de usr1
+</span></span></span><span style="display:flex;"><span>    Usuario <span style="color:#f92672">*</span>usr2 <span style="color:#f92672">=</span> usr1;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Se limpia usr1 (libera usr1-&gt;nombre y usr1)
+</span></span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">limpiar_usuario</span>(usr1);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// ... Más adelante en el código, por error se intenta limpiar usr2 ...
+</span></span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Esto causará un Double-Free sobre la memoria de &#39;nombre&#39; y del struct
+</span></span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">limpiar_usuario</span>(usr2);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><strong>¿Cómo se previene?</strong></p>
+<p>La regla de oro y defensa más simple en C es neutralizar el puntero inmediatamente después de liberarlo, asignándole NULL.</p>
+<p>En C, la función free(NULL) está garantizada por el estándar para no hacer absolutamente nada (es una operación segura).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>free<span style="color:#f92672">(</span>ptr<span style="color:#f92672">)</span>;
+</span></span><span style="display:flex;"><span>ptr <span style="color:#f92672">=</span> NULL; // El puntero ya no apunta a nada peligroso
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>// ... Más adelante ...
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>free<span style="color:#f92672">(</span>ptr<span style="color:#f92672">)</span>; // Esto es equivalente a free<span style="color:#f92672">(</span>NULL<span style="color:#f92672">)</span>, es completamente seguro y no rompe el programa
+</span></span></code></pre></div><p>En sistemas modernos de Linux, glibc incluye mecanismos de protección severos. Si el gestor de memoria detecta una anomalía obvia de double-free, abortará inmediatamente la ejecución del programa lanzando un error del tipo double free or corruption (fasttop) para evitar que la vulnerabilidad sea explotada.</p>
+<p>Las reflexiones de George tocan uno de los pilares más complejos de la explotación del heap (memoria dinámica) en Linux: el comportamiento bifásico de malloc y cómo las mitigaciones modernas rompen las técnicas de ataque clásicas.</p>
+<p>Aquí desglosamos técnicamente por qué la diferencia entre brk y mmap cambia por completo las reglas del juego para un exploit, y las barreras que imponen los sistemas actuales:</p>
+<ol>
+<li>El Umbral de Asignación: brk vs mmap</li>
+</ol>
+<p>El gestor de memoria de la librería de C (glibc malloc) utiliza dos llamadas al sistema distintas para pedir memoria al kernel, dependiendo del tamaño solicitado (controlado por un umbral dinámico que por defecto suele rondar los 128 KB o 256 KB):</p>
+<p>El área brk (Asignaciones Pequeñas/Medianas)</p>
+<p>Para bloques pequeños, malloc hace crecer el heap principal moviendo el puntero de ruptura (brk/sbrk).</p>
+<p>Estructura: Todos los bloques se colocan de forma contigua en una gran región de memoria.</p>
+<p>Comportamiento: Cuando liberas un bloque aquí con free(), la memoria no se devuelve al sistema operativo de inmediato. Se guarda en listas internas de reciclaje (fastbins, tcache, unsorted bins) para ser reutilizada rápidamente.</p>
+<p>Impacto en Explotación: Al ser memoria compartida y contigua, un desbordamiento o un double-free permite corromper los metadatos de los bloques vecinos o manipular las listas de reciclaje para engañar a malloc.</p>
+<p>El área mmap (Asignaciones Grandes)</p>
+<p>Para bloques que superan el umbral, malloc solicita páginas de memoria completamente independientes usando mmap.</p>
+<p>Estructura: Cada asignación crea una región de memoria aislada, mapeada en una zona distinta del espacio de direcciones del proceso.</p>
+<p>Comportamiento: Cuando haces free() de un bloque creado por mmap, glibc ejecuta inmediatamente munmap, devolviendo la memoria al sistema operativo. Las páginas desaparecen.</p>
+<p>Impacto en Explotación: Si intentas hacer un double-free sobre un bloque manejado por mmap, el segundo free() resultará casi instantáneamente en un Crash de segmentación (SIGSEGV) porque el programa está intentando operar sobre una dirección de memoria que ya no existe en su mapa de páginas. No hay listas de reciclaje que corromper aquí.</p>
+<ol start="2">
+<li>El Desafío del Caché de Fuentes (fontconfig)</li>
+</ol>
+<p>En el escenario que describe George, si fontconfig mapea o procesa archivos grandes mediante mmap (o xmmap), los objetos quedan aislados en páginas específicas de memoria.</p>
+<p>Para lograr que un double-free funcione y permita apuntar dos objetos a la misma estructura, el atacante se enfrenta a un dilema de control:</p>
+<p>Falta de continuidad: No puedes usar un desbordamiento lineal simple para saltar de un bloque brk a una página mmap.</p>
+<p>Sincronización del ciclo de vida: Para abusar de las estructuras de caché compartidas, se necesita que el programa libere un bloque, mantenga una referencia huérfana (Dangling Pointer), y luego permita que otro componente asigne un objeto idéntico en esa misma dirección. Si las páginas se desmapean constantemente debido a munmap, esa ventana de oportunidad se cierra.</p>
+<ol start="3">
+<li>Mitigaciones Modernas: Elevando la Barra</li>
+</ol>
+<p>Incluso si George logra forzar que las asignaciones caigan dentro del rango de brk para aprovechar las listas de reciclaje del heap, las versiones modernas de glibc (particularmente desde la introducción y endurecimiento de tcache) cuentan con protecciones severas:</p>
+<p>Tcache Double-Free Detection: Las versiones recientes de glibc guardan una clave de verificación (key) en los bloques libres. Si intentas liberar un bloque que ya tiene esa clave, el sistema detecta el double-free inmediatamente y aborta el programa.</p>
+<p>Safe Linking: Se introdujo una mitigación que aplica una operación XOR (ofuscación) a los punteros de las listas enlazadas del heap, utilizando un valor derivado de ASLR. Esto significa que un atacante ya no puede simplemente sobreescribir un puntero con una dirección arbitraria, ya que al ser desofuscado por malloc, resultará en una dirección inválida y el programa caerá.</p>
+<p>Por esta razón, la explotación moderna del heap a menudo requiere una vulnerabilidad secundaria (como una fuga de información o Information Leak) que permita leer la memoria primero para calcular las direcciones aleatorizadas y las claves de ofuscación antes de poder armar el exploit funcional.</p>
+
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+
+</footer>
+
+
+</body>
+</html>
