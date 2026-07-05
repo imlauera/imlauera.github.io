@@ -23,7 +23,7 @@ Por qué Firefox&#43;uBlock te pesa tanto Firefox para Android en Android 7 corr
 Por qué Firefox&#43;uBlock te pesa tanto Firefox para Android en Android 7 corre con el motor Gecko completo &#43; WebExtensions en JS, que es pesado en dispositivos con poca RAM. uBlock Origin agrega otra capa de parsing de listas de filtros en tiempo real. En un equipo con Android 7 (probablemente 1-2GB RAM) esto genera jank real.">
 	<meta itemprop="datePublished" content="2026-07-05T07:47:21-03:00">
 	<meta itemprop="dateModified" content="2026-07-05T07:47:21-03:00">
-	<meta itemprop="wordCount" content="460">
+	<meta itemprop="wordCount" content="867">
 	<meta itemprop="keywords" content="Ads">
   
 	<meta name="twitter:card" content="summary">
@@ -118,6 +118,26 @@ Firefox para Android en Android 7 corre con el motor Gecko completo &#43; WebExt
 <h2 id="la-limitación-que-tenés-que-saber">La limitación que tenés que saber</h2>
 <p>El bloqueo por DNS no puede parar anuncios servidos desde el <strong>mismo dominio</strong> que el contenido (común en sitios de noticias que sirven ads first-party para evadir justamente el bloqueo DNS). Para esos casos, no hay atajo liviano — necesitás filtrado de contenido real (regex sobre el HTML), que es lo que hace personalDNSfilter, pero consume más CPU que RethinkDNS puro. Probalo si después de RethinkDNS+Via seguís viendo mucha publicidad remanente en sitios de noticias específicos.</p>
 <p>Si en tu casa tenés control del router, un <strong>Pi-hole</strong> o <strong>AdGuard Home</strong> corriendo en una Raspberry Pi (o hasta en un contenedor en tu Arch) filtra todo el tráfico de tu red antes de que llegue al teléfono — complementa perfecto lo anterior y saca carga del propio dispositivo.</p>
+<p>Sí, <code>/etc/hosts</code> es la versión más básica del mismo concepto, pero el equivalente más directo y prolijo a RethinkDNS en Arch es <strong>AdGuard Home</strong> corriendo localmente. Te explico las opciones de menor a mayor sofisticación:</p>
+<h2 id="opción-1-etchosts-a-mano-lo-más-simple-lo-más-limitado">Opción 1: <code>/etc/hosts</code> a mano (lo más simple, lo más limitado)</h2>
+<p>Funciona en el mismo principio (mapear dominios de ads a <code>0.0.0.0</code> para que no resuelvan), pero tiene los mismos problemas que tenía DNS66 viejo: es estático, no soporta wildcards reales, no hace matching por CNAME cloaking, y tenés que actualizarlo vos manualmente.</p>
+<p>Hay un paquete en el AUR que automatiza esto: <strong>hblock</strong>. Descarga blocklists (StevenBlack, etc.) y te genera el <code>/etc/hosts</code> automático, con un timer de systemd para actualizarlo solo:</p>
+<pre tabindex="0"><code>yay -S hblock
+sudo hblock
+</code></pre><h2 id="opción-2-dnsmasq-como-resolver-local-con-blocklist-más-parecido-a-rethinkdns">Opción 2: <code>dnsmasq</code> como resolver local con blocklist (más parecido a RethinkDNS)</h2>
+<p>En vez de editar <code>/etc/hosts</code> directamente, <code>dnsmasq</code> corre como resolver local en <code>127.0.0.1</code> y lee un archivo con formato hosts como fuente de bloqueo, pero con caché real de DNS y mejor rendimiento que reescribir hosts constantemente. Le apuntás tu <code>/etc/resolv.conf</code> (o <code>systemd-resolved</code>) a <code>127.0.0.1</code> y listo.</p>
+<h2 id="opción-3-adguard-home-local--el-equivalente-más-fiel-a-rethinkdns">Opción 3: AdGuard Home local — el equivalente más fiel a RethinkDNS</h2>
+<p>Este es realmente el mismo modelo mental: un resolver DNS local con blocklists configurables, panel de administración, logs, reglas custom por dominio. Se puede correr en tu misma máquina apuntando a <code>127.0.0.1</code>:</p>
+<pre tabindex="0"><code>yay -S adguardhome-bin
+</code></pre><p>Le configurás:</p>
+<ul>
+<li>Blocklists (OISD, HaGeZi, las mismas que le metiste a RethinkDNS)</li>
+<li>Upstream resolver propio (podés meterle <strong>Unbound</strong> como recursivo real en vez de reenviar a Cloudflare — resolviendo vos mismo desde los root servers, cero tercero de confianza, mismo razonamiento que charlamos antes)</li>
+<li>Panel web en <code>localhost:3000</code> para ver qué bloquea en tiempo real</li>
+</ul>
+<p>Y de yapa: como tenés un teléfono con RethinkDNS y una PC con AdGuard Home, si después querés centralizar todo, ese mismo AdGuard Home lo podés exponer en tu red local (Pi-hole cumple el mismo rol) y apuntar el teléfono ahí por WireGuard cuando estás en casa — cerrando el círculo de lo que hablamos antes.</p>
+<h2 id="un-plus-que-en-desktop-sí-tiene-sentido-a-diferencia-de-android-7">Un plus que en desktop sí tiene sentido (a diferencia de Android 7)</h2>
+<p>En tu Arch no tenés la limitación de RAM/CPU que tenías en el teléfono, así que ahí <strong>Firefox + uBlock Origin sigue siendo la mejor combinación</strong>, porque bloquea también lo que el DNS no puede (ads first-party, cosmetic filtering, anti-adblock scripts). El DNS local lo complementa, no lo reemplaza — en desktop convendría tener ambas capas.</p>
 
 </div>
 
