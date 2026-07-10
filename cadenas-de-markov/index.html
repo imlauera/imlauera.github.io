@@ -23,7 +23,7 @@ La idea central Una cadena de Markov es un modelo matemático que dice: “el si
 La idea central Una cadena de Markov es un modelo matemático que dice: “el siguiente estado depende solo del estado actual, no de todo el historial pasado”. Esto se llama la “propiedad de Markov” o “falta de memoria”.">
 	<meta itemprop="datePublished" content="2026-07-10T10:26:17-03:00">
 	<meta itemprop="dateModified" content="2026-07-10T10:26:17-03:00">
-	<meta itemprop="wordCount" content="993">
+	<meta itemprop="wordCount" content="1994">
 	<meta itemprop="keywords" content="Ai">
   
 	<meta name="twitter:card" content="summary">
@@ -265,6 +265,86 @@ Una cadena de Markov es un modelo matemático que dice: &ldquo;el siguiente esta
 </ul>
 <h2 id="algo-a-tener-en-cuenta">Algo a tener en cuenta</h2>
 <p>Con textos de entrenamiento chicos como los de mis ejemplos, vas a ver que el generador cae en loops o frases idénticas al original rápido — necesita un corpus bastante grande (miles o decenas de miles de palabras) para que las probabilidades den variedad real y no termine repitiendo el texto fuente casi literal.</p>
+<h1 id="la-teoría-detrás-de-las-cadenas-de-markov-aplicadas-a-texto">La teoría detrás de las cadenas de Markov aplicadas a texto</h1>
+<p>Vamos a construir el concepto de a poco, desde la probabilidad pura hasta cómo se traduce en estructuras de datos.</p>
+<h2 id="1-estados-y-transiciones">1. Estados y transiciones</h2>
+<p>Un proceso de Markov se define sobre un <strong>espacio de estados</strong> $S = {s_1, s_2, &hellip;, s_n}$. En cada paso, el sistema está en algún estado, y pasa al siguiente según una probabilidad que depende <em>solo</em> del estado actual:</p>
+<p>$$P(X_{t+1} = s_j \mid X_t = s_i)$$</p>
+<p>Esto se llama <strong>propiedad de Markov</strong>: el futuro depende del presente, no del pasado completo. Formalmente:</p>
+<p>$$P(X_{t+1} \mid X_t, X_{t-1}, &hellip;, X_0) = P(X_{t+1} \mid X_t)$$</p>
+<p>Aplicado a texto, cada <strong>estado</strong> es una palabra (o una secuencia corta de palabras, ya volvemos a esto). La &ldquo;transición&rdquo; es simplemente: qué palabra viene después.</p>
+<h2 id="2-la-matriz-de-transición">2. La matriz de transición</h2>
+<p>Si tenés $n$ palabras distintas en tu vocabulario, en teoría existe una matriz $n \times n$ donde la celda $(i,j)$ guarda:</p>
+<p>$$P(\text{palabra}_j \mid \text{palabra}_i)$$</p>
+<p>En la práctica <strong>nunca construís esta matriz explícitamente</strong>, porque el vocabulario puede tener miles de palabras y la matriz sería enorme y casi toda ceros (la mayoría de los pares de palabras nunca aparecen juntos). Por eso se usa una estructura dispersa: un diccionario/mapa donde la clave es el estado actual y el valor es la lista (o distribución) de estados posibles siguientes.</p>
+<p>Esto es clave para tu implementación: <strong>no necesitás álgebra de matrices, necesitás un mapa de &ldquo;estado → lista de siguientes posibles&rdquo;</strong>.</p>
+<h2 id="3-cómo-se-estiman-las-probabilidades-conteo-de-frecuencias">3. Cómo se estiman las probabilidades (conteo de frecuencias)</h2>
+<p>Acá está el corazón del algoritmo, y es puro conteo, nada sofisticado:</p>
+<ol>
+<li>Recorrés el texto de entrenamiento palabra por palabra.</li>
+<li>Por cada palabra en la posición $i$, mirás cuál es la palabra en la posición $i+1$.</li>
+<li>Vas anotando: &ldquo;después de X, vi Y una vez más&rdquo;.</li>
+</ol>
+<p>Si &ldquo;el&rdquo; fue seguido de &ldquo;perro&rdquo; 3 veces y de &ldquo;gato&rdquo; 1 vez en todo el corpus, entonces:</p>
+<p>$$P(\text{perro} \mid \text{el}) = 3/4, \quad P(\text{gato} \mid \text{el}) = 1/4$$</p>
+<p><strong>Truco de implementación importante:</strong> no hace falta calcular estas probabilidades explícitamente como fracciones. Si simplemente guardás una <strong>lista con repeticiones</strong> (<code>[&quot;perro&quot;, &quot;perro&quot;, &quot;perro&quot;, &quot;gato&quot;]</code>) y después elegís un elemento al azar de esa lista con distribución uniforme, estás logrando exactamente el mismo efecto que si hubieras calculado las probabilidades reales. Es la manera más simple de &ldquo;samplear&rdquo; de una distribución categórica sin hacer matemática explícita.</p>
+<h2 id="4-el-problema-del-orden-1-por-qué-necesitás-memoria-de-más-de-una-palabra">4. El problema del orden 1 (por qué necesitás memoria de más de una palabra)</h2>
+<p>Con orden 1 (el estado es una sola palabra), el modelo pierde demasiado contexto. Por ejemplo, &ldquo;banco&rdquo; podría seguir a &ldquo;el&rdquo; tanto en &ldquo;el banco de plaza&rdquo; como en &ldquo;el banco central&rdquo; — el modelo mezcla todo y pierde coherencia rápido.</p>
+<p>La solución es usar <strong>cadenas de orden N</strong>: el estado no es una palabra, sino una <strong>tupla de N palabras consecutivas</strong>. Con orden 2, el estado sería <code>(&quot;el&quot;, &quot;banco&quot;)</code> y ahí las transiciones posibles ya son mucho más específicas y coherentes.</p>
+<p>Esto sigue siendo matemáticamente una cadena de Markov de orden 1, solo que redefiniste qué es un &ldquo;estado&rdquo;: en vez de que el estado sea una palabra, es una ventana deslizante de N palabras. Es un truco muy común: <strong>subir el orden de contexto convirtiendo secuencias en estados atómicos</strong>.</p>
+<p><strong>Trade-off que tenés que entender:</strong></p>
+<ul>
+<li>Orden bajo (1-2): más variedad y creatividad, pero menos coherencia gramatical, texto más &ldquo;loco&rdquo;.</li>
+<li>Orden alto (4-5+): el texto generado se vuelve casi una copia literal del original, porque secuencias largas de N palabras casi no se repiten en el corpus, entonces el modelo tiene muy pocas opciones (a veces solo una) para cada estado.</li>
+</ul>
+<p>Este es el trade-off fundamental que vas a tener que ajustar empíricamente según el tamaño de tu corpus.</p>
+<h2 id="5-el-algoritmo-de-generación-sampling">5. El algoritmo de generación (sampling)</h2>
+<p>Una vez que tenés el mapa &ldquo;estado → lista de posibles siguientes&rdquo;, generar texto es:</p>
+<ol>
+<li>Elegís un estado inicial (al azar, o el primero del corpus, o uno que empiece con mayúscula si querés simular inicio de oración).</li>
+<li>Buscás la lista de palabras que pueden seguir a ese estado.</li>
+<li>Elegís una al azar de esa lista (respetando las frecuencias, como vimos).</li>
+<li>Armás el nuevo estado descartando la palabra más vieja y agregando la nueva (ventana deslizante).</li>
+<li>Repetís hasta llegar a la longitud deseada, o hasta toparte con un estado sin salidas registradas (ahí reiniciás o cortás).</li>
+</ol>
+<h2 id="6-el-problema-de-los-callejones-sin-salida-dead-ends">6. El problema de los &ldquo;callejones sin salida&rdquo; (dead ends)</h2>
+<p>Si tu estado actual nunca fue visto seguido de nada en el corpus (por ejemplo, es la última palabra del texto de entrenamiento), no hay transición posible. Tenés que decidir una estrategia:</p>
+<ul>
+<li>Reiniciar con un estado al azar del modelo.</li>
+<li>Terminar la generación ahí (tratarlo como fin de oración).</li>
+<li>Usar un modelo de &ldquo;back-off&rdquo;: si no hay datos para el estado de orden N, probás con orden N-1 (esto ya es más avanzado, similar a lo que hacen los modelos de lenguaje n-gram clásicos con <em>smoothing</em>).</li>
+</ul>
+<h2 id="7-conexión-con-la-ia-generativa-moderna">7. Conexión con la IA generativa moderna</h2>
+<p>Vale la pena que veas el paralelismo, porque es justo lo que mencionaste al principio:</p>
+<table>
+	<thead>
+			<tr>
+					<th>Cadena de Markov</th>
+					<th>LLM moderno (GPT, Claude, etc.)</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>Estado = últimas N palabras</td>
+					<td>Contexto = últimos miles de tokens</td>
+			</tr>
+			<tr>
+					<td>Probabilidades = conteo de frecuencias</td>
+					<td>Probabilidades = red neuronal entrenada</td>
+			</tr>
+			<tr>
+					<td>Transición fija por corpus</td>
+					<td>Transición aprendida y generalizable a secuencias nunca vistas</td>
+			</tr>
+			<tr>
+					<td>Sampling categórico simple</td>
+					<td>Sampling con temperatura, top-k, top-p, etc.</td>
+			</tr>
+	</tbody>
+</table>
+<p>La diferencia enorme es que un LLM no memoriza conteos exactos de secuencias vistas: aprende una función continua que <strong>generaliza</strong> a secuencias nunca vistas antes, y puede mantener coherencia en contextos de miles de palabras, no solo 2 o 3. Pero la lógica de fondo — &ldquo;dado el contexto, sampleo la palabra siguiente según una distribución de probabilidad&rdquo; — es conceptualmente la misma línea evolutiva.</p>
+<hr>
+<p>Con esto ya tenés todos los ladrillos teóricos: estados, transiciones, conteo de frecuencias, orden N, sampling, y manejo de callejones sin salida. ¿Querés que profundice en alguna parte en particular, como el tema del <em>back-off</em> o cómo pensar la estructura de datos antes de programarla vos mismo?</p>
 
 </div>
 
