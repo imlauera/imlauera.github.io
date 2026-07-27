@@ -23,7 +23,7 @@ Lo más interesante de este stream es que George Hotz destruye bastante el mito 
 Lo más interesante de este stream es que George Hotz destruye bastante el mito “mágico” del coding con agentes IA. Básicamente dice que el stream anterior había dado una impresión equivocada: la gente cree que podés soltar un agente y dejarlo programar solo, pero en la práctica tenés que supervisar obsesivamente cada línea. Para él, los agentes sirven más como aceleradores de iteración que como programadores autónomos.">
 	<meta itemprop="datePublished" content="2026-06-01T00:41:51-03:00">
 	<meta itemprop="dateModified" content="2026-06-01T00:41:51-03:00">
-	<meta itemprop="wordCount" content="387677">
+	<meta itemprop="wordCount" content="393079">
 	<meta itemprop="keywords" content="Hacking">
   
 	<meta name="twitter:card" content="summary">
@@ -5603,6 +5603,317 @@ Los tinybox nuevos con 5090s y RTX6000 Blackwell. El 12 de mayo de 2026, tinygra
 <li><strong>Web oficial</strong>: <a href="https://tinygrad.org/">tinygrad.org</a></li>
 <li><strong>Podcast Latent Space</strong>: <a href="https://www.latent.space/p/geohot">latent.space/p/geohot</a></li>
 </ul>
+<p>Te resumo de qué va la conversación y después te explico los servicios y la herramienta que mencionás.</p>
+<h2 id="de-qué-se-trata-la-charla">De qué se trata la charla</h2>
+<p>Es un chat de un server de Discord donde la gente charla sobre IA local/self-hosted, con <strong>George Hotz (geohot)</strong> como protagonista. El hilo tiene varios temas entrelazados:</p>
+<ol>
+<li>
+<p><strong>Kimi K3</strong>: un modelo de lenguaje de Moonshot AI que todavía no salió (estaba por lanzarse, &ldquo;17 hrs to go&rdquo;). La gente está ansiosa por poder correrlo localmente.</p>
+</li>
+<li>
+<p><strong>geohot mostrando su setup</strong>: dice que ahora tiene &ldquo;un equipo de devops&rdquo; — o sea, en vez de contratar gente, tiene una máquina (un &ldquo;tinybox&rdquo;, que es el hardware de IA que vende su empresa <strong>tiny corp</strong>) corriendo varios servicios que hacen de soporte técnico, guardia (oncall), seguridad (redteam) y backups automáticamente, usando tokens ilimitados de <strong>GLM 5.2</strong> (un modelo chino de Zhipu AI) que le da su propia empresa.</p>
+</li>
+<li>
+<p><strong>La charla de &ldquo;token farming&rdquo;</strong>: se pone a discutir con &ldquo;Space [CAI]&rdquo; sobre si conviene comprarse una de estas máquinas caras (150k-400k dólares) para: (a) venderle tokens/cómputo de IA a otra gente, o (b) simplemente usarla para uso personal. Terminan discutiendo el retorno de inversión, comparándolo hasta con el costo de una carrera universitaria en EEUU, y bromeando sobre poner paneles solares y granjas de token en el patio.</p>
+</li>
+</ol>
+<p>Es básicamente un ida y vuelta informal, medio en joda, sobre la fiebre de tener hardware propio de IA en casa en vez de depender de la nube.</p>
+<h2 id="los-servicios-que-mencionás-gitea-jellyfin-paseo">Los servicios que mencionás (Gitea, Jellyfin, Paseo)</h2>
+<ul>
+<li><strong>Gitea</strong>: es un servidor de control de versiones, como una versión liviana y auto-hosteada de GitHub/GitLab. Sirve para guardar y gestionar repositorios de código (los &ldquo;vibe coded repos&rdquo; que menciona).</li>
+<li><strong>Jellyfin</strong>: es un servidor de streaming multimedia (tipo Plex pero open source y gratis). Sirve para organizar y ver tus propias películas/series/música desde cualquier dispositivo en tu red.</li>
+<li><strong>Paseo</strong>: no es un servicio tan conocido/estándar como los otros dos — probablemente sea un usuario o proceso específico corriendo en su máquina (dice &ldquo;paseo is running as a paseo user without root&rdquo;, o sea que es una cuenta de sistema limitada, sin privilegios de administrador, probablemente por seguridad). No es una herramienta pública famosa, así que puede ser algo interno o un proyecto personal suyo.</li>
+</ul>
+<h2 id="lo-del-redteam-hacker">Lo del &ldquo;redteam hacker&rdquo;</h2>
+<p>Esto es un chiste — no contrató a una persona, es una herramienta automatizada. Según tu descripción de la imagen:</p>
+<ul>
+<li><strong>pi-redteam</strong> parece ser una variante de <strong>&ldquo;pi&rdquo;</strong>, que sería un agente de código (coding agent) alternativo a herramientas como OpenCode/Claude Code.</li>
+<li>Corre dentro de un <strong>contenedor Docker con Ubuntu</strong>, aislado.</li>
+<li>Usa <strong>GLM 5.2</strong> como modelo, corriendo en un servidor remoto de inferencia (no local).</li>
+<li>Está diseñado para hacer <strong>pruebas de red team autorizadas</strong> contra los propios servicios de esa máquina — es decir, es un agente de IA que intenta activamente encontrar vulnerabilidades de seguridad en su propio setup (probando atacar Gitea, Jellyfin, etc.) para detectar fallas antes de que lo haga alguien malintencionado.</li>
+</ul>
+<p>En criollo: es una IA que él usa para hackear/testear su propio servidor y encontrar agujeros de seguridad, presentada en joda como si fuera un empleado (&ldquo;contraté a un genio redteam hacker&rdquo;).</p>
+<p>Ah, dale, te explico esa parte puntual.</p>
+<h2 id="el-contexto">El contexto</h2>
+<p>Space [CAI] le pregunta a geohot algo así como: &ldquo;¿cuál es el tiempo de repago (break even) si alguien se compra un tinybox para <strong>venderle tokens a otra gente</strong> Y usarlo para uso personal en paralelo?&rdquo; — es decir, la idea de convertirte en una especie de &ldquo;granjero de tokens&rdquo; (token farmer): comprás la máquina cara, la alquilás/vendés como servicio de IA a terceros, y con esa guita &ldquo;pagás&rdquo; la máquina.</p>
+<h2 id="la-respuesta-de-geohot">La respuesta de geohot</h2>
+<p>Él dice:</p>
+<blockquote>
+<p>&ldquo;el ROI de una máquina grande es como de meses&hellip; pero ugh, hacer plata es tan aburrido zzzzz. Es todo sobre la propiedad (ownership). Tener tu propia IA es el nuevo sueño americano.&rdquo;</p>
+</blockquote>
+<p>O sea, él le está bajando el tema del negocio (vender tokens = hacer plata con la máquina) y en cambio pone el foco en otra cosa: <strong>el punto no es monetizar la máquina, el punto es simplemente tener tu propia IA, sin depender de OpenAI/Google/Anthropic</strong>. Para él ser &ldquo;dueño&rdquo; de tu inteligencia artificial es el verdadero objetivo, no un negocio de reventa de cómputo.</p>
+<h2 id="ahí-es-donde-space-cai-retoma-esa-idea">Ahí es donde Space [CAI] retoma esa idea</h2>
+<p>Space dice:</p>
+<blockquote>
+<p>&ldquo;No quiero hacer plata con esto, solo quiero pagarlo (el costo de la máquina) y que después funcione para mí.&rdquo;</p>
+</blockquote>
+<p>Es decir: <strong>no le interesa el modelo de negocio de vender tokens a otros para lucrar</strong>. Su objetivo es distinto: quiere que la máquina se <strong>autofinancie</strong> (que con lo que genera o ahorra, cubra su propio costo de compra en algún momento — ese es el &ldquo;break even&rdquo; que preguntaba antes), y una vez pagada, tenerla ahí sin más pretensión que usarla él mismo, como una mascota/asistente personal (&ldquo;landlord&rdquo; le dice geohot, como &ldquo;sos el dueño que cobra renta&rdquo; — un chiste, porque en realidad no está alquilando nada).</p>
+<p>Después Space lo explica con humor: quiere poder &ldquo;llevarse a Kimi de vacaciones&rdquo;, tenerlo en el auto, en casa calentándolo en invierno — la idea de la IA como una posesión personal / compañera, no como un emprendimiento para ganar dinero revendiendo tokens a desconocidos.</p>
+<p><strong>En resumen</strong>: la diferencia que marcan es entre dos mentalidades — (1) comprar el hardware como inversión para generar ingresos vendiendo cómputo, vs (2) comprarlo únicamente para tener tu propia IA privada y personal, sin buscar rédito económico, solo que en algún momento se pague sola.</p>
+<p>Buena pregunta, es un proyecto real de infraestructura. Te desgloso las capas de trabajo que necesitarías, de abajo hacia arriba.</p>
+<h2 id="1-hardware-y-sistema-operativo-base">1. Hardware y sistema operativo base</h2>
+<ul>
+<li>Servidor con GPUs (o el &ldquo;tinybox&rdquo; que menciona geohot, que son máquinas armadas por su empresa tiny corp con varias GPUs AMD/NVIDIA).</li>
+<li>Linux (Ubuntu suele ser el estándar), drivers de GPU (CUDA/ROCm), actualizaciones de firmware.</li>
+<li>Configuración de red: IP fija o dominio, apertura de puertos, certificados TLS (Let&rsquo;s Encrypt) si vas a exponer una API pública.</li>
+<li>Refrigeración y electricidad: esto no es joda, boxes de esas potencias consumen muchísimo y generan calor real (por algo hablan de paneles solares y facturas de 30k libras/año).</li>
+</ul>
+<h2 id="2-motor-de-inferencia-la-parte-ia">2. Motor de inferencia (la parte &ldquo;IA&rdquo;)</h2>
+<p>Acá es donde corre el modelo en sí. Opciones típicas:</p>
+<ul>
+<li><strong>vLLM</strong>, <strong>SGLang</strong>, o <strong>TensorRT-LLM</strong>: son los motores más usados para servir LLMs grandes con alta concurrencia (batching, paginación de KV-cache, etc). Esto es lo que te permite tener &ldquo;20+ concurrent requests a 500 tok/s&rdquo; como menciona geohot.</li>
+<li>Necesitás descargar los pesos del modelo (Kimi K3, GLM, etc, generalmente de Hugging Face) y cuantizarlos si hace falta para que entren en tu VRAM disponible.</li>
+<li>Configurar el paralelismo (tensor parallelism / pipeline parallelism) si el modelo no entra en una sola GPU.</li>
+</ul>
+<h2 id="3-capa-de-api--gateway">3. Capa de API / gateway</h2>
+<ul>
+<li>Exponer un endpoint compatible con el estándar de OpenAI (<code>/v1/chat/completions</code>) para que cualquier cliente pueda pegarle fácil. La mayoría de motores de inferencia ya traen esto incorporado.</li>
+<li><strong>Reverse proxy</strong> (nginx, Caddy, o Traefik) delante, para TLS, rate limiting, y ruteo.</li>
+<li><strong>API gateway / auth</strong>: sistema de API keys, cuotas, y facturación por token consumido (algo tipo Kong, o armar tu propio middleware que cuenta tokens por request y los descuenta de un balance).</li>
+</ul>
+<h2 id="4-observabilidad-el-oncall-que-menciona-geohot">4. Observabilidad (el &ldquo;oncall&rdquo; que menciona geohot)</h2>
+<ul>
+<li><strong>Prometheus + Grafana</strong>: métricas de uso de GPU, latencia, throughput, errores.</li>
+<li><strong>Logs centralizados</strong>: Loki, o algo simple como journald + logrotate si es chico.</li>
+<li><strong>Alertas</strong>: Alertmanager o algo tipo PagerDuty/Opsgenie para que te avisen si se cae el servicio.</li>
+<li>Esto es lo que reemplaza al &ldquo;devops team&rdquo; — dashboards que vigilan la salud del sistema 24/7.</li>
+</ul>
+<h2 id="5-seguridad-el-redteam">5. Seguridad (el &ldquo;redteam&rdquo;)</h2>
+<ul>
+<li>Aislar el servicio en contenedores (Docker) con usuarios sin privilegios (como el &ldquo;paseo&rdquo; que corre sin root).</li>
+<li>Firewall (ufw/iptables), fail2ban para bloquear ataques de fuerza bruta.</li>
+<li>Testing activo: correr herramientas o agentes (como el &ldquo;pi-redteam&rdquo; que mencionás) que ataquen tu propia infraestructura buscando vulnerabilidades antes que un atacante real.</li>
+<li>Backups automáticos y encriptados (de config, no tanto de los pesos del modelo que se pueden re-descargar).</li>
+</ul>
+<h2 id="6-capa-de-negocio-si-de-verdad-querés-vender-tokens">6. Capa de negocio (si de verdad querés vender tokens)</h2>
+<ul>
+<li>Sistema de billing: cobrar por token de entrada/salida, con distintos planes.</li>
+<li>Onboarding de clientes: dashboard donde generen su API key.</li>
+<li>Términos de servicio, límites de uso aceptable (para no terminar siendo usado para spam/abuso).</li>
+<li>Competencia: tenés que competir en precio/latencia contra proveedores gigantes (Together AI, Fireworks, Groq, DeepInfra, etc) que ya tienen escala — por eso el ROI real de &ldquo;vender tokens&rdquo; es más difícil que solo usarlo para vos mismo.</li>
+</ul>
+<h2 id="en-resumen">En resumen</h2>
+<p>El stack completo sería algo como: <strong>Ubuntu + drivers GPU → vLLM/SGLang sirviendo el modelo → nginx/Caddy como proxy con TLS → capa de auth y medición de tokens → Prometheus/Grafana para monitoreo → Docker + firewall para seguridad → sistema de billing si querés cobrar</strong>.</p>
+<p>Es exactamente el trabajo que un SRE haría para cualquier servicio de producción, solo que acá el &ldquo;producto&rdquo; es tokens de un LLM en vez de, por ejemplo, un e-commerce. La diferencia grande es el costo de la infraestructura (GPUs) y que el &ldquo;producto&rdquo; (los pesos del modelo) lo tenés que mantener actualizado vos mismo.</p>
+<p>¿Querés que profundice en alguna capa específica, tipo cómo configurar vLLM o cómo armar el sistema de billing por tokens?</p>
+<p>Buena observación, pero hay un malentendido con lo del TikTok — te aclaro.</p>
+<h2 id="qué-se-ve-realmente-en-la-imagen-3">Qué se ve realmente en la imagen 3</h2>
+<p>A la izquierda es la pantalla de su teléfono (espejada a la laptop), mostrando el <strong>Google Play Store</strong> en medio de instalar una app: &ldquo;Chess - Play and Learn&rdquo; (39% descargado). Abajo, en la sección &ldquo;Suggested for you&rdquo;, aparecen anuncios/sugerencias del propio Play Store — ahí es donde salen TikTok, ChatGPT, Amazon Shopping. <strong>Eso no es que el agente esté usando TikTok</strong>, es simplemente publicidad que Google Play le muestra a cualquiera en esa pantalla, sin relación con lo que está haciendo el agente.</p>
+<p>A la derecha se ve una terminal corriendo un <strong>agente de código con el modelo GLM-4.5</strong> (se lee &ldquo;zai-org/GLM-4.5 high&rdquo; abajo a la derecha). Ahí es donde está la acción real:</p>
+<ul>
+<li>Comandos como <code>su -c &quot;uiautomator dump /sdcard/chess8.xml&quot;</code> → esto extrae un &ldquo;mapa&rdquo; de todos los elementos visibles en pantalla (botones, textos, posiciones).</li>
+<li><code>su -c &quot;pm list packages&quot; | grep -i chess</code> → chequea si el paquete de la app ya está instalado.</li>
+<li><code>su -c &quot;input tap 818 1489&quot;</code> → literalmente le hace un toque táctil a la pantalla del teléfono en esas coordenadas (en este caso, tocando el botón &ldquo;Install&rdquo;).</li>
+<li><code>screencap</code> → saca capturas de pantalla para &ldquo;ver&rdquo; el resultado.</li>
+</ul>
+<h2 id="qué-significa-my-phone-is-using-itself">Qué significa &ldquo;my phone is using itself&rdquo;</h2>
+<p>El chiste/punto es que <strong>no es él tocando la pantalla</strong> — es un agente de IA (corriendo en su compu, vía ADB/uiautomator) el que está controlando su teléfono de forma autónoma: le da instrucciones al modelo tipo &ldquo;instalá y probá esta app de ajedrez&rdquo;, y el modelo:</p>
+<ol>
+<li>Busca la app en Play Store,</li>
+<li>La descarga,</li>
+<li>Espera a que instale,</li>
+<li>Verifica con dumps de UI y screenshots que efectivamente se instaló,</li>
+<li>Confirma diálogos (como el de &ldquo;Install&rdquo;) tocando la pantalla él solo.</li>
+</ol>
+<p>O sea, es un <strong>agente autónomo operando un teléfono físico real</strong> como si fuera un humano tocando la pantalla — sin que geohot esté haciendo click en nada. Por eso dice &ldquo;mi teléfono se está usando a sí mismo&rdquo; y &ldquo;esto es el futuro&rdquo;: la idea de que en vez de programar apps con APIs, la IA directamente <em>usa las apps como las usaría una persona</em>, mirando la pantalla y tocando donde corresponde (esto se llama a veces <strong>&ldquo;computer use&rdquo; o &ldquo;GUI agent&rdquo;</strong>).</p>
+<p>No tiene nada que ver con TikTok específicamente — el ejemplo que eligió mostrar fue instalar y verificar una app de ajedrez, controlando el teléfono a ciegas mediante comandos de terminal.</p>
+<p>Es la segunda opción: es la <strong>computadora (laptop) la que está manejando el teléfono a través de ADB</strong>, no el teléfono corriendo el agente por sí solo.</p>
+<h2 id="cómo-se-arma-esto">Cómo se arma esto</h2>
+<p>Mirá las pistas en la imagen:</p>
+<ol>
+<li>
+<p><strong>La terminal de la derecha</strong> corre en la laptop (HP), con el agente de código (usando GLM-4.5) ejecutando comandos de shell.</p>
+</li>
+<li>
+<p>Los comandos usan <code>su -c &quot;...&quot;</code> — esto es una sintaxis típica de <strong>ADB shell</strong>: la laptop le manda el comando al teléfono vía cable USB o red, y <code>su -c</code> le pide privilegios de root <em>en el teléfono</em> para poder tocar la pantalla y leer el estado de la UI (cosas que una app normal sin permisos no podría hacer).</p>
+</li>
+<li>
+<p>La pestaña del navegador de la izquierda muestra la URL <strong><code>100.67.177.18:8890/screenshot.png</code></strong> — ese <code>100.x.x.x</code> es un rango de IP típico de <strong>Tailscale</strong> (la VPN mesh que mencionaba antes en el chat de Discord, &ldquo;tailscale it everywhere&rdquo;). O sea: el teléfono (o algo corriendo en/cerca del teléfono) expone un mini servidor HTTP que sirve las capturas de pantalla, y la laptop simplemente abre esa URL en el navegador para &ldquo;ver&rdquo; lo que está pasando en el celu en tiempo real.</p>
+</li>
+</ol>
+<h2 id="el-flujo-completo-sería">El flujo completo sería:</h2>
+<pre tabindex="0"><code>Laptop (agente + GLM-4.5)
+   │
+   ├─→ manda comandos ADB (uiautomator dump, input tap, screencap) → Teléfono
+   │
+   └─→ el teléfono guarda screenshot.png, un servidor lo expone vía Tailscale
+   │
+   └─→ Laptop abre esa URL en el navegador para &#34;ver&#34; la pantalla del celu
+</code></pre><p>Entonces el agente de IA <strong>no vive dentro del teléfono</strong>. Vive en la laptop (con el modelo corriendo posiblemente remoto también), y usa ADB para:</p>
+<ul>
+<li>Leer el estado de la pantalla (<code>uiautomator dump</code> = qué botones/textos hay y dónde están),</li>
+<li>Simular toques (<code>input tap x y</code>),</li>
+<li>Sacar capturas (<code>screencap</code>) para confirmar visualmente que la acción funcionó.</li>
+</ul>
+<p>Es básicamente el mismo patrón que usan los &ldquo;computer use agents&rdquo; pero aplicado a Android en vez de a una PC de escritorio — la diferencia es que en vez de mouse/teclado virtual, usa el protocolo ADB para inyectar toques táctiles en un teléfono real conectado.</p>
+<p>Me intereso eso que hablaron antes de vivir en el campo o algo asi ? Yo quiero tener una vida autonoma en el campo en este articulo hablo de eso: <a href="https://geohot.github.io/blog/jekyll/update/2021/07/11/individual-sovereignty.html">https://geohot.github.io/blog/jekyll/update/2021/07/11/individual-sovereignty.html</a></p>
+<p>Leí el artículo. Es de 2021, así que es una idea que geohot viene masticando hace años — y conecta directo con lo que charlaron en el Discord sobre tener tu propia IA en vez de depender de la nube. Te resumo la idea central y después cómo se conecta con tu interés en el campo.</p>
+<h2 id="de-qué-habla-el-artículo">De qué habla el artículo</h2>
+<p>La idea central es el concepto de <strong>&ldquo;soberanía individual&rdquo;</strong>: poder vivir de forma completamente autónoma, sin depender de sistemas centralizados (el estado, las corporaciones, la &ldquo;nube&rdquo;).</p>
+<p>Puntos clave:</p>
+<ul>
+<li>
+<p><strong>Punto de partida</strong>: cita una canción de NOFX y reflexiona que para &ldquo;ganarle al sistema&rdquo; hace falta usar herramientas que no estaban disponibles para la gente en el pasado — no alcanza con repetir estrategias viejas (como crear una &ldquo;iglesia&rdquo; o institución alternativa para competir con Harvard/NYT, algo que él descarta porque tarde o temprano cualquier institución termina capturada burocráticamente).</p>
+</li>
+<li>
+<p><strong>La trampa de la interdependencia</strong>: describe estar en un hotel en Italia con sus Airpods puestos, y el recepcionista le preguntó si le gustaban porque estaba pensando en comprarse un par — y él se preguntó por qué no había Airpods italianos, o por qué había Uber Eats en Japón. La idea es que casi nadie hoy vive realmente independiente — ni la gente que se dice &ldquo;libertaria&rdquo; o &ldquo;soberana&rdquo;, porque su comida y ropa vienen de cadenas globales.</p>
+</li>
+<li>
+<p><strong>Sobre vivir &ldquo;off the grid&rdquo;</strong>: se pregunta cuánta gente realmente vive desconectada del sistema, y cuántos de esos lo logran manteniendo un nivel de vida moderno (calefacción/aire, baño, lavarropas, computadora). Concluye que casi nadie, y que la mayoría de los países ni siquiera podrían garantizar eso a su población.</p>
+</li>
+<li>
+<p><strong>Descarta el &ldquo;seasteading&rdquo;</strong> (vivir en el mar en plataformas flotantes) como una idea fallida, porque en la práctica dependés muchísimo de la tierra firme y necesitás ser muy rico para sostenerlo.</p>
+</li>
+<li>
+<p><strong>La idea central — &ldquo;post-escasez&rdquo; y &ldquo;vida open source&rdquo;</strong>: el objetivo real no es aislarse geográficamente (como ir a un lugar remoto), sino lograr una <strong>vida completamente independiente, cómoda, fácil, y sin gasto recurrente</strong>. Su frase clave: &ldquo;el gasto recurrente es cómo la sociedad te atrapa&rdquo;. La meta es abolir la escasez con tecnología, para que nadie dependa de pagar facturas constantemente a terceros para sobrevivir.</p>
+</li>
+<li>
+<p><strong>El rol de la IA</strong>: plantea que construir sistemas de IA capaces de &ldquo;pelear contra la entropía&rdquo; de forma independiente (o sea, mantener y reparar cosas por vos mismo) es un problema tecnológico difícil — más difícil que los autos autónomos, dice — pero el verdadero desafío no es técnico sino de <strong>estructura</strong>: asegurarse de que lo que construyas sirva para liberar a la gente, y no termine alimentando el mismo sistema que querés esquivar.</p>
+</li>
+</ul>
+<h2 id="la-conexión-con-lo-que-charlamos-antes">La conexión con lo que charlamos antes</h2>
+<p>Ahora tiene mucho más sentido el chiste de &ldquo;u r landlord&rdquo; y &ldquo;owning your own AI is the new american dream&rdquo; del Discord: para geohot, comprar un tinybox y correr tu propio modelo de IA en tu casa <strong>no es solo un hobby técnico</strong> — es un paso concreto hacia esta idea de soberanía individual de 2021. Es la misma lógica: en vez de pagarle mes a mes a OpenAI/Google (gasto recurrente = trampa), tenés tu propia infraestructura, sin depender de nadie, con costo hundido una sola vez.</p>
+<h2 id="sobre-tu-interés-en-el-campo">Sobre tu interés en el campo</h2>
+<p>Lo interesante es que el artículo <strong>explícitamente descarta</strong> la idea de &ldquo;irse literal a un lugar remoto&rdquo; (menciona el Polo Norte, Marte, un pueblito de Kansas) como solución. Su punto es que el aislamiento geográfico solo no te hace soberano — lo que te hace soberano es tener <strong>la tecnología para no depender de cadenas de suministro externas</strong> estés donde estés: energía propia (solar, como bromeaban en el Discord), agua, comida, cómputo/IA propia, etc.</p>
+<p>Si tu interés real es una vida autónoma en el campo, la lectura que se puede sacar de esto es: no alcanza con mudarse — el proyecto sería armar la infraestructura (energía, agua, cultivo, y por qué no cómputo/IA local) para que ese lugar en el campo realmente no dependa de &ldquo;gasto recurrente&rdquo; hacia afuera.</p>
+<p>¿Querés que profundicemos en algún pilar concreto de eso — por ejemplo, energía solar off-grid, autosuficiencia de agua/alimento, o directamente el tema de montar tu propio servidor de IA en una casa de campo?</p>
+<p>Buena pregunta, ahí hay dos cosas separadas que se mezclaron. Te las separo:</p>
+<h2 id="tailscale-la-vpn">Tailscale (la VPN)</h2>
+<p><strong>Tailscale no es un servidor HTTP ni manda capturas de nada.</strong> Es una <strong>red privada virtual tipo mesh (VPN mesh)</strong>, construida sobre el protocolo WireGuard. Lo que hace es:</p>
+<ul>
+<li>Conectar todos tus dispositivos (laptop, teléfono, servidor de casa, etc.) en una <strong>red privada virtual</strong>, como si estuvieran todos en la misma LAN, aunque físicamente estén en lugares distintos (tu casa, tu oficina, en la calle con datos móviles).</li>
+<li>A cada dispositivo le asigna una <strong>IP fija dentro de ese rango 100.x.x.x</strong> (por eso la URL que vimos era <code>100.67.177.18:8890</code> — esa es la IP <em>de Tailscale</em>, no una IP pública de internet).</li>
+<li>Es lo que le permite a geohot acceder a sus servicios de casa (Gitea, Jellyfin, etc.) desde cualquier lado, de forma segura, sin exponer nada directamente a internet — de ahí el &ldquo;tailscale it everywhere&hellip; my cloud is mine&rdquo; del primer meme que viste.</li>
+</ul>
+<p>O sea: Tailscale es <strong>la tubería/el túnel de red</strong>, no el servicio que corre adentro.</p>
+<h2 id="el-servidor-http-que-sirve-las-capturas">El servidor HTTP que sirve las capturas</h2>
+<p>Eso es <strong>otra cosa completamente distinta</strong>, que corre <em>sobre</em> la red de Tailscale, no es Tailscale en sí. Alguien (probablemente el propio agente/script que está usando para controlar el teléfono) levantó un <strong>servidor web simple</strong> — podría ser con Python (<code>http.server</code>), Node, o cualquier librería mínima — que:</p>
+<ol>
+<li>Recibe las capturas de pantalla (<code>screencap</code>) que el agente le saca al teléfono vía ADB.</li>
+<li>Las guarda como archivo (<code>screenshot.png</code>).</li>
+<li>Las sirve por HTTP en algún puerto (en este caso el <strong>8890</strong>).</li>
+</ol>
+<p>Como ese servidor corre en una máquina conectada a la red de Tailscale, la URL termina siendo <code>100.67.177.18:8890/screenshot.png</code> — la IP la puso Tailscale, pero el servidor HTTP en sí es un programita aparte, hecho a medida para este propósito (probablemente parte del mismo script/herramienta que orquesta todo el flujo de &ldquo;agente controla el teléfono&rdquo;).</p>
+<h2 id="en-resumen-1">En resumen</h2>
+<table>
+	<thead>
+			<tr>
+					<th>Componente</th>
+					<th>Qué es</th>
+					<th>Qué hace</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td><strong>Tailscale</strong></td>
+					<td>VPN mesh (WireGuard)</td>
+					<td>Conecta todos los dispositivos en una red privada, les da IPs 100.x.x.x</td>
+			</tr>
+			<tr>
+					<td><strong>Servidor HTTP en :8890</strong></td>
+					<td>Script casero (Python/Node/etc)</td>
+					<td>Sirve el archivo screenshot.png para que se pueda ver en el navegador</td>
+			</tr>
+			<tr>
+					<td><strong>ADB</strong></td>
+					<td>Protocolo de Android</td>
+					<td>Le manda comandos al teléfono (tap, dump de UI, screencap)</td>
+			</tr>
+	</tbody>
+</table>
+<p>Tailscale es la &ldquo;carretera&rdquo; privada entre sus dispositivos; el servidorcito HTTP es &ldquo;el local&rdquo; que puso sobre esa carretera para mostrar la imagen. Son piezas independientes que él combinó.</p>
+<p>Dale, vamos con los tres pilares. Te armo un panorama de cada uno con lo esencial para arrancar a planificar.</p>
+<h2 id="1-energía-solar-off-grid">1. Energía solar off-grid</h2>
+<p>La base de cualquier proyecto de autonomía. Los componentes son:</p>
+<ul>
+<li><strong>Paneles solares</strong>: hoy los paneles chinos (mencionados en el chat de Discord como joda, pero es real) bajaron muchísimo de precio — estamos hablando de paneles monocristalinos que rondan los 0.15-0.30 USD/watt en mercados al por mayor.</li>
+<li><strong>Baterías</strong>: acá está el cuello de botella real de costo. Opciones:
+<ul>
+<li><strong>LiFePO4 (litio-hierro-fosfato)</strong>: el estándar actual para off-grid residencial. Duran 3000-6000 ciclos, son seguras (no se incendian como el litio tradicional), pero son caras por kWh.</li>
+<li><strong>Plomo-ácido (AGM/gel)</strong>: más barato de entrada, pero dura mucho menos (500-1000 ciclos) y hay que sobredimensionar porque no conviene descargarlas más del 50%.</li>
+</ul>
+</li>
+<li><strong>Inversor/cargador híbrido</strong>: convierte la energía DC de los paneles/baterías a AC para tu casa, y gestiona la carga. Marcas típicas en la comunidad off-grid: Victron, Growatt, EG4.</li>
+<li><strong>Dimensionamiento</strong>: la cuenta clave es tu consumo diario en kWh vs. horas de sol útil en tu zona (Corrientes tiene muy buena radiación todo el año, así que jugás con ventaja ahí). Regla gruesa: sistema de 5-10 kWp de paneles + 15-30 kWh de batería cubre una casa normal con heladera, algo de aire acondicionado y electrónica, sin depender de la red.</li>
+<li><strong>Respaldo</strong>: muchos proyectos off-grid en serio igual tienen un generador a diésel/gas como backup para los días grises seguidos, aunque el ideal es no necesitarlo casi nunca.</li>
+</ul>
+<h2 id="2-autosuficiencia-de-agua-y-alimento">2. Autosuficiencia de agua y alimento</h2>
+<p><strong>Agua:</strong></p>
+<ul>
+<li><strong>Pozo/perforación</strong>: en Corrientes la napa freática suele estar relativamente accesible, pero depende mucho del terreno específico — hay que hacer un estudio o preguntar a perforistas de la zona.</li>
+<li><strong>Captación de agua de lluvia</strong>: complementaria, con cisterna/aljibe y filtrado.</li>
+<li><strong>Bomba</strong>: acá conectás con el punto 1 — necesitás energía para bombear el agua del pozo, así que se integra con el sistema solar.</li>
+<li><strong>Potabilización</strong>: filtros de sedimento + carbón activado como mínimo; UV o cloración si el agua tiene riesgo microbiológico.</li>
+</ul>
+<p><strong>Alimento:</strong></p>
+<ul>
+<li><strong>Huerta orgánica</strong>: la parte más simple de arrancar, pero la que más tiempo/aprendizaje requiere para ser realmente autosuficiente (rotación de cultivos, compostaje, control de plagas sin agroquímicos).</li>
+<li><strong>Gallinas ponedoras</strong>: de las inversiones con mejor retorno rápido — huevos frescos, y comen restos de la huerta/cocina.</li>
+<li><strong>Ganado menor</strong> (cabras, conejos): si el terreno da, complementa proteína y lácteos.</li>
+<li><strong>Conservación</strong>: sin esto, todo lo anterior es frágil. Conservas caseras, deshidratado, y si hay energía, freezer — de nuevo conecta con el punto 1.</li>
+</ul>
+<p>La clave real acá no es dominar cada técnica por separado, sino que <strong>todo el sistema se retroalimente</strong>: el agua de la huerta drena hacia donde están las gallinas, el estiércol vuelve como compost, la energía sobrante de mediodía bombea agua para el tanque, etc. Esto es básicamente permacultura aplicada.</p>
+<h2 id="3-servidor-de-ia-propio-en-la-casa-de-campo">3. Servidor de IA propio en la casa de campo</h2>
+<p>Esto es la parte más nueva/especulativa de todo el combo, pero conecta directo con la filosofía del artículo que leíste:</p>
+<ul>
+<li><strong>Escala realista para empezar</strong>: no hace falta un tinybox de 400k para arrancar. Una PC con una sola GPU de consumo (una RTX 4090 o similar) ya te corre modelos abiertos de tamaño mediano (Llama, Qwen, GLM en versiones más chicas) de forma totalmente local, sin depender de ninguna nube.</li>
+<li><strong>Consumo eléctrico</strong>: una GPU de esas consume 300-450W bajo carga — esto hay que sumarlo al dimensionamiento del sistema solar del punto 1. Es factible, pero hay que planificarlo, no es gratis en términos energéticos.</li>
+<li><strong>Conectividad</strong>: en el campo el punto débil suele ser el internet. Con Tailscale (como vimos) podés acceder a tu servidor de IA desde cualquier lado una vez que tenés aunque sea una conexión intermitente (LTE rural, Starlink si llega la zona, etc.).</li>
+<li><strong>Qué te resuelve la IA local ahí</strong>: automatización de la huerta/riego (sensores + un modelo que decida cuándo regar), asistente sin depender de señal para diagnóstico veterinario o de cultivos, o simplemente tener tu &ldquo;Kimi&rdquo; personal como decía el chat de Discord, sin factura mensual ni dependencia de que un tercero te corte el servicio.</li>
+</ul>
+<h2 id="cómo-se-conecta-todo">Cómo se conecta todo</h2>
+<p>Justamente el punto del artículo de geohot es que estos tres pilares <strong>no son proyectos separados</strong> — son la misma idea aplicada a distintas capas: dejar de depender de &ldquo;gasto recurrente&rdquo; externo (factura de luz, de agua, de comida del súper, de suscripción de IA) y en cambio construir un sistema que se sostenga solo.</p>
+<p>¿Por dónde te gustaría arrancar en concreto — ya tenés terreno en Corrientes, o todavía estás en etapa de evaluar/buscar?</p>
+<p>Vamos punto por punto, son varios temas distintos mezclados.</p>
+<h2 id="1-3-400k-box-in-a-garage--three-phase--30k-gbp-electric-bill">1-3. &ldquo;400k box in a garage / three phase / 30k gbp electric bill&rdquo;</h2>
+<p>Esto retoma directamente la charla del Discord que vimos antes: Space [CAI] está imaginando dónde pondría físicamente su hipotético &ldquo;tinybox&rdquo; de 400k dólares — en su <strong>garage</strong>. Menciona que ya tiene <strong>trifásica</strong> (three phase power, la instalación eléctrica industrial/residencial de alta capacidad necesaria para alimentar algo que consume tanto), y se queja de que en su ubicación (parece ser Reino Unido, por las libras esterlinas — GBP) la factura de electricidad ya le cuesta <strong>30 mil libras al año</strong>, incluso sin sumarle todavía el consumo extra de la máquina de IA. Es la continuación del lamento sobre lo caro que sale la energía en su país comparado con, por ejemplo, EEUU o China.</p>
+<h2 id="4-el-tweet-de-sam-altman-sobre-sol-a-750-toks">4. El tweet de Sam Altman sobre &ldquo;Sol&rdquo; a 750 tok/s</h2>
+<p>Es un tweet real de Sam Altman (CEO de OpenAI) del 26 de junio de 2026. En el hilo completo (que me pasaste antes) cuenta que:</p>
+<ul>
+<li>Sol es un modelo inteligente y eficiente, un paso significativo hacia adelante, con el mismo precio que GPT-5.5.</li>
+<li>También lanzan Terra, con rendimiento nivel 5.5 a mitad de precio.</li>
+<li>La mala noticia: a pedido del gobierno de EEUU, Sol se lanza hoy en preview limitado en vez del acceso abierto que tenían planeado.</li>
+<li>Después, en un segundo tweet, tira la posta técnica: 750 tokens por segundo llegando a &ldquo;5.6 Sol&rdquo; en julio.</li>
+</ul>
+<p>Esto es relevante para la charla porque conecta directo con el tema de &ldquo;tok/sec&rdquo; que se venía discutiendo — están comparando la velocidad de inferencia de los modelos grandes de las empresas (OpenAI) contra la de correr vos mismo un modelo local (Kimi, GLM). 750 tok/s es una cifra muy alta — para contexto, corriendo local en un tinybox hablaban de objetivos de 500 tok/s con concurrencia.</p>
+<h2 id="5-el-chiste-sobre-indias-local-kimi-swarm--ascamgi">5. El chiste sobre &ldquo;India&rsquo;s local kimi swarm&rdquo; / &ldquo;AscamGI&rdquo;</h2>
+<p>Esto es un comentario irónico/cínico de Space [CAI]. Está prediciendo que, si en India se populariza correr &ldquo;enjambres&rdquo; (swarms) de modelos locales tipo Kimi de forma barata, la aplicación más probable no va a ser algo noble, sino <strong>estafas de soporte técnico</strong> (los famosos &ldquo;tech support scams&rdquo; — call centers que llaman haciéndose pasar por Microsoft/soporte técnico para estafar gente, un fenómeno real asociado a algunas call center farms en India).</p>
+<p>El chiste de <strong>&ldquo;AscamGI&rdquo;</strong> es un juego de palabras con <strong>AGI</strong> (Artificial General Intelligence, el santo grial de la industria de IA) — está diciendo que en vez de una AGI real, lo que va a salir de ahí es una &ldquo;Ascam-GI&rdquo;: una inteligencia artificial optimizada para estafar, calibrada específicamente para el nivel de sofisticación de sus víctimas (dice &ldquo;relative to 50 IQ people&rdquo;, una forma bastante despectiva de decir que apunta a gente con poco conocimiento técnico que no puede distinguir una estafa).</p>
+<p>Es un comentario cínico y con una generalización bastante fuerte/despectiva hacia India — vale aclarar que es una opinión de un usuario del chat, no un hecho.</p>
+<h2 id="6-8-toksecdollar">6-8. &ldquo;Tok/sec/dollar&rdquo;</h2>
+<p>Acá Space [CAI] introduce una métrica distinta a la que venían usando. La discusión previa giraba en torno a <strong>tok/sec</strong> (tokens por segundo) como medida de velocidad pura — cuánto texto puede generar un modelo por segundo. Pero él plantea que esa métrica sola es engañosa, y que lo que importa de verdad es:</p>
+<blockquote>
+<p><strong>Tok/sec/dollar</strong> = cuántos tokens por segundo obtenés <em>por cada dólar invertido</em> (ya sea en hardware propio o en costo de API).</p>
+</blockquote>
+<p>La lógica: no sirve de nada que un modelo genere rapidísimo si para lograrlo necesitás gastar una fortuna en infraestructura o pagar tarifas carísimas de API. Un modelo más lento pero mucho más barato de correr puede ser &ldquo;mejor negocio&rdquo; en esta métrica que uno rapidísimo pero carísimo.</p>
+<p>Después se pregunta <strong>&ldquo;What is their Tok/sec/dollar to do that&rdquo;</strong> — es decir, cuestiona si OpenAI puede realmente sostener esos 750 tok/s de Sol/Altman a un costo razonable, o si es una cifra que solo es alcanzable quemando plata (subsidiando el costo real de cómputo).</p>
+<p>Y cierra con honestidad: <strong>&ldquo;Is it even at that atm? I am a Chinese model consoomer so i don&rsquo;t know&rdquo;</strong> — admite que no sabe si ya llegaron a esa velocidad, porque él personalmente usa modelos chinos (como GLM/Kimi que vienen mencionando todo el rato) y no sigue de cerca las métricas de rendimiento de OpenAI. &ldquo;Consoomer&rdquo; es un término de jerga de internet (con esa ortografía intencional) que se usa medio irónicamente para describir a alguien que consume mucho contenido/producto de una categoría — en este caso, se autodefine como alguien que consume/usa mucho los modelos chinos de código abierto en particular.</p>
+<p>No, tokens/sec no tiene nada que ver con qué tan &ldquo;inteligente&rdquo; es el modelo — es pura <strong>velocidad</strong>, no calidad.</p>
+<h2 id="qué-es-un-token">Qué es un token</h2>
+<p>Un token es la unidad mínima de texto que procesa un modelo de lenguaje. No es exactamente una palabra ni una letra — suele ser un pedacito de palabra. Por ejemplo:</p>
+<ul>
+<li>&ldquo;gato&rdquo; → probablemente 1 token</li>
+<li>&ldquo;extraordinariamente&rdquo; → puede partirse en varios tokens (&ldquo;extra&rdquo;, &ldquo;ordinari&rdquo;, &ldquo;amente&rdquo;)</li>
+</ul>
+<p>Como regla aproximada, en español/inglés <strong>1 token ≈ 0.75 palabras</strong> más o menos.</p>
+<h2 id="qué-es-tokenssegundo-toks">Qué es tokens/segundo (tok/s)</h2>
+<p>Es literalmente <strong>cuántos de esos pedacitos de texto puede generar el modelo por segundo</strong> cuando te está respondiendo. Es una medida de <strong>velocidad de generación</strong>, no de calidad de la respuesta.</p>
+<ul>
+<li>Un modelo a <strong>20 tok/s</strong> genera texto a una velocidad tipo &ldquo;se va escribiendo letra por letra visible&rdquo;, más lento que leer.</li>
+<li>Un modelo a <strong>100-200 tok/s</strong> ya lo ves aparecer bastante rápido, casi instantáneo para respuestas cortas.</li>
+<li>Un modelo a <strong>500-750 tok/s</strong> (como lo que mencionaban de Kimi o el &ldquo;Sol&rdquo; de OpenAI) te tira párrafos enteros casi de golpe, imperceptiblemente rápido para el ojo humano.</li>
+</ul>
+<h2 id="por-qué-importa-y-por-qué-no-es-inteligencia">Por qué importa (y por qué no es &ldquo;inteligencia&rdquo;)</h2>
+<p>Dos modelos pueden tener exactamente el mismo nivel de razonamiento/calidad de respuesta, pero uno correr a 30 tok/s y otro a 500 tok/s. La diferencia de velocidad depende de:</p>
+<ul>
+<li><strong>El hardware</strong> donde corre (GPUs más nuevas/rápidas, más memoria de ancho de banda),</li>
+<li><strong>Cómo está optimizado el motor de inferencia</strong> (vLLM, técnicas de paralelismo, cuantización),</li>
+<li><strong>El tamaño del modelo</strong> (modelos más chicos suelen ser más rápidos, pero no necesariamente menos inteligentes si están bien entrenados),</li>
+<li><strong>Cuánta gente lo está usando al mismo tiempo</strong> (si el servidor está saturado, cae la velocidad por usuario aunque el modelo &ldquo;podría&rdquo; ser más rápido).</li>
+</ul>
+<h2 id="por-qué-importa-en-la-práctica">Por qué importa en la práctica</h2>
+<p>Para casos como los que mencionaba geohot en el Discord — un agente que hace muchísimas tareas en cadena (leer pantalla → decidir → tocar botón → leer pantalla otra vez, repetido cientos de veces) — la velocidad bruta sí importa muchísimo, porque cada paso del agente tiene que esperar a que el modelo &ldquo;piense&rdquo; (genere tokens) antes de seguir. Si el modelo es lento, el agente completo se vuelve lento, aunque sea inteligentísimo.</p>
+<p>Por eso la distinción que hacía Space [CAI] con &ldquo;tok/sec/dollar&rdquo;: la inteligencia del modelo (qué tan bien razona, qué tan pocos errores comete) es una dimensión totalmente separada de qué tan rápido y barato te la puede entregar.</p>
 
 </div>
 
