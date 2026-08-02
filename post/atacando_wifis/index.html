@@ -33,7 +33,7 @@ No te hace falta usar espacio de disco almacenando diccionarios. Abris un simple
 hashcat -O --markov-threshold=0 -m 22000 -a 3 mi_hash.HC22000 004y014mas7.hcmask -w Si es vulnerable con pixie mas wps con correr este comando es mas que suficiente y es para cualquier distro.">
 	<meta itemprop="datePublished" content="2024-07-21T19:48:09-03:00">
 	<meta itemprop="dateModified" content="2024-07-21T19:48:09-03:00">
-	<meta itemprop="wordCount" content="4333">
+	<meta itemprop="wordCount" content="4734">
 	<meta itemprop="keywords" content="Atacando,Redes,Ciberseguridad,Vulnerabilidades">
   
 	<meta name="twitter:card" content="summary">
@@ -776,7 +776,71 @@ grep -E &#39;^[^0-9]*([0-9]){4}$&#39; sanchez_dicc1 &gt; sanchez_dicc2
 </span></span><span style="display:flex;"><span>sudo airmon-ng stop wlp1s0 
 </span></span></code></pre></div><h3 id="wifite">wifite</h3>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>wifite
-</span></span></code></pre></div><p>Saludos, que Dios los bendiga.</p>
+</span></span></code></pre></div><h3 id="aircrack-script-por-si-se-te-corta-la-luz-claude">Aircrack script por si se te corta la luz (Claude)</h3>
+<p>Te armo un sistema completo de &ldquo;resume falso&rdquo; para aircrack-ng, ya que no tiene soporte nativo. La idea es partir el diccionario en trozos pequeños y llevar un registro de por dónde ibas, para que al reiniciar retome desde el trozo siguiente en vez de desde cero.</p>
+<h2 id="1-partir-el-diccionario-en-trozos-manejables">1. Partir el diccionario en trozos manejables</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>split -l <span style="color:#ae81ff">50000</span> diccionario.txt /home/usuario/wordlist_parts/parte_
+</span></span></code></pre></div><p>Esto crea archivos <code>parte_aa</code>, <code>parte_ab</code>, <code>parte_ac</code>, etc. Ajusta el número de líneas según cuánto tarda cada trozo (unos 2-5 minutos por trozo es razonable).</p>
+<h2 id="2-script-que-corre-y-guarda-el-progreso">2. Script que corre y guarda el progreso</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/bash
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"># /home/usuario/crack_resume.sh</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>CAPFILE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/home/usuario/captura-01.cap&#34;</span>
+</span></span><span style="display:flex;"><span>PARTS_DIR<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/home/usuario/wordlist_parts&#34;</span>
+</span></span><span style="display:flex;"><span>STATE_FILE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/home/usuario/crack_state.txt&#34;</span>
+</span></span><span style="display:flex;"><span>LOG_FILE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/home/usuario/crack.log&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Si no existe el archivo de estado, arrancamos desde el principio</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> ! -f <span style="color:#e6db74">&#34;</span>$STATE_FILE<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;0&#34;</span> &gt; <span style="color:#e6db74">&#34;</span>$STATE_FILE<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>PARTS<span style="color:#f92672">=(</span><span style="color:#66d9ef">$(</span>ls <span style="color:#e6db74">&#34;</span>$PARTS_DIR<span style="color:#e6db74">&#34;</span> | sort<span style="color:#66d9ef">)</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>TOTAL<span style="color:#f92672">=</span><span style="color:#e6db74">${#</span>PARTS[@]<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>START<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>cat <span style="color:#e6db74">&#34;</span>$STATE_FILE<span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;Reanudando desde el trozo </span>$START<span style="color:#e6db74"> de </span>$TOTAL<span style="color:#e6db74">&#34;</span> &gt;&gt; <span style="color:#e6db74">&#34;</span>$LOG_FILE<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> <span style="color:#f92672">((</span>i<span style="color:#f92672">=</span>START; i&lt;TOTAL; i++<span style="color:#f92672">))</span>; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>    PART<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>PARTS[$i]<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Probando </span>$PART<span style="color:#e6db74"> (</span>$i<span style="color:#e6db74">/</span>$TOTAL<span style="color:#e6db74">)&#34;</span> &gt;&gt; <span style="color:#e6db74">&#34;</span>$LOG_FILE<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    aircrack-ng -w <span style="color:#e6db74">&#34;</span>$PARTS_DIR<span style="color:#e6db74">/</span>$PART<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;</span>$CAPFILE<span style="color:#e6db74">&#34;</span> &gt;&gt; <span style="color:#e6db74">&#34;</span>$LOG_FILE<span style="color:#e6db74">&#34;</span> 2&gt;&amp;<span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Si encontró la clave, aircrack-ng la muestra en el log; revisamos</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> grep -q <span style="color:#e6db74">&#34;KEY FOUND&#34;</span> <span style="color:#e6db74">&#34;</span>$LOG_FILE<span style="color:#e6db74">&#34;</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;CLAVE ENCONTRADA - revisa </span>$LOG_FILE<span style="color:#e6db74">&#34;</span> &gt;&gt; <span style="color:#e6db74">&#34;</span>$LOG_FILE<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>        exit <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Guardamos el progreso: el siguiente trozo a probar</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#66d9ef">$((</span>i+1<span style="color:#66d9ef">))</span> &gt; <span style="color:#e6db74">&#34;</span>$STATE_FILE<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;Terminó el diccionario completo sin encontrar la clave&#34;</span> &gt;&gt; <span style="color:#e6db74">&#34;</span>$LOG_FILE<span style="color:#e6db74">&#34;</span>
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>chmod +x /home/usuario/crack_resume.sh
+</span></span></code></pre></div><p>Cada vez que termina un trozo (aunque sea exitosamente sin encontrar nada), actualiza <code>crack_state.txt</code> con el número del siguiente. Si se corta la luz a mitad de un trozo, en el peor caso pierdes solo ese trozo, no todo el avance.</p>
+<h2 id="3-que-arranque-solo-al-volver-la-luz">3. Que arranque solo al volver la luz</h2>
+<p><strong>En la BIOS/UEFI:</strong> busca la opción <code>Restore on AC Power Loss</code> o <code>After Power Failure</code> y ponla en <code>Power On</code>.</p>
+<p><strong>Que el script se ejecute solo al iniciar sesión</strong>, usando un servicio systemd:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo nano /etc/systemd/system/crack-resume.service
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-ini" data-lang="ini"><span style="display:flex;"><span><span style="color:#66d9ef">[Unit]</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">Description</span><span style="color:#f92672">=</span><span style="color:#e6db74">Reanudar cracking aircrack-ng</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">After</span><span style="color:#f92672">=</span><span style="color:#e6db74">network.target</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">[Service]</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">Type</span><span style="color:#f92672">=</span><span style="color:#e6db74">simple</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">ExecStart</span><span style="color:#f92672">=</span><span style="color:#e6db74">/home/usuario/crack_resume.sh</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">User</span><span style="color:#f92672">=</span><span style="color:#e6db74">usuario</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">Restart</span><span style="color:#f92672">=</span><span style="color:#e6db74">no</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">[Install]</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">WantedBy</span><span style="color:#f92672">=</span><span style="color:#e6db74">multi-user.target</span>
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo systemctl enable crack-resume.service
+</span></span></code></pre></div><p>Así, apenas la PC vuelve a prender (BIOS) y arranca Linux, el servicio se lanza solo y retoma justo desde el trozo donde te quedaste, sin que tengas que tocar nada.</p>
+<h2 id="extra-ups-como-respaldo-real">Extra: UPS como respaldo real</h2>
+<p>Este script resuelve el &ldquo;perder el progreso&rdquo;, pero si quieres evitar el corte en sí mismo, un UPS chico con <code>apcupsd</code>/<code>nut</code> sigue siendo la solución más sólida — te da margen para que ni siquiera llegue a cortarse.</p>
+<p>Saludos, que Dios los bendiga.</p>
 
 </div>
 
