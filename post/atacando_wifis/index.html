@@ -33,7 +33,7 @@ No te hace falta usar espacio de disco almacenando diccionarios. Abris un simple
 hashcat -O --markov-threshold=0 -m 22000 -a 3 mi_hash.HC22000 004y014mas7.hcmask -w Si es vulnerable con pixie mas wps con correr este comando es mas que suficiente y es para cualquier distro.">
 	<meta itemprop="datePublished" content="2024-07-21T19:48:09-03:00">
 	<meta itemprop="dateModified" content="2024-07-21T19:48:09-03:00">
-	<meta itemprop="wordCount" content="4734">
+	<meta itemprop="wordCount" content="5080">
 	<meta itemprop="keywords" content="Atacando,Redes,Ciberseguridad,Vulnerabilidades">
   
 	<meta name="twitter:card" content="summary">
@@ -841,6 +841,22 @@ grep -E &#39;^[^0-9]*([0-9]){4}$&#39; sanchez_dicc1 &gt; sanchez_dicc2
 <h2 id="extra-ups-como-respaldo-real">Extra: UPS como respaldo real</h2>
 <p>Este script resuelve el &ldquo;perder el progreso&rdquo;, pero si quieres evitar el corte en sí mismo, un UPS chico con <code>apcupsd</code>/<code>nut</code> sigue siendo la solución más sólida — te da margen para que ni siquiera llegue a cortarse.</p>
 <p>Saludos, que Dios los bendiga.</p>
+<h4 id="aircrack-por-si-se-corta-la-luz-con-john">Aircrack por si se corta la luz con john</h4>
+<p>La respuesta corta es <strong>no, no existe un fork oficial ni mantenido de aircrack-ng con soporte nativo de resume</strong>. De hecho está documentado como una limitación conocida desde hace años: ya en 2006 se reportó como issue que sería útil que aircrack-ng guardara su estado actual para poder continuar donde se detuvo, pero nunca se implementó de forma nativa.</p>
+<p>Lo que sí existe son <strong>workarounds que combinan aircrack-ng con otra herramienta que sí tiene sesiones</strong>:</p>
+<h2 id="la-solución-real-que-usa-la-gente-aircrack-ng--john-the-ripper">La solución real que usa la gente: aircrack-ng + John the Ripper</h2>
+<p>En vez de que aircrack-ng lea el diccionario directamente, John the Ripper genera las contraseñas y se las pasa por <em>pipe</em>, mientras John es quien guarda el progreso:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Iniciar</span>
+</span></span><span style="display:flex;"><span>john --session<span style="color:#f92672">=</span>micrack --stdout --wordlist<span style="color:#f92672">=</span>diccionario.txt | aircrack-ng -w - -b 00:11:22:33:44:55 captura.cap
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Se corta la luz, Ctrl+C, lo que sea → al volver:</span>
+</span></span><span style="display:flex;"><span>john --restore<span style="color:#f92672">=</span>micrack | aircrack-ng -w - -b 00:11:22:33:44:55 captura.cap
+</span></span></code></pre></div><p>John guarda el progreso de la sesión en un archivo (por defecto ~/.john/john.rec), y para continuar se usa la opción &ndash;restore=[nombre de sesión]. Esto es prácticamente el &ldquo;resume&rdquo; que buscas, sin tocar el código de aircrack-ng.</p>
+<h2 id="herramienta-que-automatiza-justo-esto">Herramienta que automatiza justo esto</h2>
+<p>Encontré un proyecto pequeño llamado <strong>aircrunch</strong>, descrito como una herramienta para pausar y reanudar aircrack-ng cuando se usa con diccionario o con crunch. Básicamente envuelve la técnica de John + aircrack-ng en un script más cómodo. Vale la pena mirarlo, aunque al ser un proyecto pequeño de un solo mantenedor, revisa que siga funcionando con tu versión de aircrack-ng antes de confiar en él para algo largo.</p>
+<h2 id="por-qué-pasa-esto">Por qué pasa esto</h2>
+<p>En el fondo, aircrack-ng fue diseñado como una herramienta de ataque puntual, no pensando en sesiones largas de días — por eso nunca priorizaron el guardado de estado, y la comunidad resolvió el problema por fuera, delegándole esa función a otra herramienta (John) en vez de parchear aircrack-ng.</p>
+<p>¿Quieres que te arme el script combinando John + aircrack-ng con el reinicio automático que armamos antes (BIOS + systemd), para que todo el ciclo completo quede resuelto?</p>
 
 </div>
 
