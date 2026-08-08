@@ -31,7 +31,7 @@ No te hace falta usar espacio de disco almacenando diccionarios. Abris un simple
 004?d?d?d?d?d?d?d 014?d?d?d?d?d?d?d Lo guardas como 004y014mas7.hcmask. Despues solo resta correr hashcat.">
 	<meta itemprop="datePublished" content="2024-07-21T19:48:09-03:00">
 	<meta itemprop="dateModified" content="2024-07-21T19:48:09-03:00">
-	<meta itemprop="wordCount" content="5382">
+	<meta itemprop="wordCount" content="5645">
 	<meta itemprop="keywords" content="Atacando,Redes,Ciberseguridad,Vulnerabilidades">
   
 	<meta name="twitter:card" content="summary">
@@ -889,7 +889,20 @@ grep -E &#39;^[^0-9]*([0-9]){4}$&#39; sanchez_dicc1 &gt; sanchez_dicc2
 <p>Si <code>pacman -Q pocl</code> da error de &ldquo;no encontrado&rdquo;, no se instaló (revisá si el comando anterior tiró algún error que se te pasó). Si sí está instalado pero <code>/etc/OpenCL/vendors/</code> está vacío o no existe, el archivo <code>.icd</code> que le dice al sistema dónde está pocl no se generó — probá reinstalar:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo pacman -S --needed pocl ocl-icd clinfo
 </span></span><span style="display:flex;"><span>clinfo
-</span></span></code></pre></div>
+</span></span></code></pre></div><h2 id="fix-inmediato-sin-descargar-nada-nuevo">Fix inmediato (sin descargar nada nuevo)</h2>
+<p>Tu triple-h ya tiene todo lo que necesitás — solo hay que <strong>filtrar</strong> los cortos, no descartar el archivo entero. Con <code>pw-inspector</code> (ya lo tenés, es parte del paquete de aircrack-ng) o con <code>awk</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pw-inspector -i triple-h.txt -o triple-h_wpa2.txt -m <span style="color:#ae81ff">8</span> -M <span style="color:#ae81ff">63</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># o equivalente:</span>
+</span></span><span style="display:flex;"><span>awk <span style="color:#e6db74">&#39;length($0) &gt;= 8 &amp;&amp; length($0) &lt;= 63&#39;</span> triple-h.txt &gt; triple-h_wpa2.txt
+</span></span></code></pre></div><p>WPA2 requiere contraseñas de entre 8 y 63 caracteres, así que esto te deja el mismo diccionario de 17.9GB pero sin desperdiciar tiempo en entradas que nunca podrían ser válidas.</p>
+<h2 id="si-querés-algo-más-grande-ya-filtrado-de-fábrica">Si querés algo más grande, ya filtrado de fábrica</h2>
+<p><strong>Específico para WPA2, sin filtrar vos mismo:</strong> el repositorio kennyn510/wpa2-wordlists en GitHub trae listas ya preparadas para WPA2, junto con un script que limpia cualquier wordlist a 8-63 caracteres automáticamente:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>git clone https://github.com/kennyn510/wpa2-wordlists.git
+</span></span></code></pre></div><p><strong>El más grande que encontré ya filtrado a 8+ caracteres:</strong> OneWordlistToListThemAll tiene una variante específica &ldquo;WPA-PSK&rdquo; de 99.9GB, generada combinando más de una decena de fuentes (crackstation, weakpass, hashes.org, rockyou2024, etc.) y filtrada a 8+ caracteres — revisá el README del repo <code>mamatb/OneWordlistToListThemAll</code> para los links de descarga (torrent).</p>
+<p><strong>El más grande de weakpass.com sin filtrar:</strong> su lista completa &ldquo;weakpass&rdquo; pesa 83.3GB — le pasás el <code>pw-inspector</code> de arriba después de bajarla.</p>
+<h2 id="un-aviso-honesto">Un aviso honesto</h2>
+<p>Antes de bajar 80-100GB: un flujo más eficiente suele ser una lista curada más chica combinada con reglas de hashcat (como best64.rule), en vez de un archivo enorme en crudo — con tu CPU, un diccionario de 100GB puede tardar semanas/meses en agotarse. El triple-h filtrado (17.9GB) ya es bastante diccionario para empezar.</p>
+
 </div>
 
 
