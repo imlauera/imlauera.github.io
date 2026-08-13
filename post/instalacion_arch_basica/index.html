@@ -32,7 +32,7 @@ Y COPIA LAS COOKIES DE TU NAVEGADOR (EN MI CASO USO FALKON BASADO EN CHROMIUM) E
 TU CONFIGURACION DE JACKETT.">
 	<meta itemprop="datePublished" content="2023-11-22T02:05:50-03:00">
 	<meta itemprop="dateModified" content="2023-11-22T02:05:50-03:00">
-	<meta itemprop="wordCount" content="6670">
+	<meta itemprop="wordCount" content="7074">
 	<meta itemprop="keywords" content="Archlinux,Full,Installation">
   
 	<meta name="twitter:card" content="summary">
@@ -1507,6 +1507,83 @@ comandos mas rapidos.</p>
 </span></span></code></pre></div><hr>
 <h3 id="descargar-mi-música-con-yt-dlp">Descargar mi música con yt-dlp.</h3>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>yt-dlp -f worstaudio <span style="color:#e6db74">&#34;ytsearch50:avenged_sevenfold&#34;</span> <span style="color:#e6db74">&#34;ytsearch50:cancerslug&#34;</span> <span style="color:#e6db74">&#34;ytsearch50:manowar&#34;</span> <span style="color:#e6db74">&#34;ytsearch50:russian war songs&#34;</span> <span style="color:#e6db74">&#34;ytsearch50:sabaton&#34;</span>
+</span></span></code></pre></div><hr>
+<h1 id="fin">FIN</h1>
+<h2 id="fsck-al-inicio-y-otras-cosas-que-hacen-las-otras-distros-por-defecto">Fsck al inicio y otras cosas que hacen las otras distros por defecto</h2>
+<p>Estas son configuraciones que la mayoría de las distros traen activadas
+de fábrica y en Arch hay que hacerlas a mano. Todas al final de la
+instalación.</p>
+<h3 id="fsck-del-root-antes-de-montarlo">Fsck del root antes de montarlo</h3>
+<p>Hay dos mecanismos (ArchWiki: <a href="https://wiki.archlinux.org/title/Fsck">https://wiki.archlinux.org/title/Fsck</a>)</p>
+<p><strong>1. Hook <code>fsck</code> de mkinitcpio (recomendado)</strong></p>
+<p>Se chequea el rootfs dentro del initramfs, antes de montarlo.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo vim /etc/mkinitcpio.conf
+</span></span></code></pre></div><p>Agregá <code>fsck</code> al final de <code>HOOKS</code>:</p>
+<pre tabindex="0"><code>HOOKS=(base udev autodetect microcode modconf kms keyboard keymap consolefont block filesystems fsck)
+</code></pre><p>Verificá que la entrada del root en <code>/etc/fstab</code> tenga <code>1</code> como último
+campo (el pass number). Si no lo tiene:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo vim /etc/fstab
+</span></span></code></pre></div><p>Regenerá el initramfs:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo mkinitcpio -P
+</span></span></code></pre></div><p><strong>2. Con <code>systemd-fsck-root.service</code></strong></p>
+<p>Si preferís que systemd lo haga, sin el hook <code>fsck</code>, tenés que bootear
+el root con <code>ro</code> para que lo chequeé antes del remount <code>rw</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo vim /etc/default/grub
+</span></span></code></pre></div><p>En <code>CMDLINE_LINUX_DEFAULT</code> agregá <code>ro</code>:</p>
+<pre tabindex="0"><code>GRUB_CMDLINE_LINUX_DEFAULT=&#34;loglevel=3 quiet ro&#34;
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo grub-mkconfig -o /boot/grub/grub.cfg
+</span></span></code></pre></div><p>Notas:</p>
+<ul>
+<li><code>fsck.mode=force</code> como parámetro de kernel fuerza el chequeo en cada boot.</li>
+<li><code>fsck.repair=yes</code> o <code>fsck.repair=preen</code> para que repare automáticamente.</li>
+<li>Para chequear cada X montajes: <code>sudo tune2fs -c 30 /dev/sda3</code>.</li>
+<li>Si usás btrfs no necesitás nada, tiene su propio chequeo al montar.</li>
+</ul>
+<h3 id="microcódigo-temprano">Microcódigo temprano</h3>
+<p>Sin esto los fixes de CPU se cargan tarde o nunca.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo pacman -S intel-ucode   <span style="color:#75715e"># o amd-ucode si es AMD</span>
+</span></span><span style="display:flex;"><span>sudo grub-mkconfig -o /boot/grub/grub.cfg
+</span></span></code></pre></div><h3 id="trim-automático-para-ssd">TRIM automático para SSD</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo systemctl enable fstrim.timer
+</span></span></code></pre></div><h3 id="zram-en-vez-de-swap-como-fedoraubuntu">zram en vez de swap (como Fedora/Ubuntu)</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo pacman -S zram-generator
+</span></span><span style="display:flex;"><span>sudo vim /etc/systemd/zram-generator.conf
+</span></span></code></pre></div><pre tabindex="0"><code>[zram0]
+zram-size = ram / 2
+compression-algorithm = zstd
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo systemctl enable systemd-zram-setup@zram0.service
+</span></span></code></pre></div><h3 id="journal-persistente">Journal persistente</h3>
+<p>En Arch los logs del journal viven en RAM y se pierden en cada boot.
+Para que queden en disco:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo mkdir -p /var/log/journal
+</span></span><span style="display:flex;"><span>sudo systemd-tmpfiles --create --prefix /var/log/journal
+</span></span><span style="display:flex;"><span>sudo systemctl restart systemd-journald
+</span></span></code></pre></div><h3 id="limpieza-automática-de-la-caché-de-pacman">Limpieza automática de la caché de pacman</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo pacman -S pacman-contrib
+</span></span><span style="display:flex;"><span>sudo systemctl enable paccache.timer
+</span></span></code></pre></div><h3 id="firewall-como-ubuntu">Firewall (como Ubuntu)</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo pacman -S ufw
+</span></span><span style="display:flex;"><span>sudo ufw enable
+</span></span></code></pre></div><h3 id="apparmor-como-ubuntudebian">AppArmor (como Ubuntu/Debian)</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo pacman -S apparmor
+</span></span><span style="display:flex;"><span>sudo systemctl enable apparmor
+</span></span><span style="display:flex;"><span>sudo vim /etc/default/grub
+</span></span></code></pre></div><p>En <code>CMDLINE_LINUX_DEFAULT</code> agregá <code>security=apparmor</code> y regenerá el grub:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo grub-mkconfig -o /boot/grub/grub.cfg
+</span></span></code></pre></div><h3 id="snapshots-del-sistema">Snapshots del sistema</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo pacman -S snapper
+</span></span><span style="display:flex;"><span>sudo snapper -c root create-config /
+</span></span><span style="display:flex;"><span>sudo systemctl enable snapper-timeline.timer snapper-cleanup.timer
+</span></span></code></pre></div><p>O más simple con ext4: <code>timeshift</code>.</p>
+<h3 id="mirrors-actualizados-automáticamente">Mirrors actualizados automáticamente</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo pacman -S reflector
+</span></span><span style="display:flex;"><span>sudo systemctl enable reflector.timer
+</span></span></code></pre></div><h3 id="tmp-en-ram">/tmp en RAM</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo vim /etc/fstab
+</span></span></code></pre></div><p>Agregá:</p>
+<pre tabindex="0"><code>tmpfs /tmp tmpfs defaults,noatime,mode=1777 0 0
+</code></pre><h3 id="swappiness">Swappiness</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>echo <span style="color:#e6db74">&#39;vm.swappiness=10&#39;</span> | sudo tee /etc/sysctl.d/99-swappiness.conf
 </span></span></code></pre></div>
 </div>
 
