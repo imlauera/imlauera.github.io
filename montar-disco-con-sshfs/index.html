@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/montar-disco-con-sshfs/">
+	<meta property="og:site_name" content="Imlauer">
+	<meta property="og:title" content="Montar disco a traves de la red con sshfs">
+	<meta property="og:description" content="Montar una partición remota con sshfs es una forma muy práctica y segura de acceder a archivos de otro equipo a través de SSH. La idea es simple: con sshfs puedes hacer que un directorio de un servidor remoto aparezca como una unidad más en tu propia computadora, y vas a poder manejarlo con el explorador de archivos o desde la terminal como si fuera local.
+Aquí te explico cómo hacerlo paso a paso:">
+	<meta property="og:locale" content="es_es">
+	<meta property="og:type" content="article">
+		<meta property="article:published_time" content="2026-08-17T19:46:09-03:00">
+		<meta property="article:modified_time" content="2026-08-17T19:46:09-03:00">
+		<meta property="article:tag" content="Linux">
+
+  
+	<meta itemprop="name" content="Montar disco a traves de la red con sshfs">
+	<meta itemprop="description" content="Montar una partición remota con sshfs es una forma muy práctica y segura de acceder a archivos de otro equipo a través de SSH. La idea es simple: con sshfs puedes hacer que un directorio de un servidor remoto aparezca como una unidad más en tu propia computadora, y vas a poder manejarlo con el explorador de archivos o desde la terminal como si fuera local.
+Aquí te explico cómo hacerlo paso a paso:">
+	<meta itemprop="datePublished" content="2026-08-17T19:46:09-03:00">
+	<meta itemprop="dateModified" content="2026-08-17T19:46:09-03:00">
+	<meta itemprop="wordCount" content="562">
+	<meta itemprop="keywords" content="Linux">
+  
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:title" content="Montar disco a traves de la red con sshfs">
+	<meta name="twitter:description" content="Montar una partición remota con sshfs es una forma muy práctica y segura de acceder a archivos de otro equipo a través de SSH. La idea es simple: con sshfs puedes hacer que un directorio de un servidor remoto aparezca como una unidad más en tu propia computadora, y vas a poder manejarlo con el explorador de archivos o desde la terminal como si fuera local.
+Aquí te explico cómo hacerlo paso a paso:">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Montar disco a traves de la red con sshfs
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/montar-disco-con-sshfs/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="Montar una partición remota con sshfs es una forma muy práctica y segura de acceder a archivos de otro equipo a través de SSH. La idea es simple: con sshfs puedes hacer que un directorio de un servidor remoto aparezca como una unidad más en tu propia computadora, y vas a poder manejarlo con el explorador de archivos o desde la terminal como si fuera local.
+Aquí te explico cómo hacerlo paso a paso:">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Montar disco a traves de la red con sshfs
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2026-08-17T19:46:09-03:00'>
+      August 17, 2026
+    </time>
+    
+    <br>
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/linux/">Linux</a>
+    
+    
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <p>Montar una partición remota con <code>sshfs</code> es una forma muy práctica y segura de acceder a archivos de otro equipo a través de SSH. La idea es simple: con <code>sshfs</code> puedes hacer que un directorio de un servidor remoto aparezca como una unidad más en tu propia computadora, y vas a poder manejarlo con el explorador de archivos o desde la terminal como si fuera local.</p>
+<p>Aquí te explico cómo hacerlo paso a paso:</p>
+<h3 id="1-instalar-sshfs">1. Instalar SSHFS</h3>
+<p>Primero, necesitas tener el paquete <code>sshfs</code> instalado en tu computadora local (la que usas para montar). El comando depende de tu distribución de Linux:</p>
+<ul>
+<li><strong>En Ubuntu/Debian y derivados</strong>:
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo apt install sshfs
+</span></span></code></pre></div></li>
+<li><strong>En Red Hat, Fedora, CentOS y derivados</strong>:
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo yum install fuse-sshfs
+</span></span></code></pre></div></li>
+</ul>
+<blockquote>
+<p><strong>Nota importante sobre permisos:</strong> Si quieres que otros usuarios (que no sean <code>root</code>) puedan usar la opción <code>-o allow_other</code>, debes asegurarte de que la línea <code>user_allow_other</code> en el archivo <code>/etc/fuse.conf</code> no esté comentada.</p>
+</blockquote>
+<h3 id="2-crear-un-punto-de-montaje-local">2. Crear un punto de montaje local</h3>
+<p>Necesitas una carpeta vacía en tu sistema local que servirá como el &ldquo;punto de entrada&rdquo; a la partición remota. Puedes crearla donde prefieras, por ejemplo, en tu directorio <code>home</code> o en <code>/mnt</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mkdir -p ~/carpeta_remota
+</span></span></code></pre></div><h3 id="3-montar-el-sistema-de-archivos-remoto">3. Montar el sistema de archivos remoto</h3>
+<p>La sintaxis básica del comando es la siguiente:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sshfs <span style="color:#f92672">[</span>usuario<span style="color:#f92672">]</span>@<span style="color:#f92672">[</span>servidor<span style="color:#f92672">]</span>:<span style="color:#f92672">[</span>ruta_remota<span style="color:#f92672">]</span> <span style="color:#f92672">[</span>punto_de_montaje_local<span style="color:#f92672">]</span> <span style="color:#f92672">[</span>opciones<span style="color:#f92672">]</span>
+</span></span></code></pre></div><ul>
+<li><code>[usuario]@[servidor]</code>: Tus credenciales de acceso SSH al servidor remoto.</li>
+<li><code>[ruta_remota]</code>: La ruta absoluta de la carpeta o partición en el servidor que quieres montar. Si la omites, se montará tu directorio <code>home</code> remoto.</li>
+<li><code>[punto_de_montaje_local]</code>: La carpeta que acabas de crear.</li>
+</ul>
+<p><strong>Ejemplo básico:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sshfs usuario@192.168.1.100:/home/usuario/datos ~/carpeta_remota
+</span></span></code></pre></div><p>Al ejecutar esto, se te pedirá la contraseña SSH del usuario remoto.</p>
+<h4 id="opciones-comunes-y-útiles">Opciones comunes y útiles</h4>
+<p>Puedes añadir opciones con <code>-o</code> para un mejor control. Aquí algunas de las más usadas:</p>
+<ul>
+<li><strong><code>-o allow_other</code></strong>: Permite que otros usuarios del sistema local accedan a los archivos montados.</li>
+<li><strong><code>-o default_permissions</code></strong>: Habilita la comprobación de permisos local. Sin esta opción, <code>sshfs</code> ignora los permisos del sistema de archivos local y cualquier usuario que pueda acceder al punto de montaje podrá realizar operaciones según los permisos del servidor remoto.</li>
+<li><strong><code>-o IdentityFile=/ruta/a/tu/clave</code></strong>: Especifica la ruta a tu clave privada SSH si no usas contraseña.</li>
+<li><strong><code>-p [puerto]</code></strong>: Especifica un puerto SSH diferente al 22.</li>
+<li><strong><code>-C</code></strong>: Habilita la compresión de datos durante la transferencia, lo que puede mejorar el rendimiento en conexiones lentas.</li>
+</ul>
+<p><strong>Ejemplo con varias opciones:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sshfs -o allow_other,default_permissions,IdentityFile<span style="color:#f92672">=</span>~/.ssh/id_rsa usuario@servidor:/ruta/remota ~/carpeta_remota
+</span></span></code></pre></div><h3 id="4-desmontar-el-sistema-de-archivos">4. Desmontar el sistema de archivos</h3>
+<p>Cuando hayas terminado de trabajar, es importante desmontar la unidad de forma segura para evitar pérdida de datos:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>fusermount -u ~/carpeta_remota
+</span></span></code></pre></div><h3 id="5-montaje-automático-al-iniciar-opcional">5. Montaje automático al iniciar (Opcional)</h3>
+<p>Para que el montaje se realice de forma automática cada vez que inicies tu sistema, puedes añadir una entrada al archivo <code>/etc/fstab</code>. Asegúrate de que el punto de montaje exista y que tengas configurada la autenticación sin contraseña (usando claves SSH).</p>
+<p>Añade una línea como esta a <code>/etc/fstab</code>:</p>
+<pre tabindex="0"><code>usuario@servidor:/ruta/remota /ruta/local/montaje fuse.sshfs noauto,x-systemd.automount,_netdev,users,idmap=user,IdentityFile=/ruta/a/tu/clave,allow_other,default_permissions 0 0
+</code></pre><p>[0†L30]</p>
+<h3 id="solución-de-problemas-comunes">Solución de problemas comunes</h3>
+<ul>
+<li><strong>&ldquo;Connection refused&rdquo; o &ldquo;Host key verification failed&rdquo;</strong>: Asegúrate de que el servidor remoto está encendido, que el servicio SSH está corriendo y que has aceptado su clave SSH previamente (con <code>ssh usuario@servidor</code>).</li>
+<li><strong>Permiso denegado</strong>: Verifica que el usuario remoto tenga permisos para acceder a la ruta que intentas montar.</li>
+<li><strong>Problemas de permisos locales</strong>: Si ves errores de permisos al abrir archivos, prueba a montar con las opciones <code>-o allow_other,default_permissions</code>.</li>
+</ul>
+<p>Espero que esta guía te sea de ayuda.</p>
+
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+
+</footer>
+
+
+</body>
+</html>
