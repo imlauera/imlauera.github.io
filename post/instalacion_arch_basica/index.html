@@ -32,7 +32,7 @@ Y COPIA LAS COOKIES DE TU NAVEGADOR (EN MI CASO USO FALKON BASADO EN CHROMIUM) E
 TU CONFIGURACION DE JACKETT.">
 	<meta itemprop="datePublished" content="2023-11-22T02:05:50-03:00">
 	<meta itemprop="dateModified" content="2023-11-22T02:05:50-03:00">
-	<meta itemprop="wordCount" content="7074">
+	<meta itemprop="wordCount" content="7289">
 	<meta itemprop="keywords" content="Archlinux,Full,Installation">
   
 	<meta name="twitter:card" content="summary">
@@ -1584,7 +1584,25 @@ Para que queden en disco:</p>
 <pre tabindex="0"><code>tmpfs /tmp tmpfs defaults,noatime,mode=1777 0 0
 </code></pre><h3 id="swappiness">Swappiness</h3>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>echo <span style="color:#e6db74">&#39;vm.swappiness=10&#39;</span> | sudo tee /etc/sysctl.d/99-swappiness.conf
-</span></span></code></pre></div>
+</span></span></code></pre></div><h2 id="montar-particion-windows">Montar particion windows</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo pacman -S ntfs-3g
+</span></span><span style="display:flex;"><span>sudo pacman -S ntfsprogs
+</span></span><span style="display:flex;"><span>sudo ntfsfix /dev/sdb2
+</span></span><span style="display:flex;"><span>sudo mount -t ntfs-3g /dev/sdb2 /mnt/windows
+</span></span></code></pre></div><h2 id="forzalo-no-recomendado-si-te-tira-error-es-porque-esta-en-hibernacion-tenes-que-reiniciar-tu-pc">Forzalo (no recomendado si te tira error es porque esta en hibernacion tenes que reiniciar tu pc)</h2>
+<p>Tenes que ejecutar grub-mkconfig .. (el comando esta arriba) detectar windows y iniciar windows.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># No ejecutes este comando lee arriba!! : sudo mount -t ntfs3 -o force,rw /dev/sdb2 /mnt/windows </span>
+</span></span></code></pre></div><p>Cuando GRUB encuentre Windows 10 correctamente en <code>/dev/sdb1</code> (la partición de arranque), así que no necesitabas montar <code>/dev/sdb2</code> para nada de esto.</p>
+<ol>
+<li><strong>Reinicia</strong> el equipo (<code>sudo reboot</code> o desde el menú).</li>
+<li>En el menú de GRUB, selecciona la entrada de <strong>Windows 10</strong> y déjalo arrancar normalmente.</li>
+<li>Si Windows resume desde el estado hibernado, déjalo terminar de cargar sin interrumpir — no fuerces un apagado a la mitad.</li>
+<li>Una vez dentro de Windows, desactiva el <strong>inicio rápido</strong> (Fast Startup): Panel de Control → Opciones de energía → &ldquo;Elegir el comportamiento de los botones de encendido&rdquo; → click en &ldquo;Cambiar la configuración actualmente no disponible&rdquo; → desmarcar <strong>Activar inicio rápido</strong>.</li>
+<li>Haz un <strong>apagado completo</strong> (Shut Down, no reinicio) desde Windows.</li>
+<li>Vuelve a arrancar en Arch y monta de nuevo — ya no debería aparecer el mensaje de &ldquo;hibernated&rdquo;.</li>
+</ol>
+<p>Con eso debería quedar resuelto sin necesidad de forzar nada desde Linux.</p>
+
 </div>
 
 

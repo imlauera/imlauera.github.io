@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/adbd_remoto_wireguard/">
+	<meta property="og:site_name" content="Imlauer">
+	<meta property="og:title" content="Controlar un Android viejo por ADB desde cualquier lugar del mundo (WireGuard)">
+	<meta property="og:description" content="Tengo un Moto G3 con LineageOS 14.1 que controlo por ADB WiFi desde la PC. El problema: eso solo funciona estando en la misma red. Acá dejo armado el esquema para controlarlo desde cualquier parte del mundo sin instalar nada raro en el teléfono (no hay Tailscale para Android 7).
+La idea [notebook en el mundo] --túnel WG--&gt; [PC Linux en casa] --adb wifi--&gt; [G3] La PC de casa hace de gateway: mantiene el ADB del teléfono y expone WireGuard. El celular no necesita ninguna app nueva.">
+	<meta property="og:locale" content="es_es">
+	<meta property="og:type" content="article">
+		<meta property="article:published_time" content="2026-08-24T20:00:00-03:00">
+		<meta property="article:modified_time" content="2026-08-24T20:00:00-03:00">
+		<meta property="article:tag" content="Android">
+		<meta property="article:tag" content="Wireguard">
+		<meta property="article:tag" content="Adb">
+		<meta property="article:tag" content="Vpn">
+
+  
+	<meta itemprop="name" content="Controlar un Android viejo por ADB desde cualquier lugar del mundo (WireGuard)">
+	<meta itemprop="description" content="Tengo un Moto G3 con LineageOS 14.1 que controlo por ADB WiFi desde la PC. El problema: eso solo funciona estando en la misma red. Acá dejo armado el esquema para controlarlo desde cualquier parte del mundo sin instalar nada raro en el teléfono (no hay Tailscale para Android 7).
+La idea [notebook en el mundo] --túnel WG--&gt; [PC Linux en casa] --adb wifi--&gt; [G3] La PC de casa hace de gateway: mantiene el ADB del teléfono y expone WireGuard. El celular no necesita ninguna app nueva.">
+	<meta itemprop="datePublished" content="2026-08-24T20:00:00-03:00">
+	<meta itemprop="dateModified" content="2026-08-24T20:00:00-03:00">
+	<meta itemprop="wordCount" content="822">
+	<meta itemprop="keywords" content="Android,Wireguard,Adb,Vpn">
+  
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:title" content="Controlar un Android viejo por ADB desde cualquier lugar del mundo (WireGuard)">
+	<meta name="twitter:description" content="Tengo un Moto G3 con LineageOS 14.1 que controlo por ADB WiFi desde la PC. El problema: eso solo funciona estando en la misma red. Acá dejo armado el esquema para controlarlo desde cualquier parte del mundo sin instalar nada raro en el teléfono (no hay Tailscale para Android 7).
+La idea [notebook en el mundo] --túnel WG--&gt; [PC Linux en casa] --adb wifi--&gt; [G3] La PC de casa hace de gateway: mantiene el ADB del teléfono y expone WireGuard. El celular no necesita ninguna app nueva.">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Controlar un Android viejo por ADB desde cualquier lugar del mundo (WireGuard)
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/adbd_remoto_wireguard/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="Tengo un Moto G3 con LineageOS 14.1 que controlo por ADB WiFi desde la PC.
+El problema: eso solo funciona estando en la misma red. Acá dejo armado el
+esquema para controlarlo desde cualquier parte del mundo sin instalar nada
+raro en el teléfono (no hay Tailscale para Android 7).
+La idea
+[notebook en el mundo] --túnel WG--&gt; [PC Linux en casa] --adb wifi--&gt; [G3]
+La PC de casa hace de gateway: mantiene el ADB del teléfono y expone
+WireGuard. El celular no necesita ninguna app nueva.">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Controlar un Android viejo por ADB desde cualquier lugar del mundo (WireGuard)
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2026-08-24T20:00:00-03:00'>
+      August 24, 2026
+    </time>
+    
+    <br>
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/android/">Android</a>
+    
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/wireguard/">Wireguard</a>
+    
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/adb/">Adb</a>
+    
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/vpn/">Vpn</a>
+    
+    
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <p>Tengo un Moto G3 con LineageOS 14.1 que controlo por ADB WiFi desde la PC.
+El problema: eso solo funciona estando en la misma red. Acá dejo armado el
+esquema para controlarlo desde cualquier parte del mundo sin instalar nada
+raro en el teléfono (no hay Tailscale para Android 7).</p>
+<h1 id="la-idea">La idea</h1>
+<pre tabindex="0"><code>[notebook en el mundo] --túnel WG--&gt; [PC Linux en casa] --adb wifi--&gt; [G3]
+</code></pre><p>La PC de casa hace de <strong>gateway</strong>: mantiene el ADB del teléfono y expone
+WireGuard. El celular no necesita ninguna app nueva.</p>
+<h1 id="1-servidor-wireguard-en-la-pc-arch">1. Servidor WireGuard en la PC (Arch)</h1>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo pacman -S wireguard-tools
+</span></span><span style="display:flex;"><span>cd /etc/wireguard
+</span></span><span style="display:flex;"><span>wg genkey | tee server.key | wg pubkey &gt; server.pub
+</span></span><span style="display:flex;"><span>wg genkey | tee notebook.key | wg pubkey &gt; notebook.pub
+</span></span></code></pre></div><p><code>/etc/wireguard/wg0.conf</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-ini" data-lang="ini"><span style="display:flex;"><span><span style="color:#66d9ef">[Interface]</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">Address</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">10.66.0.1/24</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">ListenPort</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">51820</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">PrivateKey</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&lt;contenido de server.key&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">PostUp</span>   <span style="color:#f92672">=</span> <span style="color:#e6db74">sysctl -w net.ipv4.ip_forward=1 &gt;/dev/null</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">PostUp</span>   <span style="color:#f92672">=</span> <span style="color:#e6db74">iptables -A FORWARD -i wg0 -j ACCEPT; iptables -A FORWARD -o wg0 -j ACCEPT</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">PostUp</span>   <span style="color:#f92672">=</span> <span style="color:#e6db74">iptables -t nat -A POSTROUTING -s 10.66.0.0/24 -o wlp1s0 -j MASQUERADE</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">PostDown</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">iptables -D FORWARD -i wg0 -j ACCEPT; iptables -D FORWARD -o wg0 -j ACCEPT</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">PostDown</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">iptables -t nat -D POSTROUTING -s 10.66.0.0/24 -o wlp1s0 -j MASQUERADE</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">[Peer]</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># notebook</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">PublicKey</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&lt;notebook.pub&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">AllowedIPs</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">10.66.0.2/32</span>
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo systemctl enable --now wg-quick@wg0
+</span></span></code></pre></div><p>Ojo: si levantás el túnel a mano antes, <code>systemctl start</code> falla porque el
+puerto ya existe. <code>sudo wg-quick down wg0</code> primero.</p>
+<h2 id="abrir-el-puerto-en-el-router">Abrir el puerto en el router</h2>
+<p>Si el router tiene UPnP:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>upnpc -m wlp1s0 -r <span style="color:#ae81ff">51820</span> udp   <span style="color:#75715e"># dura 24h</span>
+</span></span></code></pre></div><p>Los routers caseros limitan el lease a 24hs, así que lo renuevo con un
+timer de systemd (<code>/etc/systemd/system/wg-upnp.timer</code>, cada 12hs):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-ini" data-lang="ini"><span style="display:flex;"><span><span style="color:#66d9ef">[Unit]</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">Description</span><span style="color:#f92672">=</span><span style="color:#e6db74">Renueva UPnP cada 12 horas</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">[Timer]</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">OnBootSec</span><span style="color:#f92672">=</span><span style="color:#e6db74">3min</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">OnUnitActiveSec</span><span style="color:#f92672">=</span><span style="color:#e6db74">12h</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">[Install]</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">WantedBy</span><span style="color:#f92672">=</span><span style="color:#e6db74">timers.target</span>
+</span></span></code></pre></div><p>con un service oneshot que ejecuta <code>upnpc -m wlp1s0 -r 51820 udp</code>.
+Si el ISP te da IP dinámica, sumarle DDNS (duckdns o similar).</p>
+<h1 id="2-cliente-notebook">2. Cliente notebook</h1>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-ini" data-lang="ini"><span style="display:flex;"><span><span style="color:#66d9ef">[Interface]</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">PrivateKey</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&lt;notebook.key&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">Address</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">10.66.0.2/24</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">[Peer]</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">PublicKey</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&lt;server.pub&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">Endpoint</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">TU_IP_PUBLICA:51820</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">AllowedIPs</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">10.66.0.0/24, 192.168.0.0/24</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">PersistentKeepalive</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">25</span>
+</span></span></code></pre></div><p>Y desde cualquier bar del mundo:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ssh -N -L 5555:192.168.0.129:5555 usuario@10.66.0.1 &amp;
+</span></span><span style="display:flex;"><span>adb connect 127.0.0.1:5555
+</span></span></code></pre></div><p>Todo lo que hacía en casa, igual.</p>
+<h1 id="3-el-android-viejo-la-parte-divertida">3. El Android viejo (la parte divertida)</h1>
+<p>No hay WireGuard para Android 7 ya (min SDK subió a 26), pero con <strong>root</strong>
+se puede correr <code>wireguard-go</code> como binario CLI horneado en /system.
+Esto es mejor que una app: sobrevive a formateos.</p>
+<h2 id="compilar-wireguard-go-para-arm">Compilar wireguard-go para ARM</h2>
+<p>En la PC con Go:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>git clone https://github.com/WireGuard/wireguard-go <span style="color:#f92672">&amp;&amp;</span> cd wireguard-go
+</span></span><span style="display:flex;"><span>GOOS<span style="color:#f92672">=</span>linux GOARCH<span style="color:#f92672">=</span>arm GOARM<span style="color:#f92672">=</span><span style="color:#ae81ff">7</span> CGO_ENABLED<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  go build -trimpath -ldflags<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;-s -w&#34;</span> -o wireguard-go-arm .
+</span></span></code></pre></div><p>Truco: <code>GOOS=android</code> exige cgo/NDK, pero un binario estático linux/arm
+corre joya en Android con root (el kernel de Android ES Linux).
+El daemon crea su socket en <code>/var/run/wireguard</code>, que en Android es
+read-only; se resuelve montando un tmpfs en <code>/var/run</code> al arrancar.</p>
+<p>El <code>wg</code> CLI sale del paquete Termux <code>wireguard-tools</code>
+(<code>packages.termux.dev/apt/termux-main/pool/main/w/wireguard-tools/</code>),
+se extrae del .deb y corre directo (está linkeado contra bionic).</p>
+<h2 id="instalar-en-el-teléfono">Instalar en el teléfono</h2>
+<p>Con adb root: pushear <code>wireguard-go</code> y <code>wg</code> a <code>/system/xbin/</code> (chmod 755)
+y la config a <code>/system/etc/wireguard/g3.conf</code> (chmod 600):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-ini" data-lang="ini"><span style="display:flex;"><span><span style="color:#66d9ef">[Interface]</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">PrivateKey</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&lt;clave del peer celular&gt;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">[Peer]</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">PublicKey</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&lt;server.pub&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">Endpoint</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">TU_IP_PUBLICA:51820</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">AllowedIPs</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">10.66.0.0/24</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">PersistentKeepalive</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">25</span>
+</span></span></code></pre></div><p>Además agregar al <code>/system/build.prop</code>:</p>
+<pre tabindex="0"><code>persist.adb.tcp.port=5555
+</code></pre><p>para que adbd escuche en red después de cada reinicio (y de un formateo).</p>
+<h2 id="script-de-arranque">Script de arranque</h2>
+<p><code>/system/etc/init.d/99wireguard</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#75715e">#!/system/bin/sh
+</span></span></span><span style="display:flex;"><span>mkdir -p /dev/net
+</span></span><span style="display:flex;"><span><span style="color:#f92672">[</span> -e /dev/net/tun <span style="color:#f92672">]</span> <span style="color:#f92672">||</span> mknod /dev/net/tun c <span style="color:#ae81ff">10</span> <span style="color:#ae81ff">200</span>
+</span></span><span style="display:flex;"><span>chmod <span style="color:#ae81ff">660</span> /dev/net/tun
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>grep -q <span style="color:#e6db74">&#39; /var/run &#39;</span> /proc/mounts <span style="color:#f92672">||</span> <span style="color:#f92672">{</span> mount -o remount,rw / &gt;/dev/null 2&gt;&amp;<span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>mkdir -p /var/run; mount -t tmpfs tmpfs /var/run &gt;/dev/null 2&gt;&amp;<span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>mount -o remount,ro / &gt;/dev/null 2&gt;&amp;1; <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>mkdir -p /var/run/wireguard
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>setsid /system/xbin/wireguard-go wg0 &gt;&gt; /data/local/tmp/wgboot.log 2&gt;&amp;<span style="color:#ae81ff">1</span> &lt; /dev/null &amp;
+</span></span><span style="display:flex;"><span>sleep <span style="color:#ae81ff">4</span>
+</span></span><span style="display:flex;"><span>/system/xbin/wg setconf wg0 /system/etc/wireguard/g3.conf
+</span></span><span style="display:flex;"><span>ip addr add 10.66.0.3/24 dev wg0
+</span></span><span style="display:flex;"><span>ip link set wg0 mtu <span style="color:#ae81ff">1420</span> up
+</span></span><span style="display:flex;"><span>ip rule add to 10.66.0.0/24 lookup main pref <span style="color:#ae81ff">9000</span>
+</span></span></code></pre></div><p>Detalles que me hicieron perder un rato:</p>
+<ul>
+<li>El servicio <code>sysinit</code> de CM corre los init.d en post-fs-data, pero mata
+los hijos al terminar: usar <strong>setsid</strong> para que el daemon quede huérfano.</li>
+<li>Sin tmpfs en /var/run el daemon muere con &ldquo;read-only file system&rdquo;.</li>
+<li>Falta la regla de ruteo: Android usa tablas por-red con fwmark y pisa la
+tabla main. Por eso el <code>ip rule ... pref 9000</code>.</li>
+</ul>
+<h1 id="4-cómo-queda-funcionando">4. Cómo queda funcionando</h1>
+<ul>
+<li>Teléfono en casa → ADB directo <code>192.168.0.XXX:5555</code></li>
+<li>Teléfono afuera → keepalive conecta el túnel solo → ADB por <code>10.66.0.3:5555</code></li>
+<li>Reinicio del teléfono → vuelve solo (build.prop + init.d)</li>
+<li>Formateo del teléfono → adb en red vuelve solo (build.prop está en /system);
+re-instalar wireguard-go/wg/config (están en /system, sobreviven) y
+aceptar la huella RSA una vez con el teléfono en la mano.</li>
+</ul>
+<p>Nota sobre hairpin NAT: estando en la misma LAN el túnel contra la IP
+pública no completa handshake (el router no hace loopback). No importa:
+en casa el acceso directo por LAN ya funciona.</p>
+<h1 id="bonus">Bonus</h1>
+<p>Por ese mismo túnel anda scrcpy (Android 5+): espejo de pantalla + control
+remoto completo del teléfono desde la notebook.</p>
+
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+
+</footer>
+
+
+</body>
+</html>
