@@ -9,9 +9,9 @@
   <meta property="og:url" content="https://imlauera.github.io/post/como_transferir_seguramente_archivos_entre_servidores_con_scp/">
 	<meta property="og:site_name" content="Imlauer">
 	<meta property="og:title" content="Como transferir seguramente archivos entre servidores con scp">
-	<meta property="og:description" content="Copie un solo archivo de la máquina local a una máquina remota: El comando scp necesita un origen y un destino para copiar archivos de una ubicación a otra. Este es el patrón que utilizamos:
-scp máquina local/ruta_al_archivo nombre de usuario@ip_servidor:/ruta_al_directorio_remoto En el siguiente ejemplo, estoy copiando un archivo local a mi vps de Linux.
-scp /home/imlauera/Downloads/slackware.iso blogger@111.111.111.111:/home/blogger/isos/ Aquí, “blogger” es el usuario en el servidor y 111.111.111.111 es la IP del servidor. Le pedirá que proporcione la contraseña de ese usuario y luego copie el archivo de forma segura.">
+	<meta property="og:description" content="USA rsync es mas rápido
+SCP usa un solo hilo &#43; encriptación CPU-bound SCP es monohilo y usa cifrado AES por defecto, lo que limita throughput en CPUs lentas.
+Soluciones rápidas Opción Comando Usar rsync (recomendado) rsync -avP --progress archivo usuario@host:/destino/ Usar SCP con cipher arcfour scp -c arcfour -o Ciphers=aes128-ctr Usar un servidor temporal HTTP En el host: python3 -m http.server y descargar con wget Usar netcat (sin cifrado) nc -l 1234 &gt; archivo / cat archivo | nc host 1234 rsync -avP --progress archivo usuario@host:/destino/ Copie un solo archivo de la máquina local a una máquina remota: El comando scp necesita un origen y un destino para copiar archivos de una ubicación a otra. Este es el patrón que utilizamos:">
 	<meta property="og:locale" content="es_es">
 	<meta property="og:type" content="article">
 		<meta property="article:section" content="post">
@@ -23,19 +23,19 @@ scp /home/imlauera/Downloads/slackware.iso blogger@111.111.111.111:/home/blogger
 
   
 	<meta itemprop="name" content="Como transferir seguramente archivos entre servidores con scp">
-	<meta itemprop="description" content="Copie un solo archivo de la máquina local a una máquina remota: El comando scp necesita un origen y un destino para copiar archivos de una ubicación a otra. Este es el patrón que utilizamos:
-scp máquina local/ruta_al_archivo nombre de usuario@ip_servidor:/ruta_al_directorio_remoto En el siguiente ejemplo, estoy copiando un archivo local a mi vps de Linux.
-scp /home/imlauera/Downloads/slackware.iso blogger@111.111.111.111:/home/blogger/isos/ Aquí, “blogger” es el usuario en el servidor y 111.111.111.111 es la IP del servidor. Le pedirá que proporcione la contraseña de ese usuario y luego copie el archivo de forma segura.">
+	<meta itemprop="description" content="USA rsync es mas rápido
+SCP usa un solo hilo &#43; encriptación CPU-bound SCP es monohilo y usa cifrado AES por defecto, lo que limita throughput en CPUs lentas.
+Soluciones rápidas Opción Comando Usar rsync (recomendado) rsync -avP --progress archivo usuario@host:/destino/ Usar SCP con cipher arcfour scp -c arcfour -o Ciphers=aes128-ctr Usar un servidor temporal HTTP En el host: python3 -m http.server y descargar con wget Usar netcat (sin cifrado) nc -l 1234 &gt; archivo / cat archivo | nc host 1234 rsync -avP --progress archivo usuario@host:/destino/ Copie un solo archivo de la máquina local a una máquina remota: El comando scp necesita un origen y un destino para copiar archivos de una ubicación a otra. Este es el patrón que utilizamos:">
 	<meta itemprop="datePublished" content="2023-10-01T11:41:54-03:00">
 	<meta itemprop="dateModified" content="2023-10-01T11:41:54-03:00">
-	<meta itemprop="wordCount" content="311">
+	<meta itemprop="wordCount" content="398">
 	<meta itemprop="keywords" content="Transferir,Archivos,Scp">
   
 	<meta name="twitter:card" content="summary">
 	<meta name="twitter:title" content="Como transferir seguramente archivos entre servidores con scp">
-	<meta name="twitter:description" content="Copie un solo archivo de la máquina local a una máquina remota: El comando scp necesita un origen y un destino para copiar archivos de una ubicación a otra. Este es el patrón que utilizamos:
-scp máquina local/ruta_al_archivo nombre de usuario@ip_servidor:/ruta_al_directorio_remoto En el siguiente ejemplo, estoy copiando un archivo local a mi vps de Linux.
-scp /home/imlauera/Downloads/slackware.iso blogger@111.111.111.111:/home/blogger/isos/ Aquí, “blogger” es el usuario en el servidor y 111.111.111.111 es la IP del servidor. Le pedirá que proporcione la contraseña de ese usuario y luego copie el archivo de forma segura.">
+	<meta name="twitter:description" content="USA rsync es mas rápido
+SCP usa un solo hilo &#43; encriptación CPU-bound SCP es monohilo y usa cifrado AES por defecto, lo que limita throughput en CPUs lentas.
+Soluciones rápidas Opción Comando Usar rsync (recomendado) rsync -avP --progress archivo usuario@host:/destino/ Usar SCP con cipher arcfour scp -c arcfour -o Ciphers=aes128-ctr Usar un servidor temporal HTTP En el host: python3 -m http.server y descargar con wget Usar netcat (sin cifrado) nc -l 1234 &gt; archivo / cat archivo | nc host 1234 rsync -avP --progress archivo usuario@host:/destino/ Copie un solo archivo de la máquina local a una máquina remota: El comando scp necesita un origen y un destino para copiar archivos de una ubicación a otra. Este es el patrón que utilizamos:">
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -53,12 +53,43 @@ scp /home/imlauera/Downloads/slackware.iso blogger@111.111.111.111:/home/blogger
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="referrer" content="no-referrer">
   <meta name="author" content="Imlauer.">
-  <meta name="description" content="Copie un solo archivo de la máquina local a una máquina remota:
-El comando scp necesita un origen y un destino para copiar archivos de una ubicación a otra. Este es el patrón que utilizamos:
-scp máquina local/ruta_al_archivo nombre de usuario@ip_servidor:/ruta_al_directorio_remoto
-En el siguiente ejemplo, estoy copiando un archivo local a mi vps de Linux.
-scp /home/imlauera/Downloads/slackware.iso blogger@111.111.111.111:/home/blogger/isos/
-Aquí, &ldquo;blogger&rdquo; es el usuario en el servidor y 111.111.111.111 es la IP del servidor. Le pedirá que proporcione la contraseña de ese usuario y luego copie el archivo de forma segura.">
+  <meta name="description" content="USA rsync es mas rápido
+
+SCP usa un solo hilo &#43; encriptación CPU-bound
+
+SCP es monohilo y usa cifrado AES por defecto, lo que limita throughput en CPUs lentas.
+
+Soluciones rápidas
+
+
+	
+			
+					Opción
+					Comando
+			
+	
+	
+			
+					Usar rsync (recomendado)
+					rsync -avP --progress archivo usuario@host:/destino/
+			
+			
+					Usar SCP con cipher arcfour
+					scp -c arcfour -o Ciphers=aes128-ctr
+			
+			
+					Usar un servidor temporal HTTP
+					En el host: python3 -m http.server y descargar con wget
+			
+			
+					Usar netcat (sin cifrado)
+					nc -l 1234 &gt; archivo / cat archivo | nc host 1234
+			
+	
+
+rsync -avP --progress archivo usuario@host:/destino/
+Copie un solo archivo de la máquina local a una máquina remota:
+El comando scp necesita un origen y un destino para copiar archivos de una ubicación a otra. Este es el patrón que utilizamos:">
 </head>
 <body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
   <div class="navbar-brand">
@@ -116,7 +147,42 @@ Aquí, &ldquo;blogger&rdquo; es el usuario en el servidor y 111.111.111.111 es l
     <section class="section">
       <div class="container">
 <div class="content is-medium">
-  <h4 id="copie-un-solo-archivo-de-la-máquina-local-a-una-máquina-remota">Copie un solo archivo de la máquina local a una máquina remota:</h4>
+  <p>USA rsync es mas rápido</p>
+<ol start="2">
+<li>SCP usa un solo hilo + encriptación CPU-bound</li>
+</ol>
+<p>SCP es monohilo y usa cifrado AES por defecto, lo que limita throughput en CPUs lentas.</p>
+<ol start="3">
+<li>Soluciones rápidas</li>
+</ol>
+<table>
+	<thead>
+			<tr>
+					<th>Opción</th>
+					<th>Comando</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td><strong>Usar rsync (recomendado)</strong></td>
+					<td><code>rsync -avP --progress archivo usuario@host:/destino/</code></td>
+			</tr>
+			<tr>
+					<td><strong>Usar SCP con cipher arcfour</strong></td>
+					<td><code>scp -c arcfour -o Ciphers=aes128-ctr</code></td>
+			</tr>
+			<tr>
+					<td><strong>Usar un servidor temporal HTTP</strong></td>
+					<td>En el host: <code>python3 -m http.server</code> y descargar con <code>wget</code></td>
+			</tr>
+			<tr>
+					<td><strong>Usar netcat (sin cifrado)</strong></td>
+					<td><code>nc -l 1234 &gt; archivo</code> / <code>cat archivo | nc host 1234</code></td>
+			</tr>
+	</tbody>
+</table>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>rsync -avP --progress archivo usuario@host:/destino/
+</span></span></code></pre></div><h4 id="copie-un-solo-archivo-de-la-máquina-local-a-una-máquina-remota">Copie un solo archivo de la máquina local a una máquina remota:</h4>
 <p>El comando scp necesita un origen y un destino para copiar archivos de una ubicación a otra. Este es el patrón que utilizamos:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-console" data-lang="console"><span style="display:flex;"><span>scp máquina local/ruta_al_archivo nombre de usuario@ip_servidor:/ruta_al_directorio_remoto
 </span></span></code></pre></div><p>En el siguiente ejemplo, estoy copiando un archivo local a mi vps de Linux.</p>
