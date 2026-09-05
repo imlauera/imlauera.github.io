@@ -23,7 +23,7 @@ Más ZIMs para Kiwix (no solo Wikipedia) El catálogo de Kiwix es enorme y cubre
 Más ZIMs para Kiwix (no solo Wikipedia) El catálogo de Kiwix es enorme y cubre mucho más que la enciclopedia: tiene cientos de sitios curados y fuentes educativas empaquetadas para usar offline, incluyendo cosas como Project Gutenberg y TED Talks y un curso completo de programación (freeCodeCamp ofrece su currícula de JavaScript como paquete offline). Te recomiendo bajar además:">
 	<meta itemprop="datePublished" content="2026-09-05T03:53:30-03:00">
 	<meta itemprop="dateModified" content="2026-09-05T03:53:30-03:00">
-	<meta itemprop="wordCount" content="1549">
+	<meta itemprop="wordCount" content="2035">
 	<meta itemprop="keywords" content="Internet">
   
 	<meta name="twitter:card" content="summary">
@@ -292,7 +292,62 @@ en español y lo baje a <code>~/offline/salud/</code>.</p>
 <li><input disabled="" type="checkbox"> Backup de claves SSH/GPG (<code>~/.ssh</code>, <code>~/.gnupg</code>) copiado a un disco externo</li>
 <li><input disabled="" type="checkbox"> Mapas descargados también en el celular (Organic Maps/OsmAnd), no solo en la laptop</li>
 </ul>
-
+<p>Ojo con SearXNG: es un <em>metabuscador</em>, no tiene índice propio — le pega a Google, Bing, DuckDuckGo, etc. por atrás. Sin internet no te devuelve nada, así que para tu caso no sirve (salvo que quieras meterte a montar algo tipo YaCy, que arma su propio índice rastreando la web, pero es mucho más peso y mantenimiento del que necesitás).</p>
+<p>La buena noticia es que <strong>ya tenés tu Google offline sin saberlo: Kiwix</strong>. Indexa cada ZIM con Xapian (full-text real, no solo títulos) y busca en todos los ZIM cargados a la vez desde el navegador cuando corrés <code>kiwix-serve</code>. Y además tiene versión de terminal:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Ya viene con kiwix-tools, que instalamos antes</span>
+</span></span><span style="display:flex;"><span>kiwix-search ~/offline/zim/wikipedia_es_all_nopic.zim <span style="color:#e6db74">&#34;fotosintesis&#34;</span>
+</span></span></code></pre></div><p>Para el resto de tu contenido offline (PDFs, epubs, código, notas, lo que bajes con yt-dlp/calibre) el equivalente a &ldquo;grep pero de verdad&rdquo; es <strong>ripgrep-all</strong> (<code>rga</code>) — es ripgrep pero entiende PDF, epub, docx, sqlite, zip, subtítulos de video, etc. Y está en los repos oficiales, ni hace falta AUR:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo pacman -S ripgrep-all
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Busca &#34;termino&#34; adentro de PDFs, epubs, docx, zips, etc.</span>
+</span></span><span style="display:flex;"><span>rga -i <span style="color:#e6db74">&#34;termino&#34;</span> ~/offline/
+</span></span></code></pre></div><p>Tiene caché, así que la segunda búsqueda sobre los mismos archivos es instantánea. Y se integra con <code>fzf</code> para búsqueda interactiva con preview en vivo (<code>rga-fzf</code>).</p>
+<p>Te armé un script chiquito que junta las dos búsquedas en un solo comando, como tu &ldquo;Google offline&rdquo;:Para instalarlo:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>chmod +x buscar-offline.sh
+</span></span><span style="display:flex;"><span>sudo mv buscar-offline.sh /usr/local/bin/buscar-offline
+</span></span></code></pre></div><p>Y lo usás como <code>buscar-offline fotosintesis</code> — te tira primero los resultados de tus ZIMs y después lo que encuentre en el resto de tu biblioteca offline.</p>
+<p>Un extra si querés algo más &ldquo;buscador de archivos por nombre&rdquo; (no contenido) para cuando sabés más o menos cómo se llama lo que buscás: <code>sudo pacman -S plocate</code> y después <code>plocate &lt;nombre&gt;</code> — es instantáneo porque tiene su propio índice (correr <code>updatedb</code> de vez en cuando para que se actualice).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/usr/bin/env bash
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"># buscar-offline: un &#34;Google&#34; para cuando no hay internet.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Busca primero en todos tus ZIM de Kiwix (Wikipedia, wikiHow, StackOverflow, etc.)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># y despues en el resto de tus archivos offline (PDFs, epubs, notas, codigo) con rga.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Uso: buscar-offline termino de busqueda</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>set -euo pipefail
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>QUERY<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$*<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>ZIM_DIR<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>ZIM_DIR<span style="color:#66d9ef">:-</span>$HOME/offline/zim<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>DOCS_DIR<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>DOCS_DIR<span style="color:#66d9ef">:-</span>$HOME/offline<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> -z <span style="color:#e6db74">&#34;</span>$QUERY<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;Uso: buscar-offline &lt;termino de busqueda&gt;&#34;</span>
+</span></span><span style="display:flex;"><span>  exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> command -v kiwix-search &gt;/dev/null 2&gt;&amp;<span style="color:#ae81ff">1</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">[</span> -d <span style="color:#e6db74">&#34;</span>$ZIM_DIR<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;=== Wikipedia / ZIMs ===&#34;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">for</span> zim in <span style="color:#e6db74">&#34;</span>$ZIM_DIR<span style="color:#e6db74">&#34;</span>/*.zim; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">[</span> -e <span style="color:#e6db74">&#34;</span>$zim<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span> <span style="color:#f92672">||</span> <span style="color:#66d9ef">continue</span>
+</span></span><span style="display:flex;"><span>    nombre<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>basename <span style="color:#e6db74">&#34;</span>$zim<span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>    resultados<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>kiwix-search <span style="color:#e6db74">&#34;</span>$zim<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;</span>$QUERY<span style="color:#e6db74">&#34;</span> 2&gt;/dev/null | head -5 <span style="color:#f92672">||</span> true<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> -n <span style="color:#e6db74">&#34;</span>$resultados<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>      echo <span style="color:#e6db74">&#34;--- </span>$nombre<span style="color:#e6db74"> ---&#34;</span>
+</span></span><span style="display:flex;"><span>      echo <span style="color:#e6db74">&#34;</span>$resultados<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>      echo
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;(kiwix-search no encontrado o no hay ZIMs en </span>$ZIM_DIR<span style="color:#e6db74">)&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> command -v rga &gt;/dev/null 2&gt;&amp;1; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;=== Libros, PDFs, notas y codigo ===&#34;</span>
+</span></span><span style="display:flex;"><span>  rga -i --max-count <span style="color:#ae81ff">3</span> --heading <span style="color:#e6db74">&#34;</span>$QUERY<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;</span>$DOCS_DIR<span style="color:#e6db74">&#34;</span> 2&gt;/dev/null <span style="color:#f92672">||</span> echo <span style="color:#e6db74">&#34;(sin resultados)&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;(rga no instalado: sudo pacman -S ripgrep-all)&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span></code></pre></div>
 </div>
 
 
