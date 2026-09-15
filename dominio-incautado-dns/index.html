@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/dominio-incautado-dns/">
+	<meta property="og:site_name" content="Imlauer">
+	<meta property="og:title" content="Dominio Incautado DNS">
+	<meta property="og:description" content="Así se ve un dominio suspendido / incautado Reporte sobre librefutbol.su y técnicas DNS para investigar/eludir bloqueos.
+1) Síntoma: REFUSED en todos los nameservers autoritativos Cuando un dominio se suspende o incauta, el registro NI lo borra (para que no quede NXDOMAIN) NI lo deja responder: apunta a unos nameservers que se niegan a contestar. Eso da SERVFAIL en el resolver.
+El comando que muestra el estado: curl &#34;https://dns.google/resolve?name=librefutbol.su&amp;type=A&#34; Salida real (verificado el 2026-09-14): {&#34;Status&#34;:2,&#34;TC&#34;:false,&#34;RD&#34;:true,&#34;RA&#34;:true,&#34;AD&#34;:false,&#34;CD&#34;:false,&#34;Question&#34;:[{&#34;name&#34;:&#34;librefutbol.su.&#34;,&#34;type&#34;:1}],&#34;Comment&#34;:&#34;Resolution failure. Please check https://intodns.com/librefutbol.su&#34;,&#34;extended_dns_errors&#34;:[{&#34;info_code&#34;:23,&#34;extra_text&#34;:&#34;[162.210.197.241] rcode=REFUSED for librefutbol.su/a&#34;},{&#34;info_code&#34;:23,&#34;extra_text&#34;:&#34;[37.187.209.163] rcode=REFUSED for librefutbol.su/a&#34;},{&#34;info_code&#34;:23,&#34;extra_text&#34;:&#34;[185.108.84.23] rcode=REFUSED for librefutbol.su/a&#34;},{&#34;info_code&#34;:22,&#34;extra_text&#34;:&#34;At delegation librefutbol.su for librefutbol.su/a&#34;}]} Cómo leerla: Campo Valor Significado Status 2 SERVFAIL: el resolver no obtuvo respuesta válida rcode=REFUSED x3 Los NS autoritativos se niegan a responder (patrón de suspensión/incautación) At delegation error La delegación en el registro .su está rota/inconsistente con los NS Diferencia clave:">
+	<meta property="og:locale" content="es_es">
+	<meta property="og:type" content="article">
+		<meta property="article:published_time" content="2026-09-15T09:08:01-03:00">
+		<meta property="article:modified_time" content="2026-09-15T09:08:01-03:00">
+		<meta property="article:tag" content="Dns">
+
+  
+	<meta itemprop="name" content="Dominio Incautado DNS">
+	<meta itemprop="description" content="Así se ve un dominio suspendido / incautado Reporte sobre librefutbol.su y técnicas DNS para investigar/eludir bloqueos.
+1) Síntoma: REFUSED en todos los nameservers autoritativos Cuando un dominio se suspende o incauta, el registro NI lo borra (para que no quede NXDOMAIN) NI lo deja responder: apunta a unos nameservers que se niegan a contestar. Eso da SERVFAIL en el resolver.
+El comando que muestra el estado: curl &#34;https://dns.google/resolve?name=librefutbol.su&amp;type=A&#34; Salida real (verificado el 2026-09-14): {&#34;Status&#34;:2,&#34;TC&#34;:false,&#34;RD&#34;:true,&#34;RA&#34;:true,&#34;AD&#34;:false,&#34;CD&#34;:false,&#34;Question&#34;:[{&#34;name&#34;:&#34;librefutbol.su.&#34;,&#34;type&#34;:1}],&#34;Comment&#34;:&#34;Resolution failure. Please check https://intodns.com/librefutbol.su&#34;,&#34;extended_dns_errors&#34;:[{&#34;info_code&#34;:23,&#34;extra_text&#34;:&#34;[162.210.197.241] rcode=REFUSED for librefutbol.su/a&#34;},{&#34;info_code&#34;:23,&#34;extra_text&#34;:&#34;[37.187.209.163] rcode=REFUSED for librefutbol.su/a&#34;},{&#34;info_code&#34;:23,&#34;extra_text&#34;:&#34;[185.108.84.23] rcode=REFUSED for librefutbol.su/a&#34;},{&#34;info_code&#34;:22,&#34;extra_text&#34;:&#34;At delegation librefutbol.su for librefutbol.su/a&#34;}]} Cómo leerla: Campo Valor Significado Status 2 SERVFAIL: el resolver no obtuvo respuesta válida rcode=REFUSED x3 Los NS autoritativos se niegan a responder (patrón de suspensión/incautación) At delegation error La delegación en el registro .su está rota/inconsistente con los NS Diferencia clave:">
+	<meta itemprop="datePublished" content="2026-09-15T09:08:01-03:00">
+	<meta itemprop="dateModified" content="2026-09-15T09:08:01-03:00">
+	<meta itemprop="wordCount" content="1870">
+	<meta itemprop="keywords" content="Dns">
+  
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:title" content="Dominio Incautado DNS">
+	<meta name="twitter:description" content="Así se ve un dominio suspendido / incautado Reporte sobre librefutbol.su y técnicas DNS para investigar/eludir bloqueos.
+1) Síntoma: REFUSED en todos los nameservers autoritativos Cuando un dominio se suspende o incauta, el registro NI lo borra (para que no quede NXDOMAIN) NI lo deja responder: apunta a unos nameservers que se niegan a contestar. Eso da SERVFAIL en el resolver.
+El comando que muestra el estado: curl &#34;https://dns.google/resolve?name=librefutbol.su&amp;type=A&#34; Salida real (verificado el 2026-09-14): {&#34;Status&#34;:2,&#34;TC&#34;:false,&#34;RD&#34;:true,&#34;RA&#34;:true,&#34;AD&#34;:false,&#34;CD&#34;:false,&#34;Question&#34;:[{&#34;name&#34;:&#34;librefutbol.su.&#34;,&#34;type&#34;:1}],&#34;Comment&#34;:&#34;Resolution failure. Please check https://intodns.com/librefutbol.su&#34;,&#34;extended_dns_errors&#34;:[{&#34;info_code&#34;:23,&#34;extra_text&#34;:&#34;[162.210.197.241] rcode=REFUSED for librefutbol.su/a&#34;},{&#34;info_code&#34;:23,&#34;extra_text&#34;:&#34;[37.187.209.163] rcode=REFUSED for librefutbol.su/a&#34;},{&#34;info_code&#34;:23,&#34;extra_text&#34;:&#34;[185.108.84.23] rcode=REFUSED for librefutbol.su/a&#34;},{&#34;info_code&#34;:22,&#34;extra_text&#34;:&#34;At delegation librefutbol.su for librefutbol.su/a&#34;}]} Cómo leerla: Campo Valor Significado Status 2 SERVFAIL: el resolver no obtuvo respuesta válida rcode=REFUSED x3 Los NS autoritativos se niegan a responder (patrón de suspensión/incautación) At delegation error La delegación en el registro .su está rota/inconsistente con los NS Diferencia clave:">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Dominio Incautado DNS
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/dominio-incautado-dns/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="Así se ve un dominio suspendido / incautado
+
+Reporte sobre librefutbol.su y técnicas DNS para investigar/eludir bloqueos.
+
+
+1) Síntoma: REFUSED en todos los nameservers autoritativos
+Cuando un dominio se suspende o incauta, el registro NI lo borra (para que
+no quede NXDOMAIN) NI lo deja responder: apunta a unos nameservers que
+se niegan a contestar. Eso da SERVFAIL en el resolver.
+El comando que muestra el estado:
+curl &#34;https://dns.google/resolve?name=librefutbol.su&amp;type=A&#34;
+Salida real (verificado el 2026-09-14):
+{&#34;Status&#34;:2,&#34;TC&#34;:false,&#34;RD&#34;:true,&#34;RA&#34;:true,&#34;AD&#34;:false,&#34;CD&#34;:false,&#34;Question&#34;:[{&#34;name&#34;:&#34;librefutbol.su.&#34;,&#34;type&#34;:1}],&#34;Comment&#34;:&#34;Resolution failure. Please check https://intodns.com/librefutbol.su&#34;,&#34;extended_dns_errors&#34;:[{&#34;info_code&#34;:23,&#34;extra_text&#34;:&#34;[162.210.197.241] rcode=REFUSED for librefutbol.su/a&#34;},{&#34;info_code&#34;:23,&#34;extra_text&#34;:&#34;[37.187.209.163] rcode=REFUSED for librefutbol.su/a&#34;},{&#34;info_code&#34;:23,&#34;extra_text&#34;:&#34;[185.108.84.23] rcode=REFUSED for librefutbol.su/a&#34;},{&#34;info_code&#34;:22,&#34;extra_text&#34;:&#34;At delegation librefutbol.su for librefutbol.su/a&#34;}]}
+Cómo leerla:
+
+	
+			
+					Campo
+					Valor
+					Significado
+			
+	
+	
+			
+					Status
+					2
+					SERVFAIL: el resolver no obtuvo respuesta válida
+			
+			
+					rcode=REFUSED
+					x3
+					Los NS autoritativos se niegan a responder (patrón de suspensión/incautación)
+			
+			
+					At delegation
+					error
+					La delegación en el registro .su está rota/inconsistente con los NS
+			
+	
+
+Diferencia clave:">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Dominio Incautado DNS
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2026-09-15T09:08:01-03:00'>
+      September 15, 2026
+    </time>
+    
+    <br>
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/dns/">Dns</a>
+    
+    
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <h1 id="así-se-ve-un-dominio-suspendido--incautado">Así se ve un dominio suspendido / incautado</h1>
+<blockquote>
+<p>Reporte sobre <code>librefutbol.su</code> y técnicas DNS para investigar/eludir bloqueos.</p>
+</blockquote>
+<hr>
+<h2 id="1-síntoma-refused-en-todos-los-nameservers-autoritativos">1) Síntoma: <code>REFUSED</code> en todos los nameservers autoritativos</h2>
+<p>Cuando un dominio se <strong>suspende o incauta</strong>, el registro NI lo borra (para que
+no quede <code>NXDOMAIN</code>) NI lo deja responder: apunta a unos nameservers que
+<strong>se niegan a contestar</strong>. Eso da <code>SERVFAIL</code> en el resolver.</p>
+<h3 id="el-comando-que-muestra-el-estado">El comando que muestra el estado:</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>curl <span style="color:#e6db74">&#34;https://dns.google/resolve?name=librefutbol.su&amp;type=A&#34;</span>
+</span></span></code></pre></div><h3 id="salida-real-verificado-el-2026-09-14">Salida real (verificado el 2026-09-14):</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>{<span style="color:#f92672">&#34;Status&#34;</span>:<span style="color:#ae81ff">2</span>,<span style="color:#f92672">&#34;TC&#34;</span>:<span style="color:#66d9ef">false</span>,<span style="color:#f92672">&#34;RD&#34;</span>:<span style="color:#66d9ef">true</span>,<span style="color:#f92672">&#34;RA&#34;</span>:<span style="color:#66d9ef">true</span>,<span style="color:#f92672">&#34;AD&#34;</span>:<span style="color:#66d9ef">false</span>,<span style="color:#f92672">&#34;CD&#34;</span>:<span style="color:#66d9ef">false</span>,<span style="color:#f92672">&#34;Question&#34;</span>:[{<span style="color:#f92672">&#34;name&#34;</span>:<span style="color:#e6db74">&#34;librefutbol.su.&#34;</span>,<span style="color:#f92672">&#34;type&#34;</span>:<span style="color:#ae81ff">1</span>}],<span style="color:#f92672">&#34;Comment&#34;</span>:<span style="color:#e6db74">&#34;Resolution failure. Please check https://intodns.com/librefutbol.su&#34;</span>,<span style="color:#f92672">&#34;extended_dns_errors&#34;</span>:[{<span style="color:#f92672">&#34;info_code&#34;</span>:<span style="color:#ae81ff">23</span>,<span style="color:#f92672">&#34;extra_text&#34;</span>:<span style="color:#e6db74">&#34;[162.210.197.241] rcode=REFUSED for librefutbol.su/a&#34;</span>},{<span style="color:#f92672">&#34;info_code&#34;</span>:<span style="color:#ae81ff">23</span>,<span style="color:#f92672">&#34;extra_text&#34;</span>:<span style="color:#e6db74">&#34;[37.187.209.163] rcode=REFUSED for librefutbol.su/a&#34;</span>},{<span style="color:#f92672">&#34;info_code&#34;</span>:<span style="color:#ae81ff">23</span>,<span style="color:#f92672">&#34;extra_text&#34;</span>:<span style="color:#e6db74">&#34;[185.108.84.23] rcode=REFUSED for librefutbol.su/a&#34;</span>},{<span style="color:#f92672">&#34;info_code&#34;</span>:<span style="color:#ae81ff">22</span>,<span style="color:#f92672">&#34;extra_text&#34;</span>:<span style="color:#e6db74">&#34;At delegation librefutbol.su for librefutbol.su/a&#34;</span>}]}
+</span></span></code></pre></div><h3 id="cómo-leerla">Cómo leerla:</h3>
+<table>
+	<thead>
+			<tr>
+					<th>Campo</th>
+					<th>Valor</th>
+					<th>Significado</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td><code>Status</code></td>
+					<td><code>2</code></td>
+					<td><code>SERVFAIL</code>: el resolver no obtuvo respuesta válida</td>
+			</tr>
+			<tr>
+					<td><code>rcode=REFUSED</code></td>
+					<td>x3</td>
+					<td>Los NS autoritativos <strong>se niegan</strong> a responder (patrón de suspensión/incautación)</td>
+			</tr>
+			<tr>
+					<td><code>At delegation</code></td>
+					<td>error</td>
+					<td>La delegación en el registro <code>.su</code> está rota/inconsistente con los NS</td>
+			</tr>
+	</tbody>
+</table>
+<p><strong>Diferencia clave:</strong></p>
+<ul>
+<li>Dominio normal caído → <code>NXDOMAIN</code> (no existe) o <code>Timeout</code> (sin respuesta).</li>
+<li>Dominio <strong>suspenso/incautado</strong> → <code>REFUSED</code> desde los autoritativos (los apuntaron a la &ldquo;nada&rdquo;).</li>
+</ul>
+<blockquote>
+<p>Un dominio incautado <strong>no tiene IP pública resoluble</strong>, y aunque recordaras la
+IP vieja, el servicio del otro lado ya no está.</p>
+</blockquote>
+<hr>
+<h2 id="2-quién-lo-incautó-se-puede-saber">2) ¿Quién lo incautó? Se puede saber</h2>
+<ul>
+<li><code>librefutbol.su</code> sigue <strong>registrado</strong> en el registro <code>.su</code> (TCI):
+<code>registrar: ARDIS-SU</code>, creado <code>2022-12-17</code>.</li>
+<li>Sus NS ahora son <code>a.p-dns.com</code>, <code>b.p-dns.org</code>, <code>c.p-dns.biz</code>, <code>d.p-dns.info</code>
+(set de &ldquo;apuntamiento a nada / parking&rdquo;), y <strong>no responden</strong>.</li>
+</ul>
+<pre tabindex="0"><code>whois librefutbol.su
+</code></pre><h3 id="contexto-público-prensa-2026">Contexto público (prensa, 2026):</h3>
+<p>Según Infobae, el <strong>creador original de la red &ldquo;Fútbol Libre&rdquo; fue detenido en
+Argentina</strong> y se cerraron <strong>más de 50 dominios</strong> asociados, dentro de operativos
+anti-piratería. El detalle de qué organismo ordenó la incautación de cada dominio
+en concreto no es verificable solo por DNS; suele ser una operación conjunta
+(policía judicial + titular de derechos, p. ej. ACE/MPA), coordinada con el
+registro <code>TCI</code>.</p>
+<p><strong>Veredicto:</strong> se sabe que fue un operativo anti-piratería (el caso argentino),
+pero el &ldquo;quién exacto&rdquo; por dominio requiere pedir datos al registro/justicia; el
+registro público no lo dice.</p>
+<hr>
+<h2 id="3-cómo-obtener-la-ip-cuando-el-dns-normal-está-bloqueado-o-el-dominio-es-jodido-de-resolver">3) Cómo obtener la IP cuando el DNS normal está bloqueado o el dominio es jodido de resolver</h2>
+<h3 id="opción-a--dns-over-https-doh-recomendado">Opción A — DNS-over-HTTPS (DoH) [recomendado]</h3>
+<p>Usa TLS en el puerto 443: un bloqueo de DNS normal NO lo toca.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Cloudflare</span>
+</span></span><span style="display:flex;"><span>curl -H <span style="color:#e6db74">&#34;accept: application/dns-json&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;https://cloudflare-dns.com/dns-query?name=thefutbollibre.su&amp;type=A&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Google</span>
+</span></span><span style="display:flex;"><span>curl <span style="color:#e6db74">&#34;https://dns.google/resolve?name=futbollibre.ru&amp;type=A&#34;</span>
+</span></span></code></pre></div><p>Salidas verificadas (2026-09-14):</p>
+<table>
+	<thead>
+			<tr>
+					<th>Dominio</th>
+					<th>IP obtenida</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td><code>futbollibre.ru</code></td>
+					<td><code>80.251.153.83</code></td>
+			</tr>
+			<tr>
+					<td><code>thefutbollibre.su</code></td>
+					<td><code>217.156.8.54</code></td>
+			</tr>
+	</tbody>
+</table>
+<h3 id="opción-b--dns-over-tls-dot">Opción B — DNS-over-TLS (DoT)</h3>
+<p>Puerto 853, también encriptado (requiere <code>kdig</code>/<code>dnspython</code>).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># con kdig (paquete knot-dnsutils)</span>
+</span></span><span style="display:flex;"><span>kdig @dns.quad9.net -p <span style="color:#ae81ff">853</span> thefutbollibre.su A
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># con python3 + dnspython</span>
+</span></span><span style="display:flex;"><span>python3 -c <span style="color:#e6db74">&#34;import dns.resolver; r=dns.resolver.Resolver(); r.nameservers=[&#39;9.9.9.9&#39;];\
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">print([str(x) for x in dns.resolver.Resolver.resolve(&#39;thefutbollibre.su&#39;,&#39;A&#39;)])&#34;</span>
+</span></span></code></pre></div><h3 id="opción-c--torsocks--tcp-resolver-y-traer-contenido-vía-tor">Opción C — torsocks + TCP (resolver y traer contenido vía Tor)</h3>
+<p><code>torsocks ping</code> <strong>NO funciona</strong>: ping usa ICMP y Tor solo proxya TCP junto con su
+propia resolución DNS. Para resolver Y descargar por Tor (sin exponer tu IP):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># resolver la IP desde la salida de Tor</span>
+</span></span><span style="display:flex;"><span>torsocks curl -sI https://thefutbollibre.su
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># o resolver solo el A record vía Tor</span>
+</span></span><span style="display:flex;"><span>torsocks curl -s -H <span style="color:#e6db74">&#34;accept: application/dns-json&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;https://cloudflare-dns.com/dns-query?name=thefutbollibre.su&amp;type=A&#34;</span>
+</span></span></code></pre></div><h3 id="cómo-funciona-doh-y-te-hace-inmune-a-la-censura">¿Cómo funciona DoH y te hace inmune a la censura?</h3>
+<p><strong>Por qué el DNS clásico es censurable:</strong> la consulta viaja <strong>en texto plano por
+UDP/TCP puerto 53</strong>. Tu ISP o un firewall corporate ve qué dominio preguntás y
+puede <strong>filtrarlo o responderte con una IP falsa/censurada</strong> (DNS hijacking).</p>
+<p><strong>Qué hace DoH:</strong> envía la misma consulta <strong>encriptada dentro de HTTPS (puerto
+443)</strong> al servidor DoH (Cloudflare / Google). Un filtro de DNS normal ya no ve
+qué dominio preguntás ni puede inyectar respuesta → recibís la IP real del
+sitio. Además, con curl la resolución la hace el servidor DoH directamente, <strong>sin
+pasar por tu resolver del sistema</strong>.</p>
+<p><strong>PERO no es &ldquo;nadie puede censurarte&rdquo;:</strong></p>
+<table>
+	<thead>
+			<tr>
+					<th>Escenario</th>
+					<th>¿DoH lo resuelve?</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>Censura a nivel de resolver/ISP (puerto 53, DNS hijacking)</td>
+					<td>✅ Sí</td>
+			</tr>
+			<tr>
+					<td>Bloqueo del servidor DoH (IP/SNI de <code>cloudflare-dns.com</code>, <code>dns.google</code> visibles)</td>
+					<td>⚠️ Parcial: cambiás de servidor DoH, pero te pueden ir bloqueando uno por uno</td>
+			</tr>
+			<tr>
+					<td>Bloqueo por IP del sitio destino (DPI/firewall)</td>
+					<td>❌ No</td>
+			</tr>
+			<tr>
+					<td>Dominio <strong>tomado a nivel de registro/NS</strong> (caso <code>librefutbol.su</code>: REFUSED autoritativo)</td>
+					<td>❌ No: el problema no es tu resolver, son los NS del dominio que se niegan</td>
+			</tr>
+	</tbody>
+</table>
+<p><strong>En la práctica:</strong> DoH te da la IP de los dominios <strong>vivos</strong> aunque tu ISP
+bloquee el DNS (por eso resolvió <code>futbollibre.ru</code> y <code>thefutbollibre.su</code> sin
+tocar tu configuración) — pero no revive un dominio incautado de verdad.</p>
+<p><strong>Contraparte de privacidad:</strong> le estás confiando TODAS tus consultas DNS al
+proveedor DoH (Cloudflare/Google). Ellos sí las ven, aunque tu ISP no.</p>
+<h3 id="y-si-tengo-un-buen-dns-quad9mullvad-doh-no-es-redundante">¿Y si tengo un &ldquo;buen DNS&rdquo; (Quad9/Mullvad)? ¿DoH no es redundante?</h3>
+<p>No: protegen <strong>dos problemas distintos</strong> de la misma consulta:</p>
+<table>
+	<thead>
+			<tr>
+					<th>Capa</th>
+					<th>Problema que resuelve</th>
+					<th>Ejemplo de falla</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td><strong>Qué resolver elegís</strong></td>
+					<td>Quién VE y LOGUEA tus consultas (el servidor)</td>
+					<td>Elegís Quad9 (sin logs) pero&hellip;</td>
+			</tr>
+			<tr>
+					<td><strong>Cómo viaja la consulta</strong> (port 53 plano vs DoH/DoT)</td>
+					<td>Que NADIE en el camino la lea o la manipule</td>
+					<td>&hellip;tu ISP sigue viendo el puerto 53 plano: puede <strong>censurarla</strong> o <strong>inyectar una IP falsa</strong> ANTES de que llegue a Quad9</td>
+			</tr>
+	</tbody>
+</table>
+<p>Por más bueno que sea el resolver, con transporte plano (UDP 53) el que intercepta
+el paquete gana. DoH blinda el tránsito; el resolver blinda el destino. <strong>Se
+necesitan los dos</strong> para privacidad completa.</p>
+<p><strong>Y en el caso de los dominios de fútbol DoH no servía de nada:</strong> tu ISP no estaba
+censurando; el dominio estaba muerto en el registro. Si tu ISP no censura y no te
+importa que vea, DNS plano a Quad9 es suficiente.</p>
+<h3 id="cómo-lo-activo-y-con-qué-resolver-elegir">¿Cómo lo activo? (y con qué resolver elegir)</h3>
+<p><strong>Elegí un resolver que no te espíe.</strong> Cloudflare y Google son comerciales;
+alternativas <strong>sin logs / orientadas a privacidad</strong>:</p>
+<table>
+	<thead>
+			<tr>
+					<th>Resolver</th>
+					<th>IP formato clásico</th>
+					<th>URL DoH</th>
+					<th>Nota</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td><strong>Quad9</strong></td>
+					<td><code>9.9.9.9</code> / <code>149.112.112.112</code></td>
+					<td><code>https://dns.quad9.net/dns-query</code></td>
+					<td>ONG suiza, sin logs, bloquea malware</td>
+			</tr>
+			<tr>
+					<td><strong>Mullvad</strong></td>
+					<td><code>194.242.2.2</code></td>
+					<td><code>https://dns.mullvad.net/dns-query</code></td>
+					<td>sueco, sin logs, anycast descentralizado</td>
+			</tr>
+			<tr>
+					<td><strong>AdGuard DNS</strong></td>
+					<td><code>94.140.14.14</code></td>
+					<td><code>https://dns.adguard-dns.com/dns-query</code></td>
+					<td>sin logs, bloquea ads/trackers/malware</td>
+			</tr>
+			<tr>
+					<td><strong>dns0.eu</strong></td>
+					<td><code>193.110.81.0</code></td>
+					<td><code>https://zero.dns0.eu/dns-query</code></td>
+					<td>UE, sin logs</td>
+			</tr>
+	</tbody>
+</table>
+<p>Verificado: Quad9 y AdGuard responden bien por DoH (<code>futbollibre.ru</code> → <code>80.251.153.83</code>).</p>
+<p><strong>Activarlo:</strong></p>
+<ul>
+<li><strong>Firefox</strong> → <em>Configuración → Privacidad y seguridad</em> → al fondo <em>&ldquo;Activar DNS a
+través de HTTPS&rdquo;</em> → pegá la URL DoH propia (ej. <code>https://dns.quad9.net/dns-query</code>
+o <code>https://dns.mullvad.net/dns-query</code>).</li>
+<li><strong>Chrome/Edge</strong> → <em>Configuración → Privacidad y seguridad → Seguridad → Usar DNS
+seguro</em> → elegir proveedor o URL personalizada.</li>
+<li><strong>Todo el sistema (Linux)</strong> → con <code>dnscrypt-proxy</code> (soporta DoH) o con
+<code>systemd-resolved</code> (DoT): en <code>/etc/systemd/resolved.conf</code>:
+<pre tabindex="0"><code>[Resolve]
+DNS=9.9.9.9#dns.quad9.net
+DNSOverTLS=yes
+</code></pre></li>
+<li><strong>Verificar que esté activo:</strong> <code>dnsleaktest.com</code> (web) o probar la resolución
+directo con curl y una URL DoH.</li>
+</ul>
+<p><strong>Advertencia honesta sobre el ISP:</strong> DoH le oculta a tu ISP <strong>qué dominio
+preguntás</strong>, pero tu ISP <strong>igual ve las IP de los sitios a los que te conectás</strong> y
+el <em>SNI</em> (nombre del sitio) en el handshake TLS. No oculta que entrás a esos
+sitios, solo el paso de resolución. Para que el ISP no vea NADA: <strong>Tor o VPN</strong>.</p>
+<hr>
+<h2 id="4-acceso-directo-por-ip-virtual-hosting">4) Acceso directo por IP (virtual hosting)</h2>
+<p>Las IP solas NO sirven el sitio correcto: el server usa <em>virtual hosts</em> y necesita
+la cabecera <code>Host</code>/SNI. Con curl se hace así:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># con Host header</span>
+</span></span><span style="display:flex;"><span>curl -H <span style="color:#e6db74">&#34;Host: thefutbollibre.su&#34;</span> -k https://217.156.8.54/
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># y para que el navegador entre como &#34;dominio&#34; aunque el DNS muera:</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;80.251.153.83    futbollibre.ru
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">217.156.8.54   thefutbollibre.su&#34;</span> &gt;&gt; /etc/hosts
+</span></span></code></pre></div><hr>
+<h2 id="5-y-si-tenía-la-ip-vieja-y-la-ponía-en-etchosts-habría-funcionado">5) ¿Y si tenía la IP vieja y la ponía en <code>/etc/hosts</code>? ¿Habría funcionado?</h2>
+<p><strong>Depende del tipo de bloqueo:</strong></p>
+<table>
+	<thead>
+			<tr>
+					<th>Tipo de bloqueo</th>
+					<th><code>/etc/hosts</code> con la IP vieja</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td><strong>Solo DNS</strong>: el sitio sigue corriendo en su IP, solo no se puede resolver el nombre</td>
+					<td>✅ Sí, entrabas directo a la IP</td>
+			</tr>
+			<tr>
+					<td><strong>Takedown completo</strong>: también apagaron los servidores/cuentas de hosting (este caso)</td>
+					<td>❌ No, la IP ya no sirve nada</td>
+			</tr>
+	</tbody>
+</table>
+<p><strong>Verificado en <code>librefutbol.su</code>:</strong> la IP histórica del sitio (176.97.112.7)
+responde <strong>HTTP 000 = servidor muerto</strong>, así que fue un takedown completo, no un
+bloqueo solo de DNS. Ahí <code>/etc/hosts</code> con la IP vieja <strong>no habría funcionado</strong>.</p>
+<p>La técnica <code>/etc/hosts</code> sí sirve para los dominios <strong>vivos</strong> de hoy
+(<code>futbollibre.ru</code> / <code>thefutbollibre.su</code>), porque esos servidores sí responden.</p>
+<hr>
+<h2 id="6-cómo-encontré-la-ip-histórica-del-sitio-certificate-transparency">6) Cómo encontré la IP histórica del sitio (Certificate Transparency)</h2>
+<p>El truco: <strong>todo certificado TLS emitido queda registrado públicamente</strong> en los
+<em>Certificate Transparency logs</em> (CT logs). Aunque un dominio ya no resuelva, su
+historial de certificados sigue ahí y muchas veces la IP queda grabada en el
+mismo certificado.</p>
+<h3 id="el-comando">El comando:</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>curl -s <span style="color:#e6db74">&#34;https://crt.sh/?q=%25.librefutbol.su&amp;output=json&#34;</span> &gt; /tmp/crt_libre.json
+</span></span></code></pre></div><p><code>%25</code> es el comodín <code>%</code> escapado para <code>*.librefutbol.su</code> y subdominios.</p>
+<h3 id="resultados-clave">Resultados clave:</h3>
+<pre tabindex="0"><code>*.librefutbol.su
+librefutbol.su
+librefutbol.su.176-97-112-7.cprapid.com
+mail.librefutbol.su.176-97-112-7.cprapid.com
+www.librefutbol.su
+</code></pre><h3 id="cómo-leer-el-nombre-del-certificado">Cómo leer el nombre del certificado:</h3>
+<p>El campo <code>name_value</code> de crt.sh mostró <code>librefutbol.su.176-97-112-7.cprapid.com</code>.
+Ese formato <code>dominio.IP.hosting.com</code> es cómo <strong>cPanel</strong> nombra los certificados
+autogenerados: la IP del sitio está <strong>incrustada en el propio nombre</strong>. O sea:
+<code>cprapid.com</code> era el hosting y <strong>176.97.112.7</strong> la IP del servidor.</p>
+<h3 id="confirmación">Confirmación:</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>curl -k -m <span style="color:#ae81ff">15</span> -H <span style="color:#e6db74">&#34;Host: librefutbol.su&#34;</span> <span style="color:#e6db74">&#34;https://176.97.112.7/&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># → HTTP 000 (conexión fallida): servidor apagado → takedown completo confirmado</span>
+</span></span></code></pre></div><h3 id="limitaciones-y-otras-fuentes">Limitaciones y otras fuentes:</h3>
+<ul>
+<li>CT logs solo muestran IPs que emitieron certificados <strong>públicos</strong>; no es la IP
+actual garantizada.</li>
+<li>Otras vías para IPs históricas: SecurityTrails, ViewDNS.info, valores
+históricos de DNS (<code>RDAP</code>, archivo de servidores).</li>
+</ul>
+<hr>
+<h2 id="7-los-servicios-de-archivo-web-siguen-vivos-chequeo-2026-09-14">7) ¿Los servicios de archivo web siguen vivos? (chequeo 2026-09-14)</h2>
+<p>Motivo del chequeo: archive.org y archive.today a veces <strong>sacan páginas por
+problemas legales</strong> (remoción, DMCA, NCII), así que conviene tener backups.</p>
+<h3 id="estado-actual-http">Estado actual (HTTP):</h3>
+<table>
+	<thead>
+			<tr>
+					<th>Servicio</th>
+					<th>Estado</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td><code>archive.org</code> (Wayback)</td>
+					<td>✅ 200</td>
+			</tr>
+			<tr>
+					<td><code>archive.today</code> / <code>archive.is</code> / <code>archive.ph</code> / <code>archive.li</code> / <code>archive.vn</code> / <code>archive.md</code> (mismos mirrors)</td>
+					<td>✅ 200</td>
+			</tr>
+			<tr>
+					<td><code>commoncrawl.org</code></td>
+					<td>✅ 200</td>
+			</tr>
+			<tr>
+					<td><code>arquivo.pt</code> (archivo nacional de Portugal)</td>
+					<td>✅ 200</td>
+			</tr>
+			<tr>
+					<td><code>webarchive.org.uk</code> (UK Web Archive)</td>
+					<td>✅ 200</td>
+			</tr>
+			<tr>
+					<td><code>webarchive.nla.gov.au</code> (PANDORA, Australia)</td>
+					<td>✅ 200</td>
+			</tr>
+			<tr>
+					<td><code>timetravel.mementoweb.org</code></td>
+					<td>❌ <strong>muerto (000, sin DNS)</strong></td>
+			</tr>
+	</tbody>
+</table>
+<h3 id="timetravelmementoweborg-no-existe-más--es-definitivo"><code>timetravel.mementoweb.org</code> NO existe más — es definitivo</h3>
+<p>No es un corte temporal: según <code>mementoweb.org</code>, el servicio &ldquo;Time Travel&rdquo;
+(agregador de Memento, operado por el <strong>Laboratorio Nacional de Los Álamos</strong>
+desde 2015) fue <strong>dado de baja a fines de 2025 por decisión administrativa</strong>
+del laboratorio. El sitio actual de mementoweb.org es solo info estática
+resucitada (Github Pages, voluntarios). El DNS ya no resuelve.</p>
+<h3 id="por-qué-a-veces-no-está-la-página-problemas-legales">Por qué a veces &ldquo;no está la página&rdquo; (problemas legales)</h3>
+<table>
+	<thead>
+			<tr>
+					<th>Servicio</th>
+					<th>Motivo de huecos</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td><strong>archive.org (Wayback)</strong></td>
+					<td>Pedidos de <strong>remoción</strong> del dueño del sitio, <strong>DMCA</strong>, <strong>NCII</strong> (contenido íntimo sin consentimiento), datos personales. Antes de 2017 además respetaba <code>robots.txt</code> (dejó huecos históricos)</td>
+			</tr>
+			<tr>
+					<td><strong>archive.today</strong></td>
+					<td>Denuncias/uso por problemas legales; bloqueos de países (Rusia/Roskomnadzor 2026); <strong>lista negra de Wikipedia</strong> (feb 2026: DDoS a un blog + capturas alteradas)</td>
+			</tr>
+	</tbody>
+</table>
+<h3 id="alternativas-de-archivo-más-usadas">Alternativas de archivo más usadas</h3>
+<ul>
+<li><strong>Memento / TimeTravel</strong> → ❌ muerto (ver arriba); antes agregaba múltiples
+archivos con una sola consulta.</li>
+<li><strong>Common Crawl</strong> (<code>commoncrawl.org</code>) — corpus abierto y enorme de URLs.</li>
+<li><strong>Archivos nacionales</strong>: <strong>Arquivo.pt</strong> (Portugal), <strong>UK Web Archive</strong>,
+<strong>PANDORA</strong> (Biblioteca Nacional de Australia), Library of Congress.</li>
+<li><strong>SELF HOSTS para guardar POR LAS DUDAS</strong>:
+<ul>
+<li><strong>Mirrors de archive.today</strong>: <code>archive.ph</code>, <code>archive.li</code>, <code>archive.vn</code>,
+<code>archive.fo</code>, <code>archive.md</code>.</li>
+<li><strong>SingleFile</strong> — extensión, guarda la página completa en un solo HTML.</li>
+<li><strong>ArchiveWeb.page</strong> — capturas manuales en formato <strong>WACZ</strong>.</li>
+<li><strong>HTTrack</strong> — descarga sitios completos para guardarlos offline.</li>
+</ul>
+</li>
+</ul>
+<h3 id="cómo-reemplazarlo-agregar-múltiples-archivos-ya-no-hace-falta-un-agregador">Cómo reemplazarlo (agregar múltiples archivos ya no hace falta un agregador):</h3>
+<ul>
+<li><strong>Wayback directo:</strong> <code>web.archive.org/web/&lt;timestamp&gt;/&lt;url&gt;</code></li>
+<li><strong>archive.today directo:</strong> <code>archive.is/&lt;url&gt;</code> o <code>archive.ph/&lt;url&gt;</code></li>
+<li><strong>Extensión de navegador &ldquo;Wayback Machine&rdquo;</strong> (Internet Archive).</li>
+<li><strong>Regla de la comunidad archivera:</strong> nunca dependas de UNA sola copia:
+guardá la misma página en 2-3 archivos independientes a la vez.</li>
+</ul>
+<hr>
+<h2 id="resumen">Resumen</h2>
+<ol>
+<li><code>REFUSED</code> en autoritativos = dominio <strong>suspendido/incautado</strong>, no solo caído.</li>
+<li>La incautación de Fútbol Libre corresponde al operativo anti-piratería
+argentino (detención del creador + 50+ dominios).</li>
+<li>Fue un <strong>takedown completo</strong> (DNS + servidor): la IP histórica
+<code>176.97.112.7</code> está muerta (comprobado vía crt.sh / CT logs).</li>
+<li>IPs de los dominios vivos ahora mismo: <code>80.251.153.83</code> (futbollibre.ru) y
+<code>217.156.8.54</code> (thefutbollibre.su) — obtenidas <strong>por DoH</strong>, sin tocar tu DNS.</li>
+</ol>
+
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+
+</footer>
+
+
+</body>
+</html>
