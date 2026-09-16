@@ -32,7 +32,7 @@ creá un archivo llamado jackett.json { &#34;api_key&#34;: &#34;YOUR_API_KEY_HER
 Abrí Jackett y agregá todos los indexers publicos seleccionando uno por uno el checkbox de la izquierda.">
 	<meta itemprop="datePublished" content="2024-06-13T23:25:49-03:00">
 	<meta itemprop="dateModified" content="2024-06-13T23:25:49-03:00">
-	<meta itemprop="wordCount" content="3161">
+	<meta itemprop="wordCount" content="1540">
 	<meta itemprop="keywords" content="Ares,Qbittorrent,Jackett">
   
 	<meta name="twitter:card" content="summary">
@@ -170,647 +170,226 @@ $ curl -s &ldquo;http://127.0.0.1:9117/api/v2.0/indexers/all/results?Query=formu
 1337x: Needs FlareSolverr
 52bt: Needs FlareSolverr</p>
 <p>El script que me generó opencode todavía tengo que arreglarlo cuando lo tenga, lo publico acá.</p>
-<h2 id="claude-ai">Claude AI</h2>
+<h2 id="opencode">Opencode</h2>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/usr/bin/env bash
-</span></span></span><span style="display:flex;"><span><span style="color:#75715e"># =============================================================================</span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># torrent_streamer.sh — &#34;El nuevo Ares&#34;</span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># https://imlauera.github.io/post/el_nuevo_ares/</span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># Uso:</span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e">#   ./torrent_streamer.sh &#34;Jason vs Freddy&#34;</span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e">#   ./torrent_streamer.sh --reset</span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e">#   ./torrent_streamer.sh --setup</span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># =============================================================================</span>
+</span></span></span><span style="display:flex;"><span>set -uo pipefail
 </span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># IMPORTANTE: NO usar set -e porque grep/jq/curl devuelven exit!=0 legítimamente</span>
-</span></span><span style="display:flex;"><span>set -uo pipefail
+</span></span><span style="display:flex;"><span>JACKETT_URL<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;http://127.0.0.1:9117&#34;</span>
+</span></span><span style="display:flex;"><span>INDEXERS_DIR<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>INDEXERS_DIR<span style="color:#66d9ef">:-</span>/var/lib/jackett/Indexers<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>JACKETT_KEY_FILE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$HOME<span style="color:#e6db74">/.local/share/qBittorrent/nova3/engines/jackett.json&#34;</span>
+</span></span><span style="display:flex;"><span>QBT_URL<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;http://127.0.0.1:8080&#34;</span>
+</span></span><span style="display:flex;"><span>DOWNLOAD_DIR<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>DOWNLOAD_DIR<span style="color:#66d9ef">:-</span>/mnt/linux2/torrents<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>RESULTS_TMP<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/tmp/torrent_menu_results.json&#34;</span>
+</span></span><span style="display:flex;"><span>TOP_RESULTS<span style="color:#f92672">=</span><span style="color:#ae81ff">20</span>
 </span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>RED<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;\033[0;31m&#39;</span>; YELLOW<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;\033[1;33m&#39;</span>; GREEN<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;\033[0;32m&#39;</span>
-</span></span><span style="display:flex;"><span>CYAN<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;\033[0;36m&#39;</span>; MAGENTA<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;\033[0;35m&#39;</span>; BOLD<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;\033[1m&#39;</span>; RESET<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;\033[0m&#39;</span>
+</span></span><span style="display:flex;"><span>RED<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;\033[0;31m&#39;</span>; GREEN<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;\033[0;32m&#39;</span>; YELLOW<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;\033[1;33m&#39;</span>; CYAN<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;\033[0;36m&#39;</span>; BOLD<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;\033[1m&#39;</span>; RESET<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;\033[0m&#39;</span>
 </span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>info<span style="color:#f92672">()</span>  <span style="color:#f92672">{</span> echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>CYAN<span style="color:#e6db74">}</span><span style="color:#e6db74">[INFO]</span><span style="color:#e6db74">${</span>RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">  </span>$*<span style="color:#e6db74">&#34;</span>; <span style="color:#f92672">}</span>
-</span></span><span style="display:flex;"><span>ok<span style="color:#f92672">()</span>    <span style="color:#f92672">{</span> echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>GREEN<span style="color:#e6db74">}</span><span style="color:#e6db74">[OK]</span><span style="color:#e6db74">${</span>RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">    </span>$*<span style="color:#e6db74">&#34;</span>; <span style="color:#f92672">}</span>
-</span></span><span style="display:flex;"><span>warn<span style="color:#f92672">()</span>  <span style="color:#f92672">{</span> echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>YELLOW<span style="color:#e6db74">}</span><span style="color:#e6db74">[WARN]</span><span style="color:#e6db74">${</span>RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">  </span>$*<span style="color:#e6db74">&#34;</span>; <span style="color:#f92672">}</span>
-</span></span><span style="display:flex;"><span>step<span style="color:#f92672">()</span>  <span style="color:#f92672">{</span> echo -e <span style="color:#e6db74">&#34;\n</span><span style="color:#e6db74">${</span>MAGENTA<span style="color:#e6db74">}</span><span style="color:#e6db74">[STEP]</span><span style="color:#e6db74">${</span>RESET<span style="color:#e6db74">}</span><span style="color:#e6db74"> </span><span style="color:#e6db74">${</span>BOLD<span style="color:#e6db74">}</span>$*<span style="color:#e6db74">${</span>RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>; <span style="color:#f92672">}</span>
-</span></span><span style="display:flex;"><span>error<span style="color:#f92672">()</span> <span style="color:#f92672">{</span> echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>RED<span style="color:#e6db74">}</span><span style="color:#e6db74">[ERROR]</span><span style="color:#e6db74">${</span>RESET<span style="color:#e6db74">}</span><span style="color:#e6db74"> </span>$*<span style="color:#e6db74">&#34;</span> &gt;&amp;2; <span style="color:#f92672">}</span>
-</span></span><span style="display:flex;"><span>die<span style="color:#f92672">()</span>   <span style="color:#f92672">{</span> error <span style="color:#e6db74">&#34;</span>$*<span style="color:#e6db74">&#34;</span>; exit 1; <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>info<span style="color:#f92672">()</span> <span style="color:#f92672">{</span> echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>CYAN<span style="color:#e6db74">}</span><span style="color:#e6db74">[INFO]</span><span style="color:#e6db74">${</span>RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">  </span>$*<span style="color:#e6db74">&#34;</span>; <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>ok<span style="color:#f92672">()</span>   <span style="color:#f92672">{</span> echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>GREEN<span style="color:#e6db74">}</span><span style="color:#e6db74">[OK]</span><span style="color:#e6db74">${</span>RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">    </span>$*<span style="color:#e6db74">&#34;</span>; <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>warn<span style="color:#f92672">()</span> <span style="color:#f92672">{</span> echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>YELLOW<span style="color:#e6db74">}</span><span style="color:#e6db74">[WARN]</span><span style="color:#e6db74">${</span>RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">  </span>$*<span style="color:#e6db74">&#34;</span>; <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>die<span style="color:#f92672">()</span>  <span style="color:#f92672">{</span> echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>RED<span style="color:#e6db74">}</span><span style="color:#e6db74">[ERROR]</span><span style="color:#e6db74">${</span>RESET<span style="color:#e6db74">}</span><span style="color:#e6db74"> </span>$*<span style="color:#e6db74">&#34;</span> &gt;&amp;2; exit 1; <span style="color:#f92672">}</span>
 </span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># ─── Config ──────────────────────────────────────────────────────────────────</span>
-</span></span><span style="display:flex;"><span>QBT_HOST<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;http://127.0.0.1:8080&#34;</span>
-</span></span><span style="display:flex;"><span>QBT_USER<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;admin&#34;</span>
-</span></span><span style="display:flex;"><span>QBT_PASS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;adminadmin&#34;</span>
-</span></span><span style="display:flex;"><span>QBT_COOKIES<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/tmp/qbt_cookies.txt&#34;</span>
-</span></span><span style="display:flex;"><span>QBT_CONF<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$HOME<span style="color:#e6db74">/.config/qBittorrent/qBittorrent.conf&#34;</span>
-</span></span><span style="display:flex;"><span>QBT_LOG<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/tmp/qbt.log&#34;</span>
+</span></span><span style="display:flex;"><span>human_size<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    local n<span style="color:#f92672">=</span>$1
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span>   <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span>$n<span style="color:#e6db74">&#34;</span> -ge <span style="color:#ae81ff">1099511627776</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span> awk <span style="color:#e6db74">&#34;BEGIN{printf \&#34;%.2f TB\&#34;, </span>$n<span style="color:#e6db74">/1099511627776}&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">elif</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span>$n<span style="color:#e6db74">&#34;</span> -ge <span style="color:#ae81ff">1073741824</span> <span style="color:#f92672">]</span>;   <span style="color:#66d9ef">then</span> awk <span style="color:#e6db74">&#34;BEGIN{printf \&#34;%.2f GB\&#34;, </span>$n<span style="color:#e6db74">/1073741824}&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">elif</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span>$n<span style="color:#e6db74">&#34;</span> -ge <span style="color:#ae81ff">1048576</span> <span style="color:#f92672">]</span>;      <span style="color:#66d9ef">then</span> awk <span style="color:#e6db74">&#34;BEGIN{printf \&#34;%.1f MB\&#34;, </span>$n<span style="color:#e6db74">/1048576}&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">elif</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span>$n<span style="color:#e6db74">&#34;</span> -ge <span style="color:#ae81ff">1024</span> <span style="color:#f92672">]</span>;         <span style="color:#66d9ef">then</span> awk <span style="color:#e6db74">&#34;BEGIN{printf \&#34;%.0f KB\&#34;, </span>$n<span style="color:#e6db74">/1024}&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span> echo <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>n<span style="color:#e6db74">}</span><span style="color:#e6db74"> B&#34;</span>; <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
 </span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>JACKETT_HOST<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;http://127.0.0.1:9117&#34;</span>
-</span></span><span style="display:flex;"><span>JACKETT_ENGINES_DIR<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$HOME<span style="color:#e6db74">/.local/share/qBittorrent/nova3/engines&#34;</span>
-</span></span><span style="display:flex;"><span>JACKETT_KEY_FILE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$JACKETT_ENGINES_DIR<span style="color:#e6db74">/jackett.json&#34;</span>
-</span></span><span style="display:flex;"><span>JACKETT_PLUGIN_URL<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;https://raw.githubusercontent.com/qbittorrent/search-plugins/master/nova3/engines/jackett.py&#34;</span>
+</span></span><span style="display:flex;"><span>get_apikey<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    jq -r <span style="color:#e6db74">&#39;.api_key // empty&#39;</span> <span style="color:#e6db74">&#34;</span>$JACKETT_KEY_FILE<span style="color:#e6db74">&#34;</span> 2&gt;/dev/null
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
 </span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># Directorio de descarga: tiene que ser escribible por el usuario &#39;qbt&#39; (systemd)</span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># /var/lib/qbittorrent es el home del usuario qbt → siempre tiene permisos</span>
-</span></span><span style="display:flex;"><span>DOWNLOAD_DIR<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/var/lib/qbittorrent/Downloads&#34;</span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># Si preferís descargar en tu home, corré:</span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e">#   sudo chown -R qbt:qbt ~/Downloads/torrents</span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e">#   DOWNLOAD_DIR=&#34;$HOME/Downloads/torrents&#34;</span>
-</span></span><span style="display:flex;"><span>FLARESOLVERR_INDEXERS<span style="color:#f92672">=(</span><span style="color:#e6db74">&#34;0magnet&#34;</span> <span style="color:#e6db74">&#34;1337x&#34;</span> <span style="color:#e6db74">&#34;52bt&#34;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>list_indexers<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">[</span> -d <span style="color:#e6db74">&#34;</span>$INDEXERS_DIR<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span> <span style="color:#f92672">||</span> warn <span style="color:#e6db74">&#34;No se pudo leer </span>$INDEXERS_DIR<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    ok <span style="color:#e6db74">&#34;Indexers configurados:&#34;</span>
+</span></span><span style="display:flex;"><span>    ls <span style="color:#e6db74">&#34;</span>$INDEXERS_DIR<span style="color:#e6db74">&#34;</span>/*.json 2&gt;/dev/null | xargs -n1 basename 2&gt;/dev/null | sed <span style="color:#e6db74">&#39;s/\.json$//&#39;</span> | sort | nl
+</span></span><span style="display:flex;"><span>    exit <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
 </span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># ─── Args ────────────────────────────────────────────────────────────────────</span>
-</span></span><span style="display:flex;"><span>MODE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;stream&#34;</span>
-</span></span><span style="display:flex;"><span>QUERY<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;Jason vs Freddy&#34;</span>
+</span></span><span style="display:flex;"><span>resolve_indexer<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    local want<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span> wlower id ilower found<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    wlower<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>printf <span style="color:#e6db74">&#39;%s&#39;</span> <span style="color:#e6db74">&#34;</span>$want<span style="color:#e6db74">&#34;</span> | tr <span style="color:#e6db74">&#39;[:upper:]&#39;</span> <span style="color:#e6db74">&#39;[:lower:]&#39;</span><span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> f in <span style="color:#e6db74">&#34;</span>$INDEXERS_DIR<span style="color:#e6db74">&#34;</span>/*.json; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">[</span> -e <span style="color:#e6db74">&#34;</span>$f<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span> <span style="color:#f92672">||</span> <span style="color:#66d9ef">continue</span>
+</span></span><span style="display:flex;"><span>        id<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>basename <span style="color:#e6db74">&#34;</span>$f<span style="color:#e6db74">&#34;</span> .json<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span>$id<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;</span>$want<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">{</span> echo <span style="color:#e6db74">&#34;</span>$id<span style="color:#e6db74">&#34;</span>; <span style="color:#66d9ef">return</span> 0; <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">[</span> -z <span style="color:#e6db74">&#34;</span>$found<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span> <span style="color:#f92672">&amp;&amp;</span>             <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>printf <span style="color:#e6db74">&#39;%s&#39;</span> <span style="color:#e6db74">&#34;</span>$id<span style="color:#e6db74">&#34;</span> | tr <span style="color:#e6db74">&#39;[:upper:]&#39;</span> <span style="color:#e6db74">&#39;[:lower:]&#39;</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;</span>$wlower<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span> <span style="color:#f92672">&amp;&amp;</span> found<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$id<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> -n <span style="color:#e6db74">&#34;</span>$found<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span> echo <span style="color:#e6db74">&#34;</span>$found<span style="color:#e6db74">&#34;</span>; <span style="color:#66d9ef">return</span> 0; <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>search_jackett<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    local query<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span> idx<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>2<span style="color:#66d9ef">:-</span>all<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> apikey total encoded
+</span></span><span style="display:flex;"><span>    apikey<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>get_apikey<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">[</span> -n <span style="color:#e6db74">&#34;</span>$apikey<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span> <span style="color:#f92672">||</span> die <span style="color:#e6db74">&#34;No se encontró API key en </span>$JACKETT_KEY_FILE<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    encoded<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>python3 -c <span style="color:#e6db74">&#34;import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1]))&#34;</span> <span style="color:#e6db74">&#34;</span>$query<span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>    info <span style="color:#e6db74">&#34;Consultando Jackett indexer: </span>$idx<span style="color:#e6db74"> ...&#34;</span>
+</span></span><span style="display:flex;"><span>    curl -s -m <span style="color:#ae81ff">300</span> -f <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>JACKETT_URL<span style="color:#e6db74">}</span><span style="color:#e6db74">/api/v2.0/indexers/</span><span style="color:#e6db74">${</span>idx<span style="color:#e6db74">}</span><span style="color:#e6db74">/results?Query=</span><span style="color:#e6db74">${</span>encoded<span style="color:#e6db74">}</span><span style="color:#e6db74">&amp;apikey=</span><span style="color:#e6db74">${</span>apikey<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> &gt; <span style="color:#e6db74">&#34;</span>$RESULTS_TMP<span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>        <span style="color:#f92672">||</span> die <span style="color:#e6db74">&#34;Jackett no respondió. ¿Está corriendo en </span>$JACKETT_URL<span style="color:#e6db74">?&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    total<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>jq <span style="color:#e6db74">&#39;.Results | length&#39;</span> <span style="color:#e6db74">&#34;</span>$RESULTS_TMP<span style="color:#e6db74">&#34;</span> 2&gt;/dev/null<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span>$total<span style="color:#e6db74">&#34;</span> -gt <span style="color:#ae81ff">0</span> <span style="color:#f92672">]</span> 2&gt;/dev/null <span style="color:#f92672">||</span> die <span style="color:#e6db74">&#34;Sin resultados para &#39;</span>$query<span style="color:#e6db74">&#39;.&#34;</span>
+</span></span><span style="display:flex;"><span>    ok <span style="color:#e6db74">&#34;Resultados: </span>$total<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    tracker_summary
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>tracker_summary<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    local line
+</span></span><span style="display:flex;"><span>    echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>CYAN<span style="color:#e6db74">}</span><span style="color:#e6db74">  Por indexer:</span><span style="color:#e6db74">${</span>RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> IFS<span style="color:#f92672">=</span><span style="color:#e6db74">$&#39;\t&#39;</span> read -r tr c; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>        printf <span style="color:#e6db74">&#34;     %-22s %s\n&#34;</span> <span style="color:#e6db74">&#34;</span>$tr<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;</span>$c<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">done</span> &lt; &lt;<span style="color:#f92672">(</span>jq -r <span style="color:#e6db74">&#39;[.Results[].Tracker] | group_by(.) | map(&#34;\(.[0])\t\(length)&#34;) | .[]&#39;</span> <span style="color:#e6db74">&#34;</span>$RESULTS_TMP<span style="color:#e6db74">&#34;</span> 2&gt;/dev/null <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>        | sort -t <span style="color:#e6db74">$&#39;\t&#39;</span> -k2 -rn<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>build_list<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    jq -r --argjson top <span style="color:#e6db74">&#34;</span>$TOP_RESULTS<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      def ds: .PublishDate // &#34;&#34; | strptime(&#34;%Y-%m-%dT%H:%M:%S&#34;)? | mktime // 0;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      def skey: [-(.Seeders // 0), -ds];
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      (.Results | map(select((.Guid | startswith(&#34;magnet:?&#34;)) or ((.Link // &#34;&#34;) | startswith(&#34;http&#34;))))) as $c
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      | (($c | group_by(.Tracker) | length) | if . &gt; 0 then . else 1 end) as $nt
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      | (((($top + $nt - 1) / $nt) | floor)) as $per
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      | $c
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      | group_by(.Tracker)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      | map(sort_by(skey) | .[0:$per])
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      | add
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      | (sort_by(skey) | .[0:$top])[] as $x
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      | [ 0,   # placeholder, se numera en show_menu
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">          $x.Seeders,
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">          $x.Size,
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">          ($x.Title | gsub(&#34;[
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">	]&#34;;&#34; &#34;)),
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">          ($x.IndexerError // $x.Tracker // &#34;&#34;),
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">          $x.Guid,
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">          $x.Link,
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">          ($x.PublishDate // &#34;&#34; | split(&#34;T&#34;)[0]) ]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      | @tsv
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    &#39;</span> <span style="color:#e6db74">&#34;</span>$RESULTS_TMP<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>show_menu<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>BOLD<span style="color:#e6db74">}</span><span style="color:#e6db74">Resultados (seeds, luego más reciente; balanceado entre indexers):</span><span style="color:#e6db74">${</span>RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>CYAN<span style="color:#e6db74">}</span><span style="color:#e6db74">------------------------------------------------------------</span><span style="color:#e6db74">${</span>RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    local i<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> IFS<span style="color:#f92672">=</span><span style="color:#e6db74">$&#39;	&#39;</span> read -r _x seeds size title idxr guid link pdate; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>        i<span style="color:#f92672">=</span><span style="color:#66d9ef">$((</span>i+1<span style="color:#66d9ef">))</span>
+</span></span><span style="display:flex;"><span>        ttype<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;[m]&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span>$link<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;http&#34;</span>* <span style="color:#f92672">]]</span> <span style="color:#f92672">&amp;&amp;</span> ttype<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;[t]&#34;</span>
+</span></span><span style="display:flex;"><span>        d<span style="color:#f92672">=</span><span style="color:#e6db74">${</span>pdate:0:10<span style="color:#e6db74">}</span>
+</span></span><span style="display:flex;"><span>        printf <span style="color:#e6db74">&#34;%2s │ %-4s│ %10s │ %-60s %s %s %s
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;</span>             <span style="color:#e6db74">&#34;</span>$i<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;</span>$seeds<span style="color:#e6db74"> seeds&#34;</span> <span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>human_size <span style="color:#e6db74">&#34;</span>$size<span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>title:0:60<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;[</span>$idxr<span style="color:#e6db74">]&#34;</span> <span style="color:#e6db74">&#34;</span>$ttype<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;[</span><span style="color:#e6db74">${</span>d:2<span style="color:#e6db74">}</span><span style="color:#e6db74">]&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">done</span> &lt; &lt;<span style="color:#f92672">(</span>build_list<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>CYAN<span style="color:#e6db74">}</span><span style="color:#e6db74">------------------------------------------------------------</span><span style="color:#e6db74">${</span>RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>pick_magnet<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    local choice
+</span></span><span style="display:flex;"><span>    local n
+</span></span><span style="display:flex;"><span>    n<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>build_list | wc -l<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span>$n<span style="color:#e6db74">&#34;</span> -eq <span style="color:#ae81ff">0</span> <span style="color:#f92672">]</span> <span style="color:#f92672">&amp;&amp;</span> warn <span style="color:#e6db74">&#34;Sin resultados descargables (magnet o .torrent).&#34;</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    read -rp <span style="color:#e6db74">&#34;Número a descargar (Enter=salir, 0=volver a buscar): &#34;</span> choice
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">[</span> -z <span style="color:#e6db74">&#34;</span>$choice<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span> <span style="color:#f92672">&amp;&amp;</span> echo <span style="color:#e6db74">&#34;cancelado&#34;</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span>$choice<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;0&#34;</span> <span style="color:#f92672">]</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span>$choice<span style="color:#e6db74">&#34;</span> -ge <span style="color:#ae81ff">1</span> <span style="color:#f92672">]</span> 2&gt;/dev/null <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span>$choice<span style="color:#e6db74">&#34;</span> -le <span style="color:#e6db74">&#34;</span>$n<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span> 2&gt;/dev/null; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        MAGNET<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>build_list | sed -n <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>choice<span style="color:#e6db74">}</span><span style="color:#e6db74">p&#34;</span> | cut -f6<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>        TORRENT_LINK<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>build_list | sed -n <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>choice<span style="color:#e6db74">}</span><span style="color:#e6db74">p&#34;</span> | cut -f7<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>        TITLE<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>build_list | sed -n <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>choice<span style="color:#e6db74">}</span><span style="color:#e6db74">p&#34;</span> | cut -f4<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>        ok <span style="color:#e6db74">&#34;Elegido: </span><span style="color:#e6db74">${</span>TITLE:0:80<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>    warn <span style="color:#e6db74">&#34;Opción inválida&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>add_torrent<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    local source_url<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$MAGNET<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span>$MAGNET<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;http&#34;</span>* <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        source_url<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$TORRENT_LINK<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>    info <span style="color:#e6db74">&#34;Agregando a qBittorrent (destino: </span>$DOWNLOAD_DIR<span style="color:#e6db74">)...&#34;</span>
+</span></span><span style="display:flex;"><span>    curl -sf -X POST <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>QBT_URL<span style="color:#e6db74">}</span><span style="color:#e6db74">/api/v2/torrents/add&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>        --data-urlencode <span style="color:#e6db74">&#34;urls=</span>$source_url<span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>        -d <span style="color:#e6db74">&#34;savepath=</span>$DOWNLOAD_DIR<span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>        -d <span style="color:#e6db74">&#34;category=menu&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>        -w <span style="color:#e6db74">&#34;&#34;</span> -o /dev/null <span style="color:#f92672">||</span> curl -s -X POST <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>QBT_URL<span style="color:#e6db74">}</span><span style="color:#e6db74">/api/v2/torrents/add&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>        --data-urlencode <span style="color:#e6db74">&#34;urls=</span>$source_url<span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>        -d <span style="color:#e6db74">&#34;savepath=</span>$DOWNLOAD_DIR<span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>        -d <span style="color:#e6db74">&#34;category=menu&#34;</span>
+</span></span><span style="display:flex;"><span>    ok <span style="color:#e6db74">&#34;Torrent agregado. Ver estado en </span>$QBT_URL<span style="color:#e6db74"> o corre: torrent_menu.sh --estado&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>show_status<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>BOLD<span style="color:#e6db74">}</span><span style="color:#e6db74">Estado de descargas:</span><span style="color:#e6db74">${</span>RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    curl -sf <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>QBT_URL<span style="color:#e6db74">}</span><span style="color:#e6db74">/api/v2/torrents/info?category=menu&#34;</span> | jq -r <span style="color:#e6db74">&#39;.[] | &#34;  [\(.state)] \(.progress*100|floor)%%  \(.name[0:60])&#34;&#39;</span> 2&gt;/dev/null <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>        <span style="color:#f92672">||</span> echo <span style="color:#e6db74">&#34;  (sin torrents o qBittorrent sin respuesta)&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>usage<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
-</span></span><span style="display:flex;"><span>    echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>BOLD<span style="color:#e6db74">}</span><span style="color:#e6db74">Uso:</span><span style="color:#e6db74">${</span>RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
-</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  </span>$0<span style="color:#e6db74"> \&#34;nombre\&#34;    Buscar y reproducir&#34;</span>
-</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  </span>$0<span style="color:#e6db74"> --setup     Instalar y configurar todo&#34;</span>
-</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  </span>$0<span style="color:#e6db74"> --reset     Reiniciar cuando algo falla&#34;</span>
-</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  </span>$0<span style="color:#e6db74"> --help&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Uso:&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  </span>$0<span style="color:#e6db74"> \&#34;nombre\&#34;              Buscar en TODOS los indexers (puede tardar 1-2 min)&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  </span>$0<span style="color:#e6db74"> --indexer NOMBRE \&#34;q\&#34;  Buscar solo en UN indexer (no sensible a mayúsculas)&#34;</span>
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;  </span>$0<span style="color:#e6db74"> --list-indexers      Listar indexers configurados&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  </span>$0<span style="color:#e6db74"> --estado               Ver estado de descargas&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;  </span>$0<span style="color:#e6db74"> --servicios            Verificar servicios (jackett, qbittorrent-nox)&#34;</span>
 </span></span><span style="display:flex;"><span>    exit <span style="color:#ae81ff">0</span>
 </span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
 </span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> arg in <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;</span>; <span style="color:#66d9ef">do</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;</span>$arg<span style="color:#e6db74">&#34;</span> in
-</span></span><span style="display:flex;"><span>        --help|-h<span style="color:#f92672">)</span> usage ;;
-</span></span><span style="display:flex;"><span>        --reset<span style="color:#f92672">)</span>   MODE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;reset&#34;</span> ;;
-</span></span><span style="display:flex;"><span>        --setup<span style="color:#f92672">)</span>   MODE<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;setup&#34;</span> ;;
-</span></span><span style="display:flex;"><span>        *<span style="color:#f92672">)</span>         QUERY<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$arg<span style="color:#e6db74">&#34;</span> ;;
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">esac</span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">done</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>banner<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
-</span></span><span style="display:flex;"><span>    echo -e <span style="color:#e6db74">&#34;\n</span><span style="color:#e6db74">${</span>BOLD<span style="color:#e6db74">}${</span>CYAN<span style="color:#e6db74">}</span><span style="color:#e6db74">╔══════════════════════════════════════════════╗</span><span style="color:#e6db74">${</span>RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
-</span></span><span style="display:flex;"><span>    echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>BOLD<span style="color:#e6db74">}${</span>CYAN<span style="color:#e6db74">}</span><span style="color:#e6db74">║   🎬  El Nuevo Ares — Torrent Streamer       ║</span><span style="color:#e6db74">${</span>RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
-</span></span><span style="display:flex;"><span>    echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>BOLD<span style="color:#e6db74">}${</span>CYAN<span style="color:#e6db74">}</span><span style="color:#e6db74">║   qBittorrent-nox + Jackett + mpv            ║</span><span style="color:#e6db74">${</span>RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
-</span></span><span style="display:flex;"><span>    echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>BOLD<span style="color:#e6db74">}${</span>CYAN<span style="color:#e6db74">}</span><span style="color:#e6db74">╚══════════════════════════════════════════════╝</span><span style="color:#e6db74">${</span>RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
-</span></span><span style="display:flex;"><span>    echo -e <span style="color:#e6db74">&#34;   </span><span style="color:#e6db74">${</span>CYAN<span style="color:#e6db74">}</span><span style="color:#e6db74">https://imlauera.github.io/post/el_nuevo_ares/</span><span style="color:#e6db74">${</span>RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">\n&#34;</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>YELLOW<span style="color:#e6db74">}</span><span style="color:#e6db74">╔══════════════════════════════════════════════╗</span><span style="color:#e6db74">${</span>RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
-</span></span><span style="display:flex;"><span>    echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>YELLOW<span style="color:#e6db74">}</span><span style="color:#e6db74">║  ⚠  REQUISITO PREVIO: configurar Jackett     ║</span><span style="color:#e6db74">${</span>RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
-</span></span><span style="display:flex;"><span>    echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>YELLOW<span style="color:#e6db74">}</span><span style="color:#e6db74">╠══════════════════════════════════════════════╣</span><span style="color:#e6db74">${</span>RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
-</span></span><span style="display:flex;"><span>    echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>YELLOW<span style="color:#e6db74">}</span><span style="color:#e6db74">║</span><span style="color:#e6db74">${</span>RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">  1. Abrí  </span><span style="color:#e6db74">${</span>CYAN<span style="color:#e6db74">}</span><span style="color:#e6db74">http://localhost:9117</span><span style="color:#e6db74">${</span>RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
-</span></span><span style="display:flex;"><span>    echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>YELLOW<span style="color:#e6db74">}</span><span style="color:#e6db74">║</span><span style="color:#e6db74">${</span>RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">  2. Hacé click en </span><span style="color:#e6db74">${</span>BOLD<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>+ Add indexer<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
-</span></span><span style="display:flex;"><span>    echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>YELLOW<span style="color:#e6db74">}</span><span style="color:#e6db74">║</span><span style="color:#e6db74">${</span>RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">  3. Marcá los indexers que querés usar&#34;</span>
-</span></span><span style="display:flex;"><span>    echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>YELLOW<span style="color:#e6db74">}</span><span style="color:#e6db74">║</span><span style="color:#e6db74">${</span>RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">     (cada fuente = un indexer, ej: 1337x,&#34;</span>
-</span></span><span style="display:flex;"><span>    echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>YELLOW<span style="color:#e6db74">}</span><span style="color:#e6db74">║</span><span style="color:#e6db74">${</span>RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">      YTS, EZTV, Knaben, TorrentGalaxy...)&#34;</span>
-</span></span><span style="display:flex;"><span>    echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>YELLOW<span style="color:#e6db74">}</span><span style="color:#e6db74">║</span><span style="color:#e6db74">${</span>RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">  4. Hacé click en </span><span style="color:#e6db74">${</span>BOLD<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>Add selected<span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>RESET<span style="color:#e6db74">}</span><span style="color:#e6db74"> y listo&#34;</span>
-</span></span><span style="display:flex;"><span>    echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>YELLOW<span style="color:#e6db74">}</span><span style="color:#e6db74">║</span><span style="color:#e6db74">${</span>RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">  </span><span style="color:#e6db74">${</span>RED<span style="color:#e6db74">}</span><span style="color:#e6db74">Sin indexers configurados no hay resultados</span><span style="color:#e6db74">${</span>RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
-</span></span><span style="display:flex;"><span>    echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>YELLOW<span style="color:#e6db74">}</span><span style="color:#e6db74">╚══════════════════════════════════════════════╝</span><span style="color:#e6db74">${</span>RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">\n&#34;</span>
+</span></span><span style="display:flex;"><span>check_services<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    info <span style="color:#e6db74">&#34;jackett:      </span><span style="color:#66d9ef">$(</span>systemctl is-active jackett 2&gt;/dev/null <span style="color:#f92672">||</span> echo inactivo<span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    info <span style="color:#e6db74">&#34;qbittorrent:  </span><span style="color:#66d9ef">$(</span>systemctl is-active qbittorrent-nox 2&gt;/dev/null <span style="color:#f92672">||</span> echo inactivo<span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    info <span style="color:#e6db74">&#34;ruta destino: </span>$DOWNLOAD_DIR<span style="color:#e6db74">&#34;</span>
 </span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
 </span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># ─── Reset ───────────────────────────────────────────────────────────────────</span>
-</span></span><span style="display:flex;"><span>do_reset<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
-</span></span><span style="display:flex;"><span>    step <span style="color:#e6db74">&#34;Reiniciando todo...&#34;</span>
-</span></span><span style="display:flex;"><span>    pkill -f qbittorrent-nox 2&gt;/dev/null <span style="color:#f92672">&amp;&amp;</span> ok <span style="color:#e6db74">&#34;qBittorrent-nox detenido.&#34;</span> <span style="color:#f92672">||</span> info <span style="color:#e6db74">&#34;No había proceso activo.&#34;</span>
-</span></span><span style="display:flex;"><span>    rm -f <span style="color:#e6db74">&#34;</span>$QBT_COOKIES<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;</span>$QBT_LOG<span style="color:#e6db74">&#34;</span>
-</span></span><span style="display:flex;"><span>    sudo systemctl restart jackett 2&gt;/dev/null <span style="color:#f92672">&amp;&amp;</span> ok <span style="color:#e6db74">&#34;Jackett reiniciado.&#34;</span> <span style="color:#f92672">||</span> warn <span style="color:#e6db74">&#34;No se pudo reiniciar Jackett.&#34;</span>
-</span></span><span style="display:flex;"><span>    rm -f /tmp/qbt_*.txt /tmp/qbt*.log
-</span></span><span style="display:flex;"><span>    ok <span style="color:#e6db74">&#34;Reset completo. Corré el script nuevamente.&#34;</span>
-</span></span><span style="display:flex;"><span>    exit <span style="color:#ae81ff">0</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># ─── Setup ───────────────────────────────────────────────────────────────────</span>
-</span></span><span style="display:flex;"><span>do_setup<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
-</span></span><span style="display:flex;"><span>    step <span style="color:#e6db74">&#34;Instalando dependencias...&#34;</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> command -v apt &amp;&gt;/dev/null; <span style="color:#66d9ef">then</span>
-</span></span><span style="display:flex;"><span>        sudo apt update -qq <span style="color:#f92672">&amp;&amp;</span> sudo apt install -y qbittorrent-nox jackett curl jq mpv python3
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">elif</span> command -v yay &amp;&gt;/dev/null; <span style="color:#66d9ef">then</span>
-</span></span><span style="display:flex;"><span>        yay -S --noconfirm qbittorrent-nox jackett-bin curl jq mpv
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">elif</span> command -v pacman &amp;&gt;/dev/null; <span style="color:#66d9ef">then</span>
-</span></span><span style="display:flex;"><span>        sudo pacman -Sy --noconfirm qbittorrent-nox curl jq mpv
-</span></span><span style="display:flex;"><span>        warn <span style="color:#e6db74">&#34;Instalá jackett: yay -S jackett-bin&#34;</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>
-</span></span><span style="display:flex;"><span>        warn <span style="color:#e6db74">&#34;Instalá manualmente: qbittorrent-nox jackett curl jq mpv&#34;</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    step <span style="color:#e6db74">&#34;Configurando jackett.json...&#34;</span>
-</span></span><span style="display:flex;"><span>    setup_jackett_json
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    step <span style="color:#e6db74">&#34;Descargando plugin jackett.py...&#34;</span>
-</span></span><span style="display:flex;"><span>    mkdir -p <span style="color:#e6db74">&#34;</span>$JACKETT_ENGINES_DIR<span style="color:#e6db74">&#34;</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> curl -sL <span style="color:#e6db74">&#34;</span>$JACKETT_PLUGIN_URL<span style="color:#e6db74">&#34;</span> -o <span style="color:#e6db74">&#34;</span>$JACKETT_ENGINES_DIR<span style="color:#e6db74">/jackett.py&#34;</span>; <span style="color:#66d9ef">then</span>
-</span></span><span style="display:flex;"><span>        ok <span style="color:#e6db74">&#34;Plugin descargado: </span>$JACKETT_ENGINES_DIR<span style="color:#e6db74">/jackett.py&#34;</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>
-</span></span><span style="display:flex;"><span>        warn <span style="color:#e6db74">&#34;No se pudo descargar. URL: </span>$JACKETT_PLUGIN_URL<span style="color:#e6db74">&#34;</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    step <span style="color:#e6db74">&#34;Configurando qBittorrent...&#34;</span>
-</span></span><span style="display:flex;"><span>    configure_qbt
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;&#34;</span>
-</span></span><span style="display:flex;"><span>    ok <span style="color:#e6db74">&#34;Setup completo.&#34;</span>
-</span></span><span style="display:flex;"><span>    echo -e <span style="color:#e6db74">&#34;\n  </span><span style="color:#e6db74">${</span>BOLD<span style="color:#e6db74">}</span><span style="color:#e6db74">Próximos pasos:</span><span style="color:#e6db74">${</span>RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
-</span></span><span style="display:flex;"><span>    echo -e <span style="color:#e6db74">&#34;  1. Abrí Jackett en </span><span style="color:#e6db74">${</span>CYAN<span style="color:#e6db74">}</span><span style="color:#e6db74">http://localhost:9117</span><span style="color:#e6db74">${</span>RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
-</span></span><span style="display:flex;"><span>    echo -e <span style="color:#e6db74">&#34;  2. Copiá tu API key y pegala en: </span><span style="color:#e6db74">${</span>CYAN<span style="color:#e6db74">}</span>$JACKETT_KEY_FILE<span style="color:#e6db74">${</span>RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
-</span></span><span style="display:flex;"><span>    echo -e <span style="color:#e6db74">&#34;  3. Corré: </span><span style="color:#e6db74">${</span>BOLD<span style="color:#e6db74">}</span><span style="color:#e6db74">./torrent_streamer.sh \&#34;nombre pelicula\&#34;</span><span style="color:#e6db74">${</span>RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
-</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;&#34;</span>
-</span></span><span style="display:flex;"><span>    warn <span style="color:#e6db74">&#34;Indexers que necesitan FlareSolverr: </span><span style="color:#e6db74">${</span>FLARESOLVERR_INDEXERS[*]<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
-</span></span><span style="display:flex;"><span>    exit <span style="color:#ae81ff">0</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># ─── Deps ────────────────────────────────────────────────────────────────────</span>
-</span></span><span style="display:flex;"><span>check_deps<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
-</span></span><span style="display:flex;"><span>    step <span style="color:#e6db74">&#34;Verificando dependencias...&#34;</span>
-</span></span><span style="display:flex;"><span>    local missing<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> cmd in qbittorrent-nox curl jq mpv python3; <span style="color:#66d9ef">do</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> command -v <span style="color:#e6db74">&#34;</span>$cmd<span style="color:#e6db74">&#34;</span> &amp;&gt;/dev/null; <span style="color:#66d9ef">then</span>
-</span></span><span style="display:flex;"><span>            ok <span style="color:#e6db74">&#34;  ✓ </span>$cmd<span style="color:#e6db74">&#34;</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">else</span>
-</span></span><span style="display:flex;"><span>            warn <span style="color:#e6db74">&#34;  ✗ &#39;</span>$cmd<span style="color:#e6db74">&#39; no encontrado.&#34;</span>
-</span></span><span style="display:flex;"><span>            missing<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">fi</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">done</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Jackett: puede estar en /usr/lib/jackett/ sin binario en PATH (AUR jackett-bin)</span>
-</span></span><span style="display:flex;"><span>    local jackett_found<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>
-</span></span><span style="display:flex;"><span>    command -v jackett &amp;&gt;/dev/null <span style="color:#f92672">&amp;&amp;</span> jackett_found<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#f92672">[[</span> -f /usr/lib/jackett/jackett <span style="color:#f92672">]]</span> <span style="color:#f92672">&amp;&amp;</span> jackett_found<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#f92672">[[</span> -f /usr/lib/jackett/Jackett <span style="color:#f92672">]]</span> <span style="color:#f92672">&amp;&amp;</span> jackett_found<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>
-</span></span><span style="display:flex;"><span>    systemctl list-unit-files --type<span style="color:#f92672">=</span>service 2&gt;/dev/null | grep -qi jackett <span style="color:#f92672">&amp;&amp;</span> jackett_found<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> $jackett_found -eq <span style="color:#ae81ff">1</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
-</span></span><span style="display:flex;"><span>        ok <span style="color:#e6db74">&#34;  ✓ jackett&#34;</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>
-</span></span><span style="display:flex;"><span>        warn <span style="color:#e6db74">&#34;  ✗ jackett no encontrado. En Arch: yay -S jackett-bin | En Debian: apt install jackett&#34;</span>
-</span></span><span style="display:flex;"><span>        missing<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> $missing -eq <span style="color:#ae81ff">1</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
-</span></span><span style="display:flex;"><span>        die <span style="color:#e6db74">&#34;Faltan dependencias. Corré: </span>$0<span style="color:#e6db74"> --setup&#34;</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># ─── jackett.json ────────────────────────────────────────────────────────────</span>
-</span></span><span style="display:flex;"><span>setup_jackett_json<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
-</span></span><span style="display:flex;"><span>    mkdir -p <span style="color:#e6db74">&#34;</span>$JACKETT_ENGINES_DIR<span style="color:#e6db74">&#34;</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> ! -f <span style="color:#e6db74">&#34;</span>$JACKETT_KEY_FILE<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
-</span></span><span style="display:flex;"><span>        info <span style="color:#e6db74">&#34;Creando </span>$JACKETT_KEY_FILE<span style="color:#e6db74">...&#34;</span>
-</span></span><span style="display:flex;"><span>        cat &gt; <span style="color:#e6db74">&#34;</span>$JACKETT_KEY_FILE<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&lt;&lt;&#39;EOF&#39;
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">{
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    &#34;api_key&#34;: &#34;YOUR_API_KEY_HERE&#34;,
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    &#34;url&#34;: &#34;http://127.0.0.1:9117&#34;,
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    &#34;tracker_first&#34;: false,
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    &#34;thread_count&#34;: 20
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">}
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOF</span>
-</span></span><span style="display:flex;"><span>        warn <span style="color:#e6db74">&#34;IMPORTANTE: Editá </span>$JACKETT_KEY_FILE<span style="color:#e6db74"> con tu API key de http://localhost:9117&#34;</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># Completar campos faltantes (campos del artículo)</span>
-</span></span><span style="display:flex;"><span>        local updated
-</span></span><span style="display:flex;"><span>        updated<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>jq <span style="color:#e6db74">&#39;. + {
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            &#34;url&#34;:           (.url           // &#34;http://127.0.0.1:9117&#34;),
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            &#34;tracker_first&#34;: (.tracker_first // false),
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            &#34;thread_count&#34;:  (.thread_count  // 20)
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">          }&#39;</span> <span style="color:#e6db74">&#34;</span>$JACKETT_KEY_FILE<span style="color:#e6db74">&#34;</span> 2&gt;/dev/null<span style="color:#66d9ef">)</span> <span style="color:#f92672">||</span> true
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> -n <span style="color:#e6db74">&#34;</span>$updated<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
-</span></span><span style="display:flex;"><span>            echo <span style="color:#e6db74">&#34;</span>$updated<span style="color:#e6db74">&#34;</span> &gt; <span style="color:#e6db74">&#34;</span>$JACKETT_KEY_FILE<span style="color:#e6db74">&#34;</span>
-</span></span><span style="display:flex;"><span>            ok <span style="color:#e6db74">&#34;jackett.json verificado.&#34;</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">fi</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># ─── qBittorrent.conf ────────────────────────────────────────────────────────</span>
-</span></span><span style="display:flex;"><span>configure_qbt<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
-</span></span><span style="display:flex;"><span>    info <span style="color:#e6db74">&#34;Configurando qBittorrent.conf...&#34;</span>
-</span></span><span style="display:flex;"><span>    mkdir -p <span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>dirname <span style="color:#e6db74">&#34;</span>$QBT_CONF<span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    local PASS_LINE
-</span></span><span style="display:flex;"><span>    PASS_LINE<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;WebUI\Password_PBKDF2=&#34;@ByteArray(ARQ77eY1NUZaQsuDHbIMCA==:0WMRkYTUWVT9wVvdDtHAjU9b3b7uB8NR1Gur2hmQCvCDpm39Q+PsJRJPaCU51dEiz+dTzh8qbPsL8WkFljQYFQ==)&#34;&#39;</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> ! -f <span style="color:#e6db74">&#34;</span>$QBT_CONF<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
-</span></span><span style="display:flex;"><span>        cat &gt; <span style="color:#e6db74">&#34;</span>$QBT_CONF<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&lt;&lt;EOF
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">[Preferences]
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">${PASS_LINE}
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">WebUI\Port=8080
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">WebUI\Username=admin
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">WebUI\LocalHostAuth=false
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOF</span>
-</span></span><span style="display:flex;"><span>        ok <span style="color:#e6db74">&#34;qBittorrent.conf creado.&#34;</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># grep devuelve 1 si no encuentra → no usar set -e aquí</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> grep -qF <span style="color:#e6db74">&#39;Password_PBKDF2&#39;</span> <span style="color:#e6db74">&#34;</span>$QBT_CONF<span style="color:#e6db74">&#34;</span> 2&gt;/dev/null; <span style="color:#66d9ef">then</span>
-</span></span><span style="display:flex;"><span>        ok <span style="color:#e6db74">&#34;Contraseña ya configurada en qBittorrent.conf.&#34;</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">elif</span> grep -q <span style="color:#e6db74">&#39;^\[Preferences\]&#39;</span> <span style="color:#e6db74">&#34;</span>$QBT_CONF<span style="color:#e6db74">&#34;</span> 2&gt;/dev/null; <span style="color:#66d9ef">then</span>
-</span></span><span style="display:flex;"><span>        sed -i <span style="color:#e6db74">&#34;/^\[Preferences\]/a </span><span style="color:#e6db74">${</span>PASS_LINE<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;</span>$QBT_CONF<span style="color:#e6db74">&#34;</span>
-</span></span><span style="display:flex;"><span>        ok <span style="color:#e6db74">&#34;Contraseña insertada en [Preferences].&#34;</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>
-</span></span><span style="display:flex;"><span>        printf <span style="color:#e6db74">&#39;\n[Preferences]\n%s\n&#39;</span> <span style="color:#e6db74">&#34;</span>$PASS_LINE<span style="color:#e6db74">&#34;</span> &gt;&gt; <span style="color:#e6db74">&#34;</span>$QBT_CONF<span style="color:#e6db74">&#34;</span>
-</span></span><span style="display:flex;"><span>        ok <span style="color:#e6db74">&#34;Sección [Preferences] creada con contraseña.&#34;</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># ─── qBittorrent-nox ─────────────────────────────────────────────────────────</span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># El servicio systemd corre como usuario &#39;qbt&#39;, con su propia config en</span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># /var/lib/qbittorrent/.config/qBittorrent/qBittorrent.conf</span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># La contraseña debe estar ahí, no en $HOME del usuario actual.</span>
-</span></span><span style="display:flex;"><span>QBT_CONF_SYS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/var/lib/qbittorrent/.config/qBittorrent/qBittorrent.conf&#34;</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>configure_qbt_system<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Usar single quotes para evitar problemas con los caracteres especiales</span>
-</span></span><span style="display:flex;"><span>    local PASS_LINE
-</span></span><span style="display:flex;"><span>    PASS_LINE<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;WebUI\Password_PBKDF2=&#34;@ByteArray(ARQ77eY1NUZaQsuDHbIMCA==:0WMRkYTUWVT9wVvdDtHAjU9b3b7uB8NR1Gur2hmQCvCDpm39Q+PsJRJPaCU51dEiz+dTzh8qbPsL8WkFljQYFQ==)&#34;&#39;</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> ! -f <span style="color:#e6db74">&#34;</span>$QBT_CONF_SYS<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
-</span></span><span style="display:flex;"><span>        info <span style="color:#e6db74">&#34;Creando config del servicio en </span>$QBT_CONF_SYS<span style="color:#e6db74">...&#34;</span>
-</span></span><span style="display:flex;"><span>        sudo mkdir -p <span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>dirname <span style="color:#e6db74">&#34;</span>$QBT_CONF_SYS<span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
-</span></span><span style="display:flex;"><span>        printf <span style="color:#e6db74">&#39;[Preferences]\n%s\nWebUI\\Port=8080\nWebUI\\Username=admin\nWebUI\\LocalHostAuth=false\n&#39;</span> <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;</span>$PASS_LINE<span style="color:#e6db74">&#34;</span> | sudo tee <span style="color:#e6db74">&#34;</span>$QBT_CONF_SYS<span style="color:#e6db74">&#34;</span> &gt; /dev/null
-</span></span><span style="display:flex;"><span>        sudo chown -R qbt:qbt <span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>dirname <span style="color:#e6db74">&#34;</span>$QBT_CONF_SYS<span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span> 2&gt;/dev/null <span style="color:#f92672">||</span> true
-</span></span><span style="display:flex;"><span>        ok <span style="color:#e6db74">&#34;Config del servicio creada en </span>$QBT_CONF_SYS<span style="color:#e6db74">.&#34;</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">elif</span> sudo grep -qF <span style="color:#e6db74">&#39;Password_PBKDF2&#39;</span> <span style="color:#e6db74">&#34;</span>$QBT_CONF_SYS<span style="color:#e6db74">&#34;</span> 2&gt;/dev/null; <span style="color:#66d9ef">then</span>
-</span></span><span style="display:flex;"><span>        ok <span style="color:#e6db74">&#34;Contraseña ya configurada en config del servicio.&#34;</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>
-</span></span><span style="display:flex;"><span>        sudo sed -i <span style="color:#e6db74">&#34;/^\[Preferences\]/a </span><span style="color:#e6db74">${</span>PASS_LINE<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;</span>$QBT_CONF_SYS<span style="color:#e6db74">&#34;</span> 2&gt;/dev/null <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span>            <span style="color:#f92672">&amp;&amp;</span> ok <span style="color:#e6db74">&#34;Contraseña insertada en config del servicio.&#34;</span> <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span>            <span style="color:#f92672">||</span> warn <span style="color:#e6db74">&#34;No se pudo escribir en </span>$QBT_CONF_SYS<span style="color:#e6db74">. La contraseña será temporal (se leerá del journal).&#34;</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
-</span></span><span style="display:flex;"><span>start_qbt<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> curl -sf <span style="color:#e6db74">&#34;</span>$QBT_HOST<span style="color:#e6db74">/api/v2/app/version&#34;</span> &amp;&gt;/dev/null; <span style="color:#66d9ef">then</span>
-</span></span><span style="display:flex;"><span>        ok <span style="color:#e6db74">&#34;qBittorrent-nox ya está corriendo.&#34;</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Configurar la contraseña en la config del servicio (usuario qbt)</span>
-</span></span><span style="display:flex;"><span>    configure_qbt_system
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Crear directorio de descarga con permisos para el usuario qbt</span>
-</span></span><span style="display:flex;"><span>    sudo mkdir -p <span style="color:#e6db74">&#34;</span>$DOWNLOAD_DIR<span style="color:#e6db74">&#34;</span>
-</span></span><span style="display:flex;"><span>    sudo chown qbt:qbt <span style="color:#e6db74">&#34;</span>$DOWNLOAD_DIR<span style="color:#e6db74">&#34;</span> 2&gt;/dev/null <span style="color:#f92672">||</span> true
-</span></span><span style="display:flex;"><span>    sudo chmod <span style="color:#ae81ff">775</span> <span style="color:#e6db74">&#34;</span>$DOWNLOAD_DIR<span style="color:#e6db74">&#34;</span> 2&gt;/dev/null <span style="color:#f92672">||</span> true
-</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Agregar tu usuario al grupo qbt para que también puedas leer los archivos</span>
-</span></span><span style="display:flex;"><span>    sudo usermod -aG qbt <span style="color:#e6db74">&#34;</span>$USER<span style="color:#e6db74">&#34;</span> 2&gt;/dev/null <span style="color:#f92672">||</span> true
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    info <span style="color:#e6db74">&#34;Iniciando qBittorrent-nox via systemd...&#34;</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> sudo systemctl start qbittorrent-nox; <span style="color:#66d9ef">then</span>
-</span></span><span style="display:flex;"><span>        ok <span style="color:#e6db74">&#34;Comando systemctl start ejecutado.&#34;</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>
-</span></span><span style="display:flex;"><span>        die <span style="color:#e6db74">&#34;sudo systemctl start qbittorrent-nox falló. Revisá el servicio.&#34;</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    info <span style="color:#e6db74">&#34;Esperando que la WebUI responda en </span>$QBT_HOST<span style="color:#e6db74">...&#34;</span>
-</span></span><span style="display:flex;"><span>    local tries<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> true; <span style="color:#66d9ef">do</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> curl -sf <span style="color:#e6db74">&#34;</span>$QBT_HOST<span style="color:#e6db74">/api/v2/app/version&#34;</span> &amp;&gt;/dev/null; <span style="color:#66d9ef">then</span>
-</span></span><span style="display:flex;"><span>            ok <span style="color:#e6db74">&#34;qBittorrent-nox corriendo.&#34;</span>
-</span></span><span style="display:flex;"><span>            break
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">fi</span>
-</span></span><span style="display:flex;"><span>        tries<span style="color:#f92672">=</span><span style="color:#66d9ef">$((</span> tries <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span> <span style="color:#66d9ef">))</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> $tries -ge <span style="color:#ae81ff">30</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
-</span></span><span style="display:flex;"><span>            error <span style="color:#e6db74">&#34;No responde tras 30s. Status:&#34;</span>
-</span></span><span style="display:flex;"><span>            sudo systemctl status qbittorrent-nox --no-pager -l &gt;&amp;<span style="color:#ae81ff">2</span>
-</span></span><span style="display:flex;"><span>            die <span style="color:#e6db74">&#34;qBittorrent-nox no responde en </span>$QBT_HOST<span style="color:#e6db74">&#34;</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">fi</span>
-</span></span><span style="display:flex;"><span>        sleep <span style="color:#ae81ff">1</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">done</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># ─── Login ───────────────────────────────────────────────────────────────────</span>
-</span></span><span style="display:flex;"><span>login_qbt<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
-</span></span><span style="display:flex;"><span>    info <span style="color:#e6db74">&#34;Login en qBittorrent WebUI (user: </span>$QBT_USER<span style="color:#e6db74"> / pass: </span>$QBT_PASS<span style="color:#e6db74">)...&#34;</span>
-</span></span><span style="display:flex;"><span>    local result
-</span></span><span style="display:flex;"><span>    result<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>curl -sf -X POST <span style="color:#e6db74">&#34;</span>$QBT_HOST<span style="color:#e6db74">/api/v2/auth/login&#34;</span> <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span>        -d <span style="color:#e6db74">&#34;username=</span><span style="color:#e6db74">${</span>QBT_USER<span style="color:#e6db74">}</span><span style="color:#e6db74">&amp;password=</span><span style="color:#e6db74">${</span>QBT_PASS<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span>        -c <span style="color:#e6db74">&#34;</span>$QBT_COOKIES<span style="color:#e6db74">&#34;</span> 2&gt;/dev/null<span style="color:#66d9ef">)</span> <span style="color:#f92672">||</span> result<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;</span>$result<span style="color:#e6db74">&#34;</span> in
-</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;Ok.&#34;</span><span style="color:#f92672">)</span>
-</span></span><span style="display:flex;"><span>            ok <span style="color:#e6db74">&#34;Login exitoso.&#34;</span>
-</span></span><span style="display:flex;"><span>            ;;
-</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;Fails.&#34;</span><span style="color:#f92672">)</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#75715e"># El servicio systemd puede haber generado una contraseña temporal.</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#75715e"># Leerla del journal y reintentar.</span>
-</span></span><span style="display:flex;"><span>            warn <span style="color:#e6db74">&#34;Contraseña incorrecta. Buscando contraseña temporal en el journal...&#34;</span>
-</span></span><span style="display:flex;"><span>            local tmp_pass
-</span></span><span style="display:flex;"><span>            tmp_pass<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>sudo journalctl -u qbittorrent-nox -n <span style="color:#ae81ff">50</span> --no-pager 2&gt;/dev/null <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span>                | grep -oP <span style="color:#e6db74">&#34;temporary password is provided for this session: \K\S+&#34;</span> | tail -1<span style="color:#66d9ef">)</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> -n <span style="color:#e6db74">&#34;</span>$tmp_pass<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
-</span></span><span style="display:flex;"><span>                warn <span style="color:#e6db74">&#34;Contraseña temporal encontrada: </span>$tmp_pass<span style="color:#e6db74">&#34;</span>
-</span></span><span style="display:flex;"><span>                warn <span style="color:#e6db74">&#34;Para evitar esto en el futuro, el script intentará fijarla via API...&#34;</span>
-</span></span><span style="display:flex;"><span>                result<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>curl -sf -X POST <span style="color:#e6db74">&#34;</span>$QBT_HOST<span style="color:#e6db74">/api/v2/auth/login&#34;</span> <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span>                    -d <span style="color:#e6db74">&#34;username=admin&amp;password=</span><span style="color:#e6db74">${</span>tmp_pass<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span>                    -c <span style="color:#e6db74">&#34;</span>$QBT_COOKIES<span style="color:#e6db74">&#34;</span> 2&gt;/dev/null<span style="color:#66d9ef">)</span> <span style="color:#f92672">||</span> result<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>
-</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span>$result<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;Ok.&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
-</span></span><span style="display:flex;"><span>                    ok <span style="color:#e6db74">&#34;Login con contraseña temporal exitoso.&#34;</span>
-</span></span><span style="display:flex;"><span>                    <span style="color:#75715e"># Fijar la contraseña adminadmin para la próxima vez</span>
-</span></span><span style="display:flex;"><span>                    curl -sf -X POST <span style="color:#e6db74">&#34;</span>$QBT_HOST<span style="color:#e6db74">/api/v2/app/setPreferences&#34;</span> <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span>                        -b <span style="color:#e6db74">&#34;</span>$QBT_COOKIES<span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span>                        -d <span style="color:#e6db74">&#34;json={&#34;</span>web_ui_password<span style="color:#e6db74">&#34;:&#34;</span>adminadmin<span style="color:#e6db74">&#34;}&#34;</span> &amp;&gt;/dev/null <span style="color:#f92672">||</span> true
-</span></span><span style="display:flex;"><span>                    ok <span style="color:#e6db74">&#34;Contraseña fijada a &#39;adminadmin&#39; para próximas sesiones.&#34;</span>
-</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">else</span>
-</span></span><span style="display:flex;"><span>                    die <span style="color:#e6db74">&#34;Login fallido incluso con contraseña temporal. Corré --reset.&#34;</span>
-</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">fi</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">else</span>
-</span></span><span style="display:flex;"><span>                die <span style="color:#e6db74">&#34;Login fallido y no se encontró contraseña temporal. Corré --reset.&#34;</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">fi</span>
-</span></span><span style="display:flex;"><span>            ;;
-</span></span><span style="display:flex;"><span>        *<span style="color:#f92672">)</span>
-</span></span><span style="display:flex;"><span>            warn <span style="color:#e6db74">&#34;Respuesta login: &#39;</span><span style="color:#e6db74">${</span>result<span style="color:#66d9ef">:-</span>vacía<span style="color:#e6db74">}</span><span style="color:#e6db74">&#39; (asumiendo sesión activa).&#34;</span>
-</span></span><span style="display:flex;"><span>            ;;
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">esac</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># ─── Jackett ─────────────────────────────────────────────────────────────────</span>
-</span></span><span style="display:flex;"><span>start_jackett<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
-</span></span><span style="display:flex;"><span>    info <span style="color:#e6db74">&#34;Iniciando Jackett (systemd)...&#34;</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> systemctl is-active --quiet jackett 2&gt;/dev/null; <span style="color:#66d9ef">then</span>
-</span></span><span style="display:flex;"><span>        ok <span style="color:#e6db74">&#34;Jackett ya está activo.&#34;</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>
-</span></span><span style="display:flex;"><span>        sudo systemctl start jackett 2&gt;/dev/null <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span>            <span style="color:#f92672">&amp;&amp;</span> ok <span style="color:#e6db74">&#34;Jackett iniciado.&#34;</span> <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span>            <span style="color:#f92672">||</span> warn <span style="color:#e6db74">&#34;No se pudo iniciar. ¿Instalado? (yay -S jackett-bin)&#34;</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    info <span style="color:#e6db74">&#34;Esperando que Jackett responda en </span>$JACKETT_HOST<span style="color:#e6db74">...&#34;</span>
-</span></span><span style="display:flex;"><span>    local tries<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> true; <span style="color:#66d9ef">do</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> curl -sf <span style="color:#e6db74">&#34;</span>$JACKETT_HOST<span style="color:#e6db74">&#34;</span> &amp;&gt;/dev/null; <span style="color:#66d9ef">then</span>
-</span></span><span style="display:flex;"><span>            ok <span style="color:#e6db74">&#34;Jackett disponible.&#34;</span>
-</span></span><span style="display:flex;"><span>            break
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">fi</span>
-</span></span><span style="display:flex;"><span>        tries<span style="color:#f92672">=</span><span style="color:#66d9ef">$((</span> tries <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span> <span style="color:#66d9ef">))</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#f92672">[[</span> $tries -ge <span style="color:#ae81ff">25</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">&amp;&amp;</span> die <span style="color:#e6db74">&#34;Jackett no responde en </span>$JACKETT_HOST<span style="color:#e6db74"> tras 25s.&#34;</span>
-</span></span><span style="display:flex;"><span>        sleep <span style="color:#ae81ff">1</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">done</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>get_jackett_key<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
-</span></span><span style="display:flex;"><span>    setup_jackett_json
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    JACKETT_API_KEY<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>jq -r <span style="color:#e6db74">&#39;.api_key // empty&#39;</span> <span style="color:#e6db74">&#34;</span>$JACKETT_KEY_FILE<span style="color:#e6db74">&#34;</span> 2&gt;/dev/null<span style="color:#66d9ef">)</span> <span style="color:#f92672">||</span> JACKETT_API_KEY<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> -z <span style="color:#e6db74">&#34;</span>$JACKETT_API_KEY<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">||</span> <span style="color:#e6db74">&#34;</span>$JACKETT_API_KEY<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;YOUR_API_KEY_HERE&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
-</span></span><span style="display:flex;"><span>        die <span style="color:#e6db74">&#34;API key no configurada. Editá </span>$JACKETT_KEY_FILE<span style="color:#e6db74"> con la key de http://localhost:9117&#34;</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
-</span></span><span style="display:flex;"><span>    ok <span style="color:#e6db74">&#34;API key lista.&#34;</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>warn_flaresolverr<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
-</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;&#34;</span>
-</span></span><span style="display:flex;"><span>    warn <span style="color:#e6db74">&#34;Si no hay resultados, algunos indexers necesitan FlareSolverr: </span><span style="color:#e6db74">${</span>FLARESOLVERR_INDEXERS[*]<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
-</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;&#34;</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># ─── Búsqueda ────────────────────────────────────────────────────────────────</span>
-</span></span><span style="display:flex;"><span>search_torrent<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
-</span></span><span style="display:flex;"><span>    local query_encoded
-</span></span><span style="display:flex;"><span>    query_encoded<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>python3 -c <span style="color:#e6db74">&#34;import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1]))&#34;</span> <span style="color:#e6db74">&#34;</span>$QUERY<span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">)</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    info <span style="color:#e6db74">&#34;Buscando &#39;</span><span style="color:#e6db74">${</span>BOLD<span style="color:#e6db74">}${</span>QUERY<span style="color:#e6db74">}${</span>RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">&#39; en todos los indexers de Jackett...&#34;</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    SEARCH_RESULTS<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>curl -sf <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>JACKETT_HOST<span style="color:#e6db74">}</span><span style="color:#e6db74">/api/v2.0/indexers/all/results?Query=</span><span style="color:#e6db74">${</span>query_encoded<span style="color:#e6db74">}</span><span style="color:#e6db74">&amp;apikey=</span><span style="color:#e6db74">${</span>JACKETT_API_KEY<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span>        2&gt;/dev/null<span style="color:#66d9ef">)</span> <span style="color:#f92672">||</span> SEARCH_RESULTS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> -z <span style="color:#e6db74">&#34;</span>$SEARCH_RESULTS<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
-</span></span><span style="display:flex;"><span>        warn_flaresolverr
-</span></span><span style="display:flex;"><span>        die <span style="color:#e6db74">&#34;Sin respuesta de Jackett. ¿API key correcta? ¿Jackett corriendo?&#34;</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    local total
-</span></span><span style="display:flex;"><span>    total<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>echo <span style="color:#e6db74">&#34;</span>$SEARCH_RESULTS<span style="color:#e6db74">&#34;</span> | jq <span style="color:#e6db74">&#39;.Results | length&#39;</span> 2&gt;/dev/null<span style="color:#66d9ef">)</span> <span style="color:#f92672">||</span> total<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span>$total<span style="color:#e6db74">&#34;</span> -eq <span style="color:#ae81ff">0</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
-</span></span><span style="display:flex;"><span>        warn_flaresolverr
-</span></span><span style="display:flex;"><span>        die <span style="color:#e6db74">&#34;Sin resultados para &#39;</span><span style="color:#e6db74">${</span>QUERY<span style="color:#e6db74">}</span><span style="color:#e6db74">&#39;. Agregá más indexers en http://localhost:9117&#34;</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    info <span style="color:#e6db74">&#34;Resultados encontrados: </span><span style="color:#e6db74">${</span>BOLD<span style="color:#e6db74">}</span>$total<span style="color:#e6db74">${</span>RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
-</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;&#34;</span>
-</span></span><span style="display:flex;"><span>    info <span style="color:#e6db74">&#34;Top 5 por seeds:&#34;</span>
-</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;</span>$SEARCH_RESULTS<span style="color:#e6db74">&#34;</span> | jq -r <span style="color:#e6db74">&#39;
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      .Results
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      | map(select(.Seeders &gt; 0))
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      | sort_by(-.Seeders)
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      | .[0:5][]
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      | &#34;  \(.Seeders) seeds | \(.Title[:65])&#34;
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    &#39;</span> 2&gt;/dev/null <span style="color:#f92672">||</span> true
-</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;&#34;</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># ─── Filtrar ─────────────────────────────────────────────────────────────────</span>
-</span></span><span style="display:flex;"><span>pick_torrent<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
-</span></span><span style="display:flex;"><span>    info <span style="color:#e6db74">&#34;Seleccionando: menor calidad + más seeds + magnet link...&#34;</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Intento 1: sin 4K/1080p</span>
-</span></span><span style="display:flex;"><span>    MAGNET<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>echo <span style="color:#e6db74">&#34;</span>$SEARCH_RESULTS<span style="color:#e6db74">&#34;</span> | jq -r <span style="color:#e6db74">&#39;
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      .Results
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      | map(select(
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">          .Seeders &gt; 0 and
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">          (.Guid | startswith(&#34;magnet:?&#34;)) and
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">          (.Title | test(&#34;4K|2160p|UHD|1080p|FHD|REMUX&#34;; &#34;i&#34;) | not)
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        ))
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      | sort_by(-.Seeders)
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      | .[0].Guid // empty
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    &#39;</span> 2&gt;/dev/null<span style="color:#66d9ef">)</span> <span style="color:#f92672">||</span> MAGNET<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Intento 2: sin 4K solamente</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> -z <span style="color:#e6db74">&#34;</span>$MAGNET<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">||</span> <span style="color:#e6db74">&#34;</span>$MAGNET<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;null&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
-</span></span><span style="display:flex;"><span>        warn <span style="color:#e6db74">&#34;No hay baja calidad. Probando 1080p...&#34;</span>
-</span></span><span style="display:flex;"><span>        MAGNET<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>echo <span style="color:#e6db74">&#34;</span>$SEARCH_RESULTS<span style="color:#e6db74">&#34;</span> | jq -r <span style="color:#e6db74">&#39;
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">          .Results
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">          | map(select(
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">              .Seeders &gt; 0 and
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">              (.Guid | startswith(&#34;magnet:?&#34;)) and
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">              (.Title | test(&#34;4K|2160p|UHD&#34;; &#34;i&#34;) | not)
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            ))
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">          | sort_by(-.Seeders)
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">          | .[0].Guid // empty
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        &#39;</span> 2&gt;/dev/null<span style="color:#66d9ef">)</span> <span style="color:#f92672">||</span> MAGNET<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Intento 3: cualquier magnet con seeds</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> -z <span style="color:#e6db74">&#34;</span>$MAGNET<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">||</span> <span style="color:#e6db74">&#34;</span>$MAGNET<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;null&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
-</span></span><span style="display:flex;"><span>        warn <span style="color:#e6db74">&#34;Usando cualquier calidad disponible...&#34;</span>
-</span></span><span style="display:flex;"><span>        MAGNET<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>echo <span style="color:#e6db74">&#34;</span>$SEARCH_RESULTS<span style="color:#e6db74">&#34;</span> | jq -r <span style="color:#e6db74">&#39;
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">          .Results
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">          | map(select(.Seeders &gt; 0 and (.Guid | startswith(&#34;magnet:?&#34;))))
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">          | sort_by(-.Seeders)
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">          | .[0].Guid // empty
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        &#39;</span> 2&gt;/dev/null<span style="color:#66d9ef">)</span> <span style="color:#f92672">||</span> MAGNET<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> -z <span style="color:#e6db74">&#34;</span>$MAGNET<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">||</span> <span style="color:#e6db74">&#34;</span>$MAGNET<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;null&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
-</span></span><span style="display:flex;"><span>        warn_flaresolverr
-</span></span><span style="display:flex;"><span>        die <span style="color:#e6db74">&#34;No se encontró magnet link. Revisá los indexers activos en Jackett.&#34;</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    local title seeders
-</span></span><span style="display:flex;"><span>    title<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>echo <span style="color:#e6db74">&#34;</span>$SEARCH_RESULTS<span style="color:#e6db74">&#34;</span> | jq -r --arg g <span style="color:#e6db74">&#34;</span>$MAGNET<span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#39;.Results | map(select(.Guid == $g)) | .[0].Title // &#34;desconocido&#34;&#39;</span> 2&gt;/dev/null<span style="color:#66d9ef">)</span> <span style="color:#f92672">||</span> title<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;?&#34;</span>
-</span></span><span style="display:flex;"><span>    seeders<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>echo <span style="color:#e6db74">&#34;</span>$SEARCH_RESULTS<span style="color:#e6db74">&#34;</span> | jq -r --arg g <span style="color:#e6db74">&#34;</span>$MAGNET<span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#39;.Results | map(select(.Guid == $g)) | .[0].Seeders // 0&#39;</span> 2&gt;/dev/null<span style="color:#66d9ef">)</span> <span style="color:#f92672">||</span> seeders<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;?&#34;</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    ok <span style="color:#e6db74">&#34;Elegido:  </span><span style="color:#e6db74">${</span>BOLD<span style="color:#e6db74">}${</span>title<span style="color:#e6db74">}${</span>RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
-</span></span><span style="display:flex;"><span>    ok <span style="color:#e6db74">&#34;Seeds:    </span><span style="color:#e6db74">${</span>BOLD<span style="color:#e6db74">}${</span>seeders<span style="color:#e6db74">}${</span>RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
-</span></span><span style="display:flex;"><span>    info <span style="color:#e6db74">&#34;Magnet:   </span><span style="color:#e6db74">${</span>MAGNET:0:90<span style="color:#e6db74">}</span><span style="color:#e6db74">...&#34;</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># ─── Agregar torrent ─────────────────────────────────────────────────────────</span>
-</span></span><span style="display:flex;"><span>add_torrent<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
-</span></span><span style="display:flex;"><span>    info <span style="color:#e6db74">&#34;Agregando torrent a qBittorrent-nox...&#34;</span>
-</span></span><span style="display:flex;"><span>    local resp
-</span></span><span style="display:flex;"><span>    resp<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>curl -sf -X POST <span style="color:#e6db74">&#34;</span>$QBT_HOST<span style="color:#e6db74">/api/v2/torrents/add&#34;</span> <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span>        -b <span style="color:#e6db74">&#34;</span>$QBT_COOKIES<span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span>        --data-urlencode <span style="color:#e6db74">&#34;urls=</span>$MAGNET<span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span>        -d <span style="color:#e6db74">&#34;savepath=</span>$DOWNLOAD_DIR<span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span>        -d <span style="color:#e6db74">&#34;category=streamed&#34;</span> <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span>        -d <span style="color:#e6db74">&#34;sequentialDownload=true&#34;</span> <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span>        -d <span style="color:#e6db74">&#34;firstLastPiecePrio=true&#34;</span> <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span>        2&gt;/dev/null<span style="color:#66d9ef">)</span> <span style="color:#f92672">||</span> resp<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;(sin respuesta)&#34;</span>
-</span></span><span style="display:flex;"><span>    ok <span style="color:#e6db74">&#34;qBittorrent: </span><span style="color:#e6db74">${</span>resp<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
-</span></span><span style="display:flex;"><span>    info <span style="color:#e6db74">&#34;Descargando en: </span>$DOWNLOAD_DIR<span style="color:#e6db74">&#34;</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># ─── Esperar y reproducir ────────────────────────────────────────────────────</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># ─── Esperar y reproducir ────────────────────────────────────────────────────</span>
-</span></span><span style="display:flex;"><span>wait_and_play<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
-</span></span><span style="display:flex;"><span>    info <span style="color:#e6db74">&#34;Esperando datos para reproducir... (Ctrl+C para cancelar)&#34;</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Extraer hash del magnet para consultar qBittorrent directamente</span>
-</span></span><span style="display:flex;"><span>    local torrent_hash state<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span> found_file<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span> tries<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span> max_wait<span style="color:#f92672">=</span><span style="color:#ae81ff">360</span> min_size<span style="color:#f92672">=</span><span style="color:#ae81ff">52428800</span> metadl_count<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>
-</span></span><span style="display:flex;"><span>    torrent_hash<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>echo <span style="color:#e6db74">&#34;</span>$MAGNET<span style="color:#e6db74">&#34;</span> | grep -oE <span style="color:#e6db74">&#39;btih:[a-fA-F0-9]+&#39;</span> | cut -d: -f2 | tr <span style="color:#e6db74">&#39;[:upper:]&#39;</span> <span style="color:#e6db74">&#39;[:lower:]&#39;</span><span style="color:#66d9ef">)</span>
-</span></span><span style="display:flex;"><span>    info <span style="color:#e6db74">&#34;Hash: </span>$torrent_hash<span style="color:#e6db74">&#34;</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> <span style="color:#f92672">[[</span> $tries -lt $max_wait <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">do</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># Consultar estado y path via API — funciona aunque ya esté descargado</span>
-</span></span><span style="display:flex;"><span>        local torrent_info content_path save_path
-</span></span><span style="display:flex;"><span>        torrent_info<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>curl -sf <span style="color:#e6db74">&#34;</span>$QBT_HOST<span style="color:#e6db74">/api/v2/torrents/info?hashes=</span>$torrent_hash<span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span>            -b <span style="color:#e6db74">&#34;</span>$QBT_COOKIES<span style="color:#e6db74">&#34;</span> 2&gt;/dev/null<span style="color:#66d9ef">)</span> <span style="color:#f92672">||</span> torrent_info<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> -n <span style="color:#e6db74">&#34;</span>$torrent_info<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#e6db74">&#34;</span>$torrent_info<span style="color:#e6db74">&#34;</span> !<span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;[]&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
-</span></span><span style="display:flex;"><span>            state<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>echo <span style="color:#e6db74">&#34;</span>$torrent_info<span style="color:#e6db74">&#34;</span>       | jq -r <span style="color:#e6db74">&#39;.[0].state        // empty&#39;</span> 2&gt;/dev/null<span style="color:#66d9ef">)</span> <span style="color:#f92672">||</span> state<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>
-</span></span><span style="display:flex;"><span>            content_path<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>echo <span style="color:#e6db74">&#34;</span>$torrent_info<span style="color:#e6db74">&#34;</span> | jq -r <span style="color:#e6db74">&#39;.[0].content_path // empty&#39;</span> 2&gt;/dev/null<span style="color:#66d9ef">)</span> <span style="color:#f92672">||</span> content_path<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>
-</span></span><span style="display:flex;"><span>            save_path<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>echo <span style="color:#e6db74">&#34;</span>$torrent_info<span style="color:#e6db74">&#34;</span>   | jq -r <span style="color:#e6db74">&#39;.[0].save_path    // empty&#39;</span> 2&gt;/dev/null<span style="color:#66d9ef">)</span> <span style="color:#f92672">||</span> save_path<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>
-</span></span><span style="display:flex;"><span>            local pct
-</span></span><span style="display:flex;"><span>            pct<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>echo <span style="color:#e6db74">&#34;</span>$torrent_info<span style="color:#e6db74">&#34;</span> | jq -r <span style="color:#e6db74">&#39;.[0].progress // 0&#39;</span> 2&gt;/dev/null<span style="color:#66d9ef">)</span> <span style="color:#f92672">||</span> pct<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>
-</span></span><span style="display:flex;"><span>            pct<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>awk <span style="color:#e6db74">&#34;BEGIN{printf \&#34;%.1f\&#34;, </span>$pct<span style="color:#e6db74"> * 100}&#34;</span> 2&gt;/dev/null<span style="color:#66d9ef">)</span> <span style="color:#f92672">||</span> pct<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;?&#34;</span>
-</span></span><span style="display:flex;"><span>            info <span style="color:#e6db74">&#34;Estado: </span><span style="color:#e6db74">${</span>state<span style="color:#66d9ef">:-</span>?<span style="color:#e6db74">}</span><span style="color:#e6db74"> | Progreso: </span><span style="color:#e6db74">${</span>pct<span style="color:#e6db74">}</span><span style="color:#e6db74">%&#34;</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>            <span style="color:#75715e"># metaDL por más de 30s = sin seeds reales → cancelar y reintentar</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span>$state<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;metaDL&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
-</span></span><span style="display:flex;"><span>                metadl_count<span style="color:#f92672">=</span><span style="color:#66d9ef">$((</span> metadl_count <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span> <span style="color:#66d9ef">))</span>
-</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> $metadl_count -ge <span style="color:#ae81ff">6</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
-</span></span><span style="display:flex;"><span>                    warn <span style="color:#e6db74">&#34;Sin seeds después de 30s (metaDL). Cancelando este torrent...&#34;</span>
-</span></span><span style="display:flex;"><span>                    curl -sf -X POST <span style="color:#e6db74">&#34;</span>$QBT_HOST<span style="color:#e6db74">/api/v2/torrents/delete&#34;</span>                         -b <span style="color:#e6db74">&#34;</span>$QBT_COOKIES<span style="color:#e6db74">&#34;</span>                         -d <span style="color:#e6db74">&#34;hashes=</span>$torrent_hash<span style="color:#e6db74">&amp;deleteFiles=false&#34;</span> &amp;&gt;/dev/null <span style="color:#f92672">||</span> true
-</span></span><span style="display:flex;"><span>                    warn <span style="color:#e6db74">&#34;Buscando otro resultado con más seeds...&#34;</span>
-</span></span><span style="display:flex;"><span>                    <span style="color:#75715e"># Reintentar pick_torrent excluyendo este magnet</span>
-</span></span><span style="display:flex;"><span>                    SEARCH_RESULTS<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>echo <span style="color:#e6db74">&#34;</span>$SEARCH_RESULTS<span style="color:#e6db74">&#34;</span> | jq                         --arg g <span style="color:#e6db74">&#34;</span>$MAGNET<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#39;[.Results[] | select(.Guid != $g)]&#39;</span>                         | jq <span style="color:#e6db74">&#39;{Results: .}&#39;</span> 2&gt;/dev/null<span style="color:#66d9ef">)</span> <span style="color:#f92672">||</span> true
-</span></span><span style="display:flex;"><span>                    pick_torrent
-</span></span><span style="display:flex;"><span>                    add_torrent
-</span></span><span style="display:flex;"><span>                    <span style="color:#75715e"># Reiniciar contadores</span>
-</span></span><span style="display:flex;"><span>                    torrent_hash<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>echo <span style="color:#e6db74">&#34;</span>$MAGNET<span style="color:#e6db74">&#34;</span> | grep -oE <span style="color:#e6db74">&#39;btih:[a-fA-F0-9]+&#39;</span> | cut -d: -f2 | tr <span style="color:#e6db74">&#39;[:upper:]&#39;</span> <span style="color:#e6db74">&#39;[:lower:]&#39;</span><span style="color:#66d9ef">)</span>
-</span></span><span style="display:flex;"><span>                    metadl_count<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>
-</span></span><span style="display:flex;"><span>                    tries<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>
-</span></span><span style="display:flex;"><span>                    info <span style="color:#e6db74">&#34;Nuevo hash: </span>$torrent_hash<span style="color:#e6db74">&#34;</span>
-</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">fi</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">else</span>
-</span></span><span style="display:flex;"><span>                metadl_count<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">fi</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">fi</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># Encontrar el archivo de video: content_path puede ser fichero o carpeta</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> -n <span style="color:#e6db74">&#34;</span>$content_path<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">&amp;&amp;</span> -e <span style="color:#e6db74">&#34;</span>$content_path<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> -d <span style="color:#e6db74">&#34;</span>$content_path<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
-</span></span><span style="display:flex;"><span>                found_file<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>find <span style="color:#e6db74">&#34;</span>$content_path<span style="color:#e6db74">&#34;</span> -type f <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span>                    <span style="color:#ae81ff">\(</span> -iname <span style="color:#e6db74">&#34;*.mkv&#34;</span> -o -iname <span style="color:#e6db74">&#34;*.mp4&#34;</span> -o -iname <span style="color:#e6db74">&#34;*.avi&#34;</span> <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span>                       -o -iname <span style="color:#e6db74">&#34;*.mov&#34;</span> -o -iname <span style="color:#e6db74">&#34;*.webm&#34;</span> -o -iname <span style="color:#e6db74">&#34;*.ts&#34;</span> <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span>                       -o -iname <span style="color:#e6db74">&#34;*.m4v&#34;</span> -o -iname <span style="color:#e6db74">&#34;*.m2ts&#34;</span> <span style="color:#ae81ff">\)</span> <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span>                    2&gt;/dev/null | <span style="color:#66d9ef">while</span> read -r f; <span style="color:#66d9ef">do</span>
-</span></span><span style="display:flex;"><span>                        stat -c <span style="color:#e6db74">&#34;%s %n&#34;</span> <span style="color:#e6db74">&#34;</span>$f<span style="color:#e6db74">&#34;</span> 2&gt;/dev/null
-</span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">done</span> | sort -rn | head -1 | cut -d<span style="color:#e6db74">&#39; &#39;</span> -f2-<span style="color:#66d9ef">)</span> <span style="color:#f92672">||</span> found_file<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">else</span>
-</span></span><span style="display:flex;"><span>                <span style="color:#75715e"># Verificar que sea video por extensión</span>
-</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>content_path,,<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> in
-</span></span><span style="display:flex;"><span>                    *.mkv|*.mp4|*.avi|*.mov|*.webm|*.ts|*.m4v|*.m2ts<span style="color:#f92672">)</span>
-</span></span><span style="display:flex;"><span>                        found_file<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$content_path<span style="color:#e6db74">&#34;</span> ;;
-</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">esac</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">fi</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">fi</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># Fallback: buscar el video más grande en DOWNLOAD_DIR (sin filtro de fecha)</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> -z <span style="color:#e6db74">&#34;</span>$found_file<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">&amp;&amp;</span> -d <span style="color:#e6db74">&#34;</span>$DOWNLOAD_DIR<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
-</span></span><span style="display:flex;"><span>            found_file<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>find <span style="color:#e6db74">&#34;</span>$DOWNLOAD_DIR<span style="color:#e6db74">&#34;</span> -type f <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span>                <span style="color:#ae81ff">\(</span> -iname <span style="color:#e6db74">&#34;*.mkv&#34;</span> -o -iname <span style="color:#e6db74">&#34;*.mp4&#34;</span> -o -iname <span style="color:#e6db74">&#34;*.avi&#34;</span> <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span>                   -o -iname <span style="color:#e6db74">&#34;*.mov&#34;</span> -o -iname <span style="color:#e6db74">&#34;*.webm&#34;</span> -o -iname <span style="color:#e6db74">&#34;*.ts&#34;</span> <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span>                   -o -iname <span style="color:#e6db74">&#34;*.m4v&#34;</span> -o -iname <span style="color:#e6db74">&#34;*.m2ts&#34;</span> <span style="color:#ae81ff">\)</span> <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span>                2&gt;/dev/null | <span style="color:#66d9ef">while</span> read -r f; <span style="color:#66d9ef">do</span>
-</span></span><span style="display:flex;"><span>                    stat -c <span style="color:#e6db74">&#34;%s %n&#34;</span> <span style="color:#e6db74">&#34;</span>$f<span style="color:#e6db74">&#34;</span> 2&gt;/dev/null
-</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">done</span> | sort -rn | head -1 | cut -d<span style="color:#e6db74">&#39; &#39;</span> -f2-<span style="color:#66d9ef">)</span> <span style="color:#f92672">||</span> found_file<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">fi</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> -n <span style="color:#e6db74">&#34;</span>$found_file<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">&amp;&amp;</span> -f <span style="color:#e6db74">&#34;</span>$found_file<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
-</span></span><span style="display:flex;"><span>            local size size_mb
-</span></span><span style="display:flex;"><span>            size<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>stat -c%s <span style="color:#e6db74">&#34;</span>$found_file<span style="color:#e6db74">&#34;</span> 2&gt;/dev/null<span style="color:#66d9ef">)</span> <span style="color:#f92672">||</span> size<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>
-</span></span><span style="display:flex;"><span>            size_mb<span style="color:#f92672">=</span><span style="color:#66d9ef">$((</span> size <span style="color:#f92672">/</span> <span style="color:#ae81ff">1048576</span> <span style="color:#66d9ef">))</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#75715e"># Si ya terminó de bajar → reproducir de inmediato</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;</span>$state<span style="color:#e6db74">&#34;</span> in
-</span></span><span style="display:flex;"><span>                uploading|stalledUP|pausedUP|forcedUP|checkingUP|completed<span style="color:#f92672">)</span>
-</span></span><span style="display:flex;"><span>                    ok <span style="color:#e6db74">&#34;Descarga completa (</span><span style="color:#e6db74">${</span>size_mb<span style="color:#e6db74">}</span><span style="color:#e6db74"> MB) — reproduciendo.&#34;</span>
-</span></span><span style="display:flex;"><span>                    break ;;
-</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">esac</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#75715e"># Si está bajando y tiene suficientes datos para bufferear</span>
-</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> $size -gt $min_size <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
-</span></span><span style="display:flex;"><span>                ok <span style="color:#e6db74">&#34;Suficientes datos (</span><span style="color:#e6db74">${</span>size_mb<span style="color:#e6db74">}</span><span style="color:#e6db74"> MB) — reproduciendo.&#34;</span>
-</span></span><span style="display:flex;"><span>                break
-</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">fi</span>
-</span></span><span style="display:flex;"><span>            info <span style="color:#e6db74">&#34;Descargando... </span><span style="color:#e6db74">${</span>size_mb<span style="color:#e6db74">}</span><span style="color:#e6db74"> MB (mínimo 50 MB para reproducir)&#34;</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">else</span>
-</span></span><span style="display:flex;"><span>            info <span style="color:#e6db74">&#34;Esperando inicio de descarga... (</span><span style="color:#e6db74">${</span>tries<span style="color:#e6db74">}</span><span style="color:#e6db74">s)&#34;</span>
-</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">fi</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>        sleep <span style="color:#ae81ff">5</span>
-</span></span><span style="display:flex;"><span>        tries<span style="color:#f92672">=</span><span style="color:#66d9ef">$((</span> tries <span style="color:#f92672">+</span> <span style="color:#ae81ff">5</span> <span style="color:#66d9ef">))</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">done</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> -z <span style="color:#e6db74">&#34;</span>$found_file<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">||</span> ! -f <span style="color:#e6db74">&#34;</span>$found_file<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
-</span></span><span style="display:flex;"><span>        warn <span style="color:#e6db74">&#34;No se encontró archivo de video.&#34;</span>
-</span></span><span style="display:flex;"><span>        warn <span style="color:#e6db74">&#34;Buscá en: </span>$DOWNLOAD_DIR<span style="color:#e6db74">&#34;</span>
-</span></span><span style="display:flex;"><span>        warn <span style="color:#e6db74">&#34;O en la WebUI: </span>$QBT_HOST<span style="color:#e6db74">&#34;</span>
-</span></span><span style="display:flex;"><span>        exit <span style="color:#ae81ff">0</span>
-</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;&#34;</span>
-</span></span><span style="display:flex;"><span>    ok <span style="color:#e6db74">&#34;▶  Reproduciendo: </span><span style="color:#66d9ef">$(</span>basename <span style="color:#e6db74">&#34;</span>$found_file<span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
-</span></span><span style="display:flex;"><span>    mpv <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span>        --cache<span style="color:#f92672">=</span>yes <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span>        --cache-secs<span style="color:#f92672">=</span><span style="color:#ae81ff">120</span> <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span>        --demuxer-readahead-secs<span style="color:#f92672">=</span><span style="color:#ae81ff">60</span> <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span>        --force-seekable<span style="color:#f92672">=</span>yes <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span>        --title<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>basename <span style="color:#e6db74">&#34;</span>$found_file<span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;</span>$found_file<span style="color:#e6db74">&#34;</span>
-</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#75715e"># ═══════════════════════════════════════════════════════════════════════════════</span>
-</span></span><span style="display:flex;"><span>banner
-</span></span><span style="display:flex;"><span>
-</span></span><span style="display:flex;"><span><span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;</span>$MODE<span style="color:#e6db74">&#34;</span> in
-</span></span><span style="display:flex;"><span>    reset<span style="color:#f92672">)</span>  do_reset ;;
-</span></span><span style="display:flex;"><span>    setup<span style="color:#f92672">)</span>  do_setup ;;
-</span></span><span style="display:flex;"><span>    stream<span style="color:#f92672">)</span>
-</span></span><span style="display:flex;"><span>        info <span style="color:#e6db74">&#34;Búsqueda: &#39;</span><span style="color:#e6db74">${</span>BOLD<span style="color:#e6db74">}${</span>QUERY<span style="color:#e6db74">}${</span>RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">&#39;&#34;</span>
-</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;&#34;</span>
-</span></span><span style="display:flex;"><span>        check_deps
-</span></span><span style="display:flex;"><span>        configure_qbt
-</span></span><span style="display:flex;"><span>        start_qbt
-</span></span><span style="display:flex;"><span>        login_qbt
-</span></span><span style="display:flex;"><span>        start_jackett
-</span></span><span style="display:flex;"><span>        get_jackett_key
-</span></span><span style="display:flex;"><span>        search_torrent
-</span></span><span style="display:flex;"><span>        pick_torrent
-</span></span><span style="display:flex;"><span>        add_torrent
-</span></span><span style="display:flex;"><span>        wait_and_play
-</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;&#34;</span>
-</span></span><span style="display:flex;"><span>        ok <span style="color:#e6db74">&#34;¡Disfrutá la película! 🍿&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>1<span style="color:#66d9ef">:-</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> in
+</span></span><span style="display:flex;"><span>    --estado<span style="color:#f92672">)</span>    show_status; exit <span style="color:#ae81ff">0</span> ;;
+</span></span><span style="display:flex;"><span>    --servicios<span style="color:#f92672">)</span> check_services; exit <span style="color:#ae81ff">0</span> ;;
+</span></span><span style="display:flex;"><span>    --help|-h<span style="color:#f92672">)</span>   usage ;;
+</span></span><span style="display:flex;"><span>    --list-indexers<span style="color:#f92672">)</span> list_indexers ;;
+</span></span><span style="display:flex;"><span>    --indexer<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">[</span> $# -ge <span style="color:#ae81ff">3</span> <span style="color:#f92672">]</span> <span style="color:#f92672">||</span> die <span style="color:#e6db74">&#34;Uso: </span>$0<span style="color:#e6db74"> --indexer NOMBRE \&#34;búsqueda\&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>        IDX_RESOLVED<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>resolve_indexer <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>2<span style="color:#66d9ef">:-</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">)</span> <span style="color:#f92672">||</span> die <span style="color:#e6db74">&#34;Indexer &#39;</span><span style="color:#e6db74">${</span>2<span style="color:#66d9ef">:-</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#39; no encontrado. Usa: </span>$0<span style="color:#e6db74"> --list-indexers&#34;</span>
+</span></span><span style="display:flex;"><span>        IDX<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>IDX_RESOLVED<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>        QUERY<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$3<span style="color:#e6db74">&#34;</span>
 </span></span><span style="display:flex;"><span>        ;;
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;&#34;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>        read -rp <span style="color:#e6db74">&#34;¿Qué querés buscar? &#34;</span> QUERY
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">[</span> -n <span style="color:#e6db74">&#34;</span>$QUERY<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span> <span style="color:#f92672">||</span> die <span style="color:#e6db74">&#34;Búsqueda vacía.&#34;</span>
+</span></span><span style="display:flex;"><span>        ;;
+</span></span><span style="display:flex;"><span>    *<span style="color:#f92672">)</span> QUERY<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$*<span style="color:#e6db74">&#34;</span> ;;
 </span></span><span style="display:flex;"><span><span style="color:#66d9ef">esac</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>check_services
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> -n <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>IDX<span style="color:#66d9ef">:-</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    info <span style="color:#e6db74">&#34;Buscando &#39;</span>$QUERY<span style="color:#e6db74">&#39; SOLO en indexer: </span>$IDX<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    INDEXER_PATH<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$IDX<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>    warn <span style="color:#e6db74">&#34;Buscando en TODOS los indexers, puede tardar 1-2 min...&#34;</span>
+</span></span><span style="display:flex;"><span>    INDEXER_PATH<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;all&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>search_jackett <span style="color:#e6db74">&#34;</span>$QUERY<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;</span>$INDEXER_PATH<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">while</span> true; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>    show_menu
+</span></span><span style="display:flex;"><span>    pick_magnet
+</span></span><span style="display:flex;"><span>    rc<span style="color:#f92672">=</span>$?
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span>$rc<span style="color:#e6db74">&#34;</span> -eq <span style="color:#ae81ff">2</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>        read -rp <span style="color:#e6db74">&#34;Nueva búsqueda: &#34;</span> QUERY; search_jackett <span style="color:#e6db74">&#34;</span>$QUERY<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;</span>$INDEXER_PATH<span style="color:#e6db74">&#34;</span>; <span style="color:#66d9ef">continue</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span>$rc<span style="color:#e6db74">&#34;</span> -eq <span style="color:#ae81ff">0</span> <span style="color:#f92672">]</span> <span style="color:#f92672">||</span> exit <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    add_torrent
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    read -rp <span style="color:#e6db74">&#34;¿Descargar otro? [s/N]: &#34;</span> again
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span>$again<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">=</span>~ ^<span style="color:#f92672">[</span>sSyY<span style="color:#f92672">]</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">||</span> break
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span>ok <span style="color:#e6db74">&#34;Listo.&#34;</span>
 </span></span></code></pre></div><p>Los torrents se guardan en <code>/var/lib/qbittorrent/Downloads</code></p>
 <p>Despues de que Claude AI me genere ese script fenomenal le pedi esto:</p>
 <p>Me encanto, aun asi cuando abria el video con mpv parece que abria el directorio entero en vez de abrir el video que habia descargado, fuera de eso que no es tanta complicacion. Lo que me gustaria es que me de a elegir ahora quiero que sea mas como un buscador pero ordenalos por los que tienen mas seeds primero  y que sean recientes, y eso de 720 o 1080 no lo tomes en consideracion porque a veces yo quiero descargar archivos o audios que no son videos. No se si me entendes, ahora quiero algo mas como un buscador eficiente quiero descargar algo que tenga muchos seeds sino no funciona y quiero poder elegir que me de una lista de torrents y yo elijo cual quiero descargar.</p>
