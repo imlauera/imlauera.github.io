@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/bitacora-montaje-sitios-ocultos/">
+	<meta property="og:site_name" content="Imlauer">
+	<meta property="og:title" content="Bitácora: montaje de imlauer.github.io en Tor, I2P y Freenet">
+	<meta property="og:description" content="📋 Bitácora: montaje de imlauer.github.io en Tor, I2P y Freenet Fecha: 2026-09-16 · Sistema: Arch Linux · Servidor: $HOME/imlauer.github.io (sitio estático) Resultado final: el sitio publicado en Tor, I2P y Freenet (Hyphanet), más el enlace a los mirrors agregado al index.
+Este archivo es el registro de todo lo que se hizo. El “cómo” paso a paso está en tutorial-sitios-ocultos.md.
+1) Resumen Red URL pública ¿Tu PC tiene que estar encendida? Tor (onion v3) http://5n2dh4gafm6qskpd6wm4us2m7zsxbwj4yicmmyowy7n7i34d4jkq5uid.onion/ Sí I2P (eepsite) http://lj5uiypfgrbuelzguwlb7smx6lqmxrzyd2o6rbu5sdyjahsznyxq.b32.i2p/ Sí Freenet (freesite) USK@GUETDi8oxvuY5VWnnpAIUa-FPKooO0bj-OBM0BgwYGw,CIhMEUnz1-SeZqd0UT0JpgleOzQ7y0Rv5r0rrUx-lAU,AQACAAE/imlauer/0/ No (vive en la red) 2) Servidor web estático (base común para Tor e I2P) Se creó /etc/systemd/system/imlauer-static.service sirviendo ~/imlauer.github.io en 127.0.0.1:8100. No se usa el puerto 8080: está ocupado por qbittorrent. Comandos: sudo systemctl daemon-reload sudo systemctl enable --now imlauer-static.service curl -s -o /dev/null -w &#39;%{http_code}\n&#39; http://127.0.0.1:8100/ # → 200 3) Tor (onion service v3) tor ya venía instalado. Se agregó al final de /etc/tor/torrc: HiddenServiceDir /var/lib/tor/imlauer_site/ HiddenServicePort 80 127.0.0.1:8100 HiddenServiceVersion 3 Se preparó el directorio (sin esto Tor no arranca): sudo install -d -o tor -g tor /var/lib/tor/imlauer_site sudo chmod 700 /var/lib/tor/imlauer_site Se arrancó y leyó el hostname: sudo systemctl reload tor # aplica el torrc nuevo sudo cat /var/lib/tor/imlauer_site/hostname → 5n2dh4gafm6qskpd6wm4us2m7zsxbwj4yicmmyowy7n7i34d4jkq5uid.onion Verificación: curl --socks5-hostname 127.0.0.1:9050 -s -o /dev/null -w &#39;%{http_code}\n&#39; \ http://5n2dh4gafm6qskpd6wm4us2m7zsxbwj4yicmmyowy7n7i34d4jkq5uid.onion/ # → 200 Se habilitó el servicio para el boot: sudo systemctl enable tor. Problema encontrado: tras un fallo previo Tor tiraba Job for tor.service failed (...) because a configured service was not started. Se resolvió con sudo systemctl reset-failed tor &amp;&amp; sudo systemctl start tor.">
+	<meta property="og:locale" content="es_es">
+	<meta property="og:type" content="article">
+		<meta property="article:published_time" content="2026-09-16T22:03:49-03:00">
+		<meta property="article:modified_time" content="2026-09-16T22:03:49-03:00">
+		<meta property="article:tag" content="Tor">
+
+  
+	<meta itemprop="name" content="Bitácora: montaje de imlauer.github.io en Tor, I2P y Freenet">
+	<meta itemprop="description" content="📋 Bitácora: montaje de imlauer.github.io en Tor, I2P y Freenet Fecha: 2026-09-16 · Sistema: Arch Linux · Servidor: $HOME/imlauer.github.io (sitio estático) Resultado final: el sitio publicado en Tor, I2P y Freenet (Hyphanet), más el enlace a los mirrors agregado al index.
+Este archivo es el registro de todo lo que se hizo. El “cómo” paso a paso está en tutorial-sitios-ocultos.md.
+1) Resumen Red URL pública ¿Tu PC tiene que estar encendida? Tor (onion v3) http://5n2dh4gafm6qskpd6wm4us2m7zsxbwj4yicmmyowy7n7i34d4jkq5uid.onion/ Sí I2P (eepsite) http://lj5uiypfgrbuelzguwlb7smx6lqmxrzyd2o6rbu5sdyjahsznyxq.b32.i2p/ Sí Freenet (freesite) USK@GUETDi8oxvuY5VWnnpAIUa-FPKooO0bj-OBM0BgwYGw,CIhMEUnz1-SeZqd0UT0JpgleOzQ7y0Rv5r0rrUx-lAU,AQACAAE/imlauer/0/ No (vive en la red) 2) Servidor web estático (base común para Tor e I2P) Se creó /etc/systemd/system/imlauer-static.service sirviendo ~/imlauer.github.io en 127.0.0.1:8100. No se usa el puerto 8080: está ocupado por qbittorrent. Comandos: sudo systemctl daemon-reload sudo systemctl enable --now imlauer-static.service curl -s -o /dev/null -w &#39;%{http_code}\n&#39; http://127.0.0.1:8100/ # → 200 3) Tor (onion service v3) tor ya venía instalado. Se agregó al final de /etc/tor/torrc: HiddenServiceDir /var/lib/tor/imlauer_site/ HiddenServicePort 80 127.0.0.1:8100 HiddenServiceVersion 3 Se preparó el directorio (sin esto Tor no arranca): sudo install -d -o tor -g tor /var/lib/tor/imlauer_site sudo chmod 700 /var/lib/tor/imlauer_site Se arrancó y leyó el hostname: sudo systemctl reload tor # aplica el torrc nuevo sudo cat /var/lib/tor/imlauer_site/hostname → 5n2dh4gafm6qskpd6wm4us2m7zsxbwj4yicmmyowy7n7i34d4jkq5uid.onion Verificación: curl --socks5-hostname 127.0.0.1:9050 -s -o /dev/null -w &#39;%{http_code}\n&#39; \ http://5n2dh4gafm6qskpd6wm4us2m7zsxbwj4yicmmyowy7n7i34d4jkq5uid.onion/ # → 200 Se habilitó el servicio para el boot: sudo systemctl enable tor. Problema encontrado: tras un fallo previo Tor tiraba Job for tor.service failed (...) because a configured service was not started. Se resolvió con sudo systemctl reset-failed tor &amp;&amp; sudo systemctl start tor.">
+	<meta itemprop="datePublished" content="2026-09-16T22:03:49-03:00">
+	<meta itemprop="dateModified" content="2026-09-16T22:03:49-03:00">
+	<meta itemprop="wordCount" content="1084">
+	<meta itemprop="keywords" content="Tor">
+  
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:title" content="Bitácora: montaje de imlauer.github.io en Tor, I2P y Freenet">
+	<meta name="twitter:description" content="📋 Bitácora: montaje de imlauer.github.io en Tor, I2P y Freenet Fecha: 2026-09-16 · Sistema: Arch Linux · Servidor: $HOME/imlauer.github.io (sitio estático) Resultado final: el sitio publicado en Tor, I2P y Freenet (Hyphanet), más el enlace a los mirrors agregado al index.
+Este archivo es el registro de todo lo que se hizo. El “cómo” paso a paso está en tutorial-sitios-ocultos.md.
+1) Resumen Red URL pública ¿Tu PC tiene que estar encendida? Tor (onion v3) http://5n2dh4gafm6qskpd6wm4us2m7zsxbwj4yicmmyowy7n7i34d4jkq5uid.onion/ Sí I2P (eepsite) http://lj5uiypfgrbuelzguwlb7smx6lqmxrzyd2o6rbu5sdyjahsznyxq.b32.i2p/ Sí Freenet (freesite) USK@GUETDi8oxvuY5VWnnpAIUa-FPKooO0bj-OBM0BgwYGw,CIhMEUnz1-SeZqd0UT0JpgleOzQ7y0Rv5r0rrUx-lAU,AQACAAE/imlauer/0/ No (vive en la red) 2) Servidor web estático (base común para Tor e I2P) Se creó /etc/systemd/system/imlauer-static.service sirviendo ~/imlauer.github.io en 127.0.0.1:8100. No se usa el puerto 8080: está ocupado por qbittorrent. Comandos: sudo systemctl daemon-reload sudo systemctl enable --now imlauer-static.service curl -s -o /dev/null -w &#39;%{http_code}\n&#39; http://127.0.0.1:8100/ # → 200 3) Tor (onion service v3) tor ya venía instalado. Se agregó al final de /etc/tor/torrc: HiddenServiceDir /var/lib/tor/imlauer_site/ HiddenServicePort 80 127.0.0.1:8100 HiddenServiceVersion 3 Se preparó el directorio (sin esto Tor no arranca): sudo install -d -o tor -g tor /var/lib/tor/imlauer_site sudo chmod 700 /var/lib/tor/imlauer_site Se arrancó y leyó el hostname: sudo systemctl reload tor # aplica el torrc nuevo sudo cat /var/lib/tor/imlauer_site/hostname → 5n2dh4gafm6qskpd6wm4us2m7zsxbwj4yicmmyowy7n7i34d4jkq5uid.onion Verificación: curl --socks5-hostname 127.0.0.1:9050 -s -o /dev/null -w &#39;%{http_code}\n&#39; \ http://5n2dh4gafm6qskpd6wm4us2m7zsxbwj4yicmmyowy7n7i34d4jkq5uid.onion/ # → 200 Se habilitó el servicio para el boot: sudo systemctl enable tor. Problema encontrado: tras un fallo previo Tor tiraba Job for tor.service failed (...) because a configured service was not started. Se resolvió con sudo systemctl reset-failed tor &amp;&amp; sudo systemctl start tor.">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Bitácora: montaje de imlauer.github.io en Tor, I2P y Freenet
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/bitacora-montaje-sitios-ocultos/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="📋 Bitácora: montaje de imlauer.github.io en Tor, I2P y Freenet
+Fecha: 2026-09-16 · Sistema: Arch Linux · Servidor: $HOME/imlauer.github.io (sitio estático)
+Resultado final: el sitio publicado en Tor, I2P y Freenet (Hyphanet),
+más el enlace a los mirrors agregado al index.
+
+Este archivo es el registro de todo lo que se hizo. El &ldquo;cómo&rdquo; paso a paso
+está en tutorial-sitios-ocultos.md.
+
+
+1) Resumen
+
+	
+			
+					Red
+					URL pública
+					¿Tu PC tiene que estar encendida?
+			
+	
+	
+			
+					Tor (onion v3)
+					http://5n2dh4gafm6qskpd6wm4us2m7zsxbwj4yicmmyowy7n7i34d4jkq5uid.onion/
+					Sí
+			
+			
+					I2P (eepsite)
+					http://lj5uiypfgrbuelzguwlb7smx6lqmxrzyd2o6rbu5sdyjahsznyxq.b32.i2p/
+					Sí
+			
+			
+					Freenet (freesite)
+					USK@GUETDi8oxvuY5VWnnpAIUa-FPKooO0bj-OBM0BgwYGw,CIhMEUnz1-SeZqd0UT0JpgleOzQ7y0Rv5r0rrUx-lAU,AQACAAE/imlauer/0/
+					No (vive en la red)
+			
+	
+
+
+2) Servidor web estático (base común para Tor e I2P)
+
+Se creó /etc/systemd/system/imlauer-static.service sirviendo
+~/imlauer.github.io en 127.0.0.1:8100.
+No se usa el puerto 8080: está ocupado por qbittorrent.
+Comandos:
+sudo systemctl daemon-reload
+sudo systemctl enable --now imlauer-static.service
+curl -s -o /dev/null -w &#39;%{http_code}\n&#39; http://127.0.0.1:8100/   # → 200
+
+
+
+3) Tor (onion service v3)
+
+tor ya venía instalado.
+Se agregó al final de /etc/tor/torrc:
+HiddenServiceDir /var/lib/tor/imlauer_site/
+HiddenServicePort 80 127.0.0.1:8100
+HiddenServiceVersion 3
+
+Se preparó el directorio (sin esto Tor no arranca):
+sudo install -d -o tor -g tor /var/lib/tor/imlauer_site
+sudo chmod 700 /var/lib/tor/imlauer_site
+
+Se arrancó y leyó el hostname:
+sudo systemctl reload tor     # aplica el torrc nuevo
+sudo cat /var/lib/tor/imlauer_site/hostname
+→ 5n2dh4gafm6qskpd6wm4us2m7zsxbwj4yicmmyowy7n7i34d4jkq5uid.onion
+Verificación:
+curl --socks5-hostname 127.0.0.1:9050 -s -o /dev/null -w &#39;%{http_code}\n&#39; \
+  http://5n2dh4gafm6qskpd6wm4us2m7zsxbwj4yicmmyowy7n7i34d4jkq5uid.onion/   # → 200
+
+Se habilitó el servicio para el boot: sudo systemctl enable tor.
+
+Problema encontrado: tras un fallo previo Tor tiraba
+Job for tor.service failed (...) because a configured service was not started.
+Se resolvió con sudo systemctl reset-failed tor &amp;&amp; sudo systemctl start tor.">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Bitácora: montaje de imlauer.github.io en Tor, I2P y Freenet
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2026-09-16T22:03:49-03:00'>
+      September 16, 2026
+    </time>
+    
+    <br>
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/tor/">Tor</a>
+    
+    
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <h1 id="-bitácora-montaje-de-imlauergithubio-en-tor-i2p-y-freenet">📋 Bitácora: montaje de <code>imlauer.github.io</code> en Tor, I2P y Freenet</h1>
+<p>Fecha: 2026-09-16 · Sistema: Arch Linux · Servidor: <code>$HOME/imlauer.github.io</code> (sitio estático)
+Resultado final: el sitio publicado en <strong>Tor</strong>, <strong>I2P</strong> y <strong>Freenet (Hyphanet)</strong>,
+más el enlace a los mirrors agregado al index.</p>
+<blockquote>
+<p>Este archivo es el registro de todo lo que se hizo. El &ldquo;cómo&rdquo; paso a paso
+está en <code>tutorial-sitios-ocultos.md</code>.</p>
+</blockquote>
+<hr>
+<h2 id="1-resumen">1) Resumen</h2>
+<table>
+	<thead>
+			<tr>
+					<th>Red</th>
+					<th>URL pública</th>
+					<th>¿Tu PC tiene que estar encendida?</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>Tor (onion v3)</td>
+					<td><code>http://5n2dh4gafm6qskpd6wm4us2m7zsxbwj4yicmmyowy7n7i34d4jkq5uid.onion/</code></td>
+					<td>Sí</td>
+			</tr>
+			<tr>
+					<td>I2P (eepsite)</td>
+					<td><code>http://lj5uiypfgrbuelzguwlb7smx6lqmxrzyd2o6rbu5sdyjahsznyxq.b32.i2p/</code></td>
+					<td>Sí</td>
+			</tr>
+			<tr>
+					<td>Freenet (freesite)</td>
+					<td><code>USK@GUETDi8oxvuY5VWnnpAIUa-FPKooO0bj-OBM0BgwYGw,CIhMEUnz1-SeZqd0UT0JpgleOzQ7y0Rv5r0rrUx-lAU,AQACAAE/imlauer/0/</code></td>
+					<td>No (vive en la red)</td>
+			</tr>
+	</tbody>
+</table>
+<hr>
+<h2 id="2-servidor-web-estático-base-común-para-tor-e-i2p">2) Servidor web estático (base común para Tor e I2P)</h2>
+<ul>
+<li>Se creó <code>/etc/systemd/system/imlauer-static.service</code> sirviendo
+<code>~/imlauer.github.io</code> en <code>127.0.0.1:8100</code>.</li>
+<li><strong>No</strong> se usa el puerto 8080: está ocupado por <code>qbittorrent</code>.</li>
+<li>Comandos:
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo systemctl daemon-reload
+</span></span><span style="display:flex;"><span>sudo systemctl enable --now imlauer-static.service
+</span></span><span style="display:flex;"><span>curl -s -o /dev/null -w <span style="color:#e6db74">&#39;%{http_code}\n&#39;</span> http://127.0.0.1:8100/   <span style="color:#75715e"># → 200</span>
+</span></span></code></pre></div></li>
+</ul>
+<hr>
+<h2 id="3-tor-onion-service-v3">3) Tor (onion service v3)</h2>
+<ol>
+<li><code>tor</code> ya venía instalado.</li>
+<li>Se agregó al final de <code>/etc/tor/torrc</code>:
+<pre tabindex="0"><code>HiddenServiceDir /var/lib/tor/imlauer_site/
+HiddenServicePort 80 127.0.0.1:8100
+HiddenServiceVersion 3
+</code></pre></li>
+<li>Se preparó el directorio (sin esto Tor no arranca):
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo install -d -o tor -g tor /var/lib/tor/imlauer_site
+</span></span><span style="display:flex;"><span>sudo chmod <span style="color:#ae81ff">700</span> /var/lib/tor/imlauer_site
+</span></span></code></pre></div></li>
+<li>Se arrancó y leyó el hostname:
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo systemctl reload tor     <span style="color:#75715e"># aplica el torrc nuevo</span>
+</span></span><span style="display:flex;"><span>sudo cat /var/lib/tor/imlauer_site/hostname
+</span></span></code></pre></div>→ <code>5n2dh4gafm6qskpd6wm4us2m7zsxbwj4yicmmyowy7n7i34d4jkq5uid.onion</code></li>
+<li>Verificación:
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>curl --socks5-hostname 127.0.0.1:9050 -s -o /dev/null -w <span style="color:#e6db74">&#39;%{http_code}\n&#39;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  http://5n2dh4gafm6qskpd6wm4us2m7zsxbwj4yicmmyowy7n7i34d4jkq5uid.onion/   <span style="color:#75715e"># → 200</span>
+</span></span></code></pre></div></li>
+<li>Se habilitó el servicio para el boot: <code>sudo systemctl enable tor</code>.</li>
+</ol>
+<p><strong>Problema encontrado:</strong> tras un fallo previo Tor tiraba
+<code>Job for tor.service failed (...) because a configured service was not started</code>.
+Se resolvió con <code>sudo systemctl reset-failed tor &amp;&amp; sudo systemctl start tor</code>.</p>
+<hr>
+<h2 id="4-i2p-eepsite-con-i2pd">4) I2P (eepsite con <code>i2pd</code>)</h2>
+<ol>
+<li>Instalación:
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo pacman -S i2pd    <span style="color:#75715e"># extra/i2pd 2.61.0</span>
+</span></span></code></pre></div></li>
+<li>Se agregó al final de <code>/etc/i2pd/tunnels.conf</code>:
+<pre tabindex="0"><code>[imlauer-site]
+type = server
+host = 127.0.0.1
+port = 8100
+keys = imlauer-site.dat
+</code></pre></li>
+<li>Arranque y habilitación:
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo systemctl enable --now i2pd
+</span></span></code></pre></div></li>
+<li>La dirección <code>.b32.i2p</code> se obtuvo de la consola web
+<code>http://127.0.0.1:7070/?page=i2p_tunnels</code> (túnel <code>imlauer-site</code>):
+→ <code>lj5uiypfgrbuelzguwlb7smx6lqmxrzyd2o6rbu5sdyjahsznyxq.b32.i2p</code></li>
+<li>Verificación:
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>curl -x http://127.0.0.1:4444 -s -o /dev/null -w <span style="color:#e6db74">&#39;%{http_code}\n&#39;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  http://lj5uiypfgrbuelzguwlb7smx6lqmxrzyd2o6rbu5sdyjahsznyxq.b32.i2p/   <span style="color:#75715e"># → 200</span>
+</span></span></code></pre></div></li>
+</ol>
+<p><strong>Nota:</strong> el primer intento dio <code>000</code>: era warm-up del router (genera claves y
+encuentra peers los primeros minutos). Al reconectar dio <code>200</code>.</p>
+<hr>
+<h2 id="5-freenet--hyphanet-freesite-insertado-en-la-red">5) Freenet / Hyphanet (freesite insertado en la red)</h2>
+<h3 id="51-instalación-la-parte-más-larga">5.1 Instalación (la parte más larga)</h3>
+<ol>
+<li>Prueba 1: <code>yay -S hyphanet</code> falló compilando con JDK 26:
+<code>Unsupported class file major version 70</code> (Gradle 8.14.3 no soporta Java 26).</li>
+<li>Solución: instalar JDK 21 y recompilar:
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo pacman -S jdk21-openjdk
+</span></span><span style="display:flex;"><span>yay -S hyphanet      <span style="color:#75715e"># hyphanet 0.7.5.1506-2 (AUR, compila desde fuente)</span>
+</span></span></code></pre></div>Hubo que importar la GPG key del mantenedor (<code>B41A6047FD6C57F9</code> de hyphanet.org)
+para que pacman validara las fuentes.</li>
+<li>Paquete instalado: <code>hyphanet</code> con servicio <code>freenet.service</code>.</li>
+</ol>
+<h3 id="52-primer-arranque-y-completar-el-wizard">5.2 Primer arranque y completar el wizard</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo systemctl enable --now freenet.service
+</span></span></code></pre></div><p>El nodo nuevo redirige a <code>/wizard/</code>; en vez del navegador se completó el
+formulario <code>/wiz/</code> por curl (opennet, conecta solo):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>FP<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>curl -s http://127.0.0.1:8888/wiz/ | grep -oE <span style="color:#e6db74">&#39;formPassword&#34; type=&#34;hidden&#34; value=&#34;[^&#34;]*&#34;&#39;</span> | sed <span style="color:#e6db74">&#39;s/.*value=&#34;//;s/&#34;$//&#39;</span><span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>curl -s -o /dev/null -X POST http://127.0.0.1:8888/wiz/ <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --data-urlencode <span style="color:#e6db74">&#34;formPassword=</span>$FP<span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --data-urlencode <span style="color:#e6db74">&#34;connectToStrangers=on&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --data-urlencode <span style="color:#e6db74">&#34;downLimit=4096&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --data-urlencode <span style="color:#e6db74">&#34;upLimit=2048&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --data-urlencode <span style="color:#e6db74">&#34;storage=1&#34;</span>
+</span></span></code></pre></div><p>Resultado: <code>hasCompletedWizard=true</code> y <code>opennet.enabled=true</code> en
+/etc/freenet/freenet.ini.</p>
+<h3 id="53-herramientas-de-inserción-pyfreenet">5.3 Herramientas de inserción (pyFreenet)</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>python3 -m venv ~/.fcpvenv
+</span></span><span style="display:flex;"><span>~/.fcpvenv/bin/pip install git+https://github.com/freenet/pyFreenet
+</span></span></code></pre></div><p>venv <strong>persistente</strong> en <code>~/.fcpvenv</code> (no se borra). Quedan disponibles
+<code>freesitemgr</code>, <code>fcpgenkey</code>, <code>fcpput</code>, <code>fcpgetdir</code>, etc.</p>
+<h3 id="54-preparar-el-freesite-versión-reducida-del-sitio">5.4 Preparar el freesite (versión reducida del sitio)</h3>
+<p>El repo completo pesa ~565 MB (incluye <code>tinygrad-archive</code> de ~301 MB), imposible
+para Freenet. Se armó <code>/tmp/imlauer</code> con solo lo publicable:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mkdir -p /tmp/imlauer/blog
+</span></span><span style="display:flex;"><span>cd ~/imlauer.github.io
+</span></span><span style="display:flex;"><span>cp *.html *.css /tmp/imlauer/
+</span></span><span style="display:flex;"><span>cd blog <span style="color:#f92672">&amp;&amp;</span> cp <span style="color:#66d9ef">$(</span>ls *.txt | grep -vE <span style="color:#e6db74">&#39;^ZZZ|^:w&#39;</span> | grep -v <span style="color:#e6db74">&#39;test_airesacondicionados.txt&#39;</span><span style="color:#66d9ef">)</span> /tmp/imlauer/blog/
+</span></span></code></pre></div><ul>
+<li>Resultado: ~13 MB · 1050+ archivos (HTML + CSS + blogs de texto).</li>
+<li>Excluidos a propósito: <code>tinygrad-archive/</code>, <code>GeorgeHotzLinkedIn.png</code> (6.1 MB),
+<code>2026geohot_comments_final.pdf</code> (5.3 MB), <code>george_hotz_linkedin.html</code> (1.5 MB),
+algunos <code>.txt</code> con nombres raros/no publicables.</li>
+<li>Límite de <code>freesitemgr</code>: manifiesto ~2 MB y ~896 archivos separados; copiamos
+el blog tanto como *.txt individuales como en algún caso por bulks; quedó OK.</li>
+</ul>
+<h3 id="55-insertar-el-freesite">5.5 Insertar el freesite</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mkdir -p ~/.freesitemgr
+</span></span><span style="display:flex;"><span>printf <span style="color:#e6db74">&#39;\n\n\n\n&#39;</span> &gt; /tmp/respuestas.txt
+</span></span><span style="display:flex;"><span>setsid nohup ~/.fcpvenv/bin/freesitemgr -v -l ~/freesitemgr.log add /tmp/imlauer &lt; /tmp/respuestas.txt &amp;
+</span></span></code></pre></div><p>Resultado: el freesite <code>imlauer</code> quedó configurado y las inserciones en cola
+(&ldquo;All insert jobs are now on queue, ok&rdquo;). Con 0 peers la subida real no progresa
+(ver §7 &ldquo;estado pendiente&rdquo;).</p>
+<p>Datos (guardados en <code>~/.freesitemgr/imlauer</code>):</p>
+<ul>
+<li>clave pública: <code>USK@GUETDi8oxvuY5VWnnpAIUa-FPKooO0bj-OBM0BgwYGw,CIhMEUnz1-SeZqd0UT0JpgleOzQ7y0Rv5r0rrUx-lAU,AQACAAE/imlauer/0</code></li>
+<li>clave privada (SENSIBLE, no compartir): <code>USK@AKZlTzozMx~WC3M2ibL7WtvaTzrO8AAEWlzJ7QhtFyRQ,CIhMEUnz1-SeZqd0UT0JpgleOzQ7y0Rv5r0rrUx-lAU,AQECAAE/imlauer/0</code></li>
+</ul>
+<h3 id="56-errorestrucos-de-freesitemgr">5.6 Errores/trucos de freesitemgr</h3>
+<ul>
+<li><code>freesitemgr -c</code> dio un bug de directorios inconsistentes → se usa la config
+por defecto <code>~/.freesitemgr</code>.</li>
+<li><code>freesitemgr add</code> pide respuestas por stdin → se usó <code>printf '\n\n\n\n'</code>.</li>
+<li>La inserción es <strong>persistente</strong>: aunque se corte el proceso, las peticiones
+quedan en la cola del nodo y <code>freesitemgr</code> guarda el progreso.</li>
+</ul>
+<hr>
+<h2 id="6-scriptsarchivos-creados">6) Scripts/archivos creados</h2>
+<table>
+	<thead>
+			<tr>
+					<th>Archivo</th>
+					<th>Propósito</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td><code>~/montar-sitio-i2p.md</code></td>
+					<td>Primer plan de I2P (y luego las 3 redes)</td>
+			</tr>
+			<tr>
+					<td><code>/etc/systemd/system/imlauer-static.service</code></td>
+					<td>Servidor web estático :8100</td>
+			</tr>
+			<tr>
+					<td><code>/etc/tor/torrc</code> (líneas agregadas)</td>
+					<td>Hidden service Tor → :8100</td>
+			</tr>
+			<tr>
+					<td><code>/etc/i2pd/tunnels.conf</code> (agregado)</td>
+					<td>Túnel eepsite <code>imlauer-site</code> → :8100</td>
+			</tr>
+			<tr>
+					<td><code>/var/lib/tor/imlauer_site/</code></td>
+					<td>Claves + hostname del onion</td>
+			</tr>
+			<tr>
+					<td><code>/var/lib/i2pd/imlauer-site.dat</code></td>
+					<td>Claves del eepsite</td>
+			</tr>
+			<tr>
+					<td><code>/etc/freenet/freenet.ini</code></td>
+					<td>Config Hyphanet (la reescribe el nodo)</td>
+			</tr>
+			<tr>
+					<td><code>~/.fcpvenv/</code></td>
+					<td>venv con herramientas pyFreenet (<code>freesitemgr</code>)</td>
+			</tr>
+			<tr>
+					<td><code>~/.freesitemgr/imlauer</code></td>
+					<td>Estado y claves del freesite <code>imlauer</code></td>
+			</tr>
+			<tr>
+					<td><code>~/freesite-update.sh</code></td>
+					<td>Script de re-insert del freesite (<code>update imlauer</code>)</td>
+			</tr>
+			<tr>
+					<td><code>/tmp/imlauer</code></td>
+					<td>Staging del freesite (~13 MB, regenerable)</td>
+			</tr>
+			<tr>
+					<td><code>/tmp/freesitemgr.log</code> (o <code>~/freesitemgr.log</code>)</td>
+					<td>Log de inserción</td>
+			</tr>
+			<tr>
+					<td><code>~/imlauer.github.io/tutorial-sitios-ocultos.md</code></td>
+					<td>Tutorial con el paso a paso de las 3 redes</td>
+			</tr>
+			<tr>
+					<td><code>~/imlauer.github.io/BITACORA-montaje-sitios-ocultos.md</code></td>
+					<td>Este documento</td>
+			</tr>
+	</tbody>
+</table>
+<p>Servicios habilitados de arranque:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>systemctl is-enabled imlauer-static tor i2pd freenet   <span style="color:#75715e"># → enabled × 4</span>
+</span></span></code></pre></div><hr>
+<h2 id="7-estado-pendiente-freenet">7) Estado pendiente (Freenet)</h2>
+<ul>
+<li>El nodo Hyphanet está conectado a <strong>0 peers</strong> todavía (bootstrap de opennet;
+puede tardar hasta ~1 h). Es normal en un nodo nuevo.</li>
+<li>El freesite está <strong>en cola</strong>; la subida real avanzará cuando el nodo consiga
+peers. Comando para chequear:
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>curl -s http://127.0.0.1:8888/network/ | grep -oiE <span style="color:#e6db74">&#39;connected to [0-9]+&#39;</span>
+</span></span><span style="display:flex;"><span>~/.fcpvenv/bin/freesitemgr -l ~/freesitemgr.log status imlauer
+</span></span></code></pre></div></li>
+</ul>
+<hr>
+<h2 id="8-cambio-en-el-index-último-paso">8) Cambio en el index (último paso)</h2>
+<p>Se agregó al <strong>index principal</strong> <code>~/imlauer.github.io/index.html</code> (después del
+párrafo de email) una línea de <strong>mirrors</strong> con los enlaces a las tres redes:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-html" data-lang="html"><span style="display:flex;"><span>&lt;<span style="color:#f92672">p</span>&gt;&lt;<span style="color:#f92672">strong</span>&gt;Mirrors:&lt;/<span style="color:#f92672">strong</span>&gt; also available on &lt;<span style="color:#f92672">a</span> <span style="color:#960050;background-color:#1e0010">...</span>&gt;Tor&lt;/<span style="color:#f92672">a</span>&gt;
+</span></span><span style="display:flex;"><span>(&lt;<span style="color:#f92672">code</span>&gt;5n2dh4gafm6qskpd6wm4us2m7zsxbwj4yicmmyowy7n7i34d4jkq5uid.onion&lt;/<span style="color:#f92672">code</span>&gt;),
+</span></span><span style="display:flex;"><span>&lt;<span style="color:#f92672">a</span> <span style="color:#960050;background-color:#1e0010">...</span>&gt;I2P&lt;/<span style="color:#f92672">a</span>&gt; (&lt;<span style="color:#f92672">code</span>&gt;lj5uiypfgrbuelzguwlb7smx6lqmxrzyd2o6rbu5sdyjahsznyxq.b32.i2p&lt;/<span style="color:#f92672">code</span>&gt;)
+</span></span><span style="display:flex;"><span>and &lt;<span style="color:#f92672">a</span> <span style="color:#960050;background-color:#1e0010">...</span>&gt;Freenet&lt;/<span style="color:#f92672">a</span>&gt;. They only resolve inside each respective network.&lt;/<span style="color:#f92672">p</span>&gt;
+</span></span></code></pre></div><p>Se verificó con <code>curl -s http://127.0.0.1:8100/ | grep -c b32.i2p</code> → aparece.
+Como Tor e I2P sirven la carpeta de <code>git</code>, este cambio ya quedó visible en las
+tres redes de forma inmediata (en Freenet se verá en la próxima re-insert).</p>
+<hr>
+<h2 id="9-limpieza--notas">9) Limpieza / notas</h2>
+<ul>
+<li>Se borraron carpetas accidentales que <code>yay -G</code> había descargado dentro del
+repo (<code>hyphanet/</code>, <code>python-pyfreenet3-git/</code>). <code>git status</code> quedó limpio salvo
+los archivos nuevos del tutorial y esta bitácora.</li>
+<li><code>index2.html</code> no se tocó.</li>
+<li>Cómo ver cada red en el futuro:
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>curl -s -o /dev/null -w <span style="color:#e6db74">&#39;TOR:%{http_code}\n&#39;</span> --socks5-hostname 127.0.0.1:9050 http://5n2dh4gafm6qskpd6wm4us2m7zsxbwj4yicmmyowy7n7i34d4jkq5uid.onion/
+</span></span><span style="display:flex;"><span>curl -s -o /dev/null -w <span style="color:#e6db74">&#39;I2P:%{http_code}\n&#39;</span>  -x http://127.0.0.1:4444 http://lj5uiypfgrbuelzguwlb7smx6lqmxrzyd2o6rbu5sdyjahsznyxq.b32.i2p/
+</span></span></code></pre></div></li>
+</ul>
+<hr>
+<p><em>Registro verificado con valores reales del nodo del usuario (2026-09-16).</em></p>
+
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+
+</footer>
+
+
+</body>
+</html>

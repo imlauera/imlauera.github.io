@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/torrents-por-i2p/">
+	<meta property="og:site_name" content="Imlauer">
+	<meta property="og:title" content="Torrents por I2P — Tutorial completo (qBittorrent-nox &#43; i2pd)">
+	<meta property="og:description" content="Torrents por I2P — Tutorial completo (qBittorrent-nox &#43; i2pd) Guía para descargar/compartir torrents dentro de la red I2P, adaptada a tu máquina: Arch Linux, qBittorrent-nox v5.2.3 (ya corriendo en 127.0.0.1:8080), i2pd no instalado aún.
+1. ¿Por qué I2P y no Tor para torrents? Tor I2P Misión Anonimato general (web, chat, DNS) P2P y servicios anónimos Torrents Desaconsejado: lento, y el flujo de datos P2P rompe el anonimato (circuitos largos, DHT contaminado, riesgo de expulsión de relay) Diseñado para esto: túnel a túnel, sin salida a clearnet salvo outproxy El tráfico sale a internet Sí (relays de salida) No (salvo outproxy explícito) Tamaño de red p2p Poca gente torrentea Comunidad torrent dedicada (trackers .i2p, DHT propio) Regla de oro I2P: el cliente se conecta por el puente SAM del router i2pd. Todo el tráfico torrent queda dentro de I2P, cifrado de extremo a extremo, sin exponer tu IP.">
+	<meta property="og:locale" content="es_es">
+	<meta property="og:type" content="article">
+		<meta property="article:published_time" content="2026-09-11T17:26:52-03:00">
+		<meta property="article:modified_time" content="2026-09-11T17:26:52-03:00">
+		<meta property="article:tag" content="I2p">
+
+  
+	<meta itemprop="name" content="Torrents por I2P — Tutorial completo (qBittorrent-nox &#43; i2pd)">
+	<meta itemprop="description" content="Torrents por I2P — Tutorial completo (qBittorrent-nox &#43; i2pd) Guía para descargar/compartir torrents dentro de la red I2P, adaptada a tu máquina: Arch Linux, qBittorrent-nox v5.2.3 (ya corriendo en 127.0.0.1:8080), i2pd no instalado aún.
+1. ¿Por qué I2P y no Tor para torrents? Tor I2P Misión Anonimato general (web, chat, DNS) P2P y servicios anónimos Torrents Desaconsejado: lento, y el flujo de datos P2P rompe el anonimato (circuitos largos, DHT contaminado, riesgo de expulsión de relay) Diseñado para esto: túnel a túnel, sin salida a clearnet salvo outproxy El tráfico sale a internet Sí (relays de salida) No (salvo outproxy explícito) Tamaño de red p2p Poca gente torrentea Comunidad torrent dedicada (trackers .i2p, DHT propio) Regla de oro I2P: el cliente se conecta por el puente SAM del router i2pd. Todo el tráfico torrent queda dentro de I2P, cifrado de extremo a extremo, sin exponer tu IP.">
+	<meta itemprop="datePublished" content="2026-09-11T17:26:52-03:00">
+	<meta itemprop="dateModified" content="2026-09-11T17:26:52-03:00">
+	<meta itemprop="wordCount" content="1075">
+	<meta itemprop="keywords" content="I2p">
+  
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:title" content="Torrents por I2P — Tutorial completo (qBittorrent-nox &#43; i2pd)">
+	<meta name="twitter:description" content="Torrents por I2P — Tutorial completo (qBittorrent-nox &#43; i2pd) Guía para descargar/compartir torrents dentro de la red I2P, adaptada a tu máquina: Arch Linux, qBittorrent-nox v5.2.3 (ya corriendo en 127.0.0.1:8080), i2pd no instalado aún.
+1. ¿Por qué I2P y no Tor para torrents? Tor I2P Misión Anonimato general (web, chat, DNS) P2P y servicios anónimos Torrents Desaconsejado: lento, y el flujo de datos P2P rompe el anonimato (circuitos largos, DHT contaminado, riesgo de expulsión de relay) Diseñado para esto: túnel a túnel, sin salida a clearnet salvo outproxy El tráfico sale a internet Sí (relays de salida) No (salvo outproxy explícito) Tamaño de red p2p Poca gente torrentea Comunidad torrent dedicada (trackers .i2p, DHT propio) Regla de oro I2P: el cliente se conecta por el puente SAM del router i2pd. Todo el tráfico torrent queda dentro de I2P, cifrado de extremo a extremo, sin exponer tu IP.">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Torrents por I2P — Tutorial completo (qBittorrent-nox &#43; i2pd)
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/torrents-por-i2p/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="Torrents por I2P — Tutorial completo (qBittorrent-nox &#43; i2pd)
+Guía para descargar/compartir torrents dentro de la red I2P, adaptada a tu máquina:
+Arch Linux, qBittorrent-nox v5.2.3 (ya corriendo en 127.0.0.1:8080), i2pd no instalado aún.
+
+1. ¿Por qué I2P y no Tor para torrents?
+
+	
+			
+					
+					Tor
+					I2P
+			
+	
+	
+			
+					Misión
+					Anonimato general (web, chat, DNS)
+					P2P y servicios anónimos
+			
+			
+					Torrents
+					Desaconsejado: lento, y el flujo de datos P2P rompe el anonimato (circuitos largos, DHT contaminado, riesgo de expulsión de relay)
+					Diseñado para esto: túnel a túnel, sin salida a clearnet salvo outproxy
+			
+			
+					El tráfico sale a internet
+					Sí (relays de salida)
+					No (salvo outproxy explícito)
+			
+			
+					Tamaño de red p2p
+					Poca gente torrentea
+					Comunidad torrent dedicada (trackers .i2p, DHT propio)
+			
+	
+
+
+Regla de oro I2P: el cliente se conecta por el puente SAM del router i2pd. Todo el tráfico torrent queda dentro de I2P, cifrado de extremo a extremo, sin exponer tu IP.">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Torrents por I2P — Tutorial completo (qBittorrent-nox &#43; i2pd)
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2026-09-11T17:26:52-03:00'>
+      September 11, 2026
+    </time>
+    
+    <br>
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/i2p/">I2p</a>
+    
+    
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <h1 id="torrents-por-i2p--tutorial-completo-qbittorrent-nox--i2pd">Torrents por I2P — Tutorial completo (qBittorrent-nox + i2pd)</h1>
+<p>Guía para descargar/compartir torrents dentro de la red I2P, adaptada a tu máquina:
+Arch Linux, qBittorrent-nox <strong>v5.2.3</strong> (ya corriendo en <code>127.0.0.1:8080</code>), i2pd <strong>no instalado</strong> aún.</p>
+<hr>
+<h2 id="1-por-qué-i2p-y-no-tor-para-torrents">1. ¿Por qué I2P y no Tor para torrents?</h2>
+<table>
+	<thead>
+			<tr>
+					<th></th>
+					<th>Tor</th>
+					<th>I2P</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>Misión</td>
+					<td>Anonimato general (web, chat, DNS)</td>
+					<td><strong>P2P y servicios anónimos</strong></td>
+			</tr>
+			<tr>
+					<td>Torrents</td>
+					<td>Desaconsejado: lento, y el flujo de datos P2P rompe el anonimato (circuitos largos, DHT contaminado, riesgo de expulsión de relay)</td>
+					<td>Diseñado para esto: túnel a túnel, sin salida a clearnet salvo outproxy</td>
+			</tr>
+			<tr>
+					<td>El tráfico sale a internet</td>
+					<td>Sí (relays de salida)</td>
+					<td>No (salvo outproxy explícito)</td>
+			</tr>
+			<tr>
+					<td>Tamaño de red p2p</td>
+					<td>Poca gente torrentea</td>
+					<td>Comunidad torrent dedicada (trackers .i2p, DHT propio)</td>
+			</tr>
+	</tbody>
+</table>
+<blockquote>
+<p><strong>Regla de oro I2P:</strong> el cliente se conecta por el puente <strong>SAM</strong> del router i2pd. Todo el tráfico torrent queda dentro de I2P, cifrado de extremo a extremo, sin exponer tu IP.</p>
+</blockquote>
+<hr>
+<h2 id="2-arquitectura">2. Arquitectura</h2>
+<pre tabindex="0"><code>qBittorrent-nox ──(SAM v3, 127.0.0.1:7656)──&gt; i2pd ──(túnel I2P)──&gt; peers/trackers .i2p
+        │
+        └──(HTTP proxy 127.0.0.1:4444 para trackers opcional)
+</code></pre><ul>
+<li><strong>i2pd</strong>: router I2P en C++ (liviano, sin Java). Alternativa: router Java (<code>i2p</code> AUR), más pesado.</li>
+<li><strong>qBittorrent</strong>: tu cliente ya instalado; usa libtorrent 2.x → soporta I2P (&ldquo;experimental&rdquo;).</li>
+</ul>
+<hr>
+<h2 id="3-instalar-y-configurar-i2pd">3. Instalar y configurar i2pd</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo pacman -S i2pd
+</span></span></code></pre></div><p>Edita <code>/etc/i2pd/i2pd.conf</code>:</p>
+<pre tabindex="0"><code>## Ancho de banda del nodo
+## L = 32 KB/s, O = 256 KB/s, P = 2048 KB/s, X = ilimitado
+## También puedes poner un entero en KB/s, p.ej. 1000
+bandwidth = O
+
+## ============ Verifica que SAM está activo (lo usa qBittorrent) ============
+[sam]
+enabled = true            # puente para clientes torrent
+address = 127.0.0.1
+port = 7656
+portudp = 7655
+
+## Lista de addressbook (resolver nombres .i2p / trackers)
+[addressbook]
+defaulturl = http://shx5vqsw7usdaunyzr2qmes2fq37oumybpudrd4jjj4e4vk4uusa.b32.i2p/hosts.txt
+subscriptions = http://reg.i2p/hosts.txt,http://identiguy.i2p/hosts.txt,http://stats.i2p/cgi-bin/newhosts.txt
+
+## Proxies locales para el navegador (opcional pero útil)
+[httpproxy]      # 127.0.0.1:4444 (verás páginas .i2p)
+[socksproxy]     # 127.0.0.1:4447
+</code></pre><p>Arranca el servicio:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo systemctl enable --now i2pd
+</span></span></code></pre></div><p>Costes:</p>
+<ul>
+<li>La <strong>primera arrancada tarda 10-30 min</strong> en llenar la base de datos de routers (network database) hasta que está &ldquo;roja/verde&rdquo; en la consola web.</li>
+<li>Consola web de i2pd: <code>http://127.0.0.1:7070</code> → ahí verás &ldquo;Network: OK&rdquo;, puertos SAM/SOCKS/HTTP activos.</li>
+</ul>
+<hr>
+<h2 id="4-configurar-qbittorrent-nox-523">4. Configurar qBittorrent-nox 5.2.3</h2>
+<p>Entra a tu WebUI (ya lo tienes: <code>http://127.0.0.1:8080</code>, usuario <code>esotericwarfare</code>).</p>
+<h3 id="4a-opciones--conexión-connection">4A. Opciones → Conexión (Connection)</h3>
+<p>En <strong>I2P (experimental)</strong>:</p>
+<ul>
+<li>Activa <code>Enable I2P</code>.</li>
+<li><code>I2P host</code>: <code>127.0.0.1</code></li>
+<li><code>I2P port</code>: <code>7656</code> (puerto SAM de i2pd)</li>
+<li><code>Mixed mode</code>: <strong>desmarcado</strong> → modo SOLO I2P, prohibido clearnet.</li>
+</ul>
+<p>En <strong>Proxy server</strong> (opcional, útil para trackers):</p>
+<ul>
+<li>Tipo: <code>HTTP</code></li>
+<li><code>127.0.0.1</code> puerto <code>4444</code> (proxy HTTP del i2pd)</li>
+<li>Marca <code>Perform hostname lookup via proxy</code> y <code>Use proxy for bittorrent purposes</code>.</li>
+<li>SI NO pones proxy: deja &ldquo;Proxy server&rdquo; en None, pero desactiva DHT/PeX/LSD (sección 4B) para no filtrar nada.</li>
+</ul>
+<h3 id="4b-opciones--bittorrent">4B. Opciones → BitTorrent</h3>
+<ul>
+<li><strong>Anonymous mode</strong>: activado.</li>
+<li><strong>Encryption mode</strong>: <code>Allow encryption</code> (NO &ldquo;Require&rdquo; — la mayoría de peers I2P son I2PSnark sin cifrado; exigirlo te deja sin peers).</li>
+<li><strong>Privacidad</strong>: desactiva <code>DHT</code>, <code>Peer Exchange (PeX)</code> y <code>Local Peer Discovery</code> (no están implementados para I2P en libtorrent y pueden filtrar/empeorar).</li>
+<li>Activa <code>Automatically append these trackers to new downloads</code> y pega los trackers .i2p (sección 6).</li>
+</ul>
+<h3 id="4c-opciones--avanzado">4C. Opciones → Avanzado</h3>
+<ul>
+<li><strong>Network interface</strong> → <code>127.0.0.1</code> y <strong>Optional IP address to bind to</strong> → <code>127.0.0.1</code> (kill-switch a nivel de bind: sin salida clearnet).</li>
+<li>Túneles I2P (cuanto más largo = más anonimato, más lento):
+<ul>
+<li><code>i2p_inbound_quantity</code> / <code>i2p_outbound_quantity</code>: <code>3-5</code></li>
+<li><code>i2p_inbound_length</code> / <code>i2p_outbound_length</code>: <code>3</code> (mínimo recomendado; no bajes de 3)</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p><strong>Si la pestaña I2P no aparece</strong> (por ser nox), edita a mano <code>~/.config/qBittorrent/qBittorrent.conf</code> añadiendo:</p>
+</blockquote>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-ini" data-lang="ini"><span style="display:flex;"><span><span style="color:#66d9ef">[BitTorrent]</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># I2P SOLO (sin mixed mode) via SAM</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">Session\I2P\Enabled</span><span style="color:#f92672">=</span><span style="color:#e6db74">true</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">Session\I2P\Address</span><span style="color:#f92672">=</span><span style="color:#e6db74">127.0.0.1</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">Session\I2P\MixedMode</span><span style="color:#f92672">=</span><span style="color:#e6db74">false</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">Session\AnonymousMode</span><span style="color:#f92672">=</span><span style="color:#e6db74">true</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Reducir filtrado de trackers .i2p que no acaban en announce.php</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">Session\AnnounceToAllTiers</span><span style="color:#f92672">=</span><span style="color:#e6db74">true</span>
+</span></span></code></pre></div><p>Reinicia: <code>systemctl restart qbittorrent-nox</code> (o como lo lances).</p>
+<hr>
+<h2 id="5-navegador-para-páginas-i2p">5. Navegador para páginas <code>.i2p</code></h2>
+<p>Necesitas un navegador que use el proxy de i2pd — <strong>con un perfil separado</strong> del de tu navegador normal (regla de oro: nunca mezcles I2P y clearnet en el mismo perfil).</p>
+<p>Firefox: <code>about:preferences#general</code> → Network Settings → Manual proxy:</p>
+<ul>
+<li>HTTP proxy: <code>127.0.0.1</code> puerto <code>4444</code></li>
+<li>Marca &ldquo;Also use this proxy for HTTPS&rdquo;.</li>
+</ul>
+<p>Para pruebas: Google alojado dentro de I2P → <code>http://i2p-projekt.i2p/</code> (o consola <code>127.0.0.1:7070</code>).</p>
+<hr>
+<h2 id="6-dónde-encontrar-torrents-dentro-de-i2p">6. Dónde encontrar torrents (dentro de I2P)</h2>
+<table>
+	<thead>
+			<tr>
+					<th>Sitio</th>
+					<th>URL (.i2p)</th>
+					<th>Qué es</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>Postman</td>
+					<td><code>http://tracker2.postman.i2p/</code></td>
+					<td>El tracker principal: buscador, sube/descarga</td>
+			</tr>
+			<tr>
+					<td>DG2</td>
+					<td><code>http://tracker2.dg2.i2p/</code></td>
+					<td>Tracker alternativo</td>
+			</tr>
+			<tr>
+					<td>reg</td>
+					<td><code>http://reg.i2p/</code></td>
+					<td>Listado de torrents y enlaces</td>
+			</tr>
+			<tr>
+					<td>PSA</td>
+					<td><code>http://psa.i2p/</code></td>
+					<td>Buscador</td>
+			</tr>
+			<tr>
+					<td>Wiki de trackers</td>
+					<td><code>http://wiki.i2p-projekt.i2p/wiki/index.php/Public_trackers</code></td>
+					<td>Lista completa de announce URLs</td>
+			</tr>
+	</tbody>
+</table>
+<p><strong>Announce URLs</strong> para añadir a tus torrents (sustituyen al tracker central de clearnet):</p>
+<pre tabindex="0"><code>http://tracker2.postman.i2p/announce.php
+http://tracker2.dg2.i2p/announce.php
+</code></pre><blockquote>
+<p>Un <code>.torrent</code> de I2P vale <strong>solo dentro de I2P</strong> (infohash y peering locales). No funciona contra trackers clearnet, y viceversa.</p>
+</blockquote>
+<hr>
+<h2 id="7-prueba-con-un-magnet-de-i2p">7. Prueba con un magnet de I2P</h2>
+<ol>
+<li>Sufre la espera inicial (10-30 min hasta que i2pd esté conectado).</li>
+<li>Añade un magnet de la sección 6 vía WebUI.</li>
+<li>En <code>qBittorrent-nox</code> verás peers con dirección <code>.i2p</code>; la descarga del metadata puede tardar <strong>varios minutos</strong> (I2P es lento por diseño).</li>
+</ol>
+<p>Logs de confirmación:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo journalctl -u i2pd -f
+</span></span></code></pre></div><hr>
+<h2 id="8-seguridad-imprescindible">8. Seguridad (imprescindible)</h2>
+<ol>
+<li><strong>No cruces torrents</strong>: un mismo <code>qBittorrent</code> NO debe bajar clearnet Y I2P a la vez (riesgo de correlación). Usa un perfil aparte para I2P o es lo que estás haciendo aquí (modo solo-I2P).</li>
+<li><strong>No uses proxy clearnet como salida</strong>: dejar el &ldquo;outproxy&rdquo; del navegador tal cual; para torrents, jamás outproxy.</li>
+<li><strong>Cifrado</strong>: &ldquo;Allow encryption&rdquo;, nunca &ldquo;Require&rdquo;.</li>
+<li><strong>Firewall</strong>: opcional pero limpio — solo permite salida de i2pd (TCP/UDP aleatorio) y entrada SOLO por CONSENTIDO de I2P (i2pd gestiona sus sockets; no abras puertos manuales salvo UPnP).</li>
+<li><strong>Velocidades</strong>: olvida el clearnet. Con <code>bandwidth = O</code> irás a 256 KB/s por túnel; sube a <code>P</code>/<code>1000</code>+ si tu línea lo permite.</li>
+<li>Los <strong>flags/túneles</strong> son tu anonimato: no bajes de 3 saltos.</li>
+</ol>
+<hr>
+<h2 id="9-problemas-comunes">9. Problemas comunes</h2>
+<table>
+	<thead>
+			<tr>
+					<th>Síntoma</th>
+					<th>Causa/Solución</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td><code>i2pd</code> tarda en conectarse</td>
+					<td>Normal: reseed inicial. Mira <code>127.0.0.1:7070</code> hasta &ldquo;Network OK&rdquo;</td>
+			</tr>
+			<tr>
+					<td>qBittorrent no anuncia trackers</td>
+					<td>Añade los announce URLs (sección 6); si el tracker no acaba en <code>announce.php</code>, no filtres con <code>AnnounceToAllTiers=false</code></td>
+			</tr>
+			<tr>
+					<td>Sin peers</td>
+					<td>I2P es lento: espera minutos; verifica SAM activo en i2pd webconsole (<code>/sam</code>)</td>
+			</tr>
+			<tr>
+					<td>Error &ldquo;invalid info &hellip; bdecode&rdquo;</td>
+					<td>El .torrent trae infohash/filelist raro; prueba otro torrent o el magnet directamente</td>
+			</tr>
+			<tr>
+					<td>El peer list queda vacío</td>
+					<td>Normal: libtorrent aún no muestra peers I2P; revisa el contador de seeds</td>
+			</tr>
+	</tbody>
+</table>
+<hr>
+<h2 id="10-alternativas-de-cliente">10. Alternativas de cliente</h2>
+<ul>
+<li><strong>BiglyBT</strong> (+ plugin I2P): más maduro para I2P que qBittorrent.</li>
+<li><strong>I2PSnark</strong> (si pasaras al router Java): integrado en su consola web, cero configuración.</li>
+<li><strong>Deluge</strong> con plugin/kill-switch específico.</li>
+</ul>
+<p>qBittorrent 5.2.x es funcional pero <strong>experimental</strong> para I2P — si encuentras flaquezas, BiglyBT es la apuesta segura.</p>
+<hr>
+<h2 id="fuentes">Fuentes</h2>
+<ul>
+<li>i2pd docs — qBittorrent: <a href="https://docs.i2pd.website/en/latest/tutorials/Filesharing/qBittorrent/">https://docs.i2pd.website/en/latest/tutorials/Filesharing/qBittorrent/</a></li>
+<li>ArchWiki I2P: <a href="https://wiki.archlinux.org/title/I2P">https://wiki.archlinux.org/title/I2P</a></li>
+<li>Guía qBittorrent-nox + I2P: <a href="https://strict3443.codeberg.page/i2p-info/hugo/public/posts/how-to-use-i2p-on-qbittorrent-nox/">https://strict3443.codeberg.page/i2p-info/hugo/public/posts/how-to-use-i2p-on-qbittorrent-nox/</a></li>
+<li>Foro I2P (setup mode solo-I2P): <a href="https://i2pforum.net/viewtopic.php?t=1224">https://i2pforum.net/viewtopic.php?t=1224</a></li>
+<li>Config de referencia i2pd: <a href="https://github.com/PurpleI2P/i2pd">https://github.com/PurpleI2P/i2pd</a> (contrib/i2pd.conf)</li>
+</ul>
+
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+
+</footer>
+
+
+</body>
+</html>

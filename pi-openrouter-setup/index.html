@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/pi-openrouter-setup/">
+	<meta property="og:site_name" content="Imlauer">
+	<meta property="og:title" content="Configuración completa de pi &#43; OpenRouter (modelos gratis con tooling)">
+	<meta property="og:description" content="Configuración completa de pi &#43; OpenRouter (modelos gratis con tooling) Fecha: 21/9/2026 · PC: GTX 1050 2GB, lenta para LLMs locales → se usan modelos remotos gratis de OpenRouter. Estado: ✅ FUNCIONANDO — pi corre con default qwen/qwen3.8-27b:free y ejecuta tools (bash, write, curl, ls).
+1. Por qué esto El camino empezó buscando cómputo de IA “tipo torrent” (como Petals o AI Horde), pero esas redes:
+Petals → el cliente se conecta, pero el swarm público está vacío de seeders (0 servidores sirviendo bloques). AI Horde → tiene swarm vivo (36&#43; workers) pero no emite tool_calls: los modelos solo responden texto plano, sin JSON estructurado de herramientas. Un agente de código no puede ejecutar tareas. Solución final: OpenRouter → gateway de modelos con capa gratis (:free) que sí emiten tool_calls de verdad. Todo el cómputo pesado corre en servidores de OpenRouter; tu PC solo corre pi &#43; sus herramientas locales (read/bash/edit/write).">
+	<meta property="og:locale" content="es_es">
+	<meta property="og:type" content="article">
+		<meta property="article:published_time" content="2026-09-21T14:05:21-03:00">
+		<meta property="article:modified_time" content="2026-09-21T14:05:21-03:00">
+		<meta property="article:tag" content="Ai">
+
+  
+	<meta itemprop="name" content="Configuración completa de pi &#43; OpenRouter (modelos gratis con tooling)">
+	<meta itemprop="description" content="Configuración completa de pi &#43; OpenRouter (modelos gratis con tooling) Fecha: 21/9/2026 · PC: GTX 1050 2GB, lenta para LLMs locales → se usan modelos remotos gratis de OpenRouter. Estado: ✅ FUNCIONANDO — pi corre con default qwen/qwen3.8-27b:free y ejecuta tools (bash, write, curl, ls).
+1. Por qué esto El camino empezó buscando cómputo de IA “tipo torrent” (como Petals o AI Horde), pero esas redes:
+Petals → el cliente se conecta, pero el swarm público está vacío de seeders (0 servidores sirviendo bloques). AI Horde → tiene swarm vivo (36&#43; workers) pero no emite tool_calls: los modelos solo responden texto plano, sin JSON estructurado de herramientas. Un agente de código no puede ejecutar tareas. Solución final: OpenRouter → gateway de modelos con capa gratis (:free) que sí emiten tool_calls de verdad. Todo el cómputo pesado corre en servidores de OpenRouter; tu PC solo corre pi &#43; sus herramientas locales (read/bash/edit/write).">
+	<meta itemprop="datePublished" content="2026-09-21T14:05:21-03:00">
+	<meta itemprop="dateModified" content="2026-09-21T14:05:21-03:00">
+	<meta itemprop="wordCount" content="1150">
+	<meta itemprop="keywords" content="Ai">
+  
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:title" content="Configuración completa de pi &#43; OpenRouter (modelos gratis con tooling)">
+	<meta name="twitter:description" content="Configuración completa de pi &#43; OpenRouter (modelos gratis con tooling) Fecha: 21/9/2026 · PC: GTX 1050 2GB, lenta para LLMs locales → se usan modelos remotos gratis de OpenRouter. Estado: ✅ FUNCIONANDO — pi corre con default qwen/qwen3.8-27b:free y ejecuta tools (bash, write, curl, ls).
+1. Por qué esto El camino empezó buscando cómputo de IA “tipo torrent” (como Petals o AI Horde), pero esas redes:
+Petals → el cliente se conecta, pero el swarm público está vacío de seeders (0 servidores sirviendo bloques). AI Horde → tiene swarm vivo (36&#43; workers) pero no emite tool_calls: los modelos solo responden texto plano, sin JSON estructurado de herramientas. Un agente de código no puede ejecutar tareas. Solución final: OpenRouter → gateway de modelos con capa gratis (:free) que sí emiten tool_calls de verdad. Todo el cómputo pesado corre en servidores de OpenRouter; tu PC solo corre pi &#43; sus herramientas locales (read/bash/edit/write).">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Configuración completa de pi &#43; OpenRouter (modelos gratis con tooling)
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/pi-openrouter-setup/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="Configuración completa de pi &#43; OpenRouter (modelos gratis con tooling)
+
+Fecha: 21/9/2026 · PC: GTX 1050 2GB, lenta para LLMs locales → se usan modelos remotos gratis de OpenRouter.
+Estado: ✅ FUNCIONANDO — pi corre con default qwen/qwen3.8-27b:free y ejecuta tools (bash, write, curl, ls).
+
+
+1. Por qué esto
+El camino empezó buscando cómputo de IA &ldquo;tipo torrent&rdquo; (como Petals o AI Horde), pero esas redes:
+
+Petals → el cliente se conecta, pero el swarm público está vacío de seeders (0 servidores sirviendo bloques).
+AI Horde → tiene swarm vivo (36&#43; workers) pero no emite tool_calls: los modelos solo responden texto plano, sin JSON estructurado de herramientas. Un agente de código no puede ejecutar tareas.
+
+Solución final: OpenRouter → gateway de modelos con capa gratis (:free) que sí emiten tool_calls de verdad. Todo el cómputo pesado corre en servidores de OpenRouter; tu PC solo corre pi &#43; sus herramientas locales (read/bash/edit/write).">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Configuración completa de pi &#43; OpenRouter (modelos gratis con tooling)
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2026-09-21T14:05:21-03:00'>
+      September 21, 2026
+    </time>
+    
+    <br>
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/ai/">Ai</a>
+    
+    
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <h1 id="configuración-completa-de-pi--openrouter-modelos-gratis-con-tooling">Configuración completa de pi + OpenRouter (modelos gratis con tooling)</h1>
+<blockquote>
+<p>Fecha: 21/9/2026 · PC: GTX 1050 2GB, lenta para LLMs locales → se usan modelos remotos <strong>gratis</strong> de OpenRouter.
+Estado: ✅ FUNCIONANDO — <code>pi</code> corre con default <code>qwen/qwen3.8-27b:free</code> y ejecuta tools (bash, write, curl, ls).</p>
+</blockquote>
+<hr>
+<h2 id="1-por-qué-esto">1. Por qué esto</h2>
+<p>El camino empezó buscando cómputo de IA &ldquo;tipo torrent&rdquo; (como Petals o AI Horde), pero esas redes:</p>
+<ul>
+<li><strong>Petals</strong> → el cliente se conecta, pero el swarm público está <strong>vacío de seeders</strong> (0 servidores sirviendo bloques).</li>
+<li><strong>AI Horde</strong> → tiene swarm vivo (36+ workers) pero <strong>no emite <code>tool_calls</code></strong>: los modelos solo responden texto plano, sin JSON estructurado de herramientas. Un agente de código no puede ejecutar tareas.</li>
+</ul>
+<p><strong>Solución final:</strong> <strong>OpenRouter</strong> → gateway de modelos con capa <strong>gratis</strong> (<code>:free</code>) que <strong>sí emiten <code>tool_calls</code> de verdad</strong>. Todo el cómputo pesado corre en servidores de OpenRouter; tu PC solo corre <code>pi</code> + sus herramientas locales (read/bash/edit/write).</p>
+<hr>
+<h2 id="2-estado-inicial">2. Estado inicial</h2>
+<ul>
+<li><code>pi</code> ya instalado: <code>/home/esotericwarfare/.local/bin/pi</code> → symlink a <code>/mnt/linux2/pi/bin/pi</code> (v0.85.1).</li>
+<li>Config en <code>~/.pi/agent/</code>:
+<ul>
+<li><code>auth.json</code> → <code>{}</code> (sin credenciales).</li>
+<li><code>models.json</code> → solo provider <code>local</code> (Qwen3 0.6B/1.7B vía llama.cpp en <code>localhost:8001</code>).</li>
+<li><code>settings.json</code> → solo theme dark.</li>
+</ul>
+</li>
+<li><code>OPENROUTER_API_KEY=&quot;sk-or-v1-...&quot;</code> ya estaba exportada en <code>~/.bashrc</code> (línea 106).</li>
+<li>Herramientas de red: <code>openrouter.ai</code> responde 200 OK (0.29s) desde esta máquina. <code>github.com</code> y <code>health.petals.dev</code> NO responden (curl 000).</li>
+</ul>
+<hr>
+<h2 id="3-configuración-final-los-3-archivos">3. Configuración final (los 3 archivos)</h2>
+<h3 id="31-piagentauthjson--dejado-en-">3.1 <code>~/.pi/agent/auth.json</code> → dejado en <code>{}</code></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>{}
+</span></span></code></pre></div><blockquote>
+<p>⚠️ <strong>Importante:</strong> pi (provider <code>openrouter</code>) <strong>NO lee la key de auth.json</strong>. La lee de la variable de entorno <code>OPENROUTER_API_KEY</code> (verificado en <code>pi-ai/dist/env-api-keys.js</code>, línea 87:
+<code>openrouter: &quot;OPENROUTER_API_KEY&quot;</code>). Un JSON con formato raro en <code>auth.json</code> hace que pi diga <code>Provider is not configured: openrouter</code> — por eso se dejó vacío.</p>
+</blockquote>
+<h3 id="32-bashrc-ya-tenía-la-key">3.2 <code>~/.bashrc</code> (ya tenía la key)</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>export OPENROUTER_API_KEY<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;sk-or-v1-REVOKED&#34;</span>
+</span></span></code></pre></div><h3 id="33-piagentsettingsjson--el-archivo-clave">3.3 <code>~/.pi/agent/settings.json</code> — EL ARCHIVO CLAVE</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;lastChangelogVersion&#34;</span>: <span style="color:#e6db74">&#34;0.85.1&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;theme&#34;</span>: <span style="color:#e6db74">&#34;dark&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;defaultModel&#34;</span>: <span style="color:#e6db74">&#34;qwen/qwen3.8-27b:free&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;defaultProvider&#34;</span>: <span style="color:#e6db74">&#34;openrouter&#34;</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><blockquote>
+<p>⚠️ <strong>El campo correcto es <code>defaultModel</code> + <code>defaultProvider</code></strong>, NO <code>&quot;model&quot;</code>. Un <code>&quot;model&quot;</code> ahí no surte efecto y pi cae al catálogo embebido del último provider.
+(Le pregunté a pi mismo y confirmó: <em>&ldquo;El campo es <code>defaultModel</code> (junto con <code>defaultProvider</code>)&hellip; <code>~/.pi/agent/settings.json</code>&rdquo;</em>.)</p>
+</blockquote>
+<hr>
+<h2 id="4-por-qué-qwen-38-27b-y-no-nemotron-los-errores-402429">4. Por qué Qwen 3.8-27b y no Nemotron (los errores 402/429)</h2>
+<p>Esto costó descubrirlo. Los 21 modelos <code>:free</code> de OpenRouter <strong>tienen límite de ~4K tokens de salida por request gratis</strong>. Pero los modelos vienen de un <strong>catálogo embebido en pi</strong> con su propio <code>maxTokens</code>:</p>
+<table>
+	<thead>
+			<tr>
+					<th>Modelo</th>
+					<th>max_out según catálogo de pi</th>
+					<th>Resultado</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td><code>nvidia/nemotron-3-super-120b-a12b:free</code></td>
+					<td><strong>235.9K</strong></td>
+					<td>❌ <code>402</code> &ldquo;requested up to 234K tokens, can only afford 3593&rdquo;</td>
+			</tr>
+			<tr>
+					<td><code>google/gemma-4-31b-it:free</code></td>
+					<td>4.1K</td>
+					<td>⚠️ <code>429</code> rate-limited upstream (temporal)</td>
+			</tr>
+			<tr>
+					<td><code>qwen/qwen3.8-27b:free</code></td>
+					<td><strong>4.1K</strong></td>
+					<td>✅ funciona</td>
+			</tr>
+	</tbody>
+</table>
+<ul>
+<li>Cuando pi usa el default desde el catálogo embebido, manda <code>max_tokens</code> gigante → OpenRouter rechaza con <code>402</code> (sin crédito suficiente).</li>
+<li>Cuando pasás <code>--model xxx:free</code> explícito por CLI, pi a veces usa el id propio y manda max_tokens chico → entra.</li>
+<li><strong>Remedio elegido:</strong> default = <code>qwen/qwen3.8-27b:free</code>, cuyo catálogo ya pide 4.1K, cabe en el free-tier y soporta tools.</li>
+</ul>
+<blockquote>
+<p><strong>Nota:</strong> Verificar el <code>max-out</code> de un modelo con:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pi --list-models openrouter | grep &lt;modelo&gt;
+</span></span></code></pre></div><p>La 2ª columna numérica (context) y 3ª (max-out) indican qué pedirá pi. Si max-out &gt; ~8K en un modelo <code>:free</code>, esperate un 402.</p>
+</blockquote>
+<hr>
+<h2 id="5-comandos-útiles">5. Comandos útiles</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># verificar credenciales</span>
+</span></span><span style="display:flex;"><span>pi auth check --provider openrouter --json
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># → {&#34;status&#34;:&#34;ready&#34;,&#34;provider&#34;:&#34;openrouter&#34;,&#34;authType&#34;:&#34;api_key&#34;}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># listar modelos (catálogo con context/max-out)</span>
+</span></span><span style="display:flex;"><span>pi --list-models openrouter
+</span></span><span style="display:flex;"><span>pi --list-models
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># correr pi interactivo (usa el default de settings.json)</span>
+</span></span><span style="display:flex;"><span>pi
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># correr pi con un modelo específico</span>
+</span></span><span style="display:flex;"><span>pi --provider openrouter --model <span style="color:#e6db74">&#34;qwen/qwen3.8-27b:free&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># modo no interactivo (un solo mensaje)</span>
+</span></span><span style="display:flex;"><span>pi --print <span style="color:#e6db74">&#34;ejecuta ls y decime que ves&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ver el estado de TODOS los providers</span>
+</span></span><span style="display:flex;"><span>pi auth
+</span></span></code></pre></div><hr>
+<h2 id="6-pruebas-realizadas-todo-verificado-">6. Pruebas realizadas (todo verificado ✅)</h2>
+<table>
+	<thead>
+			<tr>
+					<th>Prueba</th>
+					<th>Comando</th>
+					<th>Resultado</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td><code>date</code> vía bash</td>
+					<td><code>pi --provider openrouter --model &quot;nvidia/...:free&quot; --print &quot;ejecuta date&quot;</code></td>
+					<td>✅ respondió día real</td>
+			</tr>
+			<tr>
+					<td>Crear archivo</td>
+					<td><code>--print &quot;crea /tmp/opencode/prueba_pi.txt con 'hola desde openrouter'&quot;</code></td>
+					<td>✅ contenido exacto</td>
+			</tr>
+			<tr>
+					<td>Acceder a web</td>
+					<td><code>--print &quot;curl opencode.ai/docs y resume&quot;</code></td>
+					<td>✅ &ldquo;OpenCode es un agente de code de IA para terminal&rdquo;</td>
+			</tr>
+			<tr>
+					<td><code>ls</code></td>
+					<td><code>--print &quot;ejecuta ls en /tmp/opencode y cuenta&quot;</code></td>
+					<td>✅ 38 archivos + 6 dirs</td>
+			</tr>
+			<tr>
+					<td>Default sin flags</td>
+					<td><code>pi --print &quot;ejecuta ls...&quot;</code> (sin <code>--model</code>)</td>
+					<td>✅ usa qwen y ejecuta tools</td>
+			</tr>
+	</tbody>
+</table>
+<p>El loop de agente (modelo emite <code>tool_calls</code> → pi ejecuta la herramienta → devuelve resultado → el modelo continúa) funciona end-to-end.</p>
+<hr>
+<h2 id="7-modelos-free-disponibles-con-tools-openrouter">7. Modelos <code>:free</code> disponibles con tools (OpenRouter)</h2>
+<p>Verificados via API (21 gratis; todos con <code>tools=True</code> salvo 2):</p>
+<pre tabindex="0"><code>google/gemma-4-31b-it:free                 google/gemma-4-26b-a4b-it:free
+qwen/qwen3.8-27b:free                     
+nvidia/nemotron-3-ultra-550b-a55b:free      (potente, pero max-out gigante → 402 sin créditos)
+nvidia/nemotron-3-super-120b-a12b:free      (idem, 235.9K → 402)
+nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free
+thinkingmachines/inkling:free / inkling-small:free
+poolside/laguna-s-2.1:free / laguna-xs-2.1:free
+cohere/north-mini-code:free
+minimax/minimax-m2.7:free  minimax/minimax-m3:free
+dots-studio/dots-3-note-preview:free
+liquid/lfm-2.5-2.6b:free
+inclusionai/ling-3.0-flash-*:free
+z-ai/glm-5.2:free (sin tools)
+</code></pre><p><strong>Criterio de elección para que funcione gratis:</strong></p>
+<ol>
+<li>Que aparezca en <code>pi --list-models openrouter</code> con <strong>max-out ≤ ~8K</strong>.</li>
+<li>Que tenga <code>tools</code> (la columna de thinking/images no importa, esto sí).</li>
+<li>Para coding, los mejores de esta lista: <code>qwen/qwen3.8-27b:free</code>, <code>gemma-4-*/:free</code>, <code>cohere/north-mini-code:free</code>, <code>poolside/laguna-*:free</code>.</li>
+</ol>
+<hr>
+<h2 id="8-cómo-cambiar-de-modelo">8. Cómo cambiar de modelo</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># 1. ver ids</span>
+</span></span><span style="display:flex;"><span>pi --list-models openrouter | grep <span style="color:#e6db74">&#34;:free&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 2. probar en una llamada (sin tocar config)</span>
+</span></span><span style="display:flex;"><span>OPENROUTER_API_KEY<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;sk-or-v1-...&#34;</span> pi --provider openrouter --model <span style="color:#e6db74">&#34;google/gemma-4-31b-it:free&#34;</span> --print <span style="color:#e6db74">&#34;hola&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 3. si anda, fijarlo como default</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#    editar ~/.pi/agent/settings.json:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#      &#34;defaultModel&#34;: &#34;google/gemma-4-31b-it:free&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#      &#34;defaultProvider&#34;: &#34;openrouter&#34;</span>
+</span></span></code></pre></div><hr>
+<h2 id="9-limitaciones-y-troubleshooting">9. Limitaciones y troubleshooting</h2>
+<ul>
+<li><strong>402 &ldquo;requires more credits / fewer max_tokens&rdquo;</strong> → el <code>maxTokens</code> del catálogo excede el free-tier. Usá un modelo con max-out ≤8K (o cargá credits en <a href="https://openrouter.ai/settings/credits">https://openrouter.ai/settings/credits</a>).</li>
+<li><strong>429 &ldquo;temporarily rate-limited&rdquo;</strong> → el proveedor upstream (p. ej. Google AI Studio) está saturado en su pool compartido; esperá unos minutos o cambiá de modelo. (&ldquo;add your own key&rdquo; en OpenRouter te da tu propio pool).</li>
+<li><strong>&ldquo;Provider is not configured&rdquo;</strong> → revisá que <code>auth.json</code> esté en <code>{}</code> y que <code>OPENROUTER_API_KEY</code> esté exportada (o <code>export</code> en la shell).</li>
+<li><strong>Free tier no es para producción</strong> → límite de tasa. Para uso fluido, los modelos de pago por uso de OpenRouter son muy baratos (~USD 0.01–0.06 / M tokens).</li>
+</ul>
+<hr>
+<h2 id="10-archivos-tocados">10. Archivos tocados</h2>
+<table>
+	<thead>
+			<tr>
+					<th>Archivo</th>
+					<th>Estado</th>
+					<th>Uso</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td><code>~/.pi/agent/auth.json</code></td>
+					<td><code>{}</code> (limpio)</td>
+					<td>la key NO va acá para openrouter</td>
+			</tr>
+			<tr>
+					<td><code>~/.pi/agent/settings.json</code></td>
+					<td><code>defaultModel</code> + <code>defaultProvider</code></td>
+					<td><strong>el archivo clave</strong></td>
+			</tr>
+			<tr>
+					<td><code>~/.pi/agent/models.json</code></td>
+					<td>sin cambios</td>
+					<td>provider <code>local</code> (Qwen3) intacto</td>
+			</tr>
+			<tr>
+					<td><code>~/.pi/agent/models.json.bak</code></td>
+					<td>backup</td>
+					<td>del models.json original</td>
+			</tr>
+			<tr>
+					<td><code>~/.bashrc</code> (línea 106)</td>
+					<td><code>export OPENROUTER_API_KEY</code></td>
+					<td>ya existía</td>
+			</tr>
+	</tbody>
+</table>
+<hr>
+<h2 id="11-resumen-del-recorrido-qué-se-probó-antes">11. Resumen del recorrido (qué se probó antes)</h2>
+<ol>
+<li><strong>Petals</strong> (P2P real tipo torrent): setup completo en <code>/mnt/linux2/petals-client/.venv</code> (Python 3.11, hivemind parcheado). Conectó al bootstrap, cargó el modelo del swarm, pero <strong><code>MissingBlocksError: no servers holding blocks online</code></strong> → swarm sin seeders. <em>(Archivo: <code>dht_check.py</code>)</em></li>
+<li><strong>AI Horde</strong> (swarm de voluntarios): <code>horde.py</code> funcional para generar texto/imágenes con GPUs ajenas (sin tools). Verificado: worker <code>Kobold-Scribe</code> generó con un Llama-3.2-3B. <strong>Conclusión: no sirve para agentes</strong> (<code>tools_test.py</code> probó los 5 models <code>aphrodite</code> — ninguno emite <code>tool_calls</code>).</li>
+<li><strong>OpenRouter + pi</strong>: ✅ la solución final, documentada arriba.</li>
+<li><strong>pi + tinygrad local</strong>: tu GTX 1050 con Qwen3-0.6B sigue disponible como provider <code>local</code> en models.json (para cuando quieras cero dependencia de red).</li>
+</ol>
+<hr>
+<h3 id="anexo--evidencia-de-que-ai-horde-no-emite-tool_calls">Anexo — evidencia de que AI Horde no emite tool_calls</h3>
+<p>Con <code>aphrodite/TheDrummer/Cydonia-24B-v4.3</code> (backend que debería soportar function calling):</p>
+<pre tabindex="0"><code>User:  &#34;Llama la herramienta get_weather(&#39;Buenos Aires&#39;)&#34;
+Model: &#34;Let me check the current weather for Buenos Aires... I don&#39;t have r...&#34;  ← texto, no JSON
+</code></pre><p>(Hasta <code>Skyfall-31B-v4.2</code> — el flagship RP — &ldquo;imita&rdquo; la llamada escribiéndola como texto plano, sin <code>tool_calls</code> estructurado.)</p>
+
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+
+</footer>
+
+
+</body>
+</html>

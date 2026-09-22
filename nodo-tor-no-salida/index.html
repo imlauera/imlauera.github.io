@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/nodo-tor-no-salida/">
+	<meta property="og:site_name" content="Imlauer">
+	<meta property="og:title" content="Nodo de Tor NO de salida — Tutorial completo">
+	<meta property="og:description" content="Nodo de Tor NO de salida — Tutorial completo Guía para montar un relay de Tor que no es de salida (middle/guard), desde cero, adaptada a tu máquina (Arch Linux, tor 0.4.9.12, 6 núcleos, 7.7 GB RAM).
+1. Tipos de nodos en la red Tor Un circuito Tor típico tiene 3 saltos:
+Cliente &lt;-&gt; Guard (entrada) &lt;-&gt; Middle (medio) &lt;-&gt; Exit (salida) &lt;-&gt; Destino Tipo Rol Qué ve Riesgo legal Recomendado para Cliente Solo usa Tor (tu navegador, torsocks) — Ninguno Todos Guard / Entry Primer salto del circuito. Conecta con el usuario La IP del cliente, pero NO el destino Bajo-medio Operadores con uptime estable Middle Segundo salto, solo reenvía tráfico cifrado entre relays No ve IP del cliente ni destino Mínimo Casi todo el mundo — es “el” nodo no-exit Exit Último salto. El tráfico sale a internet desde tu IP El destino y el contenido si es HTTP Alto (quejas de abuso, DMCA, posible contacto policial) Operadores con soporte legal y hosting que lo permita Bridge Relay no listado en el directorio público. Solo entrada Lo mismo que un guard, pero “secreto” Bajo Redes censuradas, IP única en casa Snowflake Puente con transporte complementario — Bajo Voluntarios ligeros Onion service Servicio alojado en .onion (antes “hidden service”) — Depende de lo que alojes Quien publica un servicio Reglas de oro:">
+	<meta property="og:locale" content="es_es">
+	<meta property="og:type" content="article">
+		<meta property="article:published_time" content="2026-09-11T17:23:36-03:00">
+		<meta property="article:modified_time" content="2026-09-11T17:23:36-03:00">
+		<meta property="article:tag" content="Tor">
+
+  
+	<meta itemprop="name" content="Nodo de Tor NO de salida — Tutorial completo">
+	<meta itemprop="description" content="Nodo de Tor NO de salida — Tutorial completo Guía para montar un relay de Tor que no es de salida (middle/guard), desde cero, adaptada a tu máquina (Arch Linux, tor 0.4.9.12, 6 núcleos, 7.7 GB RAM).
+1. Tipos de nodos en la red Tor Un circuito Tor típico tiene 3 saltos:
+Cliente &lt;-&gt; Guard (entrada) &lt;-&gt; Middle (medio) &lt;-&gt; Exit (salida) &lt;-&gt; Destino Tipo Rol Qué ve Riesgo legal Recomendado para Cliente Solo usa Tor (tu navegador, torsocks) — Ninguno Todos Guard / Entry Primer salto del circuito. Conecta con el usuario La IP del cliente, pero NO el destino Bajo-medio Operadores con uptime estable Middle Segundo salto, solo reenvía tráfico cifrado entre relays No ve IP del cliente ni destino Mínimo Casi todo el mundo — es “el” nodo no-exit Exit Último salto. El tráfico sale a internet desde tu IP El destino y el contenido si es HTTP Alto (quejas de abuso, DMCA, posible contacto policial) Operadores con soporte legal y hosting que lo permita Bridge Relay no listado en el directorio público. Solo entrada Lo mismo que un guard, pero “secreto” Bajo Redes censuradas, IP única en casa Snowflake Puente con transporte complementario — Bajo Voluntarios ligeros Onion service Servicio alojado en .onion (antes “hidden service”) — Depende de lo que alojes Quien publica un servicio Reglas de oro:">
+	<meta itemprop="datePublished" content="2026-09-11T17:23:36-03:00">
+	<meta itemprop="dateModified" content="2026-09-11T17:23:36-03:00">
+	<meta itemprop="wordCount" content="945">
+	<meta itemprop="keywords" content="Tor">
+  
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:title" content="Nodo de Tor NO de salida — Tutorial completo">
+	<meta name="twitter:description" content="Nodo de Tor NO de salida — Tutorial completo Guía para montar un relay de Tor que no es de salida (middle/guard), desde cero, adaptada a tu máquina (Arch Linux, tor 0.4.9.12, 6 núcleos, 7.7 GB RAM).
+1. Tipos de nodos en la red Tor Un circuito Tor típico tiene 3 saltos:
+Cliente &lt;-&gt; Guard (entrada) &lt;-&gt; Middle (medio) &lt;-&gt; Exit (salida) &lt;-&gt; Destino Tipo Rol Qué ve Riesgo legal Recomendado para Cliente Solo usa Tor (tu navegador, torsocks) — Ninguno Todos Guard / Entry Primer salto del circuito. Conecta con el usuario La IP del cliente, pero NO el destino Bajo-medio Operadores con uptime estable Middle Segundo salto, solo reenvía tráfico cifrado entre relays No ve IP del cliente ni destino Mínimo Casi todo el mundo — es “el” nodo no-exit Exit Último salto. El tráfico sale a internet desde tu IP El destino y el contenido si es HTTP Alto (quejas de abuso, DMCA, posible contacto policial) Operadores con soporte legal y hosting que lo permita Bridge Relay no listado en el directorio público. Solo entrada Lo mismo que un guard, pero “secreto” Bajo Redes censuradas, IP única en casa Snowflake Puente con transporte complementario — Bajo Voluntarios ligeros Onion service Servicio alojado en .onion (antes “hidden service”) — Depende de lo que alojes Quien publica un servicio Reglas de oro:">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Nodo de Tor NO de salida — Tutorial completo
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/nodo-tor-no-salida/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="Nodo de Tor NO de salida — Tutorial completo
+Guía para montar un relay de Tor que no es de salida (middle/guard), desde cero, adaptada a tu máquina (Arch Linux, tor 0.4.9.12, 6 núcleos, 7.7 GB RAM).
+
+1. Tipos de nodos en la red Tor
+Un circuito Tor típico tiene 3 saltos:
+Cliente &lt;-&gt; Guard (entrada) &lt;-&gt; Middle (medio) &lt;-&gt; Exit (salida) &lt;-&gt; Destino
+
+	
+			
+					Tipo
+					Rol
+					Qué ve
+					Riesgo legal
+					Recomendado para
+			
+	
+	
+			
+					Cliente
+					Solo usa Tor (tu navegador, torsocks)
+					—
+					Ninguno
+					Todos
+			
+			
+					Guard / Entry
+					Primer salto del circuito. Conecta con el usuario
+					La IP del cliente, pero NO el destino
+					Bajo-medio
+					Operadores con uptime estable
+			
+			
+					Middle
+					Segundo salto, solo reenvía tráfico cifrado entre relays
+					No ve IP del cliente ni destino
+					Mínimo
+					Casi todo el mundo — es &ldquo;el&rdquo; nodo no-exit
+			
+			
+					Exit
+					Último salto. El tráfico sale a internet desde tu IP
+					El destino y el contenido si es HTTP
+					Alto (quejas de abuso, DMCA, posible contacto policial)
+					Operadores con soporte legal y hosting que lo permita
+			
+			
+					Bridge
+					Relay no listado en el directorio público. Solo entrada
+					Lo mismo que un guard, pero &ldquo;secreto&rdquo;
+					Bajo
+					Redes censuradas, IP única en casa
+			
+			
+					Snowflake
+					Puente con transporte complementario
+					—
+					Bajo
+					Voluntarios ligeros
+			
+			
+					Onion service
+					Servicio alojado en .onion (antes &ldquo;hidden service&rdquo;)
+					—
+					Depende de lo que alojes
+					Quien publica un servicio
+			
+	
+
+
+Reglas de oro:">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Nodo de Tor NO de salida — Tutorial completo
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2026-09-11T17:23:36-03:00'>
+      September 11, 2026
+    </time>
+    
+    <br>
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/tor/">Tor</a>
+    
+    
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <h1 id="nodo-de-tor-no-de-salida--tutorial-completo">Nodo de Tor NO de salida — Tutorial completo</h1>
+<p>Guía para montar un relay de Tor que <strong>no es de salida</strong> (middle/guard), desde cero, adaptada a tu máquina (Arch Linux, tor 0.4.9.12, 6 núcleos, 7.7 GB RAM).</p>
+<hr>
+<h2 id="1-tipos-de-nodos-en-la-red-tor">1. Tipos de nodos en la red Tor</h2>
+<p>Un circuito Tor típico tiene 3 saltos:</p>
+<pre tabindex="0"><code>Cliente &lt;-&gt; Guard (entrada) &lt;-&gt; Middle (medio) &lt;-&gt; Exit (salida) &lt;-&gt; Destino
+</code></pre><table>
+	<thead>
+			<tr>
+					<th>Tipo</th>
+					<th>Rol</th>
+					<th>Qué ve</th>
+					<th>Riesgo legal</th>
+					<th>Recomendado para</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td><strong>Cliente</strong></td>
+					<td>Solo usa Tor (tu navegador, torsocks)</td>
+					<td>—</td>
+					<td>Ninguno</td>
+					<td>Todos</td>
+			</tr>
+			<tr>
+					<td><strong>Guard / Entry</strong></td>
+					<td>Primer salto del circuito. Conecta con el usuario</td>
+					<td>La IP del cliente, pero NO el destino</td>
+					<td>Bajo-medio</td>
+					<td>Operadores con uptime estable</td>
+			</tr>
+			<tr>
+					<td><strong>Middle</strong></td>
+					<td>Segundo salto, solo reenvía tráfico cifrado entre relays</td>
+					<td>No ve IP del cliente ni destino</td>
+					<td><strong>Mínimo</strong></td>
+					<td>Casi todo el mundo — es &ldquo;el&rdquo; nodo no-exit</td>
+			</tr>
+			<tr>
+					<td><strong>Exit</strong></td>
+					<td>Último salto. El tráfico sale a internet desde tu IP</td>
+					<td>El destino y el contenido si es HTTP</td>
+					<td><strong>Alto</strong> (quejas de abuso, DMCA, posible contacto policial)</td>
+					<td>Operadores con soporte legal y hosting que lo permita</td>
+			</tr>
+			<tr>
+					<td><strong>Bridge</strong></td>
+					<td>Relay <strong>no listado</strong> en el directorio público. Solo entrada</td>
+					<td>Lo mismo que un guard, pero &ldquo;secreto&rdquo;</td>
+					<td>Bajo</td>
+					<td>Redes censuradas, IP única en casa</td>
+			</tr>
+			<tr>
+					<td><strong>Snowflake</strong></td>
+					<td>Puente con transporte complementario</td>
+					<td>—</td>
+					<td>Bajo</td>
+					<td>Voluntarios ligeros</td>
+			</tr>
+			<tr>
+					<td><strong>Onion service</strong></td>
+					<td>Servicio alojado en .onion (antes &ldquo;hidden service&rdquo;)</td>
+					<td>—</td>
+					<td>Depende de lo que alojes</td>
+					<td>Quien publica un servicio</td>
+			</tr>
+	</tbody>
+</table>
+<blockquote>
+<p><strong>Reglas de oro:</strong></p>
+<ul>
+<li>Un nodo middle/guard <strong>nunca</strong> aparece como IP de origen del tráfico. Los quejas de abuso son casi inexistentes.</li>
+<li>El de salida es el único que genera exposición legal real. Por eso en este tutorial <strong>no</strong> lo configuramos.</li>
+<li>El flag <code>ExitRelay 0</code> + <code>ExitPolicy reject *:*</code> garantiza que jamas actuarás como salida.</li>
+</ul>
+</blockquote>
+<h3 id="guard-vs-middle-puedo-elegir">Guard vs Middle: ¿puedo elegir?</h3>
+<p>No se elige manualmente. Todo relay de no-salida empieza como <strong>middle</strong> y, si es estable y rápido (≥2 MB/s), los directorios de Tor le dan el flag <strong>Guard</strong> automáticamente (~8 días a meses de uptime). No hace falta configuración extra.</p>
+<hr>
+<h2 id="2-requisitos-de-un-relay">2. Requisitos de un relay</h2>
+<p>Requisitos oficiales del Tor Project (guard/middle):</p>
+<ul>
+<li>Una IP pública IPv4 estática (o IPv6).</li>
+<li>≥10 Mbit/s de subida y bajada (16 Mbit/s recomendado).</li>
+<li>≥100 GB/mes de tráfico (2 TB+ ideal).</li>
+<li>512 MB RAM si &lt;40 Mbit/s; 1 GB si más.</li>
+<li>Uptime lo más cercano a 24/7 (reinicios frecuentes = pierdes el flag Stable).</li>
+<li><strong>OJO con tu máquina:</strong> tu IP es <code>192.168.0.143</code> (LAN privada detrás de NAT). Un relay público necesita abrir un puerto en el firewall/router (port-forwarding del ORPort). Si no quieres/compartes IP con servicios, la alternativa es un <strong>bridge</strong>.</li>
+</ul>
+<h3 id="tu-hardware">Tu hardware</h3>
+<ul>
+<li>RAM: 7.7 GB → sobrado (usa <code>MaxMemInQueues 512 MB</code> para no acaparar).</li>
+<li>CPUs: 6 → bien.</li>
+<li>Tor: 0.4.9.12 ya instalado en <code>/etc/tor/torrc</code>.</li>
+</ul>
+<hr>
+<h2 id="3-configuración-relay-middle-no-exit">3. Configuración (relay middle no-exit)</h2>
+<p>Edita <code>/etc/tor/torrc</code>. Añade/ajusta estas directivas:</p>
+<pre tabindex="0"><code>## Identidad
+Nickname MiNodoPrivado          # sin espacios, alfanumérico, máx 19 chars
+ContactInfo usuario@ejemplo.com # obligatorio de facto: canal de abuso
+
+## Puerto de relay (como llegan los demás relays/clientes)
+ORPort 9001
+# Si tienes IPv6 pública, añade:  ORPort [tu::ipv6]:9001 IPv6Only
+
+## CRÍTICO: nodo NO de salida
+ExitRelay 0
+ExitPolicy reject *:*
+
+## Apagar lo que no usamos (no soy cliente ni bridge)
+SocksPort 0
+BridgeRelay 0
+DirPort 0
+
+## Seguridad
+Sandbox 1
+DisableDebuggerAttachment 1
+ControlPort 0
+MaxMemInQueues 512 MB
+
+## Límites de ancho de banda (ajusta a tu línea)
+## 5 MB/s = ~40 Mbit/s por dirección. 12 MB = ~96 Mbit/s.
+RelayBandwidthRate  5 MBytes
+RelayBandwidthBurst 10 MBytes
+
+## Capa dura mensual (evita pasarte con tu proveedor de internet)
+AccountingStart month 1 00:00
+AccountingRule sum
+AccountingMax 1500 GBytes
+
+## Solo si ya tienes otro relay: evita que una misma ruta use dos de tus nodos
+# MyFamily &lt;fingerprint1&gt;,&lt;fingerprint2&gt;
+</code></pre><p>Pasos:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo systemctl edit --force --full tor   <span style="color:#75715e"># ó simplemente edita /etc/tor/torrc</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># pega la config de arriba (o al final del archivo)</span>
+</span></span><span style="display:flex;"><span>sudo systemctl restart tor
+</span></span></code></pre></div><hr>
+<h2 id="4-firewall">4. Firewall</h2>
+<p>Abre el ORPort (9001). Con nftables/iptables:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># iptables</span>
+</span></span><span style="display:flex;"><span>sudo iptables -A INPUT -p tcp --dport <span style="color:#ae81ff">9001</span> -j ACCEPT
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># nftables</span>
+</span></span><span style="display:flex;"><span>sudo nft add rule inet filter input tcp dport <span style="color:#ae81ff">9001</span> accept
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ufw</span>
+</span></span><span style="display:flex;"><span>sudo ufw allow 9001/tcp
+</span></span></code></pre></div><blockquote>
+<p>Si estás detrás de NAT (tu caso): configura <strong>port-forwarding</strong> en el router del puerto 9001 → 192.168.0.143:9001, e idealmente IP fija en el router (o el relay se rompe al cambiar la IP).</p>
+</blockquote>
+<hr>
+<h2 id="5-verificación">5. Verificación</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo journalctl -eu tor -f
+</span></span></code></pre></div><p>En los primeros 5-10 min deberías ver:</p>
+<ul>
+<li><code>Bootstrapped 100% (done)</code></li>
+<li><code>Registered server transport</code> o <code>Self-testing indicates your ORPort 9001 is reachable from the outside. Excellent.</code></li>
+<li><code>Performing bandwidth self-test... done</code></li>
+</ul>
+<p>Comprueba la dirección pública desde fuera:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nc -zv TU_IP_PUBLICA <span style="color:#ae81ff">9001</span>
+</span></span></code></pre></div><p>Tu fingerprint está en <code>/var/lib/tor/fingerprint</code>. A las 1-2 horas aparecerás en el buscador oficial:
+<a href="https://metrics.torproject.org/rs.html#search/MiNodoPrivado">https://metrics.torproject.org/rs.html#search/MiNodoPrivado</a></p>
+<hr>
+<h2 id="6-qué-esperar-curva-de-rampa">6. Qué esperar (curva de rampa)</h2>
+<table>
+	<thead>
+			<tr>
+					<th>Periodo</th>
+					<th>Tráfico</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>Semana 1</td>
+					<td>&lt;5% (peso del consensus en 0)</td>
+			</tr>
+			<tr>
+					<td>Semana 2-3</td>
+					<td>5-70%, los medidores de ancho de banda te miden</td>
+			</tr>
+			<tr>
+					<td>Semana 4+</td>
+					<td>70-100% (estado estacionario)</td>
+			</tr>
+			<tr>
+					<td>Mes ~2-6</td>
+					<td>Flag <strong>Guard</strong> si hay uptime estable</td>
+			</tr>
+	</tbody>
+</table>
+<blockquote>
+<p>No reinicies a menudo: cada reinicio resetea contadores de los directorios. Actualiza paquetes/kernel en horas valle.</p>
+</blockquote>
+<hr>
+<h2 id="7-mantenimiento">7. Mantenimiento</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Estado en vivo (interfaz de consola tipo htop)</span>
+</span></span><span style="display:flex;"><span>sudo pacman -S nyx
+</span></span><span style="display:flex;"><span>sudo nyx
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Logs</span>
+</span></span><span style="display:flex;"><span>sudo journalctl -u tor -f
+</span></span></code></pre></div><p>Comprueba tu relay en <a href="https://metrics.torproject.org">https://metrics.torproject.org</a> y activa alertas (Tor Weather).</p>
+<hr>
+<h2 id="8-resumen-de-decisiones">8. Resumen de decisiones</h2>
+<ol>
+<li><strong>Relay middle/guard</strong> (este tutorial): no-exit, riesgo mínimo, ayuda a la red. Se elige con <code>ExitRelay 0</code>.</li>
+<li><strong>Bridge</strong>: si estás en casa con IP única compartida y no quieres que tu IP quede listada como relay público — pero no lo mezcles con el relay público en la misma IP.</li>
+<li><strong>Exit</strong>: NO recomendado. Requiere hosting que lo permita, mailbox de abuso y respaldo legal. Fuera del alcance de este tutorial.</li>
+</ol>
+<hr>
+<h2 id="fuentes">Fuentes</h2>
+<ul>
+<li>Tor Project — Types of relays: <a href="https://community.torproject.org/relay/types-of-relays/">https://community.torproject.org/relay/types-of-relays/</a></li>
+<li>Tor Project — Relay Operations: <a href="https://community.torproject.org/relay/setup/">https://community.torproject.org/relay/setup/</a></li>
+<li>EFF — What is a Tor relay: <a href="https://www.eff.org/pages/what-tor-relay">https://www.eff.org/pages/what-tor-relay</a></li>
+<li>Tor Specifications (roles guard/middle/exit): <a href="https://spec.torproject.org/glossary.html">https://spec.torproject.org/glossary.html</a></li>
+</ul>
+
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+
+</footer>
+
+
+</body>
+</html>

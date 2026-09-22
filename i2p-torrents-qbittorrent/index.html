@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/i2p-torrents-qbittorrent/">
+	<meta property="og:site_name" content="Imlauer">
+	<meta property="og:title" content="Tutorial completo: I2P para torrents (seteando i2pd &#43; qBittorrent)">
+	<meta property="og:description" content="🧅 Tutorial completo: I2P para torrents (seteando i2pd &#43; qBittorrent) Fecha: 2026-09-19 · Sistema: Arch Linux · Router: i2pd · Cliente: qbittorrent-nox Resultado: descargar torrents por I2P de forma anónima, buscando en indexers .i2p.
+Índice Resumen de lo que se armó (mapa de puertos) Instalar y configurar i2pd Exponer i2pd en la LAN (opcional) Cómo se accede a una página .i2p (curl / lynx / w3m) Cómo encontré las páginas de torrents (addressbook) Dónde buscar torrents en I2P (indexers y trackers) Configurar qBittorrent para bajar por I2P Cómo bajar un torrent manualmente (paso a paso) Verificación &#43; troubleshooting Privacidad 1) Mapa de lo que se armó Todo vive en tu PC (192.168.0.143 en la LAN). Los puertos locales:">
+	<meta property="og:locale" content="es_es">
+	<meta property="og:type" content="article">
+		<meta property="article:published_time" content="2026-09-19T00:34:02-03:00">
+		<meta property="article:modified_time" content="2026-09-19T00:34:02-03:00">
+		<meta property="article:tag" content="I2p">
+
+  
+	<meta itemprop="name" content="Tutorial completo: I2P para torrents (seteando i2pd &#43; qBittorrent)">
+	<meta itemprop="description" content="🧅 Tutorial completo: I2P para torrents (seteando i2pd &#43; qBittorrent) Fecha: 2026-09-19 · Sistema: Arch Linux · Router: i2pd · Cliente: qbittorrent-nox Resultado: descargar torrents por I2P de forma anónima, buscando en indexers .i2p.
+Índice Resumen de lo que se armó (mapa de puertos) Instalar y configurar i2pd Exponer i2pd en la LAN (opcional) Cómo se accede a una página .i2p (curl / lynx / w3m) Cómo encontré las páginas de torrents (addressbook) Dónde buscar torrents en I2P (indexers y trackers) Configurar qBittorrent para bajar por I2P Cómo bajar un torrent manualmente (paso a paso) Verificación &#43; troubleshooting Privacidad 1) Mapa de lo que se armó Todo vive en tu PC (192.168.0.143 en la LAN). Los puertos locales:">
+	<meta itemprop="datePublished" content="2026-09-19T00:34:02-03:00">
+	<meta itemprop="dateModified" content="2026-09-19T00:34:02-03:00">
+	<meta itemprop="wordCount" content="1061">
+	<meta itemprop="keywords" content="I2p">
+  
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:title" content="Tutorial completo: I2P para torrents (seteando i2pd &#43; qBittorrent)">
+	<meta name="twitter:description" content="🧅 Tutorial completo: I2P para torrents (seteando i2pd &#43; qBittorrent) Fecha: 2026-09-19 · Sistema: Arch Linux · Router: i2pd · Cliente: qbittorrent-nox Resultado: descargar torrents por I2P de forma anónima, buscando en indexers .i2p.
+Índice Resumen de lo que se armó (mapa de puertos) Instalar y configurar i2pd Exponer i2pd en la LAN (opcional) Cómo se accede a una página .i2p (curl / lynx / w3m) Cómo encontré las páginas de torrents (addressbook) Dónde buscar torrents en I2P (indexers y trackers) Configurar qBittorrent para bajar por I2P Cómo bajar un torrent manualmente (paso a paso) Verificación &#43; troubleshooting Privacidad 1) Mapa de lo que se armó Todo vive en tu PC (192.168.0.143 en la LAN). Los puertos locales:">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Tutorial completo: I2P para torrents (seteando i2pd &#43; qBittorrent)
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/i2p-torrents-qbittorrent/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="🧅 Tutorial completo: I2P para torrents (seteando i2pd &#43; qBittorrent)
+Fecha: 2026-09-19 · Sistema: Arch Linux · Router: i2pd · Cliente: qbittorrent-nox
+Resultado: descargar torrents por I2P de forma anónima, buscando en indexers .i2p.
+
+Índice
+
+Resumen de lo que se armó (mapa de puertos)
+Instalar y configurar i2pd
+Exponer i2pd en la LAN (opcional)
+Cómo se accede a una página .i2p (curl / lynx / w3m)
+Cómo encontré las páginas de torrents (addressbook)
+Dónde buscar torrents en I2P (indexers y trackers)
+Configurar qBittorrent para bajar por I2P
+Cómo bajar un torrent manualmente (paso a paso)
+Verificación &#43; troubleshooting
+Privacidad
+
+
+1) Mapa de lo que se armó
+Todo vive en tu PC (192.168.0.143 en la LAN). Los puertos locales:">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Tutorial completo: I2P para torrents (seteando i2pd &#43; qBittorrent)
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2026-09-19T00:34:02-03:00'>
+      September 19, 2026
+    </time>
+    
+    <br>
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/i2p/">I2p</a>
+    
+    
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <h1 id="-tutorial-completo-i2p-para-torrents-seteando-i2pd--qbittorrent">🧅 Tutorial completo: I2P para torrents (seteando i2pd + qBittorrent)</h1>
+<p>Fecha: 2026-09-19 · Sistema: Arch Linux · Router: <code>i2pd</code> · Cliente: <code>qbittorrent-nox</code>
+Resultado: descargar torrents por I2P de forma <strong>anónima</strong>, buscando en indexers <code>.i2p</code>.</p>
+<hr>
+<h2 id="índice">Índice</h2>
+<ol>
+<li>Resumen de lo que se armó (mapa de puertos)</li>
+<li>Instalar y configurar i2pd</li>
+<li>Exponer i2pd en la LAN (opcional)</li>
+<li>Cómo se accede a una página <code>.i2p</code> (curl / lynx / w3m)</li>
+<li>Cómo encontré las páginas de torrents (addressbook)</li>
+<li>Dónde buscar torrents en I2P (indexers y trackers)</li>
+<li>Configurar qBittorrent para bajar por I2P</li>
+<li>Cómo bajar un torrent manualmente (paso a paso)</li>
+<li>Verificación + troubleshooting</li>
+<li>Privacidad</li>
+</ol>
+<hr>
+<h2 id="1-mapa-de-lo-que-se-armó">1) Mapa de lo que se armó</h2>
+<p>Todo vive en tu PC (<code>192.168.0.143</code> en la LAN). Los puertos locales:</p>
+<table>
+	<thead>
+			<tr>
+					<th>Puerto</th>
+					<th>Servicio</th>
+					<th>Uso</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td><code>7656</code></td>
+					<td>i2pd <strong>SAM API</strong></td>
+					<td>lo usa qBittorrent (I2P)</td>
+			</tr>
+			<tr>
+					<td><code>4444</code></td>
+					<td>i2pd proxy <strong>HTTP</strong></td>
+					<td>curl / lynx / w3m / navegador</td>
+			</tr>
+			<tr>
+					<td><code>4447</code></td>
+					<td>i2pd proxy <strong>SOCKS5</strong></td>
+					<td>otro cliente o apps socks</td>
+			</tr>
+			<tr>
+					<td><code>7070</code></td>
+					<td>i2pd <strong>webconsole</strong></td>
+					<td>estado del router</td>
+			</tr>
+			<tr>
+					<td><code>8080</code></td>
+					<td>qBittorrent WebUI</td>
+					<td>panels de torrents</td>
+			</tr>
+	</tbody>
+</table>
+<p>Flujo de datos: <strong>qBittorrent → SAM(7656) → red I2P → peers I2P</strong>.
+La IP real nunca se expone: todo el tráfico va dentro de la red I2P.</p>
+<hr>
+<h2 id="2-instalar-y-configurar-i2pd">2) Instalar y configurar i2pd</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo pacman -S i2pd
+</span></span><span style="display:flex;"><span>sudo systemctl enable --now i2pd
+</span></span></code></pre></div><p>Config principal: <code>/etc/i2pd/i2pd.conf</code>.</p>
+<p>Chequear que esté activo y escuchando:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>systemctl is-active i2pd
+</span></span><span style="display:flex;"><span>ss -tlnp | grep -E <span style="color:#e6db74">&#39;7656|4444|4447&#39;</span>
+</span></span></code></pre></div><blockquote>
+<p><strong>El warm-up</strong>: al instalar/reiniciar el router &ldquo;calienta&rdquo; (genera claves y
+busca peers fast/stable). Los primeros 1 a 5+ minutos las páginas <code>.i2p</code>
+dan timeout (<code>000</code>). Es esperable, no es un error.</p>
+</blockquote>
+<p>Reiniciar (en frío otra vez):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo systemctl restart i2pd
+</span></span></code></pre></div><hr>
+<h2 id="3-exponer-i2pd-en-la-lan-opcional">3) Exponer i2pd en la LAN (opcional)</h2>
+<p>Por defecto i2pd solo escucha en <code>127.0.0.1</code>. Para usarlo desde otra computadora
+editar <code>/etc/i2pd/i2pd.conf</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-ini" data-lang="ini"><span style="display:flex;"><span><span style="color:#66d9ef">[httpproxy]</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">enabled</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">true</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">address</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">192.168.0.143   # ← tu IP LAN</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">port</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">4444</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">[socksproxy]</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">enabled</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">true</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">address</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">192.168.0.143</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">port</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">4447</span>
+</span></span></code></pre></div><p>Luego <code>sudo systemctl restart i2pd</code>.</p>
+<blockquote>
+<p>⚠️ Dejarlo en <code>0.0.0.0</code> lo expone a TODA la red. Si te importa, limitá con
+firewall (nftables/iptables) aceptando solo la IP de la compu que vayas a usar.</p>
+</blockquote>
+<hr>
+<h2 id="4-cómo-acceder-a-una-página-i2p">4) Cómo acceder a una página <code>.i2p</code></h2>
+<p>Toda URL I2P se navega <strong>a través del proxy</strong> del router. Nunca directo.</p>
+<h3 id="curl">curl</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>curl -x http://127.0.0.1:4444 -sL http://NOMBRE.i2p/
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># desde otra PC:</span>
+</span></span><span style="display:flex;"><span>curl -x http://192.168.0.143:4444 -sL http://NOMBRE.i2p/
+</span></span></code></pre></div><h3 id="lynx--w3m">lynx / w3m</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>http_proxy<span style="color:#f92672">=</span>http://127.0.0.1:4444 lynx http://NOMBRE.i2p/
+</span></span><span style="display:flex;"><span>ww3m -http_proxy http://127.0.0.1:4444 http://NOMBRE.i2p/
+</span></span></code></pre></div><h3 id="variable-de-entorno-lo-más-cómodo">Variable de entorno (lo más cómodo)</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>export http_proxy<span style="color:#f92672">=</span>http://127.0.0.1:4444
+</span></span><span style="display:flex;"><span>export https_proxy<span style="color:#f92672">=</span>http://127.0.0.1:4444
+</span></span></code></pre></div><p>Metelo en <code>~/.bashrc</code> y no haces más.</p>
+<blockquote>
+<p>Error común: <code>lynx -socks5_proxy=http://127.0.0.1:4444</code> está MAL (4444 es
+HTTP, no SOCKS; el SOCKS va en 4447 y sin <code>http://</code>). Usá la variable de entorno.</p>
+</blockquote>
+<hr>
+<h2 id="5-cómo-encontré-las-páginas-de-torrents-addressbook">5) Cómo encontré las páginas de torrents (addressbook)</h2>
+<p>i2pd mantiene automáticamente un <em>addressbook</em> (agenda) con los eepsites
+públicos conocidos: <code>/var/lib/i2pd/addressbook/addresses.csv</code>
+(formato <code>nombre.i2p,b32</code>).</p>
+<p>Filtrar por torrents/trackers:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo grep -iE <span style="color:#e6db74">&#39;torrent|tracker&#39;</span> /var/lib/i2pd/addressbook/addresses.csv
+</span></span></code></pre></div><p>Buscar otros intereses (música, libros, archivos):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo grep -iE <span style="color:#e6db74">&#39;music|book|files|share|manga|movie&#39;</span> /var/lib/i2pd/addressbook/addresses.csv
+</span></span></code></pre></div><blockquote>
+<p>Es un CSV; se puede leer con <code>-c</code> para contar o <code>cut -d, -f1</code> para solo nombres.
+Los sitios no listados igual se pueden abrir por su <code>.b32.i2p</code> si sabés el hash.</p>
+</blockquote>
+<hr>
+<h2 id="6-dónde-buscar-torrents-en-i2p">6) Dónde buscar torrents en I2P</h2>
+<h3 id="indexers-sitios-web-con-listas-de-torrentsmagnets">Indexers (sitios WEB con listas de torrents/magnets)</h3>
+<table>
+	<thead>
+			<tr>
+					<th>Eepsite</th>
+					<th>Qué es</th>
+					<th>Cómo abrirlo</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td><code>torrentthing.i2p</code></td>
+					<td>indexer general (libros, pelis, anime, música, comics); &ldquo;10m torrents / 116m files&rdquo;</td>
+					<td><code>curl -x 127.0.0.1:4444 http://torrentthing.i2p/</code></td>
+			</tr>
+			<tr>
+					<td><code>annas-torrents.i2p</code></td>
+					<td>indexer estilo &ldquo;Anna&rsquo;s&rdquo;</td>
+					<td>idem</td>
+			</tr>
+			<tr>
+					<td><code>hentai-torrents.i2p</code></td>
+					<td>torrents de anime/hentai</td>
+					<td>idem</td>
+			</tr>
+			<tr>
+					<td><code>bytebackmusic.i2p</code></td>
+					<td>música FLAC/transcodes</td>
+					<td>idem</td>
+			</tr>
+			<tr>
+					<td><code>read-manga.i2p</code></td>
+					<td>cómics/manga</td>
+					<td>idem</td>
+			</tr>
+	</tbody>
+</table>
+<h3 id="trackers-infraestructura-que-junta-peers">Trackers (infraestructura que junta peers)</h3>
+<p><code>tracker2.postman.i2p</code>, <code>opentracker.bt.i2p</code>, <code>opentracker.dg2.i2p</code>,
+<code>opentracker.skank.i2p</code>, <code>tracker.insulaocculta.i2p</code>.
+Los magnets de estos indexers suelen venir <strong>sin announce: los peers se
+encuentran vía DHT dentro de I2P</strong>.</p>
+<hr>
+<h2 id="7-configurar-qbittorrent-para-bajar-por-i2p">7) Configurar qBittorrent para bajar por I2P</h2>
+<p>En el conf de tu usuario (<code>~/.config/qBittorrent/qBittorrent.conf</code>) se agregó,
+bajo la sección <code>[BitTorrent]</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-ini" data-lang="ini"><span style="display:flex;"><span><span style="color:#66d9ef">[BitTorrent]</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">Session\I2P\Enabled</span><span style="color:#f92672">=</span><span style="color:#e6db74">true</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">Session\I2P\Address</span><span style="color:#f92672">=</span><span style="color:#e6db74">127.0.0.1</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">Session\I2P\MixedMode</span><span style="color:#f92672">=</span><span style="color:#e6db74">false</span>
+</span></span></code></pre></div><p>Explicación:</p>
+<ul>
+<li><code>Enabled=true</code> → activa I2P en libtorrent.</li>
+<li><code>Address=127.0.0.1</code> → host del <strong>SAM API</strong> de i2pd (puerto default 7656).</li>
+<li><code>MixedMode=false</code> → <strong>SOLO I2P</strong> (no mezcla clearnet + I2P; lo seguro).</li>
+</ul>
+<p>Pasos para que tome el cambio:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo systemctl stop qbittorrent-nox@esotericwarfare.service
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># editar qBittorrent.conf ...</span>
+</span></span><span style="display:flex;"><span>sudo systemctl start qbittorrent-nox@esotericwarfare.service
+</span></span></code></pre></div><blockquote>
+<p>Si tenés GUI: Opciones → BitTorrent → sección I2P → habilitar
+&ldquo;Use the I2P proxy for torrent connections&rdquo; y modo &ldquo;I2P only&rdquo;.</p>
+</blockquote>
+<p>Verificación rápida de que el servicio corre con la config:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>systemctl is-active qbittorrent-nox@esotericwarfare
+</span></span><span style="display:flex;"><span>ss -tlnp | grep <span style="color:#ae81ff">8080</span>
+</span></span><span style="display:flex;"><span>grep -n <span style="color:#e6db74">&#39;I2P&#39;</span> ~/.config/qBittorrent/qBittorrent.conf
+</span></span></code></pre></div><hr>
+<h2 id="8-cómo-bajar-un-torrent-por-i2p-manual-paso-a-paso">8) Cómo bajar un torrent por I2P (manual, paso a paso)</h2>
+<ol>
+<li>
+<p><strong>Abrí el indexer</strong> (esperá el warm-up del router si recién arrancó):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>curl -x http://127.0.0.1:4444 -sL http://torrentthing.i2p/ | grep -oE <span style="color:#e6db74">&#39;href=&#34;[^&#34;]+&#34;&#39;</span> | head
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># o mejor navegá con lynx:</span>
+</span></span><span style="display:flex;"><span>http_proxy<span style="color:#f92672">=</span>http://127.0.0.1:4444 lynx http://torrentthing.i2p/
+</span></span></code></pre></div></li>
+<li>
+<p><strong>Elegí un torrent</strong> → en cada fila hay un botón &ldquo;Open magnet link&rdquo;.
+Copiá el magnet (empieza con <code>magnet:?xt=urn:btih:...</code>).</p>
+</li>
+<li>
+<p><strong>Agregalo a qBittorrent by API</strong> (qBittorrent-nox no tiene GUI; WebUI en
+<code>http://127.0.0.1:8080</code> desde tu PC, o <code>http://192.168.0.143:8080</code> desde otra):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># primero hacé login y guardá la cookie (usuario/pass = los del WebUI):</span>
+</span></span><span style="display:flex;"><span>curl -s -c /tmp/qcookies -b /tmp/qcookies <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --data-urlencode <span style="color:#e6db74">&#39;username=TU_USUARIO&#39;</span> --data-urlencode <span style="color:#e6db74">&#39;password=TU_PASS&#39;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#39;http://127.0.0.1:8080/api/v2/auth/login&#39;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># después, agregar el magnet:</span>
+</span></span><span style="display:flex;"><span>MAGNET<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;magnet:?xt=urn:btih:...&#39;</span>
+</span></span><span style="display:flex;"><span>curl -s -b /tmp/qcookies <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --data-urlencode <span style="color:#e6db74">&#34;urls=</span>$MAGNET<span style="color:#e6db74">&#34;</span> --data-urlencode <span style="color:#e6db74">&#39;savepath=/home/esotericwarfare/Descargas&#39;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#39;http://127.0.0.1:8080/api/v2/torrents/add&#39;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># o con el WebUI: pegás el magnet en &#34;Agregar torrent&#34; directo.</span>
+</span></span></code></pre></div></li>
+<li>
+<p><strong>Mirá que arranque</strong> (estado metadata/descarga):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>curl -s -b /tmp/qcookies <span style="color:#e6db74">&#39;http://127.0.0.1:8080/api/v2/torrents/info&#39;</span>
+</span></span></code></pre></div></li>
+<li>
+<p>Los <strong>peers TARDAN</strong>: es una red chica y anónima. Cero peers durante varios
+minutos es normal, sobre todo en torrents viejos.</p>
+</li>
+</ol>
+<hr>
+<h2 id="9-verificación--troubleshooting">9) Verificación + troubleshooting</h2>
+<table>
+	<thead>
+			<tr>
+					<th>Problema</th>
+					<th>Diagnóstico</th>
+					<th>Solución</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>Todo da <code>000</code> al inicio</td>
+					<td>router en warm-up tras install/restart</td>
+					<td>esperá 1-5 min, reintentá</td>
+			</tr>
+			<tr>
+					<td><code>500</code> al navegar</td>
+					<td>hostname no resuelve con la config</td>
+					<td>chequeá el addressbook o usá <code>.b32.i2p</code></td>
+			</tr>
+			<tr>
+					<td><code>lynx -socks5_proxy</code> cuelga</td>
+					<td>puerto/palabra mal</td>
+					<td>usá <code>http_proxy=...:4444</code></td>
+			</tr>
+			<tr>
+					<td>qBittorrent &ldquo;no peers&rdquo;</td>
+					<td>I2P es lenta / MixedMode</td>
+					<td>esperá; el modo solo-I2P es más seguro</td>
+			</tr>
+			<tr>
+					<td>Repetí todo después de restart</td>
+					<td>cada restart = warm-up</td>
+					<td>da igual, las claves persisten</td>
+			</tr>
+	</tbody>
+</table>
+<p>Estado:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>systemctl status i2pd qbittorrent-nox@esotericwarfare
+</span></span><span style="display:flex;"><span>curl -s http://127.0.0.1:7070/ | grep -oE <span style="color:#e6db74">&#39;(fast|stable)[^,]{0,10}&#39;</span> | head
+</span></span></code></pre></div><hr>
+<h2 id="10-privacidad-importante">10) Privacidad (importante)</h2>
+<ul>
+<li><strong>No mezcles</strong>: si vas a bajar por I2P, no bajes a la vez por clearnet con el
+mismo qBittorrent. <code>MixedMode=false</code> lo garantiza.</li>
+<li>Los torrents de I2P solo bajan de peers I2P. Nadie ve tu IP real.</li>
+<li>No uses tu navegador normal para I2P sin cuidar el proxy: configuralo con
+<code>http_proxy=:4444</code> SOLO para esa sesión (o un perfil separado).</li>
+<li>El indexer puede contener material ilegal. Verificá lo que bajás; es tu responsabilidad.</li>
+<li>Si el router queda expuesto en la LAN (<code>0.0.0.0</code>), cualquiera de la red puede
+usarlo. Preferí <code>192.168.0.143</code> (IP específica) o firewall.</li>
+</ul>
+<hr>
+<p><em>Tutorial verificado contra la config real del nodo del usuario (2026-09-19):</em>
+<em>puertos 4444/4447 en la LAN, SAM 7656 local, qBittorrent I2P-only.</em></p>
+
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+
+</footer>
+
+
+</body>
+</html>

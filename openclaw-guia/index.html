@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/openclaw-guia/">
+	<meta property="og:site_name" content="Imlauer">
+	<meta property="og:title" content="Guía OpenClaw — setup hecho el 19-09-2026">
+	<meta property="og:description" content="Guía OpenClaw — setup hecho el 19-09-2026 Qué es OpenClaw Asistente/agente IA open-source, self-hosted (MIT, corre local en la máquina Arch 192.168.0.143). Arquitectura de Gateway: un proceso escucha en 0.0.0.0:18789 y conecta canales (WhatsApp, Telegram, Discord, Instagram…) con el agente IA. El agente lee/escribe mensajes en los chats vinculados y tiene herramientas: navegar web, ejecutar comandos, leer/escribir archivos. No es “leer el historial de tu WhatsApp”: vive como una sesión de WhatsApp Web. Estado actual Versión: OpenClaw 2026.7.1-2 (npm, node 26.8.2). Gateway: corriendo como servicio systemd usuario → systemctl --user status openclaw-gateway. Config: ~/.openclaw/openclaw.json. Auth: token mode. Token: ed9e1620103b0eb2d1223ade7090ff24e66957b8894a90c3. Dashboard: http://192.168.0.143:18789/ (y http://127.0.0.1:18789/ en la máquina host). Canales: WhatsApp: instalado, configurado y vinculado (sesión activa, health healthy). Instagram DMs: instalado, sin configurar (requiere credenciales/cookie). Telegram: instalable, sin configurar (requiere bot token de @BotFather). Modelo del agente: groq/qwen/qwen3.8-27b (Groq, free tier, thinking off). Key guardada como GROQ_API_KEY en el servicio (~/.config/systemd/user/openclaw-gateway.service.d/groq.conf) y como secret en config. tools.profile: minimal &#43; lista de tools vacía → el agente solo responde texto (prompt chico para el límite free de ~7.000 tokens/min). channels.whatsapp.dmHistoryLimit: 2 → limita el historial que entra al modelo (evita que la sesión crezca y reviente el límite). groq/compound-mini (ITPM 70k) NO sirve como modelo principal: no soporta tool calling (schema de OpenClaw). Ojo: el tier gratis de Groq limita entrada a ~7.000 tokens/min → con tráfico alto o varios mensajes seguidos pueden verse errores 429/413 (el bot reintenta). Alternativa sin límite: Ollama local (más lento). Comandos útiles Comando Qué hace openclaw status Estado general (gateway, canales, agente) openclaw channels status --probe Estado/diagnóstico de canales openclaw channels login --channel whatsapp Vincular WhatsApp (muestra QR) openclaw channels list --all Catálogo de canales openclaw dashboard Abre el Control UI en el navegador openclaw config set &lt;path&gt; &lt;valor&gt; Cambiar config (valida contra schema) openclaw doctor Diagnóstico/arreglos Cómo se vinculó WhatsApp openclaw channels login --channel whatsapp (QR en terminal; los QR rotan cada ~25s). Como la máquina es headless, se sirvió el QR vivo en http://192.168.0.143:8090/qrv.html (auto-refresco 4s). Escaneo con el teléfono → WhatsApp → Dispositivos vinculados. Resultado: enabled, configured, linked, running, connected, transport:just now, health:healthy. Acceso al Control UI (dashboard) El Control UI exige contexto seguro: desde http://127.0.0.1 (localhost) o https://. Desde otra PC por HTTP LAN da: control ui requires device identity (use HTTPS or localhost secure context). Soluciones: SSH tunnel (recomendada): ssh -N -L 18789:127.0.0.1:18789 esotericwarfare@192.168.0.143 y abrir http://127.0.0.1:18789/. TLS en gateway (gateway.tls.enabled) → https://192.168.0.143:18789/. Temporal (solo red de confianza): gateway.controlUi.allowInsecureAuth y gateway.controlUi.dangerouslyDisableDeviceAuth = true → funciona por HTTP LAN. Apagar de nuevo al terminar. Cómo leer/gestionar mensajes (“directo con OpenClaw”) Importante: OpenClaw no es un “clon” de tu WhatsApp — es un agente que vive en tu sesión de WhatsApp Web. No hay un visor de historial completo; los mensajes se procesan al llegar.">
+	<meta property="og:locale" content="es_es">
+	<meta property="og:type" content="article">
+		<meta property="article:published_time" content="2026-09-20T01:09:50-03:00">
+		<meta property="article:modified_time" content="2026-09-20T01:09:50-03:00">
+		<meta property="article:tag" content="Ai">
+
+  
+	<meta itemprop="name" content="Guía OpenClaw — setup hecho el 19-09-2026">
+	<meta itemprop="description" content="Guía OpenClaw — setup hecho el 19-09-2026 Qué es OpenClaw Asistente/agente IA open-source, self-hosted (MIT, corre local en la máquina Arch 192.168.0.143). Arquitectura de Gateway: un proceso escucha en 0.0.0.0:18789 y conecta canales (WhatsApp, Telegram, Discord, Instagram…) con el agente IA. El agente lee/escribe mensajes en los chats vinculados y tiene herramientas: navegar web, ejecutar comandos, leer/escribir archivos. No es “leer el historial de tu WhatsApp”: vive como una sesión de WhatsApp Web. Estado actual Versión: OpenClaw 2026.7.1-2 (npm, node 26.8.2). Gateway: corriendo como servicio systemd usuario → systemctl --user status openclaw-gateway. Config: ~/.openclaw/openclaw.json. Auth: token mode. Token: ed9e1620103b0eb2d1223ade7090ff24e66957b8894a90c3. Dashboard: http://192.168.0.143:18789/ (y http://127.0.0.1:18789/ en la máquina host). Canales: WhatsApp: instalado, configurado y vinculado (sesión activa, health healthy). Instagram DMs: instalado, sin configurar (requiere credenciales/cookie). Telegram: instalable, sin configurar (requiere bot token de @BotFather). Modelo del agente: groq/qwen/qwen3.8-27b (Groq, free tier, thinking off). Key guardada como GROQ_API_KEY en el servicio (~/.config/systemd/user/openclaw-gateway.service.d/groq.conf) y como secret en config. tools.profile: minimal &#43; lista de tools vacía → el agente solo responde texto (prompt chico para el límite free de ~7.000 tokens/min). channels.whatsapp.dmHistoryLimit: 2 → limita el historial que entra al modelo (evita que la sesión crezca y reviente el límite). groq/compound-mini (ITPM 70k) NO sirve como modelo principal: no soporta tool calling (schema de OpenClaw). Ojo: el tier gratis de Groq limita entrada a ~7.000 tokens/min → con tráfico alto o varios mensajes seguidos pueden verse errores 429/413 (el bot reintenta). Alternativa sin límite: Ollama local (más lento). Comandos útiles Comando Qué hace openclaw status Estado general (gateway, canales, agente) openclaw channels status --probe Estado/diagnóstico de canales openclaw channels login --channel whatsapp Vincular WhatsApp (muestra QR) openclaw channels list --all Catálogo de canales openclaw dashboard Abre el Control UI en el navegador openclaw config set &lt;path&gt; &lt;valor&gt; Cambiar config (valida contra schema) openclaw doctor Diagnóstico/arreglos Cómo se vinculó WhatsApp openclaw channels login --channel whatsapp (QR en terminal; los QR rotan cada ~25s). Como la máquina es headless, se sirvió el QR vivo en http://192.168.0.143:8090/qrv.html (auto-refresco 4s). Escaneo con el teléfono → WhatsApp → Dispositivos vinculados. Resultado: enabled, configured, linked, running, connected, transport:just now, health:healthy. Acceso al Control UI (dashboard) El Control UI exige contexto seguro: desde http://127.0.0.1 (localhost) o https://. Desde otra PC por HTTP LAN da: control ui requires device identity (use HTTPS or localhost secure context). Soluciones: SSH tunnel (recomendada): ssh -N -L 18789:127.0.0.1:18789 esotericwarfare@192.168.0.143 y abrir http://127.0.0.1:18789/. TLS en gateway (gateway.tls.enabled) → https://192.168.0.143:18789/. Temporal (solo red de confianza): gateway.controlUi.allowInsecureAuth y gateway.controlUi.dangerouslyDisableDeviceAuth = true → funciona por HTTP LAN. Apagar de nuevo al terminar. Cómo leer/gestionar mensajes (“directo con OpenClaw”) Importante: OpenClaw no es un “clon” de tu WhatsApp — es un agente que vive en tu sesión de WhatsApp Web. No hay un visor de historial completo; los mensajes se procesan al llegar.">
+	<meta itemprop="datePublished" content="2026-09-20T01:09:50-03:00">
+	<meta itemprop="dateModified" content="2026-09-20T01:09:50-03:00">
+	<meta itemprop="wordCount" content="837">
+	<meta itemprop="keywords" content="Ai">
+  
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:title" content="Guía OpenClaw — setup hecho el 19-09-2026">
+	<meta name="twitter:description" content="Guía OpenClaw — setup hecho el 19-09-2026 Qué es OpenClaw Asistente/agente IA open-source, self-hosted (MIT, corre local en la máquina Arch 192.168.0.143). Arquitectura de Gateway: un proceso escucha en 0.0.0.0:18789 y conecta canales (WhatsApp, Telegram, Discord, Instagram…) con el agente IA. El agente lee/escribe mensajes en los chats vinculados y tiene herramientas: navegar web, ejecutar comandos, leer/escribir archivos. No es “leer el historial de tu WhatsApp”: vive como una sesión de WhatsApp Web. Estado actual Versión: OpenClaw 2026.7.1-2 (npm, node 26.8.2). Gateway: corriendo como servicio systemd usuario → systemctl --user status openclaw-gateway. Config: ~/.openclaw/openclaw.json. Auth: token mode. Token: ed9e1620103b0eb2d1223ade7090ff24e66957b8894a90c3. Dashboard: http://192.168.0.143:18789/ (y http://127.0.0.1:18789/ en la máquina host). Canales: WhatsApp: instalado, configurado y vinculado (sesión activa, health healthy). Instagram DMs: instalado, sin configurar (requiere credenciales/cookie). Telegram: instalable, sin configurar (requiere bot token de @BotFather). Modelo del agente: groq/qwen/qwen3.8-27b (Groq, free tier, thinking off). Key guardada como GROQ_API_KEY en el servicio (~/.config/systemd/user/openclaw-gateway.service.d/groq.conf) y como secret en config. tools.profile: minimal &#43; lista de tools vacía → el agente solo responde texto (prompt chico para el límite free de ~7.000 tokens/min). channels.whatsapp.dmHistoryLimit: 2 → limita el historial que entra al modelo (evita que la sesión crezca y reviente el límite). groq/compound-mini (ITPM 70k) NO sirve como modelo principal: no soporta tool calling (schema de OpenClaw). Ojo: el tier gratis de Groq limita entrada a ~7.000 tokens/min → con tráfico alto o varios mensajes seguidos pueden verse errores 429/413 (el bot reintenta). Alternativa sin límite: Ollama local (más lento). Comandos útiles Comando Qué hace openclaw status Estado general (gateway, canales, agente) openclaw channels status --probe Estado/diagnóstico de canales openclaw channels login --channel whatsapp Vincular WhatsApp (muestra QR) openclaw channels list --all Catálogo de canales openclaw dashboard Abre el Control UI en el navegador openclaw config set &lt;path&gt; &lt;valor&gt; Cambiar config (valida contra schema) openclaw doctor Diagnóstico/arreglos Cómo se vinculó WhatsApp openclaw channels login --channel whatsapp (QR en terminal; los QR rotan cada ~25s). Como la máquina es headless, se sirvió el QR vivo en http://192.168.0.143:8090/qrv.html (auto-refresco 4s). Escaneo con el teléfono → WhatsApp → Dispositivos vinculados. Resultado: enabled, configured, linked, running, connected, transport:just now, health:healthy. Acceso al Control UI (dashboard) El Control UI exige contexto seguro: desde http://127.0.0.1 (localhost) o https://. Desde otra PC por HTTP LAN da: control ui requires device identity (use HTTPS or localhost secure context). Soluciones: SSH tunnel (recomendada): ssh -N -L 18789:127.0.0.1:18789 esotericwarfare@192.168.0.143 y abrir http://127.0.0.1:18789/. TLS en gateway (gateway.tls.enabled) → https://192.168.0.143:18789/. Temporal (solo red de confianza): gateway.controlUi.allowInsecureAuth y gateway.controlUi.dangerouslyDisableDeviceAuth = true → funciona por HTTP LAN. Apagar de nuevo al terminar. Cómo leer/gestionar mensajes (“directo con OpenClaw”) Importante: OpenClaw no es un “clon” de tu WhatsApp — es un agente que vive en tu sesión de WhatsApp Web. No hay un visor de historial completo; los mensajes se procesan al llegar.">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Guía OpenClaw — setup hecho el 19-09-2026
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/openclaw-guia/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="Guía OpenClaw — setup hecho el 19-09-2026
+Qué es OpenClaw
+
+Asistente/agente IA open-source, self-hosted (MIT, corre local en la máquina Arch 192.168.0.143).
+Arquitectura de Gateway: un proceso escucha en 0.0.0.0:18789 y conecta canales (WhatsApp, Telegram, Discord, Instagram…) con el agente IA.
+El agente lee/escribe mensajes en los chats vinculados y tiene herramientas: navegar web, ejecutar comandos, leer/escribir archivos.
+No es &ldquo;leer el historial de tu WhatsApp&rdquo;: vive como una sesión de WhatsApp Web.
+
+Estado actual
+
+Versión: OpenClaw 2026.7.1-2 (npm, node 26.8.2).
+Gateway: corriendo como servicio systemd usuario → systemctl --user status openclaw-gateway.
+Config: ~/.openclaw/openclaw.json.
+Auth: token mode. Token: ed9e1620103b0eb2d1223ade7090ff24e66957b8894a90c3.
+Dashboard: http://192.168.0.143:18789/ (y http://127.0.0.1:18789/ en la máquina host).
+Canales:
+
+WhatsApp: instalado, configurado y vinculado (sesión activa, health healthy).
+Instagram DMs: instalado, sin configurar (requiere credenciales/cookie).
+Telegram: instalable, sin configurar (requiere bot token de @BotFather).
+
+
+Modelo del agente: groq/qwen/qwen3.8-27b (Groq, free tier, thinking off).
+
+Key guardada como GROQ_API_KEY en el servicio (~/.config/systemd/user/openclaw-gateway.service.d/groq.conf) y como secret en config.
+tools.profile: minimal &#43; lista de tools vacía → el agente solo responde texto (prompt chico para el límite free de ~7.000 tokens/min).
+channels.whatsapp.dmHistoryLimit: 2 → limita el historial que entra al modelo (evita que la sesión crezca y reviente el límite).
+groq/compound-mini (ITPM 70k) NO sirve como modelo principal: no soporta tool calling (schema de OpenClaw).
+Ojo: el tier gratis de Groq limita entrada a ~7.000 tokens/min → con tráfico alto o varios mensajes seguidos pueden verse errores 429/413 (el bot reintenta). Alternativa sin límite: Ollama local (más lento).
+
+
+
+Comandos útiles
+
+	
+			
+					Comando
+					Qué hace
+			
+	
+	
+			
+					openclaw status
+					Estado general (gateway, canales, agente)
+			
+			
+					openclaw channels status --probe
+					Estado/diagnóstico de canales
+			
+			
+					openclaw channels login --channel whatsapp
+					Vincular WhatsApp (muestra QR)
+			
+			
+					openclaw channels list --all
+					Catálogo de canales
+			
+			
+					openclaw dashboard
+					Abre el Control UI en el navegador
+			
+			
+					openclaw config set &lt;path&gt; &lt;valor&gt;
+					Cambiar config (valida contra schema)
+			
+			
+					openclaw doctor
+					Diagnóstico/arreglos
+			
+	
+
+Cómo se vinculó WhatsApp
+
+openclaw channels login --channel whatsapp (QR en terminal; los QR rotan cada ~25s).
+Como la máquina es headless, se sirvió el QR vivo en http://192.168.0.143:8090/qrv.html (auto-refresco 4s).
+Escaneo con el teléfono → WhatsApp → Dispositivos vinculados.
+Resultado: enabled, configured, linked, running, connected, transport:just now, health:healthy.
+
+Acceso al Control UI (dashboard)
+
+El Control UI exige contexto seguro: desde http://127.0.0.1 (localhost) o https://.
+Desde otra PC por HTTP LAN da: control ui requires device identity (use HTTPS or localhost secure context).
+Soluciones:
+
+SSH tunnel (recomendada): ssh -N -L 18789:127.0.0.1:18789 esotericwarfare@192.168.0.143 y abrir http://127.0.0.1:18789/.
+TLS en gateway (gateway.tls.enabled) → https://192.168.0.143:18789/.
+Temporal (solo red de confianza): gateway.controlUi.allowInsecureAuth y gateway.controlUi.dangerouslyDisableDeviceAuth = true → funciona por HTTP LAN. Apagar de nuevo al terminar.
+
+
+
+Cómo leer/gestionar mensajes (&ldquo;directo con OpenClaw&rdquo;)
+Importante: OpenClaw no es un &ldquo;clon&rdquo; de tu WhatsApp — es un agente que vive en tu sesión de
+WhatsApp Web. No hay un visor de historial completo; los mensajes se procesan al llegar.">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Guía OpenClaw — setup hecho el 19-09-2026
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2026-09-20T01:09:50-03:00'>
+      September 20, 2026
+    </time>
+    
+    <br>
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/ai/">Ai</a>
+    
+    
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <h1 id="guía-openclaw--setup-hecho-el-19-09-2026">Guía OpenClaw — setup hecho el 19-09-2026</h1>
+<h2 id="qué-es-openclaw">Qué es OpenClaw</h2>
+<ul>
+<li>Asistente/agente IA <strong>open-source, self-hosted</strong> (MIT, corre local en la máquina Arch <code>192.168.0.143</code>).</li>
+<li>Arquitectura de <strong>Gateway</strong>: un proceso escucha en <code>0.0.0.0:18789</code> y conecta canales (WhatsApp, Telegram, Discord, Instagram…) con el agente IA.</li>
+<li>El agente lee/escribe mensajes en los chats vinculados y tiene herramientas: navegar web, ejecutar comandos, leer/escribir archivos.</li>
+<li><strong>No es</strong> &ldquo;leer el historial de tu WhatsApp&rdquo;: vive como una sesión de WhatsApp Web.</li>
+</ul>
+<h2 id="estado-actual">Estado actual</h2>
+<ul>
+<li><strong>Versión:</strong> OpenClaw 2026.7.1-2 (npm, node 26.8.2).</li>
+<li><strong>Gateway:</strong> corriendo como servicio systemd usuario → <code>systemctl --user status openclaw-gateway</code>.</li>
+<li><strong>Config:</strong> <code>~/.openclaw/openclaw.json</code>.</li>
+<li><strong>Auth:</strong> token mode. Token: <code>ed9e1620103b0eb2d1223ade7090ff24e66957b8894a90c3</code>.</li>
+<li><strong>Dashboard:</strong> <code>http://192.168.0.143:18789/</code> (y <code>http://127.0.0.1:18789/</code> en la máquina host).</li>
+<li><strong>Canales:</strong>
+<ul>
+<li>WhatsApp: instalado, <strong>configurado y vinculado</strong> (sesión activa, health healthy).</li>
+<li>Instagram DMs: instalado, sin configurar (requiere credenciales/cookie).</li>
+<li>Telegram: instalable, sin configurar (requiere bot token de @BotFather).</li>
+</ul>
+</li>
+<li><strong>Modelo del agente:</strong> <code>groq/qwen/qwen3.8-27b</code> (Groq, free tier, thinking off).
+<ul>
+<li>Key guardada como <code>GROQ_API_KEY</code> en el servicio (<code>~/.config/systemd/user/openclaw-gateway.service.d/groq.conf</code>) y como secret en config.</li>
+<li><code>tools.profile: minimal</code> + lista de tools vacía → el agente solo responde texto (prompt chico para el límite free de ~7.000 tokens/min).</li>
+<li><code>channels.whatsapp.dmHistoryLimit: 2</code> → limita el historial que entra al modelo (evita que la sesión crezca y reviente el límite).</li>
+<li><code>groq/compound-mini</code> (ITPM 70k) NO sirve como modelo principal: no soporta tool calling (schema de OpenClaw).</li>
+<li>Ojo: el tier gratis de Groq limita entrada a ~7.000 tokens/min → con tráfico alto o varios mensajes seguidos pueden verse errores 429/413 (el bot reintenta). Alternativa sin límite: Ollama local (más lento).</li>
+</ul>
+</li>
+</ul>
+<h2 id="comandos-útiles">Comandos útiles</h2>
+<table>
+	<thead>
+			<tr>
+					<th>Comando</th>
+					<th>Qué hace</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td><code>openclaw status</code></td>
+					<td>Estado general (gateway, canales, agente)</td>
+			</tr>
+			<tr>
+					<td><code>openclaw channels status --probe</code></td>
+					<td>Estado/diagnóstico de canales</td>
+			</tr>
+			<tr>
+					<td><code>openclaw channels login --channel whatsapp</code></td>
+					<td>Vincular WhatsApp (muestra QR)</td>
+			</tr>
+			<tr>
+					<td><code>openclaw channels list --all</code></td>
+					<td>Catálogo de canales</td>
+			</tr>
+			<tr>
+					<td><code>openclaw dashboard</code></td>
+					<td>Abre el Control UI en el navegador</td>
+			</tr>
+			<tr>
+					<td><code>openclaw config set &lt;path&gt; &lt;valor&gt;</code></td>
+					<td>Cambiar config (valida contra schema)</td>
+			</tr>
+			<tr>
+					<td><code>openclaw doctor</code></td>
+					<td>Diagnóstico/arreglos</td>
+			</tr>
+	</tbody>
+</table>
+<h2 id="cómo-se-vinculó-whatsapp">Cómo se vinculó WhatsApp</h2>
+<ol>
+<li><code>openclaw channels login --channel whatsapp</code> (QR en terminal; los QR rotan cada ~25s).</li>
+<li>Como la máquina es headless, se sirvió el QR vivo en <code>http://192.168.0.143:8090/qrv.html</code> (auto-refresco 4s).</li>
+<li>Escaneo con el teléfono → WhatsApp → Dispositivos vinculados.</li>
+<li>Resultado: <code>enabled, configured, linked, running, connected, transport:just now, health:healthy</code>.</li>
+</ol>
+<h2 id="acceso-al-control-ui-dashboard">Acceso al Control UI (dashboard)</h2>
+<ul>
+<li>El Control UI <strong>exige contexto seguro</strong>: desde <code>http://127.0.0.1</code> (localhost) o <code>https://</code>.</li>
+<li>Desde otra PC por HTTP LAN da: <code>control ui requires device identity (use HTTPS or localhost secure context)</code>.</li>
+<li>Soluciones:
+<ul>
+<li><strong>SSH tunnel</strong> (recomendada): <code>ssh -N -L 18789:127.0.0.1:18789 esotericwarfare@192.168.0.143</code> y abrir <code>http://127.0.0.1:18789/</code>.</li>
+<li><strong>TLS</strong> en gateway (<code>gateway.tls.enabled</code>) → <code>https://192.168.0.143:18789/</code>.</li>
+<li><strong>Temporal (solo red de confianza):</strong> <code>gateway.controlUi.allowInsecureAuth</code> y <code>gateway.controlUi.dangerouslyDisableDeviceAuth</code> = true → funciona por HTTP LAN. <strong>Apagar de nuevo al terminar.</strong></li>
+</ul>
+</li>
+</ul>
+<h2 id="cómo-leergestionar-mensajes-directo-con-openclaw">Cómo leer/gestionar mensajes (&ldquo;directo con OpenClaw&rdquo;)</h2>
+<p>Importante: <strong>OpenClaw no es un &ldquo;clon&rdquo; de tu WhatsApp</strong> — es un agente que vive en tu sesión de
+WhatsApp Web. No hay un visor de historial completo; los mensajes se procesan al llegar.</p>
+<p>Formas de operarlo:</p>
+<h3 id="1-hablarle-desde-el-propio-whatsapp">1. Hablarle desde el propio WhatsApp</h3>
+<ul>
+<li>Escribile al número vinculado (o mandale mensaje a un chat/contacto).</li>
+<li>El agente lee el contexto del chat y responde/actúa (ordenes, búsquedas, etc.).</li>
+<li>Requiere permitir quién le escribe (ver seguridad).</li>
+</ul>
+<h3 id="2-ver-actividad-reciente-del-canal-cli">2. Ver actividad reciente del canal (CLI)</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>openclaw channels logs --channel whatsapp --lines <span style="color:#ae81ff">100</span>
+</span></span><span style="display:flex;"><span>openclaw channels logs --channel whatsapp --json
+</span></span></code></pre></div><p>Muestra los eventos/logs recientes del canal WhatsApp (los mensajes que llegan se reflejan acá).</p>
+<h3 id="3-correr-una-vuelta-del-agente-por-terminal">3. Correr una &ldquo;vuelta&rdquo; del agente por terminal</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>openclaw agent -m <span style="color:#e6db74">&#34;Resumí los mensajes recientes de hoy&#34;</span> --channel whatsapp
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Para que además envíe la respuesta al chat:</span>
+</span></span><span style="display:flex;"><span>openclaw agent -m <span style="color:#e6db74">&#34;Resumí los mensajes recientes&#34;</span> --channel whatsapp --deliver
+</span></span></code></pre></div><ul>
+<li><code>--channel whatsapp</code> elige la sesión; sin eso usa la sesión principal.</li>
+<li><code>--deliver</code> publica la respuesta del agente en el chat.</li>
+<li><code>--json</code> devuelve el resultado estructurado.</li>
+</ul>
+<h3 id="4-dashboard--control-ui">4. Dashboard / Control UI</h3>
+<ul>
+<li>Abrir el dashboard (sección Acceso) y usar el chat: hablás con el agente desde el navegador
+y ves la sesión activa.</li>
+</ul>
+<h3 id="nota-sobre-el-almacenamiento">Nota sobre el almacenamiento</h3>
+<ul>
+<li>La sesión de WhatsApp Web autenticada vive en:
+<code>~/.openclaw/credentials/whatsapp/default/session-*.json</code> (solo credenciales, no mensajes).</li>
+<li>El gateway registra eventos entrantes en <code>~/.openclaw/state/openclaw.sqlite</code>
+(tabla <code>channel_ingress_events</code>, no es un historial persistente de mensajes).</li>
+</ul>
+<h2 id="auto-respuesta-de-whatsapp-activada">Auto-respuesta de WhatsApp (activada)</h2>
+<ul>
+<li>Config: <code>channels.whatsapp.dmPolicy = &quot;open&quot;</code> + <code>channels.whatsapp.allowFrom = [&quot;*&quot;]</code>
+→ cualquier número puede escribir y recibe respuesta automática.</li>
+<li>Regla del agente: <code>~/.openclaw/workspace/AGENTS.md</code> → sección &ldquo;Auto-Respuesta WhatsApp&rdquo;.
+Responde SIEMPRE un texto fijo (horario de atención). <strong>Editá ahí el mensaje/horarios.</strong></li>
+<li>Estado: <code>openclaw channels status --probe</code> → <code>dm:open, allow:* health:healthy</code>.</li>
+<li>OJO seguridad: el agente queda expuesto a cualquier persona; la regla le prohíbe usar
+herramientas con desconocidos, pero revisá de vez en cuando qué responde.</li>
+</ul>
+<h2 id="recomendaciones-de-seguridad">Recomendaciones de seguridad</h2>
+<ul>
+<li>Configurar <strong>quién puede escribirle al bot</strong> (permitir solo tu número):
+<code>openclaw config set channels.whatsapp.allowFrom '[&quot;+549XXXXXXXXXX&quot;]'</code></li>
+<li>El token de gateway da control total: no compartir, el dashboard no debe exponerse a internet.</li>
+<li>El gateway escucha en <code>0.0.0.0</code> (bind lan): mantener auth token siempre activo.</li>
+<li>Instagram/Telegram: crear cuentas/bots dedicados o revisar bien los alcances que se otorgan.</li>
+</ul>
+<h2 id="notas">Notas</h2>
+<ul>
+<li><code>openclaw gateway run</code> <strong>no</strong> se ejecuta a la par del servicio systemd (conflicto de puerto 18789). Para correrlo a mano: <code>systemctl --user stop openclaw-gateway &amp;&amp; openclaw gateway run</code>.</li>
+<li>Logs del gateway: <code>/tmp/openclaw/openclaw-2026-09-19.log</code>.</li>
+<li>Procesos temporales del setup QR (ya limpiados): servidor http 8090, loop de refresco del QR.</li>
+</ul>
+
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+
+</footer>
+
+
+</body>
+</html>

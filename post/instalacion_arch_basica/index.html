@@ -32,7 +32,7 @@ Y COPIA LAS COOKIES DE TU NAVEGADOR (EN MI CASO USO FALKON BASADO EN CHROMIUM) E
 TU CONFIGURACION DE JACKETT.">
 	<meta itemprop="datePublished" content="2023-11-22T02:05:50-03:00">
 	<meta itemprop="dateModified" content="2023-11-22T02:05:50-03:00">
-	<meta itemprop="wordCount" content="7289">
+	<meta itemprop="wordCount" content="8084">
 	<meta itemprop="keywords" content="Archlinux,Full,Installation">
   
 	<meta name="twitter:card" content="summary">
@@ -1602,6 +1602,174 @@ Para que queden en disco:</p>
 <li>Vuelve a arrancar en Arch y monta de nuevo — ya no debería aparecer el mensaje de &ldquo;hibernated&rdquo;.</li>
 </ol>
 <p>Con eso debería quedar resuelto sin necesidad de forzar nada desde Linux.</p>
+<h1 id="fin-1">Fin</h1>
+<h3 id="drivers-nvidia-gtx1050">Drivers NVIDIA-GTX1050</h3>
+<h4 id="instalar-driver-nvidia-gtx-1050-en-arch-linux-kernel-72-con-dkms--verificar-con-hashcat">Instalar driver NVIDIA GTX 1050 en Arch Linux (kernel 7.2) con DKMS + verificar con hashcat</h4>
+<p>Tutorial de lo que hicimos, paso a paso, en un Arch con:</p>
+<ul>
+<li><strong>GPU</strong>: NVIDIA GeForce GTX 1050 (Pascal, GP107, compute_61)</li>
+<li><strong>Kernel</strong>: <code>7.2.3-arch1-2</code></li>
+<li><strong>Gestor de paquetes</strong>: pacman + <code>yay</code> (AUR)</li>
+<li>Problema: <code>nvidia-smi</code> fallaba, no había driver cargado, <code>ffmpeg</code> no podía usar NVENC y <code>hashcat</code> no veía la GPU.</li>
+</ul>
+<hr>
+<h2 id="1-diagnóstico-inicial">1. Diagnóstico inicial</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>uname -r                                   <span style="color:#75715e"># 7.2.3-arch1-2</span>
+</span></span><span style="display:flex;"><span>lspci | grep -Ei <span style="color:#e6db74">&#34;vga|3d|display&#34;</span>          <span style="color:#75715e"># NVIDIA GP107 [GeForce GTX 1050]</span>
+</span></span><span style="display:flex;"><span>lsmod | grep -Ei <span style="color:#e6db74">&#34;nouveau|nvidia&#34;</span>          <span style="color:#75715e"># nada cargado</span>
+</span></span><span style="display:flex;"><span>nvidia-smi                                  <span style="color:#75715e"># falla: no hay driver</span>
+</span></span><span style="display:flex;"><span>hashcat -I                                  <span style="color:#75715e"># no muestra la GPU</span>
+</span></span><span style="display:flex;"><span>sudo dkms status                            <span style="color:#75715e"># estado de módulos DKMS</span>
+</span></span></code></pre></div><p>Teníamos instalado <code>nvidia-550xx-dkms 550.163.01-6</code> (AUR, driver <strong>cerrado/proprietary</strong>, que es el que
+soporta Pascal), pero su compilación contra el kernel 7.2 fallaba.</p>
+<h3 id="por-qué">¿Por qué?</h3>
+<ul>
+<li>El kernel 7.2 <strong>eliminó la declaración de <code>strncpy</code></strong> de <code>include/linux/string.h</code>
+(ahora se usa <code>strscpy</code>). GCC nuevo además convierte esa &ldquo;declaración implícita&rdquo; en error.</li>
+<li>El kernel 7.2 <strong>cambió la API de DRM</strong>: <code>drm_atomic_state_alloc</code>/<code>drm_atomic_get_*_state</code>
+pasaron a <code>drm_atomic_commit</code> (renombrado/refactor).</li>
+<li>El driver <strong>open</strong> (<code>nvidia-open</code>) NO soporta GPUs Pascal (Turing+ solamente).</li>
+</ul>
+<hr>
+<h2 id="2-la-solución-limpia-aur-nvidia-550xx-dkms--7">2. La solución limpia: AUR <code>nvidia-550xx-dkms</code> <strong>-7</strong></h2>
+<p>El paquete AUR fue actualizado (revisión <code>-7</code>) con parches específicos para kernel 7.x:</p>
+<pre tabindex="0"><code>0004-kernel-open-nvidia-Use-new-timer-functions-for-6.15.patch
+0005-kernel-nvidia-Fulfill-6.17-fb_create-contract.patch
+0006-kernel-nvidia-use-new-helper-macros-and-post-removal-in_irq-for-6.19.patch
+0007-kernel-nvidia-linux-7-0-0-remove-return-code-of-signaling-functions.patch
+0008-kernel-nvidia-linux-7.2.0-remove-strncpy.patch
+0009-kernel-nvidia-linux-7.2.0-drm-atomic-state-to-commit.patch
+</code></pre><p>Chévere, el <code>-7</code> incluía 0008 y 0009 (los dos que nosotros necesitábamos), así que dejamos de
+parchear a mano y lo instalamos directamente.</p>
+<hr>
+<h2 id="3-quitar-los-drivers-anteriores-evitar-conflictos">3. Quitar los drivers anteriores (evitar conflictos)</h2>
+<p><code>nvidia-open</code>, <code>nvidia-utils</code> y <code>opencl-nvidia</code> (610) chocan con los paquetes 550xx.
+También <code>egl-gbm</code> entra en conflicto con <code>nvidia-550xx-utils</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># ver qué de nvidia hay instalado</span>
+</span></span><span style="display:flex;"><span>pacman -Q | grep -i <span style="color:#e6db74">&#34;550xx\|nvidia&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># quitar el driver open (no soporta Pascal)</span>
+</span></span><span style="display:flex;"><span>sudo pacman -Rdd --noconfirm nvidia-open-dkms nvidia-utils opencl-nvidia
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># quitar egl-gbm (sin dependientes, seguro; nvidia provee su propio EGL/GBM)</span>
+</span></span><span style="display:flex;"><span>sudo pacman -Qi egl-gbm | grep -E <span style="color:#e6db74">&#34;Required By|Depends&#34;</span>
+</span></span><span style="display:flex;"><span>sudo pacman -Rdd --noconfirm egl-gbm
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># limpiar lock huérfano de pacman si &#34;unable to lock database&#34;</span>
+</span></span><span style="display:flex;"><span>sudo rm -f /var/lib/pacman/db.lck
+</span></span></code></pre></div><hr>
+<h2 id="4-compilar-e-instalar-el-550xx--7-desde-aur">4. Compilar e instalar el 550xx -7 desde AUR</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># instala también las utilidades y OpenCL de la rama 550xx</span>
+</span></span><span style="display:flex;"><span>yay -S --noconfirm --answerclean None --answerdiff None <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  nvidia-550xx-dkms nvidia-550xx-utils opencl-nvidia-550xx
+</span></span></code></pre></div><p>El paso puede tardar varios minutos (compila los módulos del kernel). Para no cortar el proceso
+si usás una terminal con timeout, podés correrlo en background y mirar el log:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nohup yay -S --noconfirm nvidia-550xx-dkms nvidia-550xx-utils opencl-nvidia-550xx <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  &gt; /tmp/yay550.log 2&gt;&amp;<span style="color:#ae81ff">1</span> &amp;
+</span></span><span style="display:flex;"><span>tail -f /tmp/yay550.log
+</span></span></code></pre></div><p>Los paquetes quedan compilados en <code>~/.cache/yay/nvidia-550xx-dkms/*.pkg.tar.zst</code>.
+Si yay falla al instalar por conflictos, instalálos a mano:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo pacman -U --noconfirm <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  ~/.cache/yay/nvidia-550xx-dkms/opencl-nvidia-550xx-*.pkg.tar.zst <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  ~/.cache/yay/nvidia-550xx-dkms/nvidia-550xx-utils-*.pkg.tar.zst <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  ~/.cache/yay/nvidia-550xx-dkms/nvidia-550xx-dkms-*.pkg.tar.zst
+</span></span></code></pre></div><hr>
+<h2 id="5-verificar-que-el-módulo-dkms-quedó-para-el-kernel-actual">5. Verificar que el módulo DKMS quedó para el kernel actual</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo dkms status
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># nvidia/550.163.01, 7.2.3-arch1-2, x86_64: installed</span>
+</span></span></code></pre></div><p>Si no estuviera instalado:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo dkms build  -m nvidia -v 550.163.01 -k <span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>uname -r<span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>sudo dkms install -m nvidia -v 550.163.01 -k <span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>uname -r<span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span></code></pre></div><hr>
+<h2 id="6-cargar-el-módulo-y-confirmar-con-nvidia-smi">6. Cargar el módulo y confirmar con nvidia-smi</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo modprobe nvidia
+</span></span><span style="display:flex;"><span>nvidia-smi
+</span></span></code></pre></div><p>Salida esperada:</p>
+<pre tabindex="0"><code>| NVIDIA-SMI 550.163.01             Driver Version: 550.163.01     CUDA Version: 12.4     |
+|   0  NVIDIA GeForce GTX 1050        Off | 00000000:03:00.0 Off |                  N/A |
+</code></pre><hr>
+<h2 id="7-chequear-que-hashcat-reconoce-la-gpu">7. Chequear que hashcat reconoce la GPU</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>hashcat -I
+</span></span></code></pre></div><p>Debe listar la GTX 1050 en los backends <strong>CUDA</strong> y <strong>OpenCL</strong>:</p>
+<pre tabindex="0"><code>CUDA Info:
+  Backend Device ID #01
+    Name...........: NVIDIA GeForce GTX 1050
+    Memory.Total...: 1990 MB
+    PCI.Addr.BDFe..: 0000:03:00.0
+
+OpenCL Info:
+  OpenCL Platform ID #1   Vendor: NVIDIA Corporation
+    Backend Device ID #02  Name: NVIDIA GeForce GTX 1050
+    Version: OpenCL 3.0 CUDA
+</code></pre><h3 id="benchmark">Benchmark</h3>
+<p>Con hashcat 7.1.2 + CUDA 12.4 el backend CUDA puede fallar al compilar kernels
+(<code>nvrtc: error: invalid value for --gpu-architecture</code>). Solución: forzar OpenCL.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>hashcat -m <span style="color:#ae81ff">0</span> -b                      <span style="color:#75715e"># falla en CUDA (bug de -arch)</span>
+</span></span><span style="display:flex;"><span>hashcat -m <span style="color:#ae81ff">0</span> -b --backend-ignore-cuda  <span style="color:#75715e"># ✅ funciona por OpenCL</span>
+</span></span></code></pre></div><pre tabindex="0"><code>* Hash-Mode 0 (MD5)
+Speed.#01........: 6171.7 MH/s
+</code></pre><hr>
+<h2 id="8-extra-si-no-existiera-el-paquete--7-los-parches-manuales">8. (Extra) Si no existiera el paquete -7, los parches manuales</h2>
+<p>Por si alguna vez tocás una versión vieja, estos son los parches que aplicábamos a mano
+sobre <code>/usr/src/nvidia-550.163.01/</code> (¡ojo! patchear en <code>/usr/src</code>, no en <code>/var/lib/dkms</code>,
+porque <strong>dkms re-copia la fuente original al compilar</strong>):</p>
+<ol>
+<li>
+<p><code>nvidia/os-interface.c</code> — reemplazar <code>strncpy(...)</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#a6e22e">strscpy</span>(buf, current<span style="color:#f92672">-&gt;</span>comm, len);
+</span></span></code></pre></div></li>
+<li>
+<p><code>nvidia/linux_nvswitch.c</code> — los dos <code>strncpy</code> → <code>memcpy</code> (preservan semántica):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#a6e22e">memcpy</span>(regkey_val, regkey_val_start, regkey_val_len);
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">memcpy</span>(dest, src, length); <span style="color:#66d9ef">return</span> dest;
+</span></span></code></pre></div></li>
+<li>
+<p><code>nvidia-uvm/uvm_pmm_gpu.c</code> — usar <code>strscpy</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-c" data-lang="c"><span style="display:flex;"><span><span style="color:#a6e22e">strscpy</span>(chunk_split_cache[level].name, <span style="color:#e6db74">&#34;uvm_gpu_chunk_t&#34;</span>, <span style="color:#66d9ef">sizeof</span>(chunk_split_cache[level].name));
+</span></span></code></pre></div></li>
+<li>
+<p><code>nvidia-uvm/uvm_pmm_gpu.c</code> + <code>nvidia-modeset/nvidia-modeset-linux.c</code> →
+<code>memcpy</code> para el resto de <code>strncpy</code>.</p>
+</li>
+</ol>
+<p>Recompilar siempre así (borrá el árbol y volvé a agregarlo para que copie la fuente parcheada):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo dkms remove -m nvidia -v 550.163.01 --all
+</span></span><span style="display:flex;"><span>sudo dkms add    -m nvidia -v 550.163.01
+</span></span><span style="display:flex;"><span>sudo dkms build  -m nvidia -v 550.163.01 -k <span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>uname -r<span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>sudo dkms install -m nvidia -v 550.163.01 -k <span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>uname -r<span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>sudo modprobe nvidia <span style="color:#f92672">&amp;&amp;</span> nvidia-smi
+</span></span></code></pre></div><hr>
+<h2 id="resumen-de-comandos-clave">Resumen de comandos clave</h2>
+<table>
+	<thead>
+			<tr>
+					<th>Acción</th>
+					<th>Comando</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>Est. driver</td>
+					<td><code>sudo modprobe nvidia</code></td>
+			</tr>
+			<tr>
+					<td>Info GPU</td>
+					<td><code>nvidia-smi</code></td>
+			</tr>
+			<tr>
+					<td>Compilar DKMS</td>
+					<td><code>sudo dkms build/install -m nvidia -v 550.163.01 -k $(uname -r)</code></td>
+			</tr>
+			<tr>
+					<td>Ver GPU en hashcat</td>
+					<td><code>hashcat -I</code></td>
+			</tr>
+			<tr>
+					<td>Benchmark MD5</td>
+					<td><code>hashcat -m 0 -b --backend-ignore-cuda</code></td>
+			</tr>
+	</tbody>
+</table>
 
 </div>
 
