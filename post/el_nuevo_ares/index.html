@@ -32,7 +32,7 @@ creá un archivo llamado jackett.json { &#34;api_key&#34;: &#34;YOUR_API_KEY_HER
 Abrí Jackett y agregá todos los indexers publicos seleccionando uno por uno el checkbox de la izquierda.">
 	<meta itemprop="datePublished" content="2024-06-13T23:25:49-03:00">
 	<meta itemprop="dateModified" content="2024-06-13T23:25:49-03:00">
-	<meta itemprop="wordCount" content="1540">
+	<meta itemprop="wordCount" content="1588">
 	<meta itemprop="keywords" content="Ares,Qbittorrent,Jackett">
   
 	<meta name="twitter:card" content="summary">
@@ -170,7 +170,12 @@ $ curl -s &ldquo;http://127.0.0.1:9117/api/v2.0/indexers/all/results?Query=formu
 1337x: Needs FlareSolverr
 52bt: Needs FlareSolverr</p>
 <p>El script que me generó opencode todavía tengo que arreglarlo cuando lo tenga, lo publico acá.</p>
-<h2 id="opencode">Opencode</h2>
+<p>Los torrents se guardan en <code>/var/lib/qbittorrent/Downloads</code></p>
+<p>Despues de que Claude AI me genere ese script fenomenal le pedi esto:</p>
+<p>Me encanto, aun asi cuando abria el video con mpv parece que abria el directorio entero en vez de abrir el video que habia descargado, fuera de eso que no es tanta complicacion. Lo que me gustaria es que me de a elegir ahora quiero que sea mas como un buscador pero ordenalos por los que tienen mas seeds primero  y que sean recientes, y eso de 720 o 1080 no lo tomes en consideracion porque a veces yo quiero descargar archivos o audios que no son videos. No se si me entendes, ahora quiero algo mas como un buscador eficiente quiero descargar algo que tenga muchos seeds sino no funciona y quiero poder elegir que me de una lista de torrents y yo elijo cual quiero descargar.</p>
+<h4 id="en-varlibjackettindexers">En /var/lib/jackett/Indexers</h4>
+<p>Está la lista de indexs si es que los activaste uno por uno guardalos para no tener que volver a hacerlo.</p>
+<h3 id="torrent_menush-opencode-con-big-pickle">torrent_menu.sh (opencode, con big pickle)</h3>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/usr/bin/env bash
 </span></span></span><span style="display:flex;"><span>set -uo pipefail
 </span></span><span style="display:flex;"><span>
@@ -248,33 +253,38 @@ $ curl -s &ldquo;http://127.0.0.1:9117/api/v2.0/indexers/all/results?Query=formu
 </span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>build_list<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
-</span></span><span style="display:flex;"><span>    jq -r --argjson top <span style="color:#e6db74">&#34;</span>$TOP_RESULTS<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#39;
+</span></span><span style="display:flex;"><span>    jq -r --argjson top <span style="color:#e6db74">&#34;</span>$TOP_RESULTS<span style="color:#e6db74">&#34;</span> --arg query <span style="color:#e6db74">&#34;</span>$QUERY<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      def tlow: (.Title // &#34;&#34; | ascii_downcase);
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      def qtok: ($query // &#34;&#34; | ascii_downcase | split(&#34; &#34;) | map(select(length &gt; 0)));
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      def all_hit: [qtok[] as $tok | ((tlow) | contains($tok))] | all;
 </span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      def ds: .PublishDate // &#34;&#34; | strptime(&#34;%Y-%m-%dT%H:%M:%S&#34;)? | mktime // 0;
 </span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      def skey: [-(.Seeders // 0), -ds];
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      (.Results | map(select((.Guid | startswith(&#34;magnet:?&#34;)) or ((.Link // &#34;&#34;) | startswith(&#34;http&#34;))))) as $c
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      (.Results
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">       | map(select(
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">           (((.Guid | startswith(&#34;magnet:?&#34;)) or ((.Link // &#34;&#34;) | startswith(&#34;http&#34;)))
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">            and (all_hit))))) as $c
 </span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      | (($c | group_by(.Tracker) | length) | if . &gt; 0 then . else 1 end) as $nt
 </span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      | (((($top + $nt - 1) / $nt) | floor)) as $per
 </span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      | $c
 </span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      | group_by(.Tracker)
 </span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      | map(sort_by(skey) | .[0:$per])
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      | add
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      | (sort_by(skey) | .[0:$top])[] as $x
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      | add // []
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      | sort_by(skey)[0:$top][]
 </span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      | [ 0,   # placeholder, se numera en show_menu
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">          $x.Seeders,
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">          $x.Size,
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">          ($x.Title | gsub(&#34;[
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">	]&#34;;&#34; &#34;)),
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">          ($x.IndexerError // $x.Tracker // &#34;&#34;),
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">          $x.Guid,
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">          $x.Link,
-</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">          ($x.PublishDate // &#34;&#34; | split(&#34;T&#34;)[0]) ]
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">          (.Seeders // 0),
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">          (.Size // 0),
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">          (.Title // &#34;&#34; | gsub(&#34;[\n\t]&#34;;&#34; &#34;)),
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">          (.IndexerError // .Tracker // &#34;&#34;),
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">          .Guid,
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">          .Link,
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">          (.PublishDate // &#34;&#34; | split(&#34;T&#34;)[0]) ]
 </span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      | @tsv
 </span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    &#39;</span> <span style="color:#e6db74">&#34;</span>$RESULTS_TMP<span style="color:#e6db74">&#34;</span>
 </span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>show_menu<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
 </span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;&#34;</span>
-</span></span><span style="display:flex;"><span>    echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>BOLD<span style="color:#e6db74">}</span><span style="color:#e6db74">Resultados (seeds, luego más reciente; balanceado entre indexers):</span><span style="color:#e6db74">${</span>RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>BOLD<span style="color:#e6db74">}</span><span style="color:#e6db74">Resultados (más seeds primero; solo lo que coincide con la búsqueda):</span><span style="color:#e6db74">${</span>RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
 </span></span><span style="display:flex;"><span>    echo -e <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>CYAN<span style="color:#e6db74">}</span><span style="color:#e6db74">------------------------------------------------------------</span><span style="color:#e6db74">${</span>RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
 </span></span><span style="display:flex;"><span>    local i<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>
 </span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> IFS<span style="color:#f92672">=</span><span style="color:#e6db74">$&#39;	&#39;</span> read -r _x seeds size title idxr guid link pdate; <span style="color:#66d9ef">do</span>
@@ -390,12 +400,7 @@ $ curl -s &ldquo;http://127.0.0.1:9117/api/v2.0/indexers/all/results?Query=formu
 </span></span><span style="display:flex;"><span>    <span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span>$again<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">=</span>~ ^<span style="color:#f92672">[</span>sSyY<span style="color:#f92672">]</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">||</span> break
 </span></span><span style="display:flex;"><span><span style="color:#66d9ef">done</span>
 </span></span><span style="display:flex;"><span>ok <span style="color:#e6db74">&#34;Listo.&#34;</span>
-</span></span></code></pre></div><p>Los torrents se guardan en <code>/var/lib/qbittorrent/Downloads</code></p>
-<p>Despues de que Claude AI me genere ese script fenomenal le pedi esto:</p>
-<p>Me encanto, aun asi cuando abria el video con mpv parece que abria el directorio entero en vez de abrir el video que habia descargado, fuera de eso que no es tanta complicacion. Lo que me gustaria es que me de a elegir ahora quiero que sea mas como un buscador pero ordenalos por los que tienen mas seeds primero  y que sean recientes, y eso de 720 o 1080 no lo tomes en consideracion porque a veces yo quiero descargar archivos o audios que no son videos. No se si me entendes, ahora quiero algo mas como un buscador eficiente quiero descargar algo que tenga muchos seeds sino no funciona y quiero poder elegir que me de una lista de torrents y yo elijo cual quiero descargar.</p>
-<h4 id="en-varlibjackettindexers">En /var/lib/jackett/Indexers</h4>
-<p>Está la lista de indexs si es que los activaste uno por uno guardalos para no tener que volver a hacerlo.</p>
-
+</span></span></code></pre></div>
 </div>
 
 
