@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/screenrecord-ffmpeg-xorg/">
+	<meta property="og:site_name" content="Imlauer">
+	<meta property="og:title" content="Screenrecord con ffmpeg en Xorg">
+	<meta property="og:description" content="Script de bash para grabar la pantalla en X11 (dwm) con ffmpeg, detectando la resolución con xrandr y eligiendo la fuente de audio con pactl (PipeWire/PulseAudio).
+Uso:
+./screenrecord.sh # micrófono ./screenrecord.sh sys # sonido del sistema (parlantes) Presiona q para detener. Guarda en ~/videos/rec_FECHA.mkv.
+#!/bin/bash # Uso: screenrecord.sh [mic|sys] # mic (default) = graba micrófono # sys = graba sonido del sistema (parlantes) RES=$(xrandr --current | grep -w connected | grep -oP &#39;\d{3,4}x\d{3,4}&#39; | head -1) if [ &#34;$1&#34; = &#34;sys&#34; ]; then SRC=$(pactl list short sources | grep &#39;\.monitor&#39; | head -1 | cut -f2) SRC=&#34;${SRC:-default}&#34; else SRC=$(pactl list short sources | grep -v &#39;\.monitor&#39; | head -1 | cut -f2) SRC=&#34;${SRC:-default}&#34; fi OUT=&#34;$HOME/videos/rec_$(date &#43;%Y%m%d_%H%M%S).mkv&#34; mkdir -p &#34;$HOME/videos&#34; echo &#34;Grabando $RES -&gt; $OUT&#34; echo &#34;Audio: $SRC (q para detener)&#34; ffmpeg -f x11grab -framerate 30 -video_size &#34;$RES&#34; -i &#34;$DISPLAY&#34; \ -f pulse -i &#34;$SRC&#34; \ -c:v libx264 -preset ultrafast -crf 23 -pix_fmt yuv420p \ -c:a aac -b:a 128k &#34;$OUT&#34;">
+	<meta property="og:locale" content="es_es">
+	<meta property="og:type" content="article">
+		<meta property="article:published_time" content="2026-10-06T00:00:00+00:00">
+		<meta property="article:modified_time" content="2026-10-06T00:00:00+00:00">
+		<meta property="article:tag" content="Ffmpeg">
+		<meta property="article:tag" content="Xorg">
+		<meta property="article:tag" content="Linux">
+
+  
+	<meta itemprop="name" content="Screenrecord con ffmpeg en Xorg">
+	<meta itemprop="description" content="Script de bash para grabar la pantalla en X11 (dwm) con ffmpeg, detectando la resolución con xrandr y eligiendo la fuente de audio con pactl (PipeWire/PulseAudio).
+Uso:
+./screenrecord.sh # micrófono ./screenrecord.sh sys # sonido del sistema (parlantes) Presiona q para detener. Guarda en ~/videos/rec_FECHA.mkv.
+#!/bin/bash # Uso: screenrecord.sh [mic|sys] # mic (default) = graba micrófono # sys = graba sonido del sistema (parlantes) RES=$(xrandr --current | grep -w connected | grep -oP &#39;\d{3,4}x\d{3,4}&#39; | head -1) if [ &#34;$1&#34; = &#34;sys&#34; ]; then SRC=$(pactl list short sources | grep &#39;\.monitor&#39; | head -1 | cut -f2) SRC=&#34;${SRC:-default}&#34; else SRC=$(pactl list short sources | grep -v &#39;\.monitor&#39; | head -1 | cut -f2) SRC=&#34;${SRC:-default}&#34; fi OUT=&#34;$HOME/videos/rec_$(date &#43;%Y%m%d_%H%M%S).mkv&#34; mkdir -p &#34;$HOME/videos&#34; echo &#34;Grabando $RES -&gt; $OUT&#34; echo &#34;Audio: $SRC (q para detener)&#34; ffmpeg -f x11grab -framerate 30 -video_size &#34;$RES&#34; -i &#34;$DISPLAY&#34; \ -f pulse -i &#34;$SRC&#34; \ -c:v libx264 -preset ultrafast -crf 23 -pix_fmt yuv420p \ -c:a aac -b:a 128k &#34;$OUT&#34;">
+	<meta itemprop="datePublished" content="2026-10-06T00:00:00+00:00">
+	<meta itemprop="dateModified" content="2026-10-06T00:00:00+00:00">
+	<meta itemprop="wordCount" content="159">
+	<meta itemprop="keywords" content="Ffmpeg,Xorg,Linux">
+  
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:title" content="Screenrecord con ffmpeg en Xorg">
+	<meta name="twitter:description" content="Script de bash para grabar la pantalla en X11 (dwm) con ffmpeg, detectando la resolución con xrandr y eligiendo la fuente de audio con pactl (PipeWire/PulseAudio).
+Uso:
+./screenrecord.sh # micrófono ./screenrecord.sh sys # sonido del sistema (parlantes) Presiona q para detener. Guarda en ~/videos/rec_FECHA.mkv.
+#!/bin/bash # Uso: screenrecord.sh [mic|sys] # mic (default) = graba micrófono # sys = graba sonido del sistema (parlantes) RES=$(xrandr --current | grep -w connected | grep -oP &#39;\d{3,4}x\d{3,4}&#39; | head -1) if [ &#34;$1&#34; = &#34;sys&#34; ]; then SRC=$(pactl list short sources | grep &#39;\.monitor&#39; | head -1 | cut -f2) SRC=&#34;${SRC:-default}&#34; else SRC=$(pactl list short sources | grep -v &#39;\.monitor&#39; | head -1 | cut -f2) SRC=&#34;${SRC:-default}&#34; fi OUT=&#34;$HOME/videos/rec_$(date &#43;%Y%m%d_%H%M%S).mkv&#34; mkdir -p &#34;$HOME/videos&#34; echo &#34;Grabando $RES -&gt; $OUT&#34; echo &#34;Audio: $SRC (q para detener)&#34; ffmpeg -f x11grab -framerate 30 -video_size &#34;$RES&#34; -i &#34;$DISPLAY&#34; \ -f pulse -i &#34;$SRC&#34; \ -c:v libx264 -preset ultrafast -crf 23 -pix_fmt yuv420p \ -c:a aac -b:a 128k &#34;$OUT&#34;">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Screenrecord con ffmpeg en Xorg
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/screenrecord-ffmpeg-xorg/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="Script de bash para grabar la pantalla en X11 (dwm) con ffmpeg, detectando la resolución con xrandr y eligiendo la fuente de audio con pactl (PipeWire/PulseAudio).
+Uso:
+./screenrecord.sh      # micrófono
+./screenrecord.sh sys  # sonido del sistema (parlantes)
+Presiona q para detener. Guarda en ~/videos/rec_FECHA.mkv.
+#!/bin/bash
+# Uso: screenrecord.sh [mic|sys]
+#   mic (default) = graba micrófono
+#   sys           = graba sonido del sistema (parlantes)
+
+RES=$(xrandr --current | grep -w connected | grep -oP &#39;\d{3,4}x\d{3,4}&#39; | head -1)
+
+if [ &#34;$1&#34; = &#34;sys&#34; ]; then
+    SRC=$(pactl list short sources | grep &#39;\.monitor&#39; | head -1 | cut -f2)
+    SRC=&#34;${SRC:-default}&#34;
+else
+    SRC=$(pactl list short sources | grep -v &#39;\.monitor&#39; | head -1 | cut -f2)
+    SRC=&#34;${SRC:-default}&#34;
+fi
+
+OUT=&#34;$HOME/videos/rec_$(date &#43;%Y%m%d_%H%M%S).mkv&#34;
+mkdir -p &#34;$HOME/videos&#34;
+
+echo &#34;Grabando $RES -&gt; $OUT&#34;
+echo &#34;Audio: $SRC (q para detener)&#34;
+ffmpeg -f x11grab -framerate 30 -video_size &#34;$RES&#34; -i &#34;$DISPLAY&#34; \
+    -f pulse -i &#34;$SRC&#34; \
+    -c:v libx264 -preset ultrafast -crf 23 -pix_fmt yuv420p \
+    -c:a aac -b:a 128k &#34;$OUT&#34;
+">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Screenrecord con ffmpeg en Xorg
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2026-10-06T00:00:00Z'>
+      October 06, 2026
+    </time>
+    
+    <br>
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/ffmpeg/">Ffmpeg</a>
+    
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/xorg/">Xorg</a>
+    
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/linux/">Linux</a>
+    
+    
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <p>Script de bash para grabar la pantalla en X11 (dwm) con <strong>ffmpeg</strong>, detectando la resolución con <code>xrandr</code> y eligiendo la fuente de audio con <code>pactl</code> (PipeWire/PulseAudio).</p>
+<p><strong>Uso:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>./screenrecord.sh      <span style="color:#75715e"># micrófono</span>
+</span></span><span style="display:flex;"><span>./screenrecord.sh sys  <span style="color:#75715e"># sonido del sistema (parlantes)</span>
+</span></span></code></pre></div><p>Presiona <code>q</code> para detener. Guarda en <code>~/videos/rec_FECHA.mkv</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/bin/bash
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"># Uso: screenrecord.sh [mic|sys]</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   mic (default) = graba micrófono</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   sys           = graba sonido del sistema (parlantes)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>RES<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>xrandr --current | grep -w connected | grep -oP <span style="color:#e6db74">&#39;\d{3,4}x\d{3,4}&#39;</span> | head -1<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[</span> <span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;sys&#34;</span> <span style="color:#f92672">]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    SRC<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>pactl list short sources | grep <span style="color:#e6db74">&#39;\.monitor&#39;</span> | head -1 | cut -f2<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>    SRC<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>SRC<span style="color:#66d9ef">:-</span>default<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>    SRC<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>pactl list short sources | grep -v <span style="color:#e6db74">&#39;\.monitor&#39;</span> | head -1 | cut -f2<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>    SRC<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>SRC<span style="color:#66d9ef">:-</span>default<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>OUT<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$HOME<span style="color:#e6db74">/videos/rec_</span><span style="color:#66d9ef">$(</span>date +%Y%m%d_%H%M%S<span style="color:#66d9ef">)</span><span style="color:#e6db74">.mkv&#34;</span>
+</span></span><span style="display:flex;"><span>mkdir -p <span style="color:#e6db74">&#34;</span>$HOME<span style="color:#e6db74">/videos&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;Grabando </span>$RES<span style="color:#e6db74"> -&gt; </span>$OUT<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;Audio: </span>$SRC<span style="color:#e6db74"> (q para detener)&#34;</span>
+</span></span><span style="display:flex;"><span>ffmpeg -f x11grab -framerate <span style="color:#ae81ff">30</span> -video_size <span style="color:#e6db74">&#34;</span>$RES<span style="color:#e6db74">&#34;</span> -i <span style="color:#e6db74">&#34;</span>$DISPLAY<span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    -f pulse -i <span style="color:#e6db74">&#34;</span>$SRC<span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    -c:v libx264 -preset ultrafast -crf <span style="color:#ae81ff">23</span> -pix_fmt yuv420p <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    -c:a aac -b:a 128k <span style="color:#e6db74">&#34;</span>$OUT<span style="color:#e6db74">&#34;</span>
+</span></span></code></pre></div>
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+
+</footer>
+
+
+</body>
+</html>
