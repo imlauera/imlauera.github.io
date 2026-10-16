@@ -1,0 +1,115 @@
+---
+title: "Imprimir desde Arch Linux a Windows compartido"
+date: 2025-10-27T10:07:39-03:00
+tags: ['linux', 'arch', 'printing']
+---
+
+"Get-PrintJob -PrinterName 'HP PSC 1400 series'\n"
+
+Guía paso a paso para imprimir desde Arch Linux a una impresora compartida por Windows usando CUPS y SMB.
+
+**Estado:** ⚠️ Experimental - Puede requerir workarounds dependiendo del driver de Windows.
+
+---
+
+## Requisitos previos
+
+- Una PC con Windows que tenga una impresora compartida
+- Conocer la IP de la PC con Windows (ej: `192.168.0.203`)
+- Nombre de usuario y contraseña de Windows con permisos para usar la impresora
+
+---
+
+## Paso 1: Instalar CUPS
+
+```bash
+sudo rm /var/lib/pacman/db.lck  # solo si hay error de lock
+sudo pacman -S --needed cups
+```
+
+---
+
+## Paso 2: Iniciar CUPS
+
+```bash
+sudo systemctl enable --now cups
+```
+
+---
+
+## Paso 3: Descubrir impresoras compartidas en Windows
+
+```bash
+smbclient -L //192.168.0.203 -U usuario
+smbclient "//LIVING/HP1400" -U "User%" -c "print /home/esotericwarfare/humano.txt"
+```
+
+Buscá el nombre de la impresora en la salida:
+```
+HPPSC1400series Printer   HP PSC 1400 series
+```
+
+---
+
+## Paso 4: Agregar la impresora a CUPS
+
+```bash
+sudo lpadmin -p HPPSC1400series \
+  -v smb://usuario@192.168.0.203/HPPSC1400series \
+  -E \
+  -m lsb/usr/cupsfilters/pxlmono.ppd
+```
+
+**Nota:** El driver `everywhere` NO funciona con impresoras SMB. Usá `pxlmono.ppd`.
+
+---
+
+## Paso 5: Imprimir
+
+```bash
+lp -d HPPSC1400series ~/documento.pdf
+```
+
+---
+
+## Problemas conocidos y soluciones
+
+### Error: "Documento remoto de bajo nivel" (Remote Downlevel Document)
+
+Este error ocurre cuando Windows no puede procesar el formato de impresión que recibe desde Linux.
+
+**Soluciones posibles:**
+
+1. **Habilitar SMB1 en Windows (PowerShell como admin):**
+```powershell
+Enable-WindowsOptionalFeature -Online -FeatureName SMB1Protocol
+```
+Reiniciá Windows después.
+
+2. **Cambiar el driver de la impresora en Windows:**
+   - Panel de control > Dispositivos e impresoras
+   - Clic derecho en la impresoras > Propiedades
+   - Cambiar a un driver genérico (Microsoft Print To PDF, etc.)
+
+3. **Limpiar la cola de impresión en Windows:**
+```powershell
+Stop-Service -Name Spooler -Force
+Remove-Item -Path "C:\Windows\System32\spool\PRINTERS\*.*" -Force
+Start-Service -Name Spooler
+```
+
+4. **Workaround: Copiar archivo a carpeta compartida:**
+```bash
+sudo mount -t cifs //192.168.0.203/Users /mnt/windows -o username=usuario,password=
+cp archivo.pdf /mnt/windows/Public/
+```
+Luego imprimir desde Windows directamente.
+
+---
+
+## Notas importantes
+
+- No es necesario montar el recurso compartido de Windows para imprimir
+- El problema del "Remote Downlevel Document" es un bug conocido en Windows con impresoras compartidas
+- La HP PSC 1400 series es una impresora vieja y puede tener problemas de compatibilidad
+- Si nada funciona, la opción más confiable es copiar el archivo a la carpeta Public y imprimir desde Windows

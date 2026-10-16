@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/solucion_impresion_linux_a_windows/">
+	<meta property="og:site_name" content="Imlauer">
+	<meta property="og:title" content="Imprimir desde ArchLinux a Windows 10">
+	<meta property="og:description" content="Solución: Imprimir desde ArchLinux a impresoras compartidas de Windows 10 PC Windows: 192.168.0.203 (hostname LIVING, workgroup WORKGROUP, usuario living\aligra) Impresoras: Brother HL-L1222 Printer (USB002) y HP PSC 1400 series (USB001) Origen: ArchLinux (cliente SMB/CUPS) Resultado: ✅ Ambas impresoras imprimen desde Linux.
+TL;DR — Las claves que lo hicieron funcionar Ambas impresoras son “host-based” (GDI): NO aceptan texto plano. Hay que renderizar en Linux con el driver correcto antes de enviar. Texto crudo → 0 páginas, sin ruido. La HP daba un falso “cartucho de tinta vacío”: lo disparaba el soporte bidireccional (BIDI) de Windows, que consultaba el estado de la impresora y detenía el job RAW. Solución: desactivar BIDI en la impresora HP. Se necesita una cuenta autenticada para imprimir (el anónimo solo puede listar shares, no enviar trabajos). Cambios ejecutados EN WINDOWS 1. Impresoras compartidas Ya estaban compartidas. Verificado el share y puerto:">
+	<meta property="og:locale" content="es_es">
+	<meta property="og:type" content="article">
+		<meta property="article:published_time" content="2026-09-27T10:07:39-03:00">
+		<meta property="article:modified_time" content="2026-09-27T10:07:39-03:00">
+		<meta property="article:tag" content="Linux">
+
+  
+	<meta itemprop="name" content="Imprimir desde ArchLinux a Windows 10">
+	<meta itemprop="description" content="Solución: Imprimir desde ArchLinux a impresoras compartidas de Windows 10 PC Windows: 192.168.0.203 (hostname LIVING, workgroup WORKGROUP, usuario living\aligra) Impresoras: Brother HL-L1222 Printer (USB002) y HP PSC 1400 series (USB001) Origen: ArchLinux (cliente SMB/CUPS) Resultado: ✅ Ambas impresoras imprimen desde Linux.
+TL;DR — Las claves que lo hicieron funcionar Ambas impresoras son “host-based” (GDI): NO aceptan texto plano. Hay que renderizar en Linux con el driver correcto antes de enviar. Texto crudo → 0 páginas, sin ruido. La HP daba un falso “cartucho de tinta vacío”: lo disparaba el soporte bidireccional (BIDI) de Windows, que consultaba el estado de la impresora y detenía el job RAW. Solución: desactivar BIDI en la impresora HP. Se necesita una cuenta autenticada para imprimir (el anónimo solo puede listar shares, no enviar trabajos). Cambios ejecutados EN WINDOWS 1. Impresoras compartidas Ya estaban compartidas. Verificado el share y puerto:">
+	<meta itemprop="datePublished" content="2026-09-27T10:07:39-03:00">
+	<meta itemprop="dateModified" content="2026-09-27T10:07:39-03:00">
+	<meta itemprop="wordCount" content="998">
+	<meta itemprop="keywords" content="Linux">
+  
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:title" content="Imprimir desde ArchLinux a Windows 10">
+	<meta name="twitter:description" content="Solución: Imprimir desde ArchLinux a impresoras compartidas de Windows 10 PC Windows: 192.168.0.203 (hostname LIVING, workgroup WORKGROUP, usuario living\aligra) Impresoras: Brother HL-L1222 Printer (USB002) y HP PSC 1400 series (USB001) Origen: ArchLinux (cliente SMB/CUPS) Resultado: ✅ Ambas impresoras imprimen desde Linux.
+TL;DR — Las claves que lo hicieron funcionar Ambas impresoras son “host-based” (GDI): NO aceptan texto plano. Hay que renderizar en Linux con el driver correcto antes de enviar. Texto crudo → 0 páginas, sin ruido. La HP daba un falso “cartucho de tinta vacío”: lo disparaba el soporte bidireccional (BIDI) de Windows, que consultaba el estado de la impresora y detenía el job RAW. Solución: desactivar BIDI en la impresora HP. Se necesita una cuenta autenticada para imprimir (el anónimo solo puede listar shares, no enviar trabajos). Cambios ejecutados EN WINDOWS 1. Impresoras compartidas Ya estaban compartidas. Verificado el share y puerto:">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Imprimir desde ArchLinux a Windows 10
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/solucion_impresion_linux_a_windows/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="Solución: Imprimir desde ArchLinux a impresoras compartidas de Windows 10
+PC Windows: 192.168.0.203 (hostname LIVING, workgroup WORKGROUP, usuario living\aligra)
+Impresoras: Brother HL-L1222 Printer (USB002) y HP PSC 1400 series (USB001)
+Origen: ArchLinux (cliente SMB/CUPS)
+Resultado: ✅ Ambas impresoras imprimen desde Linux.
+
+TL;DR — Las claves que lo hicieron funcionar
+
+Ambas impresoras son &ldquo;host-based&rdquo; (GDI): NO aceptan texto plano. Hay que renderizar en Linux con el driver correcto antes de enviar. Texto crudo → 0 páginas, sin ruido.
+La HP daba un falso &ldquo;cartucho de tinta vacío&rdquo;: lo disparaba el soporte bidireccional (BIDI) de Windows, que consultaba el estado de la impresora y detenía el job RAW. Solución: desactivar BIDI en la impresora HP.
+Se necesita una cuenta autenticada para imprimir (el anónimo solo puede listar shares, no enviar trabajos).
+
+
+Cambios ejecutados EN WINDOWS
+1. Impresoras compartidas
+Ya estaban compartidas. Verificado el share y puerto:">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Imprimir desde ArchLinux a Windows 10
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2026-09-27T10:07:39-03:00'>
+      September 27, 2026
+    </time>
+    
+    <br>
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/linux/">Linux</a>
+    
+    
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <h1 id="solución-imprimir-desde-archlinux-a-impresoras-compartidas-de-windows-10">Solución: Imprimir desde ArchLinux a impresoras compartidas de Windows 10</h1>
+<p><strong>PC Windows:</strong> <code>192.168.0.203</code> (hostname <code>LIVING</code>, workgroup <code>WORKGROUP</code>, usuario <code>living\aligra</code>)
+<strong>Impresoras:</strong> <code>Brother HL-L1222 Printer</code> (USB002) y <code>HP PSC 1400 series</code> (USB001)
+<strong>Origen:</strong> ArchLinux (cliente SMB/CUPS)
+<strong>Resultado:</strong> ✅ <strong>Ambas impresoras imprimen desde Linux.</strong></p>
+<hr>
+<h2 id="tldr--las-claves-que-lo-hicieron-funcionar">TL;DR — Las claves que lo hicieron funcionar</h2>
+<ol>
+<li><strong>Ambas impresoras son &ldquo;host-based&rdquo; (GDI):</strong> NO aceptan texto plano. Hay que <strong>renderizar en Linux con el driver correcto</strong> antes de enviar. Texto crudo → 0 páginas, sin ruido.</li>
+<li><strong>La HP daba un falso &ldquo;cartucho de tinta vacío&rdquo;:</strong> lo disparaba el <strong>soporte bidireccional (BIDI)</strong> de Windows, que consultaba el estado de la impresora y detenía el job RAW. <strong>Solución: desactivar BIDI</strong> en la impresora HP.</li>
+<li><strong>Se necesita una cuenta autenticada</strong> para imprimir (el anónimo solo puede listar shares, no enviar trabajos).</li>
+</ol>
+<hr>
+<h2 id="cambios-ejecutados-en-windows">Cambios ejecutados EN WINDOWS</h2>
+<h3 id="1-impresoras-compartidas">1. Impresoras compartidas</h3>
+<p>Ya estaban compartidas. Verificado el share y puerto:</p>
+<ul>
+<li><code>Brother HL-L1222 Printer</code> → puerto <code>USB002</code> (default)</li>
+<li><code>HP PSC 1400 series</code> → puerto <code>USB001</code></li>
+</ul>
+<h3 id="2-usuario-local-para-autenticación">2. Usuario local para autenticación</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-powershell" data-lang="powershell"><span style="display:flex;"><span>net user arctest P@ssw0rd123 /add
+</span></span></code></pre></div><p><strong>Oculto del login</strong> (que no aparezca en la pantalla de inicio, dejando solo 1 usuario visible):</p>
+<pre tabindex="0"><code>HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\SpecialAccounts\UserList
+    arctest = 0   (DWORD)
+</code></pre><blockquote>
+<p><strong>¿Era necesario? VERIFICADO: SÍ.</strong></p>
+<ul>
+<li>Listar shares sin credenciales <strong>sí</strong> funciona → <code>smbclient -N -L //192.168.0.203</code> lista las impresoras.</li>
+<li><strong>Imprimir</strong> sin credenciales <strong>NO</strong> → <code>smbspool</code> anónimo devuelve <code>NT_STATUS_ACCESS_DENIED</code>.
+Windows exige un usuario autenticado con permiso <strong>Print</strong> para enviar un trabajo (se atribuye a un usuario).
+El anónimo solo puede <em>ver</em> los recursos, no imprimir. <strong>No borrar <code>arctest</code>.</strong>
+<em>(Nota: se pudo haber reutilizado <code>living\aligra</code> en vez de crear uno nuevo, pero una cuenta hacía falta.)</em></li>
+</ul>
+</blockquote>
+<h3 id="3-permisos-de-impresión-acl-en-ambas-impresoras">3. Permisos de impresión (ACL) en ambas impresoras</h3>
+<p>Se concedió el permiso <strong>Print</strong> a <code>arctest</code> (y Everyone/AUTHENTICATED USERS/BUILTIN ADMIN) usando la
+API Win32 <code>SetPrinter</code> vía P/Invoke (<code>PRINTER_ALL_ACCESS = 0x000F000C</code>), ya que PowerShell no tiene
+cmdlet directo para la ACL de impresora.</p>
+<h3 id="4-política-de-seguridad-de-red-modelo-clásico">4. Política de seguridad de red (modelo clásico)</h3>
+<table>
+	<thead>
+			<tr>
+					<th>Valor</th>
+					<th>Ruta</th>
+					<th>Cambio</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td><code>ForceGuest</code></td>
+					<td><code>HKLM\SYSTEM\CurrentControlSet\Control\Lsa</code></td>
+					<td>→ <strong>0</strong> (modelo clásico)</td>
+			</tr>
+			<tr>
+					<td><code>RestrictAnonymous</code></td>
+					<td><code>HKLM\SYSTEM\CurrentControlSet\Control\Lsa</code></td>
+					<td>→ <strong>0</strong></td>
+			</tr>
+			<tr>
+					<td><code>EveryoneIncludesAnonymous</code></td>
+					<td><code>...\Control\Lsa\MSV1_0</code></td>
+					<td>→ <strong>1</strong></td>
+			</tr>
+			<tr>
+					<td><code>RestrictNullSessAccess</code></td>
+					<td><code>HKLM\SYSTEM\CurrentControlSet\Control\Lsa</code></td>
+					<td>→ <strong>0</strong></td>
+			</tr>
+	</tbody>
+</table>
+<h3 id="5-print-processor-de-la-hp">5. Print processor de la HP</h3>
+<p>Revirtió al original <code>hpzpplhn</code> y luego se cambió a <code>winprint</code>. <strong>No fue la solución</strong>, pero se dejó en <code>winprint</code>.</p>
+<h3 id="6--la-clave-de-la-hp-desactivar-el-soporte-bidireccional-bidi-">6. ★ LA CLAVE DE LA HP: desactivar el soporte bidireccional (BIDI) ★</h3>
+<p>Con BIDI activo, Windows consultaba el estado por USB, leía un estado <strong>falso</strong> de &ldquo;tinta vacío&rdquo; y
+<strong>detenía el job RAW</strong> a mitad (la HP hacía ruido y se traba sin imprimir). Se quitó el bit
+<code>PRINTER_ATTRIBUTE_ENABLE_BIDI (0x800)</code>:</p>
+<pre tabindex="0"><code>HKLM\SYSTEM\CurrentControlSet\Control\Print\Printers\HP PSC 1400 series
+    Attributes:  0xA08  →  0x208
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-powershell" data-lang="powershell"><span style="display:flex;"><span>net stop spooler /y
+</span></span><span style="display:flex;"><span>Set-ItemProperty <span style="color:#e6db74">&#34;HKLM:\SYSTEM\CurrentControlSet\Control\Print\Printers\HP PSC 1400 series&#34;</span> `
+</span></span><span style="display:flex;"><span>    -Name Attributes -Value 0x208 -Type DWord
+</span></span><span style="display:flex;"><span>net start spooler
+</span></span></code></pre></div><h3 id="7-vaciado-de-la-cola-spool--repetidas-veces">7. Vaciado de la cola (spool) — repetidas veces</h3>
+<p>Para limpiar trabajos atascados (&ldquo;Retained&rdquo;, &ldquo;documento remoto de bajo nivel&rdquo;):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-powershell" data-lang="powershell"><span style="display:flex;"><span>Get-Printer | ForEach-Object { Get-PrintJob -PrinterName $_.Name -EA SilentlyContinue | Remove-PrintJob }
+</span></span><span style="display:flex;"><span>net stop spooler /y
+</span></span><span style="display:flex;"><span>Remove-Item <span style="color:#e6db74">&#34;C:\Windows\System32\spool\PRINTERS\*&#34;</span> -Force -Recurse -EA SilentlyContinue
+</span></span><span style="display:flex;"><span>net start spooler
+</span></span></code></pre></div><hr>
+<h2 id="cambios-ejecutados-en-linux-necesarios-para-el-resultado">Cambios ejecutados EN LINUX (necesarios para el resultado)</h2>
+<h3 id="paquetes-instalados">Paquetes instalados</h3>
+<p><code>cups</code>, <code>cups-filters</code>, <code>gutenprint</code>, <code>hplip</code>, <code>ghostscript</code>, <code>a2ps</code>, y desde AUR <code>brother-hll1222</code>.</p>
+<h3 id="colas-de-cups-creadas-renderizan-en-linux-y-mandan-por-smb">Colas de CUPS creadas (renderizan en Linux y mandan por SMB)</h3>
+<table>
+	<thead>
+			<tr>
+					<th>Cola CUPS</th>
+					<th>Driver (render)</th>
+					<th>URI destino</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td><code>Brother1222</code></td>
+					<td><code>brother-hll1222</code> (oficial Brother)</td>
+					<td><code>smb://arctest:P@ssw0rd123@192.168.0.203/Brother HL-L1222 Printer</code></td>
+			</tr>
+			<tr>
+					<td><code>HP1400</code></td>
+					<td><code>hplip</code> → <code>hp-psc_1400_series.ppd</code></td>
+					<td><code>smb://arctest:P@ssw0rd123@192.168.0.203/HP PSC 1400 series</code></td>
+			</tr>
+	</tbody>
+</table>
+<p>Backend: <code>/usr/lib/cups/backend/smb</code> → <code>smbspool</code> (libsmbclient), envía el trabajo como <strong>RAW</strong> al share.</p>
+<h3 id="impresión">Impresión</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>lp -d Brother1222 documento.pdf
+</span></span><span style="display:flex;"><span>lp -d HP1400 documento.pdf
+</span></span></code></pre></div><hr>
+<h2 id="nota-sobre-color">Nota sobre color</h2>
+<p>La HP imprime correctamente <strong>texto y páginas en negro</strong> desde Linux. Las páginas a color salen en
+negro (probablemente el cartucho de color no está instalado/activo en la impresora). No bloquea la
+impresión; el objetivo (imprimir desde Linux) se cumple para documentos en negro.</p>
+<hr>
+<h2 id="diagnóstico-por-qué-fallaba-lo-que-se-aprendió">Diagnóstico: por qué fallaba (lo que se aprendió)</h2>
+<table>
+	<thead>
+			<tr>
+					<th>Síntoma</th>
+					<th>Causa real</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>Trabajo llega como &ldquo;documento remoto de bajo nivel&rdquo;, <strong>0 páginas</strong>, sin ruido</td>
+					<td>Impresora <strong>GDI/host-based</strong> no entiende texto crudo. Necesita driver que la renderice.</td>
+			</tr>
+			<tr>
+					<td>Brother no imprimía con texto crudo (410 bytes, 0 páginas)</td>
+					<td>Faltaba el driver; con <code>brother-hll1222</code> (oficial) sí imprimió.</td>
+			</tr>
+			<tr>
+					<td>HP hacía ruido y se traba, con falso &ldquo;cartucho de tinta vacío&rdquo;</td>
+					<td><strong>BIDI activo</strong> → Windows leía estado falso y detenía el job RAW. Se desactivó BIDI.</td>
+			</tr>
+			<tr>
+					<td><code>smbclient print</code> → <code>NT_STATUS_ACCESS_DENIED</code></td>
+					<td><code>smbclient</code> no usa el mismo mecanismo; <code>smbspool</code> (libsmbclient) sí funciona con credenciales.</td>
+			</tr>
+			<tr>
+					<td><code>texttopdf</code> crasheaba (signal 11) en CUPS</td>
+					<td>Se enviaba <code>text/plain</code>; se envía <strong>PDF</strong> para evitar ese filtro.</td>
+			</tr>
+	</tbody>
+</table>
+<p><strong>Confirmado:</strong> el &ldquo;cartucho de tinta vacío&rdquo; era <strong>falso</strong> — la HP imprimía bien desde Windows
+(Out-Printer); el job RAW desde Linux fallaba hasta desactivar BIDI.</p>
+<hr>
+<h2 id="archivos--scripts-dejados-en-windows">Archivos / scripts dejados en Windows</h2>
+<p>En <code>C:\Users\Public\</code>: <code>hp.ps1</code>, <code>hpfix.ps1</code>, <code>hpdiag.ps1</code>, <code>state.ps1</code>, <code>dump.ps1</code>, <code>sec.ps1</code>,
+<code>setacl2.ps1</code>, <code>share.ps1</code>. (Diagnósticos; pueden borrarse.)</p>
+<h2 id="nota-sobre-imprimir-desde-linux">Nota sobre &ldquo;imprimir desde Linux&rdquo;</h2>
+<p>El trabajo <strong>se origina y renderiza en Linux</strong> y solo usa Windows como spooler/interfaz con la impresora
+USB. El uso de PowerShell/Windows fue solo para <strong>habilitar el acceso</strong> (usuario, ACLs, BIDI, política),
+no para ejecutar la impresión.</p>
+<h2 id="se-puede-imprimir-sin-usuario-no--probado-y-descartado">¿Se puede imprimir SIN usuario? No — probado y descartado</h2>
+<p>Se probó exhaustivamente (con ACL de la HP en estado original: <code>Todos</code>/<code>Autenticados</code>/<code>ANONYMOUS LOGON</code>
+con permiso Print <code>0x00020008</code>):</p>
+<ul>
+<li><strong>Anónimo</strong> (<code>smbclient -N</code>, sin credenciales) → falla.</li>
+<li><strong>Invitado/Guest, con y sin contraseña</strong> → el trabajo llega a la cola (<code>evento 800</code>) pero Windows lo
+<strong>borra solo al instante</strong> (<code>evento 310</code>, y el <code>.SPL</code>/<code>.SHD</code> nunca se escribe: error <code>0x2</code>).</li>
+<li><strong>ACL completa para Todos/anónimos</strong> (<code>0x000F004C</code>, temporal) → mismos resultados.</li>
+<li><strong>Usuario normal recién creado</strong> (<code>testprint</code>, grupo Usuarios) → también denegado en esos tests.</li>
+</ul>
+<p><strong>Conclusión: hace falta una cuenta de usuario local con contraseña</strong> (la ACL no es el limitante;
+el spooler rechaza/borra trabajos de cuentas invitadas/anónimas en este equipo). La cuenta usada es
+<code>arctest</code> (oculta en el login vía <code>SpecialAccounts\UserList</code>), y es la que documentan los tutoriales.</p>
+<h3 id="cambios-temporales-de-prueba-ya-revertidos">Cambios temporales de prueba (ya revertidos)</h3>
+<ul>
+<li>Se creó el usuario <code>testprint</code> → <strong>borrado</strong>.</li>
+<li>Se puso temporalmente la ACL de la HP en completo para Todos/Autenticados/ANONYMOUS → <strong>restaurada
+byte a byte</strong> desde backup, spooler reiniciado; verificado con <code>arctest</code> (evento 307, imprimió).</li>
+<li><code>Invitado</code> quedó con la contraseña <code>P@ssw0rd123</code> (antes estaba en blanco). Si se quiere volver en
+blanco: en la PC de Windows, <code>net user Invitado *</code> y dejar vacía dos veces.</li>
+</ul>
+
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+
+</footer>
+
+
+</body>
+</html>

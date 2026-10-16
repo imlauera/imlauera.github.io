@@ -31,7 +31,7 @@ sudo pacman -S cups samba Fedora:
 sudo dnf install cups samba-client ⚙️ 2. Start and enable CUPS sudo systemctl enable --now cups 🔍 3. Check the shared printer on the Windows host You can discover what printers are shared:">
 	<meta itemprop="datePublished" content="2025-10-27T10:07:39-03:00">
 	<meta itemprop="dateModified" content="2025-10-27T10:07:39-03:00">
-	<meta itemprop="wordCount" content="385">
+	<meta itemprop="wordCount" content="566">
 	<meta itemprop="keywords" content="Linux">
   
 	<meta name="twitter:card" content="summary">
@@ -166,6 +166,24 @@ HP_LaserJet     Printer   Office printer
 <p>📝 If you prefer to avoid storing a password in the URI, omit it:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo lpadmin -p HP_LaserJet -v smb://username@192.168.1.100/HP_LaserJet -E -m everywhere
 </span></span></code></pre></div><p>CUPS will prompt for credentials when needed.</p>
+<blockquote>
+<p>⚠️ <strong>Verified caveats (tested on a Windows 10 host with an HP PSC 1400 and a Brother HL-L1222):</strong></p>
+<ul>
+<li><strong>Host-based / GDI printers</strong> (most cheap inkjets and lasers: HP PSC/DeskJet, Brother HL-L1xxx,
+etc.): <code>-m everywhere</code> (or <code>pxlmono</code>, or raw text) will <strong>not</strong> work — Windows shows the job as
+printed but the printer outputs nothing. Install the <strong>model-specific driver</strong> (Arch: <code>hplip</code> for
+HP, the official Brother driver from AUR for Brother) and pass the real PPD with <code>-P</code> instead of
+<code>-m</code>.</li>
+<li><strong>The Windows account must be a normal user with a password.</strong> The built-in <strong>Guest account
+cannot print</strong> (tested with and without a password and with full permissions on the printer:
+the spooler accepts the job and deletes it immediately). Omitting the password in the URI only
+works if the user actually has one configured.</li>
+<li>On host-based HP printers, also <strong>disable bidirectional support (BIDI)</strong> on the Windows side
+(printer Properties → port/advanced, or clear the <code>0x800</code> bit in the printer&rsquo;s <code>Attributes</code>
+registry value) — otherwise Windows reads a false &ldquo;empty ink cartridge&rdquo; state and halts the job.</li>
+</ul>
+<p>Full verified guide (Spanish): <strong>print_from_archlinux_to_windows.md</strong>.</p>
+</blockquote>
 <hr>
 <h2 id="-5-verify-the-printer">✅ 5. Verify the printer</h2>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>lpstat -p

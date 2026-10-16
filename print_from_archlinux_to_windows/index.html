@@ -9,10 +9,9 @@
   <meta property="og:url" content="https://imlauera.github.io/print_from_archlinux_to_windows/">
 	<meta property="og:site_name" content="Imlauer">
 	<meta property="og:title" content="Imprimir desde Arch Linux a Windows compartido">
-	<meta property="og:description" content="“Get-PrintJob -PrinterName ‘HP PSC 1400 series’\n”
-Guía paso a paso para imprimir desde Arch Linux a una impresora compartida por Windows usando CUPS y SMB.
-Estado: ⚠️ Experimental - Puede requerir workarounds dependiendo del driver de Windows.
-Requisitos previos Una PC con Windows que tenga una impresora compartida Conocer la IP de la PC con Windows (ej: 192.168.0.203) Nombre de usuario y contraseña de Windows con permisos para usar la impresora Paso 1: Instalar CUPS sudo rm /var/lib/pacman/db.lck # solo si hay error de lock sudo pacman -S --needed cups Paso 2: Iniciar CUPS sudo systemctl enable --now cups Paso 3: Descubrir impresoras compartidas en Windows smbclient -L //192.168.0.203 -U usuario smbclient &#34;//LIVING/HP1400&#34; -U &#34;User%&#34; -c &#34;print /home/esotericwarfare/humano.txt&#34; Buscá el nombre de la impresora en la salida:">
+	<meta property="og:description" content="Guía para imprimir desde Arch Linux a una impresora compartida por Windows usando CUPS y SMB.
+Estado: ✅ Funciona — verificado con HP PSC 1400 series y Brother HL-L1222 (ambas host-based).
+Lo importante (lo que realmente funciona) Las impresoras baratas modernas (HP PSC 14xx, Brother HL-L1xxx, etc.) son host-based / GDI: no entienden PCL ni texto plano. Si les mandás datos “genéricos”, Windows dice “se imprimió” pero la impresora no saca nada. Para que funcione hace falta:">
 	<meta property="og:locale" content="es_es">
 	<meta property="og:type" content="article">
 		<meta property="article:published_time" content="2025-10-27T10:07:39-03:00">
@@ -23,21 +22,19 @@ Requisitos previos Una PC con Windows que tenga una impresora compartida Conocer
 
   
 	<meta itemprop="name" content="Imprimir desde Arch Linux a Windows compartido">
-	<meta itemprop="description" content="“Get-PrintJob -PrinterName ‘HP PSC 1400 series’\n”
-Guía paso a paso para imprimir desde Arch Linux a una impresora compartida por Windows usando CUPS y SMB.
-Estado: ⚠️ Experimental - Puede requerir workarounds dependiendo del driver de Windows.
-Requisitos previos Una PC con Windows que tenga una impresora compartida Conocer la IP de la PC con Windows (ej: 192.168.0.203) Nombre de usuario y contraseña de Windows con permisos para usar la impresora Paso 1: Instalar CUPS sudo rm /var/lib/pacman/db.lck # solo si hay error de lock sudo pacman -S --needed cups Paso 2: Iniciar CUPS sudo systemctl enable --now cups Paso 3: Descubrir impresoras compartidas en Windows smbclient -L //192.168.0.203 -U usuario smbclient &#34;//LIVING/HP1400&#34; -U &#34;User%&#34; -c &#34;print /home/esotericwarfare/humano.txt&#34; Buscá el nombre de la impresora en la salida:">
+	<meta itemprop="description" content="Guía para imprimir desde Arch Linux a una impresora compartida por Windows usando CUPS y SMB.
+Estado: ✅ Funciona — verificado con HP PSC 1400 series y Brother HL-L1222 (ambas host-based).
+Lo importante (lo que realmente funciona) Las impresoras baratas modernas (HP PSC 14xx, Brother HL-L1xxx, etc.) son host-based / GDI: no entienden PCL ni texto plano. Si les mandás datos “genéricos”, Windows dice “se imprimió” pero la impresora no saca nada. Para que funcione hace falta:">
 	<meta itemprop="datePublished" content="2025-10-27T10:07:39-03:00">
 	<meta itemprop="dateModified" content="2025-10-27T10:07:39-03:00">
-	<meta itemprop="wordCount" content="349">
+	<meta itemprop="wordCount" content="1109">
 	<meta itemprop="keywords" content="Linux,Arch,Printing">
   
 	<meta name="twitter:card" content="summary">
 	<meta name="twitter:title" content="Imprimir desde Arch Linux a Windows compartido">
-	<meta name="twitter:description" content="“Get-PrintJob -PrinterName ‘HP PSC 1400 series’\n”
-Guía paso a paso para imprimir desde Arch Linux a una impresora compartida por Windows usando CUPS y SMB.
-Estado: ⚠️ Experimental - Puede requerir workarounds dependiendo del driver de Windows.
-Requisitos previos Una PC con Windows que tenga una impresora compartida Conocer la IP de la PC con Windows (ej: 192.168.0.203) Nombre de usuario y contraseña de Windows con permisos para usar la impresora Paso 1: Instalar CUPS sudo rm /var/lib/pacman/db.lck # solo si hay error de lock sudo pacman -S --needed cups Paso 2: Iniciar CUPS sudo systemctl enable --now cups Paso 3: Descubrir impresoras compartidas en Windows smbclient -L //192.168.0.203 -U usuario smbclient &#34;//LIVING/HP1400&#34; -U &#34;User%&#34; -c &#34;print /home/esotericwarfare/humano.txt&#34; Buscá el nombre de la impresora en la salida:">
+	<meta name="twitter:description" content="Guía para imprimir desde Arch Linux a una impresora compartida por Windows usando CUPS y SMB.
+Estado: ✅ Funciona — verificado con HP PSC 1400 series y Brother HL-L1222 (ambas host-based).
+Lo importante (lo que realmente funciona) Las impresoras baratas modernas (HP PSC 14xx, Brother HL-L1xxx, etc.) son host-based / GDI: no entienden PCL ni texto plano. Si les mandás datos “genéricos”, Windows dice “se imprimió” pero la impresora no saca nada. Para que funcione hace falta:">
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -55,28 +52,13 @@ Requisitos previos Una PC con Windows que tenga una impresora compartida Conocer
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="referrer" content="no-referrer">
   <meta name="author" content="Imlauer.">
-  <meta name="description" content="&ldquo;Get-PrintJob -PrinterName &lsquo;HP PSC 1400 series&rsquo;\n&rdquo;
-Guía paso a paso para imprimir desde Arch Linux a una impresora compartida por Windows usando CUPS y SMB.
-Estado: ⚠️ Experimental - Puede requerir workarounds dependiendo del driver de Windows.
+  <meta name="description" content="Guía para imprimir desde Arch Linux a una impresora compartida por Windows usando CUPS y SMB.
+Estado: ✅ Funciona — verificado con HP PSC 1400 series y Brother HL-L1222 (ambas host-based).
 
-Requisitos previos
-
-Una PC con Windows que tenga una impresora compartida
-Conocer la IP de la PC con Windows (ej: 192.168.0.203)
-Nombre de usuario y contraseña de Windows con permisos para usar la impresora
-
-
-Paso 1: Instalar CUPS
-sudo rm /var/lib/pacman/db.lck  # solo si hay error de lock
-sudo pacman -S --needed cups
-
-Paso 2: Iniciar CUPS
-sudo systemctl enable --now cups
-
-Paso 3: Descubrir impresoras compartidas en Windows
-smbclient -L //192.168.0.203 -U usuario
-smbclient &#34;//LIVING/HP1400&#34; -U &#34;User%&#34; -c &#34;print /home/esotericwarfare/humano.txt&#34;
-Buscá el nombre de la impresora en la salida:">
+Lo importante (lo que realmente funciona)
+Las impresoras baratas modernas (HP PSC 14xx, Brother HL-L1xxx, etc.) son host-based / GDI: no entienden
+PCL ni texto plano. Si les mandás datos &ldquo;genéricos&rdquo;, Windows dice &ldquo;se imprimió&rdquo; pero la impresora no
+saca nada. Para que funcione hace falta:">
 </head>
 <body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
   <div class="navbar-brand">
@@ -134,78 +116,161 @@ Buscá el nombre de la impresora en la salida:">
     <section class="section">
       <div class="container">
 <div class="content is-medium">
-  <p>&ldquo;Get-PrintJob -PrinterName &lsquo;HP PSC 1400 series&rsquo;\n&rdquo;</p>
-<p>Guía paso a paso para imprimir desde Arch Linux a una impresora compartida por Windows usando CUPS y SMB.</p>
-<p><strong>Estado:</strong> ⚠️ Experimental - Puede requerir workarounds dependiendo del driver de Windows.</p>
+  <p>Guía para imprimir desde Arch Linux a una impresora compartida por Windows usando CUPS y SMB.</p>
+<p><strong>Estado:</strong> ✅ Funciona — verificado con <strong>HP PSC 1400 series</strong> y <strong>Brother HL-L1222</strong> (ambas host-based).</p>
+<hr>
+<h2 id="lo-importante-lo-que-realmente-funciona">Lo importante (lo que realmente funciona)</h2>
+<p>Las impresoras baratas modernas (HP PSC 14xx, Brother HL-L1xxx, etc.) son <strong>host-based / GDI</strong>: no entienden
+PCL ni texto plano. Si les mandás datos &ldquo;genéricos&rdquo;, Windows dice &ldquo;se imprimió&rdquo; pero <strong>la impresora no
+saca nada</strong>. Para que funcione hace falta:</p>
+<ol>
+<li><strong>Driver específico del modelo</strong> en Linux (NO <code>everywhere</code>, NO <code>pxlmono</code>).</li>
+<li><strong>Usuario de Windows normal, con contraseña</strong>, con permiso Print. <strong>La cuenta Invitado/Guest NO sirve</strong>
+(ni con contraseña, ni con permisos totales en la impresora) y el anónimo tampoco — ver
+&ldquo;Sin usuario&rdquo; en Problemas.</li>
+<li>Para HP host-based: <strong>desactivar el soporte bidireccional (BIDI)</strong> en Windows (ver Paso 5).</li>
+<li>Enviar <strong>PDF</strong>, no texto plano (evita un crash del filtro <code>texttopdf</code>).</li>
+</ol>
+<blockquote>
+<p><strong>Corrección respecto a versiones anteriores:</strong> antes recomendaba <code>pxlmono.ppd</code>. <strong>No funciona</strong> en
+impresoras host-based (sale &ldquo;impreso&rdquo; en Windows pero no imprime nada). Usá el driver del modelo.</p>
+</blockquote>
 <hr>
 <h2 id="requisitos-previos">Requisitos previos</h2>
 <ul>
-<li>Una PC con Windows que tenga una impresora compartida</li>
-<li>Conocer la IP de la PC con Windows (ej: <code>192.168.0.203</code>)</li>
-<li>Nombre de usuario y contraseña de Windows con permisos para usar la impresora</li>
+<li>PC Windows con una impresora conectada (y compartida — ver Paso 0)</li>
+<li>La IP de la PC Windows (ej: <code>192.168.0.203</code>)</li>
+<li>Una cuenta de Windows <strong>normal</strong> (grupo Usuarios) <strong>con contraseña</strong> y permiso Print en la impresora</li>
 </ul>
 <hr>
-<h2 id="paso-1-instalar-cups">Paso 1: Instalar CUPS</h2>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo rm /var/lib/pacman/db.lck  <span style="color:#75715e"># solo si hay error de lock</span>
-</span></span><span style="display:flex;"><span>sudo pacman -S --needed cups
-</span></span></code></pre></div><hr>
+<h2 id="paso-0-en-windows--usuario-y-compartir-una-sola-vez">Paso 0: En Windows — usuario y compartir (una sola vez)</h2>
+<p>En la PC que tiene la impresora (CMD/PowerShell como administrador). Si la impresora ya está
+compartida y usás un usuario con contraseña, pasá directo al Paso 1.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bat" data-lang="bat"><span style="display:flex;"><span>:<span style="color:#75715e">: 1) Usuario con contraseña (dedicado, para no dejar tu contraseña en Linux)</span>
+</span></span><span style="display:flex;"><span>net user arctest TuContraseñaSegura /add
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>:<span style="color:#75715e">: 2) Compartir la impresora (el nombre del share es el que se ve con smbclient -L)</span>
+</span></span><span style="display:flex;"><span>net share <span style="color:#e6db74">&#34;HP PSC 1400 series&#34;</span>=<span style="color:#e6db74">&#34;\\LIVING\HP PSC 1400 series&#34;</span> /GRANT:Todos,FULL
+</span></span></code></pre></div><p>(O desde GUI: Propiedades de la impresora &gt; pestaña Compartir &gt; &ldquo;Compartir esta impresora&rdquo;.)</p>
+<p>Detalles verificados en la práctica:</p>
+<ul>
+<li>La <strong>ACL por defecto</strong> al compartir (Todos: Imprimir) <strong>alcanza</strong>; no hace falta agregar el usuario
+a la seguridad de la impresora.</li>
+<li><strong>La cuenta Invitado/Guest no sirve aunque le pongas contraseña</strong>: el spooler acepta el trabajo y lo
+borra al instante (ver Problemas). Cualquier usuario <strong>normal</strong> con contraseña funciona — puede ser
+el usuario que ya usás, o uno dedicado como <code>arctest</code>.</li>
+<li>Si usás contraseña no hace falta tocar políticas (verificado: <code>ForceGuest=0</code>, default en Win10 Pro).</li>
+<li>Opcional — ocultar el usuario dedicado de la pantalla de login:
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bat" data-lang="bat"><span style="display:flex;"><span>reg add <span style="color:#e6db74">&#34;HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\SpecialAccounts\UserList&#34;</span> /v arctest /t REG_DWORD /d 0 /f
+</span></span></code></pre></div></li>
+</ul>
+<hr>
+<h2 id="paso-1-instalar-cups--el-driver-de-tu-impresora">Paso 1: Instalar CUPS + el driver de tu impresora</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo pacman -S --needed cups cups-filters ghostscript a2ps
+</span></span></code></pre></div><p><strong>Driver según el modelo:</strong></p>
+<ul>
+<li><strong>HP PSC / DeskJet (host-based):</strong> instalar <code>hplip</code> (provee <code>hp-psc_1400_series.ppd</code>, etc.)
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo pacman -S hplip
+</span></span></code></pre></div></li>
+<li><strong>Brother HL-L1xxx / DCP-L2xxx:</strong> driver oficial desde AUR
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>yay -S brother-hll1222        <span style="color:#75715e"># ajustá el modelo al tuyo</span>
+</span></span></code></pre></div></li>
+</ul>
+<hr>
 <h2 id="paso-2-iniciar-cups">Paso 2: Iniciar CUPS</h2>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo systemctl enable --now cups
 </span></span></code></pre></div><hr>
-<h2 id="paso-3-descubrir-impresoras-compartidas-en-windows">Paso 3: Descubrir impresoras compartidas en Windows</h2>
+<h2 id="paso-3-descubrir-la-impresora-compartida-en-windows">Paso 3: Descubrir la impresora compartida en Windows</h2>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>smbclient -L //192.168.0.203 -U usuario
-</span></span><span style="display:flex;"><span>smbclient <span style="color:#e6db74">&#34;//LIVING/HP1400&#34;</span> -U <span style="color:#e6db74">&#34;User%&#34;</span> -c <span style="color:#e6db74">&#34;print /home/esotericwarfare/humano.txt&#34;</span>
-</span></span></code></pre></div><p>Buscá el nombre de la impresora en la salida:</p>
-<pre tabindex="0"><code>HPPSC1400series Printer   HP PSC 1400 series
+</span></span></code></pre></div><p>Buscá el nombre del share de la impresora en la salida, por ejemplo:</p>
+<pre tabindex="0"><code>HP PSC 1400 series   Printer
 </code></pre><hr>
-<h2 id="paso-4-agregar-la-impresora-a-cups">Paso 4: Agregar la impresora a CUPS</h2>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo lpadmin -p HPPSC1400series <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span>  -v smb://usuario@192.168.0.203/HPPSC1400series <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span>  -E <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span>  -m lsb/usr/cupsfilters/pxlmono.ppd
-</span></span></code></pre></div><p><strong>Nota:</strong> El driver <code>everywhere</code> NO funciona con impresoras SMB. Usá <code>pxlmono.ppd</code>.</p>
+<h2 id="paso-4-agregar-la-impresora-a-cups-con-el-driver-del-modelo">Paso 4: Agregar la impresora a CUPS (con el driver del modelo)</h2>
+<p><strong>HP (driver hplip):</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo lpadmin -p HP1400 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -v <span style="color:#e6db74">&#34;smb://usuario:contraseña@192.168.0.203/HP%20PSC%201400%20series&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -P /usr/share/ppd/HP/hp-psc_1400_series.ppd.gz <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -E
+</span></span></code></pre></div><p><strong>Brother (driver brother-hll1222):</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo lpadmin -p Brother <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -v <span style="color:#e6db74">&#34;smb://usuario:contraseña@192.168.0.203/Brother%20HL-L1222%20Printer&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -P /usr/share/cups/model/Brother/brother-HLL1222-cups-en.ppd <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -E
+</span></span></code></pre></div><blockquote>
+<p>Nota: <code>-P</code> (ruta al PPD) es más robusto que <code>-m</code> para estos drivers.</p>
+</blockquote>
 <hr>
-<h2 id="paso-5-imprimir">Paso 5: Imprimir</h2>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>lp -d HPPSC1400series ~/documento.pdf
+<h2 id="paso-5--en-windows--desactivar-el-soporte-bidireccional-bidi-">Paso 5: ★ En Windows — desactivar el soporte bidireccional (BIDI) ★</h2>
+<p><strong>Este es el fix clave para las HP host-based.</strong> Con BIDI activo, Windows consulta el estado por USB,
+lee un <strong>falso &ldquo;cartucho de tinta vacío&rdquo;</strong> y <strong>detiene el trabajo RAW</strong> a mitad (la impresora hace ruido
+y se traba sin imprimir).</p>
+<p>PowerShell como administrador:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-powershell" data-lang="powershell"><span style="display:flex;"><span>net stop spooler /y
+</span></span><span style="display:flex;"><span>Set-ItemProperty <span style="color:#e6db74">&#34;HKLM:\SYSTEM\CurrentControlSet\Control\Print\Printers\NOMBRE DE LA IMPRESORA&#34;</span> `
+</span></span><span style="display:flex;"><span>    -Name Attributes -Value ((Get-ItemProperty <span style="color:#e6db74">&#34;HKLM:\SYSTEM\CurrentControlSet\Control\Print\Printers\NOMBRE DE LA IMPRESORA&#34;</span>).Attributes <span style="color:#f92672">-band</span> (<span style="color:#f92672">-bnot</span> 0x800)) -Type DWord
+</span></span><span style="display:flex;"><span>net start spooler
+</span></span></code></pre></div><p>(Eso quita el bit <code>0x800</code> = <code>PRINTER_ATTRIBUTE_ENABLE_BIDI</code>.)</p>
+<p><strong>Nota:</strong> la impresora debe tener un <strong>usuario con permiso Print</strong> (Paso 0). El permiso se da desde
+Propiedades de la impresora &gt; Seguridad, o con <code>SetPrinter</code> (API Win32).</p>
+<hr>
+<h2 id="paso-6-imprimir-usar-pdf">Paso 6: Imprimir (usar PDF)</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>lp -d HP1400 documento.pdf
+</span></span><span style="display:flex;"><span>lp -d Brother documento.pdf
 </span></span></code></pre></div><hr>
 <h2 id="problemas-conocidos-y-soluciones">Problemas conocidos y soluciones</h2>
-<h3 id="error-documento-remoto-de-bajo-nivel-remote-downlevel-document">Error: &ldquo;Documento remoto de bajo nivel&rdquo; (Remote Downlevel Document)</h3>
-<p>Este error ocurre cuando Windows no puede procesar el formato de impresión que recibe desde Linux.</p>
-<p><strong>Soluciones posibles:</strong></p>
-<ol>
-<li><strong>Habilitar SMB1 en Windows (PowerShell como admin):</strong></li>
-</ol>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-powershell" data-lang="powershell"><span style="display:flex;"><span>Enable-WindowsOptionalFeature -Online -FeatureName SMB1Protocol
-</span></span></code></pre></div><p>Reiniciá Windows después.</p>
-<ol start="2">
-<li>
-<p><strong>Cambiar el driver de la impresora en Windows:</strong></p>
+<h3 id="documento-remoto-de-bajo-nivel--0-páginas-sin-ruido">&ldquo;Documento remoto de bajo nivel&rdquo; + 0 páginas, sin ruido</h3>
+<p>La impresora <strong>host-based no entendió los datos</strong> (driver genérico o texto crudo). Usá el <strong>driver del
+modelo</strong> (Paso 1 y 4). <code>everywhere</code> y <code>pxlmono</code> <strong>no</strong> funcionan con estas impresoras.</p>
+<h3 id="hp-hace-ruido-se-traba-falso-cartucho-de-tinta-vacío">HP: hace ruido, se traba, falso &ldquo;cartucho de tinta vacío&rdquo;</h3>
+<p>Falta <strong>desactivar BIDI</strong> en Windows (Paso 5). El estado de tinta es falso; el driver de Windows lo
+ignora pero el trabajo RAW se detiene. Desactivar BIDI lo arregla.</p>
+<h3 id="texttopdf-crashea-signal-11-en-cups"><code>texttopdf</code> crashea (signal 11) en CUPS</h3>
+<p>Enviá <strong>PDF</strong>, no <code>.txt</code>. El filtro <code>texttopdf</code> a veces falla; el camino PDF→driver no lo usa.</p>
+<h3 id="sin-usuario--con-invitado-nt_status_access_denied-o-el-trabajo-desaparece">Sin usuario / con Invitado: <code>NT_STATUS_ACCESS_DENIED</code> o el trabajo desaparece</h3>
+<p>Probado a fondo en Windows 10: <strong>el anónimo y la cuenta Invitado/Guest no pueden imprimir</strong>, aunque:</p>
 <ul>
-<li>Panel de control &gt; Dispositivos e impresoras</li>
-<li>Clic derecho en la impresoras &gt; Propiedades</li>
-<li>Cambiar a un driver genérico (Microsoft Print To PDF, etc.)</li>
+<li>a Invitado se le ponga contraseña,</li>
+<li>la ACL de la impresora le dé permiso Print a Todos/Autenticados/anónimos (incluso control total).</li>
 </ul>
-</li>
-<li>
-<p><strong>Limpiar la cola de impresión en Windows:</strong></p>
-</li>
-</ol>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-powershell" data-lang="powershell"><span style="display:flex;"><span>Stop-Service -Name Spooler -Force
-</span></span><span style="display:flex;"><span>Remove-Item -Path <span style="color:#e6db74">&#34;C:\Windows\System32\spool\PRINTERS\*.*&#34;</span> -Force
-</span></span><span style="display:flex;"><span>Start-Service -Name Spooler
-</span></span></code></pre></div><ol start="4">
-<li><strong>Workaround: Copiar archivo a carpeta compartida:</strong></li>
-</ol>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo mount -t cifs //192.168.0.203/Users /mnt/windows -o username<span style="color:#f92672">=</span>usuario,password<span style="color:#f92672">=</span>
-</span></span><span style="display:flex;"><span>cp archivo.pdf /mnt/windows/Public/
-</span></span></code></pre></div><p>Luego imprimir desde Windows directamente.</p>
+<p>El trabajo llega a la cola (<code>evento 800</code> en el visor <em>PrintService/Operacional</em>) y Windows lo <strong>borra
+solo al instante</strong> (<code>evento 310</code>). Solo sirven usuarios <strong>normales</strong> con contraseña (grupo Usuarios).
+La solución es crear/uso un usuario normal (Paso 0) — no es un tema de permisos de la impresora.</p>
+<hr>
+<h2 id="ejemplo-real-cómo-quedó-en-esta-red">Ejemplo real (cómo quedó en esta red)</h2>
+<p>Servidor: Windows 10 <code>LIVING</code> (192.168.0.203), impresoras <code>HP PSC 1400 series</code> y
+<code>Brother HL-L1222 Printer</code> compartidas. Cliente: Arch Linux. Usuario dedicado: <code>arctest</code>
+(oculto del login; su contraseña vive solo en la cola de CUPS, no en ningún tutorial).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Colas CUPS (verificadas)</span>
+</span></span><span style="display:flex;"><span>sudo lpadmin -p HP1400 -v <span style="color:#e6db74">&#34;smb://arctest:CONTRASENA@192.168.0.203/HP%20PSC%201400%20series&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -P /usr/share/ppd/HP/hp-psc_1400_series.ppd.gz -E
+</span></span><span style="display:flex;"><span>sudo lpadmin -p Brother1222 -v <span style="color:#e6db74">&#34;smb://arctest:CONTRASENA@192.168.0.203/Brother%20HL-L1222%20Printer&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -P /usr/share/cups/model/Brother/brother-HLL1222-cups-en.ppd -E
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Prueba rápida de credenciales (imprime una hoja con un renglón)</span>
+</span></span><span style="display:flex;"><span>smbclient -U <span style="color:#e6db74">&#34;arctest%CONTRASENA&#34;</span> <span style="color:#e6db74">&#34;//192.168.0.203/HP PSC 1400 series&#34;</span> -c <span style="color:#e6db74">&#34;print /tmp/test.txt&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Imprimir de verdad</span>
+</span></span><span style="display:flex;"><span>lp -d HP1400 documento.pdf
+</span></span><span style="display:flex;"><span>lp -d Brother1222 documento.pdf
+</span></span></code></pre></div><p><strong>Verificación en Windows</strong> (PowerShell) si algo falla:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-powershell" data-lang="powershell"><span style="display:flex;"><span>Get-WinEvent -LogName <span style="color:#e6db74">&#39;Microsoft-Windows-PrintService/Operational&#39;</span> -MaxEvents <span style="color:#ae81ff">10</span> |
+</span></span><span style="display:flex;"><span>  ForEach-Object { $_.TimeCreated.ToString(<span style="color:#e6db74">&#39;HH:mm:ss&#39;</span>)+<span style="color:#e6db74">&#39; id=&#39;</span>+$_.Id+<span style="color:#e6db74">&#39; | &#39;</span>+($_.Message <span style="color:#f92672">-replace</span> <span style="color:#e6db74">&#39;\s+&#39;</span>,<span style="color:#e6db74">&#39; &#39;</span>) }
+</span></span></code></pre></div><ul>
+<li><code>307</code> = el documento se imprimió ✓</li>
+<li><code>800</code> seguido de <code>310</code> = el trabajo se encoló y se borró (cuenta invitada/anónima, o error de acceso)</li>
+<li>Para limpiar trabajos trabados en la cola:
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bat" data-lang="bat"><span style="display:flex;"><span>net stop spooler /y
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">del</span> C:\Windows\System32\spool\PRINTERS\*.*
+</span></span><span style="display:flex;"><span>net start spooler
+</span></span></code></pre></div></li>
+</ul>
 <hr>
 <h2 id="notas-importantes">Notas importantes</h2>
 <ul>
-<li>No es necesario montar el recurso compartido de Windows para imprimir</li>
-<li>El problema del &ldquo;Remote Downlevel Document&rdquo; es un bug conocido en Windows con impresoras compartidas</li>
-<li>La HP PSC 1400 series es una impresora vieja y puede tener problemas de compatibilidad</li>
-<li>Si nada funciona, la opción más confiable es copiar el archivo a la carpeta Public y imprimir desde Windows</li>
+<li>No es necesario montar el recurso compartido (CIFS) para imprimir; el backend <code>smb</code> (smbspool) va directo.</li>
+<li>Estas HP/Brother host-based <strong>solo imprimen bien en negro</strong> desde Linux si el cartucho de color no está
+activo; el texto y las páginas en negro salen perfecto.</li>
+<li>El trabajo se <strong>renderiza en Linux</strong> y Windows solo actúa de spooler hacia la impresora USB.</li>
 </ul>
 
 </div>

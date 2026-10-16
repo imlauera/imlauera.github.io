@@ -9,9 +9,8 @@
   <meta property="og:url" content="https://imlauera.github.io/imprimir_linux_a_windows_solucion/">
 	<meta property="og:site_name" content="Imlauer">
 	<meta property="og:title" content="Imprimir desde Linux a Windows (Solución)">
-	<meta property="og:description" content="Resumen La impresión directa desde Linux (CUPS) a una impresora compartida por Windows NO funciona debido a un bug de Windows llamado “Remote Downlevel Document”. El documento llega a la cola de Windows pero no se imprime.
-Solución que funciona: smbclient directo Aunque CUPS falla, usar smbclient directamente sí funciona:
-# Instalar smbclient (ya viene con Samba) # Imprimir un archivo smbclient &#34;//192.168.0.203/HP_Printer&#34; -U &#34;User%&#34; -c &#34;print archivo.pdf&#34; El % al final de User indica contraseña vacía.">
+	<meta property="og:description" content="⚠️ ACTUALIZACIÓN (2026-10-16): este tutorial está superado. La solución real NO es smbclient a mano ni el workaround de la carpeta compartida: CUPS sí funciona, con dos claves:
+Driver del modelo en Linux (hplip para HP PSC/DeskJet, brother-hll1222 para Brother HL-L1xxx) — NO pxlmono, NO everywhere, NO texto crudo. El “Documento remoto de bajo nivel” (“Remote Downlevel Document”) no era un bug de Microsoft: era driver genérico &#43; soporte bidireccional (BIDI) activo en Windows con un falso “cartucho de tinta vacío” que frenaba el trabajo. Desactivando BIDI y usando el driver del modelo, imprime perfecto. Usuario de Windows normal, con contraseña. El usuario User de este tutorial ya no existe, y la contraseña vacía no hace falta. La cuenta Invitado/Guest no puede imprimir (probado: con y sin contraseña, y con permisos totales en la impresora — el spooler de Windows acepta el trabajo y lo borra al instante). Guía completa y verificada (Linux &#43; Windows &#43; troubleshooting): print_from_archlinux_to_windows.md. Las líneas de más abajo quedan solo como referencia histórica.">
 	<meta property="og:locale" content="es_es">
 	<meta property="og:type" content="article">
 		<meta property="article:published_time" content="2026-04-04T00:00:00+00:00">
@@ -23,19 +22,17 @@ Solución que funciona: smbclient directo Aunque CUPS falla, usar smbclient dire
 
   
 	<meta itemprop="name" content="Imprimir desde Linux a Windows (Solución)">
-	<meta itemprop="description" content="Resumen La impresión directa desde Linux (CUPS) a una impresora compartida por Windows NO funciona debido a un bug de Windows llamado “Remote Downlevel Document”. El documento llega a la cola de Windows pero no se imprime.
-Solución que funciona: smbclient directo Aunque CUPS falla, usar smbclient directamente sí funciona:
-# Instalar smbclient (ya viene con Samba) # Imprimir un archivo smbclient &#34;//192.168.0.203/HP_Printer&#34; -U &#34;User%&#34; -c &#34;print archivo.pdf&#34; El % al final de User indica contraseña vacía.">
+	<meta itemprop="description" content="⚠️ ACTUALIZACIÓN (2026-10-16): este tutorial está superado. La solución real NO es smbclient a mano ni el workaround de la carpeta compartida: CUPS sí funciona, con dos claves:
+Driver del modelo en Linux (hplip para HP PSC/DeskJet, brother-hll1222 para Brother HL-L1xxx) — NO pxlmono, NO everywhere, NO texto crudo. El “Documento remoto de bajo nivel” (“Remote Downlevel Document”) no era un bug de Microsoft: era driver genérico &#43; soporte bidireccional (BIDI) activo en Windows con un falso “cartucho de tinta vacío” que frenaba el trabajo. Desactivando BIDI y usando el driver del modelo, imprime perfecto. Usuario de Windows normal, con contraseña. El usuario User de este tutorial ya no existe, y la contraseña vacía no hace falta. La cuenta Invitado/Guest no puede imprimir (probado: con y sin contraseña, y con permisos totales en la impresora — el spooler de Windows acepta el trabajo y lo borra al instante). Guía completa y verificada (Linux &#43; Windows &#43; troubleshooting): print_from_archlinux_to_windows.md. Las líneas de más abajo quedan solo como referencia histórica.">
 	<meta itemprop="datePublished" content="2026-04-04T00:00:00+00:00">
 	<meta itemprop="dateModified" content="2026-04-04T00:00:00+00:00">
-	<meta itemprop="wordCount" content="264">
+	<meta itemprop="wordCount" content="432">
 	<meta itemprop="keywords" content="Linux,Printing,Samba,Windows">
   
 	<meta name="twitter:card" content="summary">
 	<meta name="twitter:title" content="Imprimir desde Linux a Windows (Solución)">
-	<meta name="twitter:description" content="Resumen La impresión directa desde Linux (CUPS) a una impresora compartida por Windows NO funciona debido a un bug de Windows llamado “Remote Downlevel Document”. El documento llega a la cola de Windows pero no se imprime.
-Solución que funciona: smbclient directo Aunque CUPS falla, usar smbclient directamente sí funciona:
-# Instalar smbclient (ya viene con Samba) # Imprimir un archivo smbclient &#34;//192.168.0.203/HP_Printer&#34; -U &#34;User%&#34; -c &#34;print archivo.pdf&#34; El % al final de User indica contraseña vacía.">
+	<meta name="twitter:description" content="⚠️ ACTUALIZACIÓN (2026-10-16): este tutorial está superado. La solución real NO es smbclient a mano ni el workaround de la carpeta compartida: CUPS sí funciona, con dos claves:
+Driver del modelo en Linux (hplip para HP PSC/DeskJet, brother-hll1222 para Brother HL-L1xxx) — NO pxlmono, NO everywhere, NO texto crudo. El “Documento remoto de bajo nivel” (“Remote Downlevel Document”) no era un bug de Microsoft: era driver genérico &#43; soporte bidireccional (BIDI) activo en Windows con un falso “cartucho de tinta vacío” que frenaba el trabajo. Desactivando BIDI y usando el driver del modelo, imprime perfecto. Usuario de Windows normal, con contraseña. El usuario User de este tutorial ya no existe, y la contraseña vacía no hace falta. La cuenta Invitado/Guest no puede imprimir (probado: con y sin contraseña, y con permisos totales en la impresora — el spooler de Windows acepta el trabajo y lo borra al instante). Guía completa y verificada (Linux &#43; Windows &#43; troubleshooting): print_from_archlinux_to_windows.md. Las líneas de más abajo quedan solo como referencia histórica.">
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -53,14 +50,23 @@ Solución que funciona: smbclient directo Aunque CUPS falla, usar smbclient dire
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="referrer" content="no-referrer">
   <meta name="author" content="Imlauer.">
-  <meta name="description" content="Resumen
-La impresión directa desde Linux (CUPS) a una impresora compartida por Windows NO funciona debido a un bug de Windows llamado &ldquo;Remote Downlevel Document&rdquo;. El documento llega a la cola de Windows pero no se imprime.
-Solución que funciona: smbclient directo
-Aunque CUPS falla, usar smbclient directamente sí funciona:
-# Instalar smbclient (ya viene con Samba)
-# Imprimir un archivo
-smbclient &#34;//192.168.0.203/HP_Printer&#34; -U &#34;User%&#34; -c &#34;print archivo.pdf&#34;
-El % al final de User indica contraseña vacía.">
+  <meta name="description" content="
+⚠️ ACTUALIZACIÓN (2026-10-16): este tutorial está superado. La solución real NO es smbclient
+a mano ni el workaround de la carpeta compartida: CUPS sí funciona, con dos claves:
+
+Driver del modelo en Linux (hplip para HP PSC/DeskJet, brother-hll1222 para Brother
+HL-L1xxx) — NO pxlmono, NO everywhere, NO texto crudo. El &ldquo;Documento remoto de bajo nivel&rdquo;
+(&ldquo;Remote Downlevel Document&rdquo;) no era un bug de Microsoft: era driver genérico &#43; soporte
+bidireccional (BIDI) activo en Windows con un falso &ldquo;cartucho de tinta vacío&rdquo; que frenaba el
+trabajo. Desactivando BIDI y usando el driver del modelo, imprime perfecto.
+Usuario de Windows normal, con contraseña. El usuario User de este tutorial ya no existe,
+y la contraseña vacía no hace falta. La cuenta Invitado/Guest no puede imprimir (probado:
+con y sin contraseña, y con permisos totales en la impresora — el spooler de Windows acepta el
+trabajo y lo borra al instante).
+
+Guía completa y verificada (Linux &#43; Windows &#43; troubleshooting): print_from_archlinux_to_windows.md.
+Las líneas de más abajo quedan solo como referencia histórica.
+">
 </head>
 <body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
   <div class="navbar-brand">
@@ -123,7 +129,25 @@ El % al final de User indica contraseña vacía.">
     <section class="section">
       <div class="container">
 <div class="content is-medium">
-  <h2 id="resumen">Resumen</h2>
+  <blockquote>
+<p><strong>⚠️ ACTUALIZACIÓN (2026-10-16): este tutorial está superado.</strong> La solución real NO es <code>smbclient</code>
+a mano ni el workaround de la carpeta compartida: <strong>CUPS sí funciona</strong>, con dos claves:</p>
+<ol>
+<li><strong>Driver del modelo</strong> en Linux (<code>hplip</code> para HP PSC/DeskJet, <code>brother-hll1222</code> para Brother
+HL-L1xxx) — NO <code>pxlmono</code>, NO <code>everywhere</code>, NO texto crudo. El &ldquo;Documento remoto de bajo nivel&rdquo;
+(&ldquo;Remote Downlevel Document&rdquo;) <strong>no era un bug de Microsoft</strong>: era driver genérico + soporte
+bidireccional (BIDI) activo en Windows con un falso &ldquo;cartucho de tinta vacío&rdquo; que frenaba el
+trabajo. Desactivando BIDI y usando el driver del modelo, imprime perfecto.</li>
+<li><strong>Usuario de Windows normal, con contraseña.</strong> El usuario <code>User</code> de este tutorial ya no existe,
+y la contraseña vacía no hace falta. <strong>La cuenta Invitado/Guest no puede imprimir</strong> (probado:
+con y sin contraseña, y con permisos totales en la impresora — el spooler de Windows acepta el
+trabajo y lo borra al instante).</li>
+</ol>
+<p>Guía completa y verificada (Linux + Windows + troubleshooting): <strong>print_from_archlinux_to_windows.md</strong>.
+Las líneas de más abajo quedan solo como referencia histórica.</p>
+</blockquote>
+<hr>
+<h2 id="resumen">Resumen</h2>
 <p>La impresión directa desde Linux (CUPS) a una impresora compartida por Windows <strong>NO funciona</strong> debido a un bug de Windows llamado &ldquo;Remote Downlevel Document&rdquo;. El documento llega a la cola de Windows pero no se imprime.</p>
 <h2 id="solución-que-funciona-smbclient-directo">Solución que funciona: smbclient directo</h2>
 <p>Aunque CUPS falla, usar <code>smbclient</code> directamente sí funciona:</p>

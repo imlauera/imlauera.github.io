@@ -1,0 +1,72 @@
+---
+title: "Imprimir desde Linux a Windows (Solución)"
+date: 2026-04-04
+tags: ['linux', 'printing', 'samba', 'windows']
+---
+
+## Resumen
+
+La impresión directa desde Linux (CUPS) a una impresora compartida por Windows **NO funciona** debido a un bug de Windows llamado "Remote Downlevel Document". El documento llega a la cola de Windows pero no se imprime.
+
+## Solución que funciona: smbclient directo
+
+Aunque CUPS falla, usar `smbclient` directamente sí funciona:
+
+```bash
+# Instalar smbclient (ya viene con Samba)
+# Imprimir un archivo
+smbclient "//192.168.0.203/HP_Printer" -U "User%" -c "print archivo.pdf"
+```
+
+El `%` al final de User indica contraseña vacía.
+
+## Configuración actual
+
+### Windows
+- IP: 192.168.0.203
+- Usuario: User (sin contraseña)
+- Impresora: HP PSC 1400 series
+- Driver: Microsoft Print To PDF
+- Compartida como: HP_Printer
+
+### Linux
+- CUPS instalado
+- Backend SMB personalizado: `/usr/lib/cups/backend/smb`
+
+### Para usar desde Linux
+
+1. **Opción 1: Script simple**
+```bash
+#!/bin/bash
+# imprimir.sh
+smbclient "//192.168.0.203/HP_Printer" -U "User%" -c "print $1"
+```
+
+2. **Opción 2: Convertir a PostScript primero**
+```bash
+pdftops archivo.pdf archivo.ps
+smbclient "//192.168.0.203/HP_Printer" -U "User%" -c "print archivo.ps"
+```
+
+## Problemas encontrados
+
+1. **CUPS + SMB**: El documento llega a Windows pero dice "Documento remoto de bajo nivel" y no imprime
+2. **IPP**: No funciona, Windows no acepta conexiones IPP entrantes
+3. **TCP/IP raw (9100)**: El servicio LPD no está habilitado en Windows
+4. **Compartir impresoras**: Set-Printer no funciona, el servicio de compartición de Windows está deshabilitado
+
+## Workaround alternativo
+
+Si smbclient tiene problemas con PDFs, usar la carpeta compartida:
+
+```bash
+sudo mount -t cifs //192.168.0.203/Users /mnt/windows -o username=User,password=
+cp archivo.pdf /mnt/windows/
+# Luego imprimir desde Windows manualmente
+```
+
+## Notas
+
+- El problema del "Remote Downlevel Document" es un bug conocido de Microsoft
+- LaHP PSC 1400 series es una impresora vieja (2005) y tiene problemas con drivers modernos
+- PrinterShare es un software de terceros que podría resolver el problema pero requiere instalación

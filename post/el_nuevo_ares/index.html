@@ -32,7 +32,7 @@ creá un archivo llamado jackett.json { &#34;api_key&#34;: &#34;YOUR_API_KEY_HER
 Abrí Jackett y agregá todos los indexers publicos seleccionando uno por uno el checkbox de la izquierda.">
 	<meta itemprop="datePublished" content="2024-06-13T23:25:49-03:00">
 	<meta itemprop="dateModified" content="2024-06-13T23:25:49-03:00">
-	<meta itemprop="wordCount" content="1588">
+	<meta itemprop="wordCount" content="5351">
 	<meta itemprop="keywords" content="Ares,Qbittorrent,Jackett">
   
 	<meta name="twitter:card" content="summary">
@@ -400,6 +400,1015 @@ $ curl -s &ldquo;http://127.0.0.1:9117/api/v2.0/indexers/all/results?Query=formu
 </span></span><span style="display:flex;"><span>    <span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span>$again<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">=</span>~ ^<span style="color:#f92672">[</span>sSyY<span style="color:#f92672">]</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">||</span> break
 </span></span><span style="display:flex;"><span><span style="color:#66d9ef">done</span>
 </span></span><span style="display:flex;"><span>ok <span style="color:#e6db74">&#34;Listo.&#34;</span>
+</span></span></code></pre></div><h3 id="en-python-este-es-mejor">En python este es mejor</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#!/usr/bin/env python3</span>
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;&#34;&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Buscador de torrents: Jackett -&gt; qBittorrent.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Qué hace bien (a diferencia de la versión anterior):
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  * Las consultas se derivan de TU búsqueda (antes estaban hardcodeadas a &#34;Malaysia/Sepang&#34;).
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  * Filtra basura: &#34;Pre/Post Qualifying Show&#34;, &#34;Pre Race Show&#34;, highlights, reports, etc.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  * Filtra por sesión: si pedís &#34;qualifying&#34;, fuera practice / sprint / race / lights.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  * Dedup entre trackers: el mismo release en 3 fuentes aparece una sola vez.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  * Si el filtro se come todo, te dice qué descartó y te deja ver los ocultos.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">Uso:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  torrent_menu.py &#34;formula 1 2026 Bahrain&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  torrent_menu.py &#34;formula 1 2026 Bahrain qualifying&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  torrent_menu.py --session qualifying &#34;bahrain f1 2026&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  torrent_menu.py --no-filter -1 &#34;formula 1 2026 bahrain&#34;     # solo listar
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> argparse
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> json
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> os
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> re
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> shutil
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> subprocess
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> sys
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> tempfile
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> urllib.parse
+</span></span><span style="display:flex;"><span><span style="color:#f92672">from</span> datetime <span style="color:#f92672">import</span> datetime, timezone
+</span></span><span style="display:flex;"><span><span style="color:#f92672">from</span> pathlib <span style="color:#f92672">import</span> Path
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">try</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">import</span> requests
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">except</span> <span style="color:#a6e22e">Exception</span>:
+</span></span><span style="display:flex;"><span>    print(<span style="color:#e6db74">&#34;Falta requests: pip install requests&#34;</span>, file<span style="color:#f92672">=</span>sys<span style="color:#f92672">.</span>stderr)
+</span></span><span style="display:flex;"><span>    sys<span style="color:#f92672">.</span>exit(<span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>JACKETT_URL <span style="color:#f92672">=</span> os<span style="color:#f92672">.</span>environ<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;JACKETT_URL&#34;</span>, <span style="color:#e6db74">&#34;http://127.0.0.1:9117&#34;</span>)
+</span></span><span style="display:flex;"><span>JACKETT_KEY_FILE <span style="color:#f92672">=</span> Path(
+</span></span><span style="display:flex;"><span>    os<span style="color:#f92672">.</span>environ<span style="color:#f92672">.</span>get(
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;JACKETT_KEY_FILE&#34;</span>,
+</span></span><span style="display:flex;"><span>        str(Path<span style="color:#f92672">.</span>home() <span style="color:#f92672">/</span> <span style="color:#e6db74">&#34;.local/share/qBittorrent/nova3/engines/jackett.json&#34;</span>),
+</span></span><span style="display:flex;"><span>    )
+</span></span><span style="display:flex;"><span>)
+</span></span><span style="display:flex;"><span>QBT_URL <span style="color:#f92672">=</span> os<span style="color:#f92672">.</span>environ<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;QBT_URL&#34;</span>, <span style="color:#e6db74">&#34;http://127.0.0.1:8080&#34;</span>)
+</span></span><span style="display:flex;"><span>QBT_COOKIE <span style="color:#f92672">=</span> os<span style="color:#f92672">.</span>environ<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;QBT_COOKIE&#34;</span>, <span style="color:#e6db74">&#34;&#34;</span>)  <span style="color:#75715e"># opcional: cookie de sesión de qBittorrent</span>
+</span></span><span style="display:flex;"><span>DOWNLOAD_DIR <span style="color:#f92672">=</span> os<span style="color:#f92672">.</span>environ<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;DOWNLOAD_DIR&#34;</span>, <span style="color:#e6db74">&#34;/mnt/linux2/torrents&#34;</span>)
+</span></span><span style="display:flex;"><span>MAX_RESULTS <span style="color:#f92672">=</span> int(os<span style="color:#f92672">.</span>environ<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;MAX_RESULTS&#34;</span>, <span style="color:#e6db74">&#34;500&#34;</span>))
+</span></span><span style="display:flex;"><span>MAX_QUERIES <span style="color:#f92672">=</span> int(os<span style="color:#f92672">.</span>environ<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;MAX_QUERIES&#34;</span>, <span style="color:#e6db74">&#34;10&#34;</span>))
+</span></span><span style="display:flex;"><span>FILTER_JUNK <span style="color:#f92672">=</span> os<span style="color:#f92672">.</span>environ<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;FILTER_JUNK&#34;</span>, <span style="color:#e6db74">&#34;1&#34;</span>) <span style="color:#f92672">not</span> <span style="color:#f92672">in</span> (<span style="color:#e6db74">&#34;0&#34;</span>, <span style="color:#e6db74">&#34;false&#34;</span>, <span style="color:#e6db74">&#34;no&#34;</span>, <span style="color:#e6db74">&#34;&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>COL_RESET <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\033</span><span style="color:#e6db74">[0m&#34;</span>
+</span></span><span style="display:flex;"><span>COL_BOLD <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\033</span><span style="color:#e6db74">[1m&#34;</span>
+</span></span><span style="display:flex;"><span>COL_DIM <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\033</span><span style="color:#e6db74">[2m&#34;</span>
+</span></span><span style="display:flex;"><span>COL_CYAN <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\033</span><span style="color:#e6db74">[0;36m&#34;</span>
+</span></span><span style="display:flex;"><span>COL_GREEN <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\033</span><span style="color:#e6db74">[0;32m&#34;</span>
+</span></span><span style="display:flex;"><span>COL_YELLOW <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\033</span><span style="color:#e6db74">[1;33m&#34;</span>
+</span></span><span style="display:flex;"><span>COL_RED <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\033</span><span style="color:#e6db74">[0;31m&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>YEAR_RE <span style="color:#f92672">=</span> re<span style="color:#f92672">.</span>compile(<span style="color:#e6db74">r</span><span style="color:#e6db74">&#34;\b(?:19|20)\d</span><span style="color:#e6db74">{2}</span><span style="color:#e6db74">\b&#34;</span>)
+</span></span><span style="display:flex;"><span>BRACKET_RE <span style="color:#f92672">=</span> re<span style="color:#f92672">.</span>compile(<span style="color:#e6db74">r</span><span style="color:#e6db74">&#34;[\[\(\{][^\]\)\}]*[\]\)\}]&#34;</span>)
+</span></span><span style="display:flex;"><span>NUM_RE <span style="color:#f92672">=</span> re<span style="color:#f92672">.</span>compile(<span style="color:#e6db74">r</span><span style="color:#e6db74">&#34;\d+&#34;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Tags de calidad que se repiten idénticos en todos los trackers: para el dedup</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># son ruido, pero NO para los filtros (720p vs 1080p son releases distintos).</span>
+</span></span><span style="display:flex;"><span>DEDUP_NOISE <span style="color:#f92672">=</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;ss&#34;</span>, <span style="color:#e6db74">&#34;subs&#34;</span>, <span style="color:#e6db74">&#34;sub&#34;</span>, <span style="color:#e6db74">&#34;es&#34;</span>, <span style="color:#e6db74">&#34;sp&#34;</span>, <span style="color:#e6db74">&#34;lat&#34;</span>, <span style="color:#e6db74">&#34;eng&#34;</span>, <span style="color:#e6db74">&#34;en&#34;</span>, <span style="color:#e6db74">&#34;web&#34;</span>, <span style="color:#e6db74">&#34;webrip&#34;</span>, <span style="color:#e6db74">&#34;webdl&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;h264&#34;</span>, <span style="color:#e6db74">&#34;h265&#34;</span>, <span style="color:#e6db74">&#34;x264&#34;</span>, <span style="color:#e6db74">&#34;x265&#34;</span>, <span style="color:#e6db74">&#34;hevc&#34;</span>, <span style="color:#e6db74">&#34;avc&#34;</span>, <span style="color:#e6db74">&#34;aac&#34;</span>, <span style="color:#e6db74">&#34;bluray&#34;</span>, <span style="color:#e6db74">&#34;webrip&#34;</span>, <span style="color:#e6db74">&#34;ddp&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;repack&#34;</span>, <span style="color:#e6db74">&#34;proper&#34;</span>, <span style="color:#e6db74">&#34;multi&#34;</span>, <span style="color:#e6db74">&#34;dual&#34;</span>, <span style="color:#e6db74">&#34;ita&#34;</span>, <span style="color:#e6db74">&#34;spa&#34;</span>, <span style="color:#e6db74">&#34;castellano&#34;</span>, <span style="color:#e6db74">&#34;espanol&#34;</span>,
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Dos releases con título equivalente se consideran el mismo si el tamaño</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># difiere menos de este porcentaje (mismo archivovu en trackers distintos).</span>
+</span></span><span style="display:flex;"><span>SIZE_TOLERANCE <span style="color:#f92672">=</span> <span style="color:#ae81ff">0.03</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Margen antes del 1/1 del año pedido para usar PublishDate en títulos sin año.</span>
+</span></span><span style="display:flex;"><span>STALE_DAYS <span style="color:#f92672">=</span> <span style="color:#ae81ff">60</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Palabras clave por sesión del fin de semana</span>
+</span></span><span style="display:flex;"><span>SESSION_PATTERNS <span style="color:#f92672">=</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;practice&#34;</span>: <span style="color:#e6db74">r</span><span style="color:#e6db74">&#34;\b(?:practice|practicas|entrenamiento|free\s*practice|fp\s*[123])\b&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;qualifying&#34;</span>: <span style="color:#e6db74">r</span><span style="color:#e6db74">&#34;\b(?:qualifying|qualification|quali|clasificaci[oó]n|q[1-3]?)\b&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;sprint&#34;</span>: <span style="color:#e6db74">r</span><span style="color:#e6db74">&#34;\b(?:sprint)\b&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;race&#34;</span>: <span style="color:#e6db74">r</span><span style="color:#e6db74">&#34;\b(?:race|carrera|grand\s*prix)\b&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;lights&#34;</span>: <span style="color:#e6db74">r</span><span style="color:#e6db74">&#34;\b(?:lights)\b&#34;</span>,
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>SESSION_TERMS <span style="color:#f92672">=</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;practice&#34;</span>: [<span style="color:#e6db74">&#34;Practice&#34;</span>],
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;qualifying&#34;</span>: [<span style="color:#e6db74">&#34;Qualifying&#34;</span>],
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;sprint&#34;</span>: [<span style="color:#e6db74">&#34;Sprint&#34;</span>, <span style="color:#e6db74">&#34;Sprint Qualifying&#34;</span>],
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;race&#34;</span>: [<span style="color:#e6db74">&#34;Race&#34;</span>, <span style="color:#e6db74">&#34;Grand Prix&#34;</span>],
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;lights&#34;</span>: [<span style="color:#e6db74">&#34;Lights&#34;</span>, <span style="color:#e6db74">&#34;F1 Lights&#34;</span>],
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Orden por defecto del fin de semana, para los reintentos automáticos.</span>
+</span></span><span style="display:flex;"><span>SESSION_ORDER <span style="color:#f92672">=</span> [<span style="color:#e6db74">&#34;qualifying&#34;</span>, <span style="color:#e6db74">&#34;practice&#34;</span>, <span style="color:#e6db74">&#34;race&#34;</span>, <span style="color:#e6db74">&#34;sprint&#34;</span>, <span style="color:#e6db74">&#34;lights&#34;</span>]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Releases que NO son la sesión en sí (shows, resúmenes, entrevistas...)</span>
+</span></span><span style="display:flex;"><span>SHOW_RE <span style="color:#f92672">=</span> re<span style="color:#f92672">.</span>compile(
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">r</span><span style="color:#e6db74">&#34;\b(?:show|shows|highlight|highlights|resumen|analisis|analysis|reaction|reactions|&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">r</span><span style="color:#e6db74">&#34;interview|interviews|press\s*conference|race\s*report|qualifying\s*report|roundup|&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">r</span><span style="color:#e6db74">&#34;documentary|feature|promo|trailer|rehearsal|walkthrough|podcast|rundown|replay)\b&#34;</span>
+</span></span><span style="display:flex;"><span>)
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Tests de pretemporada: tampoco son sesiones de un GP.</span>
+</span></span><span style="display:flex;"><span>PRESEASON_RE <span style="color:#f92672">=</span> re<span style="color:#f92672">.</span>compile(<span style="color:#e6db74">r</span><span style="color:#e6db74">&#34;\bpre\s*season\b|\btesting\b|\btest\s*(?:session|day)\b&#34;</span>)
+</span></span><span style="display:flex;"><span>F1_RE <span style="color:#f92672">=</span> re<span style="color:#f92672">.</span>compile(<span style="color:#e6db74">r</span><span style="color:#e6db74">&#34;\b(?:f1|f 1|formula\s*1|formula1|grand\s*prix)\b&#34;</span>)
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Circuitos cuyo nombre choca con otros deportes</span>
+</span></span><span style="display:flex;"><span>CIRCUITS <span style="color:#f92672">=</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;bahrain&#34;</span>, <span style="color:#e6db74">&#34;monza&#34;</span>, <span style="color:#e6db74">&#34;silverstone&#34;</span>, <span style="color:#e6db74">&#34;spa&#34;</span>, <span style="color:#e6db74">&#34;interlagos&#34;</span>, <span style="color:#e6db74">&#34;imola&#34;</span>, <span style="color:#e6db74">&#34;spa francorchamps&#34;</span>,
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># &#34;pre ...&#34; / &#34;post ...&#34; (con espacio o guion). El lookahead evita falsos positivos tipo &#34;pressure&#34;.</span>
+</span></span><span style="display:flex;"><span>PREPOST_RE <span style="color:#f92672">=</span> re<span style="color:#f92672">.</span>compile(<span style="color:#e6db74">r</span><span style="color:#e6db74">&#34;\b(?:pre|post)[\s\-_]+&#34;</span>)
+</span></span><span style="display:flex;"><span>PREPOST_GLUE_RE <span style="color:#f92672">=</span> re<span style="color:#f92672">.</span>compile(
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">r</span><span style="color:#e6db74">&#34;\b(?:pre|post)(?=qualifying|quali|practice|race|sprint|gp|show|session|lights)\b&#34;</span>
+</span></span><span style="display:flex;"><span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">norm_ws</span>(s):
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#34; &#34;</span><span style="color:#f92672">.</span>join((s <span style="color:#f92672">or</span> <span style="color:#e6db74">&#34;&#34;</span>)<span style="color:#f92672">.</span>split())
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">log_info</span>(msg):
+</span></span><span style="display:flex;"><span>    print(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{</span>COL_CYAN<span style="color:#e6db74">}</span><span style="color:#e6db74">[INFO]</span><span style="color:#e6db74">{</span>COL_RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">  </span><span style="color:#e6db74">{</span>msg<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">log_ok</span>(msg):
+</span></span><span style="display:flex;"><span>    print(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{</span>COL_GREEN<span style="color:#e6db74">}</span><span style="color:#e6db74">[OK]</span><span style="color:#e6db74">{</span>COL_RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">    </span><span style="color:#e6db74">{</span>msg<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">log_warn</span>(msg):
+</span></span><span style="display:flex;"><span>    print(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{</span>COL_YELLOW<span style="color:#e6db74">}</span><span style="color:#e6db74">[WARN]</span><span style="color:#e6db74">{</span>COL_RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">  </span><span style="color:#e6db74">{</span>msg<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">log_err</span>(msg):
+</span></span><span style="display:flex;"><span>    print(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{</span>COL_RED<span style="color:#e6db74">}</span><span style="color:#e6db74">[ERROR]</span><span style="color:#e6db74">{</span>COL_RESET<span style="color:#e6db74">}</span><span style="color:#e6db74"> </span><span style="color:#e6db74">{</span>msg<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>, file<span style="color:#f92672">=</span>sys<span style="color:#f92672">.</span>stderr)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">human_size</span>(n):
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">try</span>:
+</span></span><span style="display:flex;"><span>        n <span style="color:#f92672">=</span> int(n <span style="color:#f92672">or</span> <span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">except</span> <span style="color:#a6e22e">Exception</span>:
+</span></span><span style="display:flex;"><span>        n <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> n <span style="color:#f92672">&gt;=</span> <span style="color:#ae81ff">1</span> <span style="color:#f92672">&lt;&lt;</span> <span style="color:#ae81ff">40</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{</span>n <span style="color:#f92672">/</span> (<span style="color:#ae81ff">1</span><span style="color:#f92672">&lt;&lt;</span><span style="color:#ae81ff">40</span>)<span style="color:#e6db74">:</span><span style="color:#e6db74">.2f</span><span style="color:#e6db74">}</span><span style="color:#e6db74"> TB&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> n <span style="color:#f92672">&gt;=</span> <span style="color:#ae81ff">1</span> <span style="color:#f92672">&lt;&lt;</span> <span style="color:#ae81ff">30</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{</span>n <span style="color:#f92672">/</span> (<span style="color:#ae81ff">1</span><span style="color:#f92672">&lt;&lt;</span><span style="color:#ae81ff">30</span>)<span style="color:#e6db74">:</span><span style="color:#e6db74">.2f</span><span style="color:#e6db74">}</span><span style="color:#e6db74"> GB&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> n <span style="color:#f92672">&gt;=</span> <span style="color:#ae81ff">1</span> <span style="color:#f92672">&lt;&lt;</span> <span style="color:#ae81ff">20</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{</span>n <span style="color:#f92672">/</span> (<span style="color:#ae81ff">1</span><span style="color:#f92672">&lt;&lt;</span><span style="color:#ae81ff">20</span>)<span style="color:#e6db74">:</span><span style="color:#e6db74">.1f</span><span style="color:#e6db74">}</span><span style="color:#e6db74"> MB&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> n <span style="color:#f92672">&gt;=</span> <span style="color:#ae81ff">1</span> <span style="color:#f92672">&lt;&lt;</span> <span style="color:#ae81ff">10</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{</span>n <span style="color:#f92672">/</span> (<span style="color:#ae81ff">1</span><span style="color:#f92672">&lt;&lt;</span><span style="color:#ae81ff">10</span>)<span style="color:#e6db74">:</span><span style="color:#e6db74">.0f</span><span style="color:#e6db74">}</span><span style="color:#e6db74"> KB&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{</span>n<span style="color:#e6db74">}</span><span style="color:#e6db74"> B&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">get_apikey</span>():
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">try</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">with</span> open(JACKETT_KEY_FILE) <span style="color:#66d9ef">as</span> f:
+</span></span><span style="display:flex;"><span>            k <span style="color:#f92672">=</span> json<span style="color:#f92672">.</span>load(f)<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;api_key&#34;</span>)
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> k:
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">return</span> k
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">except</span> <span style="color:#a6e22e">Exception</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">pass</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">None</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ---------------------------------------------------------------- consultas</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">detect_session</span>(text):
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;&#34;&#34;Detecta la sesión pedida en el texto de la búsqueda (o None).&#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    nt <span style="color:#f92672">=</span> norm_title(text)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> key <span style="color:#f92672">in</span> (<span style="color:#e6db74">&#34;qualifying&#34;</span>, <span style="color:#e6db74">&#34;practice&#34;</span>, <span style="color:#e6db74">&#34;sprint&#34;</span>, <span style="color:#e6db74">&#34;race&#34;</span>, <span style="color:#e6db74">&#34;lights&#34;</span>):
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> re<span style="color:#f92672">.</span>search(SESSION_PATTERNS[key], nt):
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> key
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">None</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">build_queries</span>(query, session<span style="color:#f92672">=</span><span style="color:#66d9ef">None</span>):
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;&#34;&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    Genera variantes a partir de la query del usuario. Ninguna queda hardcodeada:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    los indexers hacen AND de palabras y cada uno indexa distinto orden, así que
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    probamos las permutaciones de [lugar] [año] [sesión] que más se usan.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    &#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    q <span style="color:#f92672">=</span> norm_ws(query)
+</span></span><span style="display:flex;"><span>    queries <span style="color:#f92672">=</span> []
+</span></span><span style="display:flex;"><span>    seen <span style="color:#f92672">=</span> set()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">add</span>(<span style="color:#f92672">*</span>parts):
+</span></span><span style="display:flex;"><span>        x <span style="color:#f92672">=</span> norm_ws(<span style="color:#e6db74">&#34; &#34;</span><span style="color:#f92672">.</span>join(p <span style="color:#66d9ef">for</span> p <span style="color:#f92672">in</span> parts <span style="color:#66d9ef">if</span> p))
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> x <span style="color:#f92672">and</span> x<span style="color:#f92672">.</span>lower() <span style="color:#f92672">not</span> <span style="color:#f92672">in</span> seen:
+</span></span><span style="display:flex;"><span>            seen<span style="color:#f92672">.</span>add(x<span style="color:#f92672">.</span>lower())
+</span></span><span style="display:flex;"><span>            queries<span style="color:#f92672">.</span>append(x)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    add(q)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># &#34;Formula 1&#34; -&gt; &#34;F1&#34; (los indexers indexan cualquiera de las dos formas)</span>
+</span></span><span style="display:flex;"><span>    f1 <span style="color:#f92672">=</span> norm_ws(re<span style="color:#f92672">.</span>sub(<span style="color:#e6db74">r</span><span style="color:#e6db74">&#34;\bformula\s*1\b&#34;</span>, <span style="color:#e6db74">&#34;F1&#34;</span>, q, flags<span style="color:#f92672">=</span>re<span style="color:#f92672">.</span>IGNORECASE))
+</span></span><span style="display:flex;"><span>    add(f1)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    m <span style="color:#f92672">=</span> YEAR_RE<span style="color:#f92672">.</span>search(q)
+</span></span><span style="display:flex;"><span>    year <span style="color:#f92672">=</span> m<span style="color:#f92672">.</span>group(<span style="color:#ae81ff">0</span>) <span style="color:#66d9ef">if</span> m <span style="color:#66d9ef">else</span> <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    base <span style="color:#f92672">=</span> norm_ws(YEAR_RE<span style="color:#f92672">.</span>sub(<span style="color:#e6db74">&#34; &#34;</span>, f1))  <span style="color:#75715e"># el resto, sin año</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Sin sesión: con año en las dos posiciones y sin año.</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> session:
+</span></span><span style="display:flex;"><span>        add(year, base)
+</span></span><span style="display:flex;"><span>        add(base, year)
+</span></span><span style="display:flex;"><span>        add(base)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> queries[:MAX_QUERIES]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> term <span style="color:#f92672">in</span> SESSION_TERMS<span style="color:#f92672">.</span>get(session, [session]):
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># Si el usuario ya escribió la palabra de sesión, no la repetimos</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># (&#34;bahrain qualifying Qualifying&#34; no matchea nada en los indexers).</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> re<span style="color:#f92672">.</span>search(<span style="color:#e6db74">r</span><span style="color:#e6db74">&#34;\b&#34;</span> <span style="color:#f92672">+</span> re<span style="color:#f92672">.</span>escape(term) <span style="color:#f92672">+</span> <span style="color:#e6db74">r</span><span style="color:#e6db74">&#34;\b&#34;</span>, base, flags<span style="color:#f92672">=</span>re<span style="color:#f92672">.</span>IGNORECASE):
+</span></span><span style="display:flex;"><span>            add(year, base)
+</span></span><span style="display:flex;"><span>            add(base, year)
+</span></span><span style="display:flex;"><span>            add(base)
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">continue</span>
+</span></span><span style="display:flex;"><span>        add(year, base, term)
+</span></span><span style="display:flex;"><span>        add(base, year, term)   <span style="color:#75715e"># &lt;-- el orden que mejor funciona en LimeTorrents/TD</span>
+</span></span><span style="display:flex;"><span>        add(term, base, year)
+</span></span><span style="display:flex;"><span>        add(base, term, year)
+</span></span><span style="display:flex;"><span>        add(base, term)
+</span></span><span style="display:flex;"><span>        add(term, base)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> queries[:MAX_QUERIES]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ---------------------------------------------------------------- búsqueda</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">fetch_results</span>(queries, indexer<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;all&#34;</span>):
+</span></span><span style="display:flex;"><span>    apikey <span style="color:#f92672">=</span> get_apikey()
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> apikey:
+</span></span><span style="display:flex;"><span>        log_err(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;No se encontró API key en </span><span style="color:#e6db74">{</span>JACKETT_KEY_FILE<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>        sys<span style="color:#f92672">.</span>exit(<span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    raw <span style="color:#f92672">=</span> []
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> qv <span style="color:#f92672">in</span> queries:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">try</span>:
+</span></span><span style="display:flex;"><span>            enc <span style="color:#f92672">=</span> urllib<span style="color:#f92672">.</span>parse<span style="color:#f92672">.</span>quote(qv)
+</span></span><span style="display:flex;"><span>            url <span style="color:#f92672">=</span> <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{</span>JACKETT_URL<span style="color:#e6db74">}</span><span style="color:#e6db74">/api/v2.0/indexers/</span><span style="color:#e6db74">{</span>indexer<span style="color:#e6db74">}</span><span style="color:#e6db74">/results?Query=</span><span style="color:#e6db74">{</span>enc<span style="color:#e6db74">}</span><span style="color:#e6db74">&amp;apikey=</span><span style="color:#e6db74">{</span>apikey<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>            r <span style="color:#f92672">=</span> requests<span style="color:#f92672">.</span>get(url, timeout<span style="color:#f92672">=</span><span style="color:#ae81ff">300</span>)
+</span></span><span style="display:flex;"><span>            r<span style="color:#f92672">.</span>raise_for_status()
+</span></span><span style="display:flex;"><span>            res <span style="color:#f92672">=</span> (r<span style="color:#f92672">.</span>json() <span style="color:#f92672">or</span> {})<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;Results&#34;</span>) <span style="color:#f92672">or</span> []
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> res:
+</span></span><span style="display:flex;"><span>                log_info(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;&#39;</span><span style="color:#e6db74">{</span>qv<span style="color:#e6db74">}</span><span style="color:#e6db74">&#39;: </span><span style="color:#e6db74">{</span>len(res)<span style="color:#e6db74">}</span><span style="color:#e6db74"> resultados&#34;</span>)
+</span></span><span style="display:flex;"><span>            raw<span style="color:#f92672">.</span>extend(res)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">except</span> <span style="color:#a6e22e">Exception</span> <span style="color:#66d9ef">as</span> e:
+</span></span><span style="display:flex;"><span>            log_warn(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;Error con &#39;</span><span style="color:#e6db74">{</span>qv<span style="color:#e6db74">}</span><span style="color:#e6db74">&#39;: </span><span style="color:#e6db74">{</span>e<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> raw
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">parse_dt</span>(s):
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;&#34;&#34;PublishDate de Jackett -&gt; timestamp UTC (segundos).&#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> s:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">try</span>:
+</span></span><span style="display:flex;"><span>        s <span style="color:#f92672">=</span> str(s)<span style="color:#f92672">.</span>strip()<span style="color:#f92672">.</span>replace(<span style="color:#e6db74">&#34;Z&#34;</span>, <span style="color:#e6db74">&#34;+00:00&#34;</span>)
+</span></span><span style="display:flex;"><span>        dt <span style="color:#f92672">=</span> datetime<span style="color:#f92672">.</span>fromisoformat(s)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> dt<span style="color:#f92672">.</span>tzinfo <span style="color:#f92672">is</span> <span style="color:#66d9ef">None</span>:
+</span></span><span style="display:flex;"><span>            dt <span style="color:#f92672">=</span> dt<span style="color:#f92672">.</span>replace(tzinfo<span style="color:#f92672">=</span>timezone<span style="color:#f92672">.</span>utc)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> int(dt<span style="color:#f92672">.</span>timestamp())
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">except</span> <span style="color:#a6e22e">Exception</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">pass</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> fmt <span style="color:#f92672">in</span> (<span style="color:#e6db74">&#34;%Y-%m-</span><span style="color:#e6db74">%d</span><span style="color:#e6db74">T%H:%M:%S&#34;</span>, <span style="color:#e6db74">&#34;%Y-%m-</span><span style="color:#e6db74">%d</span><span style="color:#e6db74"> %H:%M:%S&#34;</span>, <span style="color:#e6db74">&#34;%Y-%m-</span><span style="color:#e6db74">%d</span><span style="color:#e6db74">&#34;</span>):
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">try</span>:
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> int(
+</span></span><span style="display:flex;"><span>                datetime<span style="color:#f92672">.</span>strptime(str(s)[: len(fmt) <span style="color:#f92672">+</span> <span style="color:#ae81ff">2</span>]<span style="color:#f92672">.</span>strip(), fmt)
+</span></span><span style="display:flex;"><span>                <span style="color:#f92672">.</span>replace(tzinfo<span style="color:#f92672">=</span>timezone<span style="color:#f92672">.</span>utc)
+</span></span><span style="display:flex;"><span>                <span style="color:#f92672">.</span>timestamp()
+</span></span><span style="display:flex;"><span>            )
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">except</span> <span style="color:#a6e22e">Exception</span>:
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">continue</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">norm_title</span>(t):
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;&#34;&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    Normaliza un título a minúsculas sin símbolos, conservando el texto entre
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    paréntesis/corchetes. Importante: &#39;1080p&#39; vs &#39;720p&#39; deben seguir siendo
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    títulos distintos, y &#39;(Inc Pre &amp; Post Sessions)&#39; tiene que quedar visible
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    para que el filtro lo pueda leer.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    &#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> norm_ws(re<span style="color:#f92672">.</span>sub(<span style="color:#e6db74">r</span><span style="color:#e6db74">&#34;[^a-z0-9]+&#34;</span>, <span style="color:#e6db74">&#34; &#34;</span>, (t <span style="color:#f92672">or</span> <span style="color:#e6db74">&#34;&#34;</span>)<span style="color:#f92672">.</span>lower()))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">dedup_title</span>(t):
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;&#34;&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    Título para comparar releases iguales entre trackers. Además quita los tags
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    que repiten todos igual (&#39;SS&#39;, &#39;WEB-DL&#39;, &#39;-GRP&#39;) para que un mismo release
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    coming de trackers distintos caiga en el mismo bucket.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    &#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    t <span style="color:#f92672">=</span> norm_title(t)
+</span></span><span style="display:flex;"><span>    words <span style="color:#f92672">=</span> [w <span style="color:#66d9ef">for</span> w <span style="color:#f92672">in</span> t<span style="color:#f92672">.</span>split() <span style="color:#66d9ef">if</span> w <span style="color:#f92672">not</span> <span style="color:#f92672">in</span> DEDUP_NOISE]
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#34; &#34;</span><span style="color:#f92672">.</span>join(words) <span style="color:#f92672">or</span> t
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">magnet_of</span>(r):
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;&#34;&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    El magnet puede venir en Guid, MagnetUri o incluso en Link (algunos indexers
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    lo ponen ahí). Devuelve &#39;&#39; si no hay ninguno.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    &#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> field <span style="color:#f92672">in</span> (<span style="color:#e6db74">&#34;Guid&#34;</span>, <span style="color:#e6db74">&#34;MagnetUri&#34;</span>, <span style="color:#e6db74">&#34;Link&#34;</span>):
+</span></span><span style="display:flex;"><span>        v <span style="color:#f92672">=</span> (r<span style="color:#f92672">.</span>get(field) <span style="color:#f92672">or</span> <span style="color:#e6db74">&#34;&#34;</span>)<span style="color:#f92672">.</span>strip()
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> v<span style="color:#f92672">.</span>startswith(<span style="color:#e6db74">&#34;magnet:?&#34;</span>):
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> v
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">is_magnet</span>(r):
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> bool(magnet_of(r))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">torrent_type</span>(r):
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> is_magnet(r):
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#34;[m]&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#34;[t]&#34;</span> <span style="color:#66d9ef">if</span> (r<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;Link&#34;</span>) <span style="color:#f92672">or</span> <span style="color:#e6db74">&#34;&#34;</span>)<span style="color:#f92672">.</span>startswith(<span style="color:#e6db74">&#34;http&#34;</span>) <span style="color:#66d9ef">else</span> <span style="color:#e6db74">&#34;[?]&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">dedup_results</span>(raw):
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;&#34;&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    Quita duplicados. El mismo release aparece en LimeTorrents, Torrent Downloads y TBP
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    con distinto Link/Guid, así que la clave es título normalizado + tamaño.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    &#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">rank</span>(x):
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># A igualdad de seeds preferimos el magnet (más confiable para qBittorrent)</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># y luego el más reciente.</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> (x<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;Seeders&#34;</span>) <span style="color:#f92672">or</span> <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span> <span style="color:#66d9ef">if</span> is_magnet(x) <span style="color:#66d9ef">else</span> <span style="color:#ae81ff">0</span>, parse_dt(x<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;PublishDate&#34;</span>)))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># 1) Agrupar por título normalizado (ignorando tags de calidad/common).</span>
+</span></span><span style="display:flex;"><span>    groups <span style="color:#f92672">=</span> {}
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> r <span style="color:#f92672">in</span> raw:
+</span></span><span style="display:flex;"><span>        groups<span style="color:#f92672">.</span>setdefault(dedup_title(r<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;Title&#34;</span>)), [])<span style="color:#f92672">.</span>append(r)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># 2) Dentro de cada grupo, separar por tamaño: releases distintos (1080p vs</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">#    2160p, o dos grupos distintos) tienen tamaño claramente diferente.</span>
+</span></span><span style="display:flex;"><span>    kept <span style="color:#f92672">=</span> []
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> items <span style="color:#f92672">in</span> groups<span style="color:#f92672">.</span>values():
+</span></span><span style="display:flex;"><span>        clusters <span style="color:#f92672">=</span> []  <span style="color:#75715e"># [tamaño_representativo, [items]]</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> r <span style="color:#f92672">in</span> items:
+</span></span><span style="display:flex;"><span>            size <span style="color:#f92672">=</span> int(r<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;Size&#34;</span>) <span style="color:#f92672">or</span> <span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">for</span> c <span style="color:#f92672">in</span> clusters:
+</span></span><span style="display:flex;"><span>                ref <span style="color:#f92672">=</span> c[<span style="color:#ae81ff">0</span>] <span style="color:#f92672">or</span> size
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">if</span> ref <span style="color:#f92672">and</span> size <span style="color:#f92672">and</span> abs(size <span style="color:#f92672">-</span> ref) <span style="color:#f92672">/</span> max(ref, size) <span style="color:#f92672">&lt;=</span> SIZE_TOLERANCE:
+</span></span><span style="display:flex;"><span>                    c[<span style="color:#ae81ff">1</span>]<span style="color:#f92672">.</span>append(r)
+</span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">break</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> ref <span style="color:#f92672">and</span> <span style="color:#f92672">not</span> size:
+</span></span><span style="display:flex;"><span>                    c[<span style="color:#ae81ff">1</span>]<span style="color:#f92672">.</span>append(r)
+</span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">break</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">else</span>:
+</span></span><span style="display:flex;"><span>                clusters<span style="color:#f92672">.</span>append([size, [r]])
+</span></span><span style="display:flex;"><span>        kept<span style="color:#f92672">.</span>extend(max(c[<span style="color:#ae81ff">1</span>], key<span style="color:#f92672">=</span>rank) <span style="color:#66d9ef">for</span> c <span style="color:#f92672">in</span> clusters)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> kept, len(raw) <span style="color:#f92672">-</span> len(kept)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">title_years</span>(text):
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;&#34;&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    Años que aparecen en un título. Tiene en cuenta los pegados tipo
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    &#39;F1.20130420.Bahrain.Qualifying&#39; (yyyymmdd) y los sueltos (&#39;F1 2019 R02&#39;).
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    Ignora resoluciones: &#39;1080p&#39;, &#39;2160p&#39;, &#39;720p&#39; no cuentan como año.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    Ojo: se busca sobre el título CRUDO, no el normalizado, porque norm_title
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    borra lo que va entre paréntesis/corchetes y ahí suelen ir los años
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    (&#39;F1 ( 2023 ) Round 01 Bahrain&#39;).
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    &#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    years <span style="color:#f92672">=</span> []
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> tok <span style="color:#f92672">in</span> NUM_RE<span style="color:#f92672">.</span>findall(text <span style="color:#f92672">or</span> <span style="color:#e6db74">&#34;&#34;</span>):
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> re<span style="color:#f92672">.</span>fullmatch(<span style="color:#e6db74">r</span><span style="color:#e6db74">&#34;(?:19|20)\d</span><span style="color:#e6db74">{2}</span><span style="color:#e6db74">&#34;</span>, tok):
+</span></span><span style="display:flex;"><span>            years<span style="color:#f92672">.</span>append(tok)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">elif</span> len(tok) <span style="color:#f92672">==</span> <span style="color:#ae81ff">8</span> <span style="color:#f92672">and</span> re<span style="color:#f92672">.</span><span style="color:#66d9ef">match</span>(<span style="color:#e6db74">r</span><span style="color:#e6db74">&#34;(?:19|20)\d</span><span style="color:#e6db74">{2}</span><span style="color:#e6db74">&#34;</span>, tok):
+</span></span><span style="display:flex;"><span>            years<span style="color:#f92672">.</span>append(tok[:<span style="color:#ae81ff">4</span>])  <span style="color:#75715e"># yyyymmdd</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> years
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">query_terms</span>(query):
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;&#34;&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    Palabras clave de la query, sin relleno y normalizando sinónimos, para
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    verificar que el release sea de lo que se pidió: buscando &#39;bahrain&#39; aparecen
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    &#39;Australia vs Bahrain&#39; (fútbol) y no debería entrar.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    Devuelve (grupos_de_sinónimos, obligatorio), donde cada grupo es una lista de
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    formas aceptadas y &#39;obligatorio&#39; es lo que tiene que aparecer sí o sí.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    &#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    nt <span style="color:#f92672">=</span> norm_title(query)
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># &#39;formula 1&#39; / &#39;formula1&#39; / &#39;f1&#39; son lo mismo: un solo grupo de sinónimos.</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> re<span style="color:#f92672">.</span>search(<span style="color:#e6db74">r</span><span style="color:#e6db74">&#34;\b(?:f1|formula\s*1|formula1)\b&#34;</span>, nt):
+</span></span><span style="display:flex;"><span>        nt <span style="color:#f92672">=</span> re<span style="color:#f92672">.</span>sub(<span style="color:#e6db74">r</span><span style="color:#e6db74">&#34;\b(?:f1|formula\s*1|formula1)\b&#34;</span>, <span style="color:#e6db74">&#34;f1&#34;</span>, nt)
+</span></span><span style="display:flex;"><span>        obligatory <span style="color:#f92672">=</span> [<span style="color:#e6db74">&#34;f1&#34;</span>]
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>:
+</span></span><span style="display:flex;"><span>        obligatory <span style="color:#f92672">=</span> []
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    groups <span style="color:#f92672">=</span> []
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> w <span style="color:#f92672">in</span> nt<span style="color:#f92672">.</span>split():
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> len(w) <span style="color:#f92672">&lt;=</span> <span style="color:#ae81ff">2</span> <span style="color:#f92672">or</span> re<span style="color:#f92672">.</span>fullmatch(<span style="color:#e6db74">r</span><span style="color:#e6db74">&#34;(?:19|20)\d</span><span style="color:#e6db74">{2}</span><span style="color:#e6db74">&#34;</span>, w):
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">continue</span>  <span style="color:#75715e"># &#39;de&#39;, &#39;gp&#39;, el año: no sirven para decidir relevancia</span>
+</span></span><span style="display:flex;"><span>        groups<span style="color:#f92672">.</span>append([w])
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> obligatory, groups
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">irrelevant_reason</span>(title, terms):
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;&#34;&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    None si el release coincide con la query; si no, el motivo.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    Se exige que el release sea de F1 Y mentione el circuito pedido: así
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    &#39;Australia vs Bahrain&#39; (fútbol) no entra en una búsqueda de F1 Bahrain.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    &#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    obligatory, groups <span style="color:#f92672">=</span> terms
+</span></span><span style="display:flex;"><span>    nt <span style="color:#f92672">=</span> norm_title(title)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># &#39;F1&#39; tiene que estar sí o sí (si la query lo pedía).</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> obligatory <span style="color:#f92672">and</span> <span style="color:#f92672">not</span> F1_RE<span style="color:#f92672">.</span>search(nt):
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># Único circuito + nada de F1: es de otro deporte.</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> CIRCUITS<span style="color:#f92672">.</span>intersection(nt<span style="color:#f92672">.</span>split()):
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#34;no parece F1&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#34;no menciona f1&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    missing <span style="color:#f92672">=</span> [
+</span></span><span style="display:flex;"><span>        group[<span style="color:#ae81ff">0</span>]
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> group <span style="color:#f92672">in</span> groups
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> any(re<span style="color:#f92672">.</span>search(<span style="color:#e6db74">r</span><span style="color:#e6db74">&#34;\b&#34;</span> <span style="color:#f92672">+</span> re<span style="color:#f92672">.</span>escape(v) <span style="color:#f92672">+</span> <span style="color:#e6db74">r</span><span style="color:#e6db74">&#34;\b&#34;</span>, nt) <span style="color:#66d9ef">for</span> v <span style="color:#f92672">in</span> group)
+</span></span><span style="display:flex;"><span>    ]
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> missing:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">None</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;no menciona </span><span style="color:#e6db74">{</span><span style="color:#e6db74">&#39;, &#39;</span><span style="color:#f92672">.</span>join(missing[:<span style="color:#ae81ff">2</span>])<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">junk_reason</span>(title, session<span style="color:#f92672">=</span><span style="color:#66d9ef">None</span>, year<span style="color:#f92672">=</span><span style="color:#66d9ef">None</span>, publish_date<span style="color:#f92672">=</span><span style="color:#66d9ef">None</span>, terms<span style="color:#f92672">=</span><span style="color:#66d9ef">None</span>):
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;&#34;&#34;Motivo por el que un release se descarta, o None si nos interesa.&#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    nt <span style="color:#f92672">=</span> norm_title(title)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> terms <span style="color:#f92672">and</span> <span style="color:#f92672">not</span> session:
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># Relevancia: ¿el release es de lo que se pidió?</span>
+</span></span><span style="display:flex;"><span>        why <span style="color:#f92672">=</span> irrelevant_reason(title, terms)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> why:
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> why
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Año equivocado: &#34;F1 2009 ... Qualifying&#34; cuando pedimos 2026.</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Solo si el título trae un año explícito; si no, no lo descartamos.</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> year:
+</span></span><span style="display:flex;"><span>        found <span style="color:#f92672">=</span> title_years(title)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> found <span style="color:#f92672">and</span> all(y <span style="color:#f92672">!=</span> year <span style="color:#66d9ef">for</span> y <span style="color:#f92672">in</span> found):
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;año </span><span style="color:#e6db74">{</span>found[<span style="color:#ae81ff">0</span>]<span style="color:#e6db74">}</span><span style="color:#e6db74"> (pedimos </span><span style="color:#e6db74">{</span>year<span style="color:#e6db74">}</span><span style="color:#e6db74">)&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># Sin año en el título (TVRips viejos: &#34;Gran Premio F1 Bahrain.mkv&#34;):</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># usamos la fecha de publicación, con margen para no castigar los</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># releases subidos semanas antes del GP.</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> found <span style="color:#f92672">and</span> publish_date:
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">try</span>:
+</span></span><span style="display:flex;"><span>                cutoff <span style="color:#f92672">=</span> datetime(int(year), <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, tzinfo<span style="color:#f92672">=</span>timezone<span style="color:#f92672">.</span>utc)<span style="color:#f92672">.</span>timestamp() <span style="color:#f92672">-</span> STALE_DAYS <span style="color:#f92672">*</span> <span style="color:#ae81ff">86400</span>
+</span></span><span style="display:flex;"><span>                ts <span style="color:#f92672">=</span> parse_dt(publish_date)
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">if</span> ts <span style="color:#f92672">and</span> ts <span style="color:#f92672">&lt;</span> cutoff:
+</span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">return</span> <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;subido </span><span style="color:#e6db74">{</span>str(publish_date)[:<span style="color:#ae81ff">10</span>]<span style="color:#e6db74">}</span><span style="color:#e6db74"> (viejo para </span><span style="color:#e6db74">{</span>year<span style="color:#e6db74">}</span><span style="color:#e6db74">)&#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">except</span> <span style="color:#a6e22e">Exception</span>:
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">pass</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> PREPOST_RE<span style="color:#f92672">.</span>search(nt) <span style="color:#f92672">or</span> PREPOST_GLUE_RE<span style="color:#f92672">.</span>search(nt):
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#34;pre/post show&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> PRESEASON_RE<span style="color:#f92672">.</span>search(nt):
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#34;pre-season testing&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> SHOW_RE<span style="color:#f92672">.</span>search(nt):
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#e6db74">&#34;show/resumen&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> session:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> re<span style="color:#f92672">.</span>search(SESSION_PATTERNS[session], nt):
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;no es </span><span style="color:#e6db74">{</span>session<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> key, pat <span style="color:#f92672">in</span> SESSION_PATTERNS<span style="color:#f92672">.</span>items():
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> key <span style="color:#f92672">!=</span> session <span style="color:#f92672">and</span> re<span style="color:#f92672">.</span>search(pat, nt):
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">return</span> <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;otra sesión (</span><span style="color:#e6db74">{</span>key<span style="color:#e6db74">}</span><span style="color:#e6db74">)&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">None</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">filter_results</span>(results, session<span style="color:#f92672">=</span><span style="color:#66d9ef">None</span>, enabled<span style="color:#f92672">=</span><span style="color:#66d9ef">True</span>, year<span style="color:#f92672">=</span><span style="color:#66d9ef">None</span>, terms<span style="color:#f92672">=</span><span style="color:#66d9ef">None</span>):
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;&#34;&#34;Separa en (los que nos interesan, {motivo: [descartados]}).&#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> enabled:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> list(results), {}
+</span></span><span style="display:flex;"><span>    kept, dropped <span style="color:#f92672">=</span> [], {}
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> r <span style="color:#f92672">in</span> results:
+</span></span><span style="display:flex;"><span>        reason <span style="color:#f92672">=</span> junk_reason(r<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;Title&#34;</span>) <span style="color:#f92672">or</span> <span style="color:#e6db74">&#34;&#34;</span>, session, year, r<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;PublishDate&#34;</span>), terms)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> reason:
+</span></span><span style="display:flex;"><span>            dropped<span style="color:#f92672">.</span>setdefault(reason, [])<span style="color:#f92672">.</span>append(r)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">else</span>:
+</span></span><span style="display:flex;"><span>            kept<span style="color:#f92672">.</span>append(r)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> kept, dropped
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">sort_results</span>(results):
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> sorted(
+</span></span><span style="display:flex;"><span>        results,
+</span></span><span style="display:flex;"><span>        key<span style="color:#f92672">=</span><span style="color:#66d9ef">lambda</span> x: (<span style="color:#f92672">-</span>parse_dt(x<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;PublishDate&#34;</span>)), <span style="color:#f92672">-</span>(x<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;Seeders&#34;</span>) <span style="color:#f92672">or</span> <span style="color:#ae81ff">0</span>)),
+</span></span><span style="display:flex;"><span>    )
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ---------------------------------------------------------------- display</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">term_width</span>():
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">try</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> max(<span style="color:#ae81ff">80</span>, min(shutil<span style="color:#f92672">.</span>get_terminal_size((<span style="color:#ae81ff">120</span>, <span style="color:#ae81ff">24</span>))<span style="color:#f92672">.</span>columns, <span style="color:#ae81ff">200</span>))
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">except</span> <span style="color:#a6e22e">Exception</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">120</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">display_results</span>(results, hidden<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>, note<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>):
+</span></span><span style="display:flex;"><span>    total <span style="color:#f92672">=</span> term_width()
+</span></span><span style="display:flex;"><span>    print()
+</span></span><span style="display:flex;"><span>    head <span style="color:#f92672">=</span> <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{</span>COL_BOLD<span style="color:#e6db74">}</span><span style="color:#e6db74">Resultados (</span><span style="color:#e6db74">{</span>len(results)<span style="color:#e6db74">}</span><span style="color:#e6db74">)</span><span style="color:#e6db74">{</span>COL_RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> hidden:
+</span></span><span style="display:flex;"><span>        head <span style="color:#f92672">+=</span> <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34; </span><span style="color:#e6db74">{</span>COL_DIM<span style="color:#e6db74">}</span><span style="color:#e6db74">· </span><span style="color:#e6db74">{</span>hidden<span style="color:#e6db74">}</span><span style="color:#e6db74"> ocultos por filtro (&#39;a&#39; para verlos)</span><span style="color:#e6db74">{</span>COL_RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    print(head)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> note:
+</span></span><span style="display:flex;"><span>        print(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{</span>COL_DIM<span style="color:#e6db74">}{</span>note<span style="color:#e6db74">}{</span>COL_RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>    print(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{</span>COL_CYAN<span style="color:#e6db74">}{</span><span style="color:#e6db74">&#39;-&#39;</span> <span style="color:#f92672">*</span> total<span style="color:#e6db74">}{</span>COL_RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    tracker_w <span style="color:#f92672">=</span> <span style="color:#ae81ff">18</span>
+</span></span><span style="display:flex;"><span>    title_w <span style="color:#f92672">=</span> max(<span style="color:#ae81ff">30</span>, total <span style="color:#f92672">-</span> tracker_w <span style="color:#f92672">-</span> <span style="color:#ae81ff">52</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> i, r <span style="color:#f92672">in</span> enumerate(results[:MAX_RESULTS], start<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>):
+</span></span><span style="display:flex;"><span>        seeds_s <span style="color:#f92672">=</span> <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{</span>r<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#39;Seeders&#39;</span>) <span style="color:#f92672">or</span> <span style="color:#ae81ff">0</span><span style="color:#e6db74">}</span><span style="color:#e6db74"> seeds&#34;</span>
+</span></span><span style="display:flex;"><span>        size <span style="color:#f92672">=</span> human_size(r<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;Size&#34;</span>) <span style="color:#f92672">or</span> <span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>        title <span style="color:#f92672">=</span> norm_ws(r<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;Title&#34;</span>))<span style="color:#f92672">.</span>replace(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, <span style="color:#e6db74">&#34; &#34;</span>)
+</span></span><span style="display:flex;"><span>        tracker <span style="color:#f92672">=</span> norm_ws(r<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;Tracker&#34;</span>) <span style="color:#f92672">or</span> r<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;Indexer&#34;</span>) <span style="color:#f92672">or</span> <span style="color:#e6db74">&#34;&#34;</span>)[:tracker_w]
+</span></span><span style="display:flex;"><span>        pdate <span style="color:#f92672">=</span> (r<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;PublishDate&#34;</span>) <span style="color:#f92672">or</span> <span style="color:#e6db74">&#34;&#34;</span>)[:<span style="color:#ae81ff">10</span>]
+</span></span><span style="display:flex;"><span>        print(
+</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{</span>i<span style="color:#e6db74">:</span><span style="color:#e6db74">3d</span><span style="color:#e6db74">}</span><span style="color:#e6db74"> │ </span><span style="color:#e6db74">{</span>seeds_s<span style="color:#e6db74">:</span><span style="color:#e6db74">&gt;8s</span><span style="color:#e6db74">}</span><span style="color:#e6db74"> │ </span><span style="color:#e6db74">{</span>size<span style="color:#e6db74">:</span><span style="color:#e6db74">&gt;9s</span><span style="color:#e6db74">}</span><span style="color:#e6db74"> │ </span><span style="color:#e6db74">{</span>title[:title_w]<span style="color:#e6db74">:</span><span style="color:#e6db74">&lt;</span><span style="color:#e6db74">{</span>title_w<span style="color:#e6db74">}</span><span style="color:#e6db74">s</span><span style="color:#e6db74">}</span><span style="color:#e6db74"> &#34;</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;│ </span><span style="color:#e6db74">{</span>tracker<span style="color:#e6db74">:</span><span style="color:#e6db74">&lt;</span><span style="color:#e6db74">{</span>tracker_w<span style="color:#e6db74">}</span><span style="color:#e6db74">s</span><span style="color:#e6db74">}</span><span style="color:#e6db74"> </span><span style="color:#e6db74">{</span>torrent_type(r)<span style="color:#e6db74">}</span><span style="color:#e6db74"> [</span><span style="color:#e6db74">{</span>pdate<span style="color:#e6db74">}</span><span style="color:#e6db74">]&#34;</span>
+</span></span><span style="display:flex;"><span>        )
+</span></span><span style="display:flex;"><span>    print(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{</span>COL_CYAN<span style="color:#e6db74">}{</span><span style="color:#e6db74">&#39;-&#39;</span> <span style="color:#f92672">*</span> total<span style="color:#e6db74">}{</span>COL_RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> len(results) <span style="color:#f92672">&gt;</span> MAX_RESULTS:
+</span></span><span style="display:flex;"><span>        print(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{</span>COL_YELLOW<span style="color:#e6db74">}</span><span style="color:#e6db74">(Mostrando primeros </span><span style="color:#e6db74">{</span>MAX_RESULTS<span style="color:#e6db74">}</span><span style="color:#e6db74"> de </span><span style="color:#e6db74">{</span>len(results)<span style="color:#e6db74">}</span><span style="color:#e6db74">)</span><span style="color:#e6db74">{</span>COL_RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">choose_with_fzf</span>(items):
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">try</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">with</span> tempfile<span style="color:#f92672">.</span>NamedTemporaryFile(<span style="color:#e6db74">&#34;w&#34;</span>, delete<span style="color:#f92672">=</span><span style="color:#66d9ef">False</span>, encoding<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;utf-8&#34;</span>) <span style="color:#66d9ef">as</span> f:
+</span></span><span style="display:flex;"><span>            tmp <span style="color:#f92672">=</span> f<span style="color:#f92672">.</span>name
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">for</span> it <span style="color:#f92672">in</span> items:
+</span></span><span style="display:flex;"><span>                f<span style="color:#f92672">.</span>write(it <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">with</span> open(tmp) <span style="color:#66d9ef">as</span> fh:
+</span></span><span style="display:flex;"><span>            proc <span style="color:#f92672">=</span> subprocess<span style="color:#f92672">.</span>run(
+</span></span><span style="display:flex;"><span>                [<span style="color:#e6db74">&#34;fzf&#34;</span>, <span style="color:#e6db74">&#34;--ansi&#34;</span>, <span style="color:#e6db74">&#34;--reverse&#34;</span>, <span style="color:#e6db74">&#34;--no-multi&#34;</span>],
+</span></span><span style="display:flex;"><span>                stdin<span style="color:#f92672">=</span>fh,
+</span></span><span style="display:flex;"><span>                text<span style="color:#f92672">=</span><span style="color:#66d9ef">True</span>,
+</span></span><span style="display:flex;"><span>                capture_output<span style="color:#f92672">=</span><span style="color:#66d9ef">True</span>,
+</span></span><span style="display:flex;"><span>            )
+</span></span><span style="display:flex;"><span>        os<span style="color:#f92672">.</span>unlink(tmp)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> proc<span style="color:#f92672">.</span>returncode <span style="color:#f92672">!=</span> <span style="color:#ae81ff">0</span>:
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">None</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> proc<span style="color:#f92672">.</span>stdout<span style="color:#f92672">.</span>strip()
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">except</span> <span style="color:#a6e22e">FileNotFoundError</span>:
+</span></span><span style="display:flex;"><span>        log_warn(<span style="color:#e6db74">&#34;fzf no encontrado. Usando selección numérica.&#34;</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">except</span> <span style="color:#a6e22e">Exception</span> <span style="color:#66d9ef">as</span> e:
+</span></span><span style="display:flex;"><span>        log_warn(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;fzf error: </span><span style="color:#e6db74">{</span>e<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">None</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ---------------------------------------------------------------- qBittorrent</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">resolve_link</span>(result):
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;&#34;&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    Sigue los redirects de Jackett a mano. requests reventaba con
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    InvalidSchema porque el /dl/ responde 302 hacia un magnet:?, que no es
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    un esquema HTTP. Devuelve (url_final, magnet_o_vacio).
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    Acá es donde Jackett decide si el tracker tiene .torrent real o solo magnet.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    &#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    url <span style="color:#f92672">=</span> (result<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;Link&#34;</span>) <span style="color:#f92672">or</span> <span style="color:#e6db74">&#34;&#34;</span>)<span style="color:#f92672">.</span>strip()
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> _ <span style="color:#f92672">in</span> range(<span style="color:#ae81ff">5</span>):
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> url<span style="color:#f92672">.</span>startswith(<span style="color:#e6db74">&#34;magnet:?&#34;</span>):
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> url, url
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> url<span style="color:#f92672">.</span>startswith(<span style="color:#e6db74">&#34;http&#34;</span>):
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> url, <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">try</span>:
+</span></span><span style="display:flex;"><span>            r <span style="color:#f92672">=</span> requests<span style="color:#f92672">.</span>get(url, timeout<span style="color:#f92672">=</span><span style="color:#ae81ff">60</span>, allow_redirects<span style="color:#f92672">=</span><span style="color:#66d9ef">False</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">except</span> <span style="color:#a6e22e">Exception</span> <span style="color:#66d9ef">as</span> e:
+</span></span><span style="display:flex;"><span>            log_warn(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;No se pudo consultar </span><span style="color:#e6db74">{</span>redact(url)<span style="color:#e6db74">}</span><span style="color:#e6db74">: </span><span style="color:#e6db74">{</span>e<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> url, <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> r<span style="color:#f92672">.</span>status_code <span style="color:#f92672">in</span> (<span style="color:#ae81ff">301</span>, <span style="color:#ae81ff">302</span>, <span style="color:#ae81ff">303</span>, <span style="color:#ae81ff">307</span>, <span style="color:#ae81ff">308</span>):
+</span></span><span style="display:flex;"><span>            loc <span style="color:#f92672">=</span> (r<span style="color:#f92672">.</span>headers<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;Location&#34;</span>) <span style="color:#f92672">or</span> <span style="color:#e6db74">&#34;&#34;</span>)<span style="color:#f92672">.</span>strip()
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> loc:
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">return</span> url, <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>            url <span style="color:#f92672">=</span> urllib<span style="color:#f92672">.</span>parse<span style="color:#f92672">.</span>urljoin(url, loc)
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">continue</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> url, <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> url, <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">redact</span>(url):
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;&#34;&#34;Oculta la API key de Jackett antes de imprimir una URL.&#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> re<span style="color:#f92672">.</span>sub(<span style="color:#e6db74">r</span><span style="color:#e6db74">&#34;((?:jackett_)?api_?key=)[^&amp;]+&#34;</span>, <span style="color:#e6db74">r</span><span style="color:#e6db74">&#34;\1***&#34;</span>, url <span style="color:#f92672">or</span> <span style="color:#e6db74">&#34;&#34;</span>, flags<span style="color:#f92672">=</span>re<span style="color:#f92672">.</span>IGNORECASE)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">jackett_torrent_file</span>(result):
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;&#34;&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    Baja el .torrent desde la URL de descarga de Jackett. Devuelve
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    (bytes, magnet_fallback): si Jackett redirige a un magnet en vez de servir
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    el archivo, se devuelve el magnet y no se pierde la descarga.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    &#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    url, magnet <span style="color:#f92672">=</span> resolve_link(result)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> magnet:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">None</span>, magnet  <span style="color:#75715e"># este tracker solo tiene magnet</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> url<span style="color:#f92672">.</span>startswith(<span style="color:#e6db74">&#34;http&#34;</span>):
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">None</span>, <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Jackett sirve el .torrent como descarga cruda.</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">try</span>:
+</span></span><span style="display:flex;"><span>        r <span style="color:#f92672">=</span> requests<span style="color:#f92672">.</span>get(url, timeout<span style="color:#f92672">=</span><span style="color:#ae81ff">90</span>, allow_redirects<span style="color:#f92672">=</span><span style="color:#66d9ef">False</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">except</span> <span style="color:#a6e22e">Exception</span> <span style="color:#66d9ef">as</span> e:
+</span></span><span style="display:flex;"><span>        log_warn(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;No se pudo bajar el .torrent: </span><span style="color:#e6db74">{</span>e<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">None</span>, <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> r<span style="color:#f92672">.</span>status_code <span style="color:#f92672">in</span> (<span style="color:#ae81ff">301</span>, <span style="color:#ae81ff">302</span>, <span style="color:#ae81ff">303</span>, <span style="color:#ae81ff">307</span>, <span style="color:#ae81ff">308</span>):
+</span></span><span style="display:flex;"><span>        loc <span style="color:#f92672">=</span> (r<span style="color:#f92672">.</span>headers<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;Location&#34;</span>) <span style="color:#f92672">or</span> <span style="color:#e6db74">&#34;&#34;</span>)<span style="color:#f92672">.</span>strip()
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> loc<span style="color:#f92672">.</span>startswith(<span style="color:#e6db74">&#34;magnet:?&#34;</span>):
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">None</span>, urllib<span style="color:#f92672">.</span>parse<span style="color:#f92672">.</span>urljoin(url, loc)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">None</span>, <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Un .torrent empieza con &#34;d8:announce&#34;; si no, es HTML de error.</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> r<span style="color:#f92672">.</span>content[:<span style="color:#ae81ff">1</span>] <span style="color:#f92672">==</span> <span style="color:#e6db74">b</span><span style="color:#e6db74">&#34;d&#34;</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> r<span style="color:#f92672">.</span>content, <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    log_warn(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;Jackett no devolvió un .torrent válido (HTTP </span><span style="color:#e6db74">{</span>r<span style="color:#f92672">.</span>status_code<span style="color:#e6db74">}</span><span style="color:#e6db74">, </span><span style="color:#e6db74">{</span>len(r<span style="color:#f92672">.</span>content)<span style="color:#e6db74">}</span><span style="color:#e6db74"> bytes)&#34;</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">None</span>, <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">qbt_headers</span>():
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> {<span style="color:#e6db74">&#34;Cookie&#34;</span>: QBT_COOKIE} <span style="color:#66d9ef">if</span> QBT_COOKIE <span style="color:#66d9ef">else</span> {}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">qbt_add_url</span>(url):
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;&#34;&#34;POST /torrents/add con un magnet o una URL, vía requests.&#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    payload <span style="color:#f92672">=</span> {<span style="color:#e6db74">&#34;urls&#34;</span>: url, <span style="color:#e6db74">&#34;savepath&#34;</span>: DOWNLOAD_DIR, <span style="color:#e6db74">&#34;category&#34;</span>: <span style="color:#e6db74">&#34;menu&#34;</span>}
+</span></span><span style="display:flex;"><span>    r <span style="color:#f92672">=</span> requests<span style="color:#f92672">.</span>post(
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{</span>QBT_URL<span style="color:#e6db74">}</span><span style="color:#e6db74">/api/v2/torrents/add&#34;</span>,
+</span></span><span style="display:flex;"><span>        data<span style="color:#f92672">=</span>payload,
+</span></span><span style="display:flex;"><span>        headers<span style="color:#f92672">=</span>qbt_headers(),
+</span></span><span style="display:flex;"><span>        timeout<span style="color:#f92672">=</span><span style="color:#ae81ff">30</span>,
+</span></span><span style="display:flex;"><span>    )
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> r<span style="color:#f92672">.</span>status_code <span style="color:#f92672">==</span> <span style="color:#ae81ff">200</span>, r<span style="color:#f92672">.</span>status_code
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">qbt_add_file</span>(data):
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;&#34;&#34;POST /torrents/add subiendo el .torrent crudo (multipart).&#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    files <span style="color:#f92672">=</span> {<span style="color:#e6db74">&#34;torrents&#34;</span>: (<span style="color:#e6db74">&#34;torrent.torrent&#34;</span>, data, <span style="color:#e6db74">&#34;application/x-bittorrent&#34;</span>)}
+</span></span><span style="display:flex;"><span>    payload <span style="color:#f92672">=</span> {<span style="color:#e6db74">&#34;savepath&#34;</span>: DOWNLOAD_DIR, <span style="color:#e6db74">&#34;category&#34;</span>: <span style="color:#e6db74">&#34;menu&#34;</span>}
+</span></span><span style="display:flex;"><span>    r <span style="color:#f92672">=</span> requests<span style="color:#f92672">.</span>post(
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{</span>QBT_URL<span style="color:#e6db74">}</span><span style="color:#e6db74">/api/v2/torrents/add&#34;</span>,
+</span></span><span style="display:flex;"><span>        data<span style="color:#f92672">=</span>payload,
+</span></span><span style="display:flex;"><span>        files<span style="color:#f92672">=</span>files,
+</span></span><span style="display:flex;"><span>        headers<span style="color:#f92672">=</span>qbt_headers(),
+</span></span><span style="display:flex;"><span>        timeout<span style="color:#f92672">=</span><span style="color:#ae81ff">60</span>,
+</span></span><span style="display:flex;"><span>    )
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> r<span style="color:#f92672">.</span>status_code <span style="color:#f92672">==</span> <span style="color:#ae81ff">200</span>, r<span style="color:#f92672">.</span>status_code
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">qbt_add_curl</span>(url):
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;&#34;&#34;Fallback con curl, por si requests falla (proxy rarezas, etc.).&#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    proc <span style="color:#f92672">=</span> subprocess<span style="color:#f92672">.</span>run(
+</span></span><span style="display:flex;"><span>        [
+</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;curl&#34;</span>, <span style="color:#e6db74">&#34;-sf&#34;</span>, <span style="color:#e6db74">&#34;-X&#34;</span>, <span style="color:#e6db74">&#34;POST&#34;</span>, <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{</span>QBT_URL<span style="color:#e6db74">}</span><span style="color:#e6db74">/api/v2/torrents/add&#34;</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;--data-urlencode&#34;</span>, <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;urls=</span><span style="color:#e6db74">{</span>url<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;-d&#34;</span>, <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;savepath=</span><span style="color:#e6db74">{</span>DOWNLOAD_DIR<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>,
+</span></span><span style="display:flex;"><span>            <span style="color:#e6db74">&#34;-d&#34;</span>, <span style="color:#e6db74">&#34;category=menu&#34;</span>,
+</span></span><span style="display:flex;"><span>        ],
+</span></span><span style="display:flex;"><span>        capture_output<span style="color:#f92672">=</span><span style="color:#66d9ef">True</span>,
+</span></span><span style="display:flex;"><span>        text<span style="color:#f92672">=</span><span style="color:#66d9ef">True</span>,
+</span></span><span style="display:flex;"><span>        timeout<span style="color:#f92672">=</span><span style="color:#ae81ff">30</span>,
+</span></span><span style="display:flex;"><span>    )
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> proc<span style="color:#f92672">.</span>returncode <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>, proc<span style="color:#f92672">.</span>returncode
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">add_qbt</span>(result):
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;&#34;&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    Manda el release a qBittorrent. Orden de preferencia:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      1) el magnet, si el indexer lo trae;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      2) el .torrent bajado de Jackett (si Jackett responde 302 al magnet, se usa
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">         ese magnet en vez de perder la descarga).
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    &#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    title <span style="color:#f92672">=</span> norm_ws(result<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;Title&#34;</span>))
+</span></span><span style="display:flex;"><span>    magnet <span style="color:#f92672">=</span> magnet_of(result)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> magnet:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">try</span>:
+</span></span><span style="display:flex;"><span>            ok, code <span style="color:#f92672">=</span> qbt_add_url(magnet)
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> ok:
+</span></span><span style="display:flex;"><span>                log_ok(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;Torrent agregado: </span><span style="color:#e6db74">{</span>title[:<span style="color:#ae81ff">70</span>]<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">True</span>
+</span></span><span style="display:flex;"><span>            log_warn(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;qBittorrent respondió </span><span style="color:#e6db74">{</span>code<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">except</span> <span style="color:#a6e22e">Exception</span> <span style="color:#66d9ef">as</span> e:
+</span></span><span style="display:flex;"><span>            log_warn(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;Subida por magnet falló: </span><span style="color:#e6db74">{</span>e<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">elif</span> (result<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;Link&#34;</span>) <span style="color:#f92672">or</span> <span style="color:#e6db74">&#34;&#34;</span>)<span style="color:#f92672">.</span>startswith(<span style="color:#e6db74">&#34;http&#34;</span>):
+</span></span><span style="display:flex;"><span>        data, fallback_magnet <span style="color:#f92672">=</span> jackett_torrent_file(result)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> data:
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">try</span>:
+</span></span><span style="display:flex;"><span>                ok, code <span style="color:#f92672">=</span> qbt_add_file(data)
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">if</span> ok:
+</span></span><span style="display:flex;"><span>                    log_ok(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;Torrent agregado (</span><span style="color:#e6db74">{</span>human_size(len(data))<span style="color:#e6db74">}</span><span style="color:#e6db74">, .torrent): </span><span style="color:#e6db74">{</span>title[:<span style="color:#ae81ff">60</span>]<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">True</span>
+</span></span><span style="display:flex;"><span>                log_warn(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;qBittorrent rechazó el archivo (HTTP </span><span style="color:#e6db74">{</span>code<span style="color:#e6db74">}</span><span style="color:#e6db74">)&#34;</span>)
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">except</span> <span style="color:#a6e22e">Exception</span> <span style="color:#66d9ef">as</span> e:
+</span></span><span style="display:flex;"><span>                log_warn(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;Subida como archivo falló: </span><span style="color:#e6db74">{</span>e<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> fallback_magnet:
+</span></span><span style="display:flex;"><span>            magnet <span style="color:#f92672">=</span> fallback_magnet
+</span></span><span style="display:flex;"><span>            log_info(<span style="color:#e6db74">&#34;Jackett redirigió a magnet; usando el magnet&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    source <span style="color:#f92672">=</span> magnet
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> source:
+</span></span><span style="display:flex;"><span>        link <span style="color:#f92672">=</span> (result<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;Link&#34;</span>) <span style="color:#f92672">or</span> <span style="color:#e6db74">&#34;&#34;</span>)<span style="color:#f92672">.</span>strip()
+</span></span><span style="display:flex;"><span>        source <span style="color:#f92672">=</span> link <span style="color:#66d9ef">if</span> link<span style="color:#f92672">.</span>startswith(<span style="color:#e6db74">&#34;http&#34;</span>) <span style="color:#66d9ef">else</span> <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> source:
+</span></span><span style="display:flex;"><span>        log_err(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;Sin magnet ni link utilizable para: </span><span style="color:#e6db74">{</span>title[:<span style="color:#ae81ff">60</span>]<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">False</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">try</span>:
+</span></span><span style="display:flex;"><span>        ok, code <span style="color:#f92672">=</span> qbt_add_curl(source)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> ok:
+</span></span><span style="display:flex;"><span>            log_ok(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;Torrent agregado (curl): </span><span style="color:#e6db74">{</span>title[:<span style="color:#ae81ff">70</span>]<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">True</span>
+</span></span><span style="display:flex;"><span>        log_err(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;qBittorrent no lo aceptó (código </span><span style="color:#e6db74">{</span>code<span style="color:#e6db74">}</span><span style="color:#e6db74">): </span><span style="color:#e6db74">{</span>title[:<span style="color:#ae81ff">60</span>]<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">False</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">except</span> <span style="color:#a6e22e">Exception</span> <span style="color:#66d9ef">as</span> e:
+</span></span><span style="display:flex;"><span>        log_err(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;No se pudo agregar: </span><span style="color:#e6db74">{</span>e<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">False</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ---------------------------------------------------------------- flujo</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">pick_and_add</span>(results):
+</span></span><span style="display:flex;"><span>    items <span style="color:#f92672">=</span> []
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> i, r <span style="color:#f92672">in</span> enumerate(results[:MAX_RESULTS], start<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>):
+</span></span><span style="display:flex;"><span>        title <span style="color:#f92672">=</span> norm_ws(r<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;Title&#34;</span>))
+</span></span><span style="display:flex;"><span>        pdate <span style="color:#f92672">=</span> (r<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;PublishDate&#34;</span>) <span style="color:#f92672">or</span> <span style="color:#e6db74">&#34;&#34;</span>)[:<span style="color:#ae81ff">10</span>]
+</span></span><span style="display:flex;"><span>        items<span style="color:#f92672">.</span>append(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{</span>i<span style="color:#e6db74">:</span><span style="color:#e6db74">3d</span><span style="color:#e6db74">}</span><span style="color:#e6db74"> | </span><span style="color:#e6db74">{</span>pdate<span style="color:#e6db74">}</span><span style="color:#e6db74"> | </span><span style="color:#e6db74">{</span>(r<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#39;Seeders&#39;</span>) <span style="color:#f92672">or</span> <span style="color:#ae81ff">0</span>)<span style="color:#e6db74">:</span><span style="color:#e6db74">5d</span><span style="color:#e6db74">}</span><span style="color:#e6db74">s | </span><span style="color:#e6db74">{</span>title<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>    picks <span style="color:#f92672">=</span> choose_with_fzf(items)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> picks:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">try</span>:
+</span></span><span style="display:flex;"><span>        cidx <span style="color:#f92672">=</span> int(picks<span style="color:#f92672">.</span>split(<span style="color:#e6db74">&#34;|&#34;</span>)[<span style="color:#ae81ff">0</span>]<span style="color:#f92672">.</span>strip()) <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>        r <span style="color:#f92672">=</span> results[cidx]
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">except</span> <span style="color:#a6e22e">Exception</span>:
+</span></span><span style="display:flex;"><span>        log_warn(<span style="color:#e6db74">&#34;Selección inválida&#34;</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>    log_ok(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;Elegido: </span><span style="color:#e6db74">{</span>norm_ws(r<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#39;Title&#39;</span>))[:<span style="color:#ae81ff">90</span>]<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>    add_qbt(r)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">print_dropped</span>(dropped, limit<span style="color:#f92672">=</span><span style="color:#ae81ff">4</span>):
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;&#34;&#34;Qué se descartó y por qué, agrupado por motivo.&#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> reason, items <span style="color:#f92672">in</span> sorted(dropped<span style="color:#f92672">.</span>items(), key<span style="color:#f92672">=</span><span style="color:#66d9ef">lambda</span> kv: <span style="color:#f92672">-</span>len(kv[<span style="color:#ae81ff">1</span>])):
+</span></span><span style="display:flex;"><span>        log_warn(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;descartado (</span><span style="color:#e6db74">{</span>reason<span style="color:#e6db74">}</span><span style="color:#e6db74">): </span><span style="color:#e6db74">{</span>len(items)<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> r <span style="color:#f92672">in</span> sorted(items, key<span style="color:#f92672">=</span><span style="color:#66d9ef">lambda</span> x: <span style="color:#f92672">-</span>(x<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;Seeders&#34;</span>) <span style="color:#f92672">or</span> <span style="color:#ae81ff">0</span>))[:limit]:
+</span></span><span style="display:flex;"><span>            print(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;       </span><span style="color:#e6db74">{</span>COL_DIM<span style="color:#e6db74">}</span><span style="color:#e6db74">- </span><span style="color:#e6db74">{</span>(r<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#39;Seeders&#39;</span>) <span style="color:#f92672">or</span> <span style="color:#ae81ff">0</span>)<span style="color:#e6db74">:</span><span style="color:#e6db74">&gt;3</span><span style="color:#e6db74">}</span><span style="color:#e6db74"> seeds │ &#34;</span>
+</span></span><span style="display:flex;"><span>                  <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{</span>human_size(r<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#39;Size&#39;</span>) <span style="color:#f92672">or</span> <span style="color:#ae81ff">0</span>)<span style="color:#e6db74">:</span><span style="color:#e6db74">&gt;9s</span><span style="color:#e6db74">}</span><span style="color:#e6db74"> │ </span><span style="color:#e6db74">{</span>norm_ws(r<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#39;Title&#39;</span>))[:<span style="color:#ae81ff">72</span>]<span style="color:#e6db74">}{</span>COL_RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> len(items) <span style="color:#f92672">&gt;</span> limit:
+</span></span><span style="display:flex;"><span>            print(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;       </span><span style="color:#e6db74">{</span>COL_DIM<span style="color:#e6db74">}</span><span style="color:#e6db74">… y </span><span style="color:#e6db74">{</span>len(items) <span style="color:#f92672">-</span> limit<span style="color:#e6db74">}</span><span style="color:#e6db74"> más</span><span style="color:#e6db74">{</span>COL_RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">suggest_session</span>(results):
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;&#34;&#34;Qué sesión aparece más entre los títulos.&#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    counts <span style="color:#f92672">=</span> session_counts(results)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> counts:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">None</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> max(counts<span style="color:#f92672">.</span>items(), key<span style="color:#f92672">=</span><span style="color:#66d9ef">lambda</span> kv: kv[<span style="color:#ae81ff">1</span>])[<span style="color:#ae81ff">0</span>]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">session_counts</span>(results):
+</span></span><span style="display:flex;"><span>    counts <span style="color:#f92672">=</span> {}
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> r <span style="color:#f92672">in</span> results:
+</span></span><span style="display:flex;"><span>        nt <span style="color:#f92672">=</span> norm_title(r<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;Title&#34;</span>))
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> key, pat <span style="color:#f92672">in</span> SESSION_PATTERNS<span style="color:#f92672">.</span>items():
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> re<span style="color:#f92672">.</span>search(pat, nt):
+</span></span><span style="display:flex;"><span>                counts[key] <span style="color:#f92672">=</span> counts<span style="color:#f92672">.</span>get(key, <span style="color:#ae81ff">0</span>) <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> counts
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">session_candidates</span>(results):
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;&#34;&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    Sesiones a probar cuando no se pidió ninguna y no quedó nada: primero la que
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    más aparece en los títulos, después el resto del fin de semana.
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    &#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    counts <span style="color:#f92672">=</span> session_counts(results)
+</span></span><span style="display:flex;"><span>    ordered <span style="color:#f92672">=</span> [k <span style="color:#66d9ef">for</span> k, _ <span style="color:#f92672">in</span> sorted(counts<span style="color:#f92672">.</span>items(), key<span style="color:#f92672">=</span><span style="color:#66d9ef">lambda</span> kv: <span style="color:#f92672">-</span>kv[<span style="color:#ae81ff">1</span>])]
+</span></span><span style="display:flex;"><span>    ordered <span style="color:#f92672">+=</span> [s <span style="color:#66d9ef">for</span> s <span style="color:#f92672">in</span> SESSION_ORDER <span style="color:#66d9ef">if</span> s <span style="color:#f92672">not</span> <span style="color:#f92672">in</span> ordered]
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> ordered
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">search</span>(query, session, use_filter, indexer<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;all&#34;</span>, year<span style="color:#f92672">=</span><span style="color:#66d9ef">None</span>):
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;&#34;&#34;Busca, deduplica y filtra. Devuelve (resultados, ocultos, notas, descartados).&#34;&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    queries <span style="color:#f92672">=</span> build_queries(query, session)
+</span></span><span style="display:flex;"><span>    log_info(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{</span>len(queries)<span style="color:#e6db74">}</span><span style="color:#e6db74"> consultas: </span><span style="color:#e6db74">{</span><span style="color:#e6db74">&#39;, &#39;</span><span style="color:#f92672">.</span>join(queries[:<span style="color:#ae81ff">6</span>])<span style="color:#e6db74">}{</span><span style="color:#e6db74">&#39;…&#39;</span> <span style="color:#66d9ef">if</span> len(queries) <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">6</span> <span style="color:#66d9ef">else</span> <span style="color:#e6db74">&#39;&#39;</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    raw <span style="color:#f92672">=</span> fetch_results(queries, indexer<span style="color:#f92672">=</span>indexer)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> raw:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> [], [], [], {}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    unique, dupes <span style="color:#f92672">=</span> dedup_results(raw)
+</span></span><span style="display:flex;"><span>    log_ok(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{</span>len(raw)<span style="color:#e6db74">}</span><span style="color:#e6db74"> brutos → </span><span style="color:#e6db74">{</span>len(unique)<span style="color:#e6db74">}</span><span style="color:#e6db74"> únicos (</span><span style="color:#e6db74">{</span>dupes<span style="color:#e6db74">}</span><span style="color:#e6db74"> duplicados entre trackers)&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Sin sesión explícita filtramos por relevancia contra la query; con sesión ya</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># los resultados vienen acotados por ella y filtrar por &#34;sesión&#34; sería redundante.</span>
+</span></span><span style="display:flex;"><span>    terms <span style="color:#f92672">=</span> query_terms(query) <span style="color:#66d9ef">if</span> session <span style="color:#f92672">is</span> <span style="color:#66d9ef">None</span> <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">None</span>
+</span></span><span style="display:flex;"><span>    kept, dropped <span style="color:#f92672">=</span> filter_results(unique, session, use_filter, year, terms)
+</span></span><span style="display:flex;"><span>    hidden <span style="color:#f92672">=</span> [r <span style="color:#66d9ef">for</span> items <span style="color:#f92672">in</span> dropped<span style="color:#f92672">.</span>values() <span style="color:#66d9ef">for</span> r <span style="color:#f92672">in</span> items]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Resumen corto para el encabezado: el desglose fino por año se agrupa bajo</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># un solo motivo, así la línea no se vuelve ilegible.</span>
+</span></span><span style="display:flex;"><span>    merged <span style="color:#f92672">=</span> {}
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> reason, items <span style="color:#f92672">in</span> dropped<span style="color:#f92672">.</span>items():
+</span></span><span style="display:flex;"><span>        key <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;año equivocado&#34;</span> <span style="color:#66d9ef">if</span> reason<span style="color:#f92672">.</span>startswith(<span style="color:#e6db74">&#34;año &#34;</span>) <span style="color:#66d9ef">else</span> reason
+</span></span><span style="display:flex;"><span>        merged[key] <span style="color:#f92672">=</span> merged<span style="color:#f92672">.</span>get(key, <span style="color:#ae81ff">0</span>) <span style="color:#f92672">+</span> len(items)
+</span></span><span style="display:flex;"><span>    notes <span style="color:#f92672">=</span> [<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{</span>k<span style="color:#e6db74">}</span><span style="color:#e6db74">: </span><span style="color:#e6db74">{</span>v<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> <span style="color:#66d9ef">for</span> k, v <span style="color:#f92672">in</span> sorted(merged<span style="color:#f92672">.</span>items(), key<span style="color:#f92672">=</span><span style="color:#66d9ef">lambda</span> kv: <span style="color:#f92672">-</span>kv[<span style="color:#ae81ff">1</span>])]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> sort_results(kept), hidden, notes, dropped
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">parse_args</span>(argv):
+</span></span><span style="display:flex;"><span>    p <span style="color:#f92672">=</span> argparse<span style="color:#f92672">.</span>ArgumentParser(
+</span></span><span style="display:flex;"><span>        description<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;Busca torrents en Jackett y los manda a qBittorrent.&#34;</span>,
+</span></span><span style="display:flex;"><span>        formatter_class<span style="color:#f92672">=</span>argparse<span style="color:#f92672">.</span>RawDescriptionHelpFormatter,
+</span></span><span style="display:flex;"><span>        epilog<span style="color:#f92672">=</span>__doc__,
+</span></span><span style="display:flex;"><span>    )
+</span></span><span style="display:flex;"><span>    p<span style="color:#f92672">.</span>add_argument(<span style="color:#e6db74">&#34;query&#34;</span>, nargs<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;*&#34;</span>, help<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;qué buscar (ej: &#39;formula 1 2026 Bahrain qualifying&#39;)&#34;</span>)
+</span></span><span style="display:flex;"><span>    p<span style="color:#f92672">.</span>add_argument(
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;--session&#34;</span>,
+</span></span><span style="display:flex;"><span>        default<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;any&#34;</span>,
+</span></span><span style="display:flex;"><span>        choices<span style="color:#f92672">=</span>[<span style="color:#e6db74">&#34;any&#34;</span>, <span style="color:#e6db74">&#34;practice&#34;</span>, <span style="color:#e6db74">&#34;qualifying&#34;</span>, <span style="color:#e6db74">&#34;sprint&#34;</span>, <span style="color:#e6db74">&#34;race&#34;</span>, <span style="color:#e6db74">&#34;lights&#34;</span>],
+</span></span><span style="display:flex;"><span>        help<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;filtrar por sesión del fin de semana (default: la que detecte en la query)&#34;</span>,
+</span></span><span style="display:flex;"><span>    )
+</span></span><span style="display:flex;"><span>    p<span style="color:#f92672">.</span>add_argument(<span style="color:#e6db74">&#34;--no-filter&#34;</span>, action<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;store_true&#34;</span>, help<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;no descartar pre/post shows ni años viejos&#34;</span>)
+</span></span><span style="display:flex;"><span>    p<span style="color:#f92672">.</span>add_argument(
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;--no-retry&#34;</span>,
+</span></span><span style="display:flex;"><span>        action<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;store_true&#34;</span>,
+</span></span><span style="display:flex;"><span>        help<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;si no pediste sesión y el filtro vacía la lista, no probar otras sesiones&#34;</span>,
+</span></span><span style="display:flex;"><span>    )
+</span></span><span style="display:flex;"><span>    p<span style="color:#f92672">.</span>add_argument(
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#34;--year&#34;</span>,
+</span></span><span style="display:flex;"><span>        default<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;auto&#34;</span>,
+</span></span><span style="display:flex;"><span>        help<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;año a mantener (default: el de la query, ej. 2026). --year any desactiva&#34;</span>,
+</span></span><span style="display:flex;"><span>    )
+</span></span><span style="display:flex;"><span>    p<span style="color:#f92672">.</span>add_argument(<span style="color:#e6db74">&#34;-1&#34;</span>, <span style="color:#e6db74">&#34;--list&#34;</span>, action<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;store_true&#34;</span>, help<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;solo listar y salir&#34;</span>)
+</span></span><span style="display:flex;"><span>    p<span style="color:#f92672">.</span>add_argument(<span style="color:#e6db74">&#34;--max&#34;</span>, type<span style="color:#f92672">=</span>int, default<span style="color:#f92672">=</span>MAX_RESULTS, help<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;máximo a mostrar&#34;</span>)
+</span></span><span style="display:flex;"><span>    p<span style="color:#f92672">.</span>add_argument(<span style="color:#e6db74">&#34;--indexer&#34;</span>, default<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;all&#34;</span>, help<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;indexer de Jackett (default: all)&#34;</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> p<span style="color:#f92672">.</span>parse_args(argv)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">main</span>(argv<span style="color:#f92672">=</span><span style="color:#66d9ef">None</span>):
+</span></span><span style="display:flex;"><span>    args <span style="color:#f92672">=</span> parse_args(argv)
+</span></span><span style="display:flex;"><span>    query <span style="color:#f92672">=</span> norm_ws(<span style="color:#e6db74">&#34; &#34;</span><span style="color:#f92672">.</span>join(args<span style="color:#f92672">.</span>query))
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> query:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">try</span>:
+</span></span><span style="display:flex;"><span>            query <span style="color:#f92672">=</span> norm_ws(input(<span style="color:#e6db74">&#34;¿Qué querés buscar? &#34;</span>))
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">except</span> <span style="color:#a6e22e">Exception</span>:
+</span></span><span style="display:flex;"><span>            query <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> query:
+</span></span><span style="display:flex;"><span>        log_err(<span style="color:#e6db74">&#34;Búsqueda vacía&#34;</span>)
+</span></span><span style="display:flex;"><span>        sys<span style="color:#f92672">.</span>exit(<span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">global</span> MAX_RESULTS
+</span></span><span style="display:flex;"><span>    MAX_RESULTS <span style="color:#f92672">=</span> args<span style="color:#f92672">.</span>max
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    session <span style="color:#f92672">=</span> detect_session(query) <span style="color:#66d9ef">if</span> args<span style="color:#f92672">.</span>session <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;any&#34;</span> <span style="color:#66d9ef">else</span> args<span style="color:#f92672">.</span>session
+</span></span><span style="display:flex;"><span>    use_filter <span style="color:#f92672">=</span> FILTER_JUNK <span style="color:#f92672">and</span> <span style="color:#f92672">not</span> args<span style="color:#f92672">.</span>no_filter
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Año: el de la query, o el que se pase con --year</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> args<span style="color:#f92672">.</span>year <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;any&#34;</span>:
+</span></span><span style="display:flex;"><span>        year <span style="color:#f92672">=</span> <span style="color:#66d9ef">None</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">elif</span> args<span style="color:#f92672">.</span>year <span style="color:#f92672">!=</span> <span style="color:#e6db74">&#34;auto&#34;</span>:
+</span></span><span style="display:flex;"><span>        year <span style="color:#f92672">=</span> args<span style="color:#f92672">.</span>year
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>:
+</span></span><span style="display:flex;"><span>        m <span style="color:#f92672">=</span> YEAR_RE<span style="color:#f92672">.</span>search(query)
+</span></span><span style="display:flex;"><span>        year <span style="color:#f92672">=</span> m<span style="color:#f92672">.</span>group(<span style="color:#ae81ff">0</span>) <span style="color:#66d9ef">if</span> m <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">None</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    out <span style="color:#f92672">=</span> search(query, session, use_filter, args<span style="color:#f92672">.</span>indexer, year)
+</span></span><span style="display:flex;"><span>    results, hidden, notes, dropped <span style="color:#f92672">=</span> out
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># No se pidió sesión y el filtro se comió todo (típico: sólo hay shows).</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># Probamos las demás sesiones en orden de probabilidad y nos quedamos con la</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># primera que devuelva releases reales, para no mostrar una lista vacía.</span>
+</span></span><span style="display:flex;"><span>    retried <span style="color:#f92672">=</span> <span style="color:#66d9ef">None</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> results <span style="color:#f92672">and</span> hidden <span style="color:#f92672">and</span> session <span style="color:#f92672">is</span> <span style="color:#66d9ef">None</span> <span style="color:#f92672">and</span> <span style="color:#f92672">not</span> args<span style="color:#f92672">.</span>no_retry:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> cand <span style="color:#f92672">in</span> session_candidates(hidden):
+</span></span><span style="display:flex;"><span>            log_info(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;Sin resultados filtrados; probando --session </span><span style="color:#e6db74">{</span>cand<span style="color:#e6db74">}</span><span style="color:#e6db74">…&#34;</span>)
+</span></span><span style="display:flex;"><span>            out <span style="color:#f92672">=</span> search(query, cand, use_filter, args<span style="color:#f92672">.</span>indexer, year)
+</span></span><span style="display:flex;"><span>            r2, hidden2, notes2, dropped2 <span style="color:#f92672">=</span> out
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> r2:
+</span></span><span style="display:flex;"><span>                results, hidden, notes, dropped <span style="color:#f92672">=</span> r2, hidden2, notes2, dropped2
+</span></span><span style="display:flex;"><span>                session, retried <span style="color:#f92672">=</span> cand, cand
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">break</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> results:
+</span></span><span style="display:flex;"><span>        log_err(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;Sin resultados para &#39;</span><span style="color:#e6db74">{</span>query<span style="color:#e6db74">}</span><span style="color:#e6db74">&#39;&#34;</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> hidden:
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> session:
+</span></span><span style="display:flex;"><span>                log_warn(<span style="color:#e6db74">&#34;Probá otra sesión (--session practice/race) o --no-filter.&#34;</span>)
+</span></span><span style="display:flex;"><span>            sys<span style="color:#f92672">.</span>exit(<span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>        log_warn(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;El filtro descartó los </span><span style="color:#e6db74">{</span>len(hidden)<span style="color:#e6db74">}</span><span style="color:#e6db74"> resultados (</span><span style="color:#e6db74">{</span><span style="color:#e6db74">&#39;, &#39;</span><span style="color:#f92672">.</span>join(notes)<span style="color:#e6db74">}</span><span style="color:#e6db74">).&#34;</span>)
+</span></span><span style="display:flex;"><span>        print_dropped(dropped)
+</span></span><span style="display:flex;"><span>        guess <span style="color:#f92672">=</span> suggest_session(hidden)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> guess:
+</span></span><span style="display:flex;"><span>            print(
+</span></span><span style="display:flex;"><span>                <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{</span>COL_YELLOW<span style="color:#e6db74">}</span><span style="color:#e6db74">Tip:</span><span style="color:#e6db74">{</span>COL_RESET<span style="color:#e6db74">}</span><span style="color:#e6db74"> no hay release de &#39;</span><span style="color:#e6db74">{</span>guess<span style="color:#e6db74">}</span><span style="color:#e6db74">&#39; limpio indexado. &#34;</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;Lo único que hay son shows/resúmenes.</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;     </span><span style="color:#e6db74">{</span>Path(sys<span style="color:#f92672">.</span>argv[<span style="color:#ae81ff">0</span>])<span style="color:#f92672">.</span>name<span style="color:#e6db74">}</span><span style="color:#e6db74"> </span><span style="color:#e6db74">{</span>q_quote(query)<span style="color:#e6db74">}</span><span style="color:#e6db74"> --session </span><span style="color:#e6db74">{</span>guess<span style="color:#e6db74">}</span><span style="color:#e6db74"> &#34;</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;--no-filter   # ver todo lo que hay, basura incluida&#34;</span>
+</span></span><span style="display:flex;"><span>            )
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">else</span>:
+</span></span><span style="display:flex;"><span>            print(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{</span>COL_YELLOW<span style="color:#e6db74">}</span><span style="color:#e6db74">Tip:</span><span style="color:#e6db74">{</span>COL_RESET<span style="color:#e6db74">}</span><span style="color:#e6db74"> probá con --no-filter para ver todo.&#34;</span>)
+</span></span><span style="display:flex;"><span>        results <span style="color:#f92672">=</span> sort_results(hidden)
+</span></span><span style="display:flex;"><span>        note <span style="color:#f92672">=</span> <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{</span>COL_DIM<span style="color:#e6db74">}</span><span style="color:#e6db74">mostrando lo descartado (nada pasó el filtro)</span><span style="color:#e6db74">{</span>COL_RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> args<span style="color:#f92672">.</span>list:
+</span></span><span style="display:flex;"><span>            display_results(results, <span style="color:#ae81ff">0</span>, note)
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>        print(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{</span>COL_DIM<span style="color:#e6db74">}</span><span style="color:#e6db74">(&#39;a&#39;/&#39;f&#39; alternan, &#39;r&#39; re-busca)</span><span style="color:#e6db74">{</span>COL_RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>:
+</span></span><span style="display:flex;"><span>        bits <span style="color:#f92672">=</span> []
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> session:
+</span></span><span style="display:flex;"><span>            bits<span style="color:#f92672">.</span>append(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;sesión </span><span style="color:#e6db74">{</span>session<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> year:
+</span></span><span style="display:flex;"><span>            bits<span style="color:#f92672">.</span>append(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;año </span><span style="color:#e6db74">{</span>year<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>        note <span style="color:#f92672">=</span> <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;filtro: </span><span style="color:#e6db74">{</span><span style="color:#e6db74">&#39; + &#39;</span><span style="color:#f92672">.</span>join(bits) <span style="color:#66d9ef">if</span> bits <span style="color:#66d9ef">else</span> <span style="color:#e6db74">&#39;sin filtro&#39;</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> hidden:
+</span></span><span style="display:flex;"><span>            note <span style="color:#f92672">+=</span> <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34; · ocultos </span><span style="color:#e6db74">{</span>len(hidden)<span style="color:#e6db74">}</span><span style="color:#e6db74"> (</span><span style="color:#e6db74">{</span><span style="color:#e6db74">&#39;, &#39;</span><span style="color:#f92672">.</span>join(notes)<span style="color:#e6db74">}</span><span style="color:#e6db74">)&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> retried:
+</span></span><span style="display:flex;"><span>            note <span style="color:#f92672">+=</span> <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34; </span><span style="color:#e6db74">{</span>COL_YELLOW<span style="color:#e6db74">}</span><span style="color:#e6db74">(nada daba para tu búsqueda sin sesión; auto --session </span><span style="color:#e6db74">{</span>retried<span style="color:#e6db74">}</span><span style="color:#e6db74">)</span><span style="color:#e6db74">{</span>COL_RESET<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> args<span style="color:#f92672">.</span>list:
+</span></span><span style="display:flex;"><span>        display_results(results, len(hidden), note)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    showing_all <span style="color:#f92672">=</span> <span style="color:#66d9ef">False</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">while</span> <span style="color:#66d9ef">True</span>:
+</span></span><span style="display:flex;"><span>        display_results(
+</span></span><span style="display:flex;"><span>            sort_results(hidden) <span style="color:#66d9ef">if</span> showing_all <span style="color:#66d9ef">else</span> results,
+</span></span><span style="display:flex;"><span>            <span style="color:#ae81ff">0</span> <span style="color:#66d9ef">if</span> showing_all <span style="color:#66d9ef">else</span> len(hidden),
+</span></span><span style="display:flex;"><span>            note,
+</span></span><span style="display:flex;"><span>        )
+</span></span><span style="display:flex;"><span>        prompt <span style="color:#f92672">=</span> <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{</span>COL_BOLD<span style="color:#e6db74">}</span><span style="color:#e6db74">Opción:</span><span style="color:#e6db74">{</span>COL_RESET<span style="color:#e6db74">}</span><span style="color:#e6db74"> [número] / &#39;f&#39; fzf / &#39;a&#39; ver ocultos&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> showing_all:
+</span></span><span style="display:flex;"><span>            prompt <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#34; (filtrados)&#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> dropped:
+</span></span><span style="display:flex;"><span>            prompt <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#34; / &#39;h&#39; qué se descartó&#34;</span>
+</span></span><span style="display:flex;"><span>        prompt <span style="color:#f92672">+=</span> <span style="color:#e6db74">&#34; / &#39;r&#39; re-buscar / Enter salir: &#34;</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">try</span>:
+</span></span><span style="display:flex;"><span>            ans <span style="color:#f92672">=</span> input(prompt)<span style="color:#f92672">.</span>strip()
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">except</span> (<span style="color:#a6e22e">EOFError</span>, <span style="color:#a6e22e">KeyboardInterrupt</span>):
+</span></span><span style="display:flex;"><span>            print(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">cancelado&#34;</span>)
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">break</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> ans <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;&#34;</span>:
+</span></span><span style="display:flex;"><span>            print(<span style="color:#e6db74">&#34;cancelado&#34;</span>)
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">break</span>
+</span></span><span style="display:flex;"><span>        low <span style="color:#f92672">=</span> ans<span style="color:#f92672">.</span>lower()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> low <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;h&#34;</span> <span style="color:#f92672">and</span> dropped:
+</span></span><span style="display:flex;"><span>            print()
+</span></span><span style="display:flex;"><span>            log_info(<span style="color:#e6db74">&#34;Por qué se descartó cada release:&#34;</span>)
+</span></span><span style="display:flex;"><span>            print_dropped(dropped)
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">continue</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> low <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;a&#34;</span> <span style="color:#f92672">and</span> hidden:
+</span></span><span style="display:flex;"><span>            showing_all <span style="color:#f92672">=</span> <span style="color:#f92672">not</span> showing_all
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">continue</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> low <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;f&#34;</span>:
+</span></span><span style="display:flex;"><span>            pick_and_add(results <span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> showing_all <span style="color:#66d9ef">else</span> sort_results(hidden))
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">elif</span> low <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;r&#34;</span>:
+</span></span><span style="display:flex;"><span>            query2 <span style="color:#f92672">=</span> norm_ws(input(<span style="color:#e6db74">&#34;Nueva búsqueda: &#34;</span>)<span style="color:#f92672">.</span>strip()) <span style="color:#f92672">or</span> query
+</span></span><span style="display:flex;"><span>            query <span style="color:#f92672">=</span> query2
+</span></span><span style="display:flex;"><span>            session <span style="color:#f92672">=</span> detect_session(query) <span style="color:#66d9ef">if</span> args<span style="color:#f92672">.</span>session <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;any&#34;</span> <span style="color:#66d9ef">else</span> args<span style="color:#f92672">.</span>session
+</span></span><span style="display:flex;"><span>            m <span style="color:#f92672">=</span> YEAR_RE<span style="color:#f92672">.</span>search(query)
+</span></span><span style="display:flex;"><span>            year_r <span style="color:#f92672">=</span> m<span style="color:#f92672">.</span>group(<span style="color:#ae81ff">0</span>) <span style="color:#66d9ef">if</span> (m <span style="color:#f92672">and</span> args<span style="color:#f92672">.</span>year <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;auto&#34;</span>) <span style="color:#66d9ef">else</span> (<span style="color:#66d9ef">None</span> <span style="color:#66d9ef">if</span> args<span style="color:#f92672">.</span>year <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;any&#34;</span> <span style="color:#66d9ef">else</span> args<span style="color:#f92672">.</span>year)
+</span></span><span style="display:flex;"><span>            out <span style="color:#f92672">=</span> search(query, session, use_filter, args<span style="color:#f92672">.</span>indexer, year_r)
+</span></span><span style="display:flex;"><span>            results, hidden, notes, dropped <span style="color:#f92672">=</span> out
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> results <span style="color:#f92672">and</span> hidden:
+</span></span><span style="display:flex;"><span>                log_warn(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;El filtro descartó los </span><span style="color:#e6db74">{</span>len(hidden)<span style="color:#e6db74">}</span><span style="color:#e6db74"> (</span><span style="color:#e6db74">{</span><span style="color:#e6db74">&#39;, &#39;</span><span style="color:#f92672">.</span>join(notes)<span style="color:#e6db74">}</span><span style="color:#e6db74">); mostrando ocultos.&#34;</span>)
+</span></span><span style="display:flex;"><span>                print_dropped(dropped)
+</span></span><span style="display:flex;"><span>                results <span style="color:#f92672">=</span> sort_results(hidden)
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">elif</span> <span style="color:#f92672">not</span> results:
+</span></span><span style="display:flex;"><span>                log_err(<span style="color:#e6db74">&#34;Sin resultados para la nueva búsqueda&#34;</span>)
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">continue</span>
+</span></span><span style="display:flex;"><span>            showing_all <span style="color:#f92672">=</span> <span style="color:#66d9ef">False</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">continue</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">else</span>:
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">try</span>:
+</span></span><span style="display:flex;"><span>                c <span style="color:#f92672">=</span> int(ans)
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">except</span> <span style="color:#a6e22e">ValueError</span>:
+</span></span><span style="display:flex;"><span>                log_warn(<span style="color:#e6db74">&#34;Opción inválida&#34;</span>)
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">continue</span>
+</span></span><span style="display:flex;"><span>            current <span style="color:#f92672">=</span> sort_results(hidden) <span style="color:#66d9ef">if</span> showing_all <span style="color:#66d9ef">else</span> results
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> c <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">1</span> <span style="color:#f92672">or</span> c <span style="color:#f92672">&gt;</span> min(len(current), MAX_RESULTS):
+</span></span><span style="display:flex;"><span>                log_warn(<span style="color:#e6db74">&#34;Fuera de rango&#34;</span>)
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">continue</span>
+</span></span><span style="display:flex;"><span>            r <span style="color:#f92672">=</span> current[c <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>]
+</span></span><span style="display:flex;"><span>            log_ok(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;Elegido: </span><span style="color:#e6db74">{</span>norm_ws(r<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#39;Title&#39;</span>))[:<span style="color:#ae81ff">90</span>]<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>            add_qbt(r)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">try</span>:
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> input(<span style="color:#e6db74">&#34;¿Descargar otro? [s/N]: &#34;</span>)<span style="color:#f92672">.</span>strip()<span style="color:#f92672">.</span>lower() <span style="color:#f92672">in</span> (<span style="color:#e6db74">&#34;s&#34;</span>, <span style="color:#e6db74">&#34;y&#34;</span>):
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">continue</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">except</span> (<span style="color:#a6e22e">EOFError</span>, <span style="color:#a6e22e">KeyboardInterrupt</span>):
+</span></span><span style="display:flex;"><span>            print()
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">break</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">q_quote</span>(text):
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#e6db74">f</span><span style="color:#e6db74">&#39;&#34;</span><span style="color:#e6db74">{</span>text<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;&#39;</span> <span style="color:#66d9ef">if</span> <span style="color:#e6db74">&#34; &#34;</span> <span style="color:#f92672">in</span> text <span style="color:#66d9ef">else</span> text
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> __name__ <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;__main__&#34;</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">try</span>:
+</span></span><span style="display:flex;"><span>        main()
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">except</span> <span style="color:#a6e22e">KeyboardInterrupt</span>:
+</span></span><span style="display:flex;"><span>        print(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">cancelado&#34;</span>)
+</span></span><span style="display:flex;"><span>        sys<span style="color:#f92672">.</span>exit(<span style="color:#ae81ff">0</span>)
 </span></span></code></pre></div>
 </div>
 
