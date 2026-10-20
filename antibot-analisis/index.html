@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/antibot-analisis/">
+	<meta property="og:site_name" content="Imlauer">
+	<meta property="og:title" content="Cómo Descifré el Anti-Bot de una Web de Streaming (y Por Qué NO Puedes Quitar la Publicidad)">
+	<meta property="og:description" content="Análisis técnico real de f1live.me / dervlin.me / seckyes.cc Desmontando 4 capas de defensa: tokens firmados, anti-iframe, detector de sandbox y Cloudflare. Fecha del análisis: Octubre 2026
+Índice El reto El mapa de la cadena Capa 1 — Tokens firmados que caducan Capa 2 — Validación de Referer y contexto Capa 3 — El detector de sandbox (la trampa genial) Capa 4 — Cloudflare: la barrera final Por qué NO se puede automatizar Por qué NO se puede quitar la publicidad Lo que SÍ funciona Conceptos para seguir aprendiendo Glosario El reto Queríamos dos cosas simples (en teoría):">
+	<meta property="og:locale" content="es_es">
+	<meta property="og:type" content="article">
+		<meta property="article:published_time" content="2026-10-19T22:43:25-03:00">
+		<meta property="article:modified_time" content="2026-10-19T22:43:25-03:00">
+		<meta property="article:tag" content="Bot">
+		<meta property="article:tag" content="Streaming">
+
+  
+	<meta itemprop="name" content="Cómo Descifré el Anti-Bot de una Web de Streaming (y Por Qué NO Puedes Quitar la Publicidad)">
+	<meta itemprop="description" content="Análisis técnico real de f1live.me / dervlin.me / seckyes.cc Desmontando 4 capas de defensa: tokens firmados, anti-iframe, detector de sandbox y Cloudflare. Fecha del análisis: Octubre 2026
+Índice El reto El mapa de la cadena Capa 1 — Tokens firmados que caducan Capa 2 — Validación de Referer y contexto Capa 3 — El detector de sandbox (la trampa genial) Capa 4 — Cloudflare: la barrera final Por qué NO se puede automatizar Por qué NO se puede quitar la publicidad Lo que SÍ funciona Conceptos para seguir aprendiendo Glosario El reto Queríamos dos cosas simples (en teoría):">
+	<meta itemprop="datePublished" content="2026-10-19T22:43:25-03:00">
+	<meta itemprop="dateModified" content="2026-10-19T22:43:25-03:00">
+	<meta itemprop="wordCount" content="1846">
+	<meta itemprop="keywords" content="Bot,Streaming">
+  
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:title" content="Cómo Descifré el Anti-Bot de una Web de Streaming (y Por Qué NO Puedes Quitar la Publicidad)">
+	<meta name="twitter:description" content="Análisis técnico real de f1live.me / dervlin.me / seckyes.cc Desmontando 4 capas de defensa: tokens firmados, anti-iframe, detector de sandbox y Cloudflare. Fecha del análisis: Octubre 2026
+Índice El reto El mapa de la cadena Capa 1 — Tokens firmados que caducan Capa 2 — Validación de Referer y contexto Capa 3 — El detector de sandbox (la trampa genial) Capa 4 — Cloudflare: la barrera final Por qué NO se puede automatizar Por qué NO se puede quitar la publicidad Lo que SÍ funciona Conceptos para seguir aprendiendo Glosario El reto Queríamos dos cosas simples (en teoría):">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Cómo Descifré el Anti-Bot de una Web de Streaming (y Por Qué NO Puedes Quitar la Publicidad)
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/antibot-analisis/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="
+Análisis técnico real de f1live.me / dervlin.me / seckyes.cc
+Desmontando 4 capas de defensa: tokens firmados, anti-iframe, detector de sandbox y Cloudflare.
+Fecha del análisis: Octubre 2026
+
+
+Índice
+
+El reto
+El mapa de la cadena
+Capa 1 — Tokens firmados que caducan
+Capa 2 — Validación de Referer y contexto
+Capa 3 — El detector de sandbox (la trampa genial)
+Capa 4 — Cloudflare: la barrera final
+Por qué NO se puede automatizar
+Por qué NO se puede quitar la publicidad
+Lo que SÍ funciona
+Conceptos para seguir aprendiendo
+Glosario
+
+
+El reto
+Queríamos dos cosas simples (en teoría):">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Cómo Descifré el Anti-Bot de una Web de Streaming (y Por Qué NO Puedes Quitar la Publicidad)
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2026-10-19T22:43:25-03:00'>
+      October 19, 2026
+    </time>
+    
+    <br>
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/bot/">Bot</a>
+    
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/streaming/">Streaming</a>
+    
+    
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <blockquote>
+<p><strong>Análisis técnico real de <code>f1live.me</code> / <code>dervlin.me</code> / <code>seckyes.cc</code></strong>
+Desmontando 4 capas de defensa: tokens firmados, anti-iframe, detector de sandbox y Cloudflare.
+Fecha del análisis: Octubre 2026</p>
+</blockquote>
+<hr>
+<h2 id="índice">Índice</h2>
+<ol>
+<li><a href="#el-reto">El reto</a></li>
+<li><a href="#el-mapa-de-la-cadena">El mapa de la cadena</a></li>
+<li><a href="#capa-1--tokens-firmados-que-caducan">Capa 1 — Tokens firmados que caducan</a></li>
+<li><a href="#capa-2--validaci%C3%B3n-de-referer-y-contexto">Capa 2 — Validación de Referer y contexto</a></li>
+<li><a href="#capa-3--el-detector-de-sandbox-la-trampa-genial">Capa 3 — El detector de sandbox (la trampa genial)</a></li>
+<li><a href="#capa-4--cloudflare-la-barrera-final">Capa 4 — Cloudflare: la barrera final</a></li>
+<li><a href="#por-qu%C3%A9-no-se-puede-automatizar">Por qué NO se puede automatizar</a></li>
+<li><a href="#por-qu%C3%A9-no-se-puede-quitar-la-publicidad">Por qué NO se puede quitar la publicidad</a></li>
+<li><a href="#lo-que-s%C3%AD-funciona">Lo que SÍ funciona</a></li>
+<li><a href="#conceptos-para-seguir-aprendiendo">Conceptos para seguir aprendiendo</a></li>
+<li><a href="#glosario">Glosario</a></li>
+</ol>
+<hr>
+<h2 id="el-reto">El reto</h2>
+<p>Queríamos dos cosas simples (en teoría):</p>
+<ol>
+<li><strong>Reproducir el canal de F1</strong> (<code>Sky Sports F1</code>) sin toda la web alrededor — solo el video.</li>
+<li><strong>Quitar la publicidad</strong> que aparece encima.</li>
+</ol>
+<p>Lo que encontramos en el camino: un sistema anti-bot de 4 capas que hace técnicamente <strong>imposible</strong> ver el video sin aceptar la publicidad.</p>
+<hr>
+<h2 id="el-mapa-de-la-cadena">El mapa de la cadena</h2>
+<p>El video <strong>no está</strong> en <code>f1live.me</code>. Está escondido detrás de una cadena de 4 saltos:</p>
+<pre tabindex="0"><code>┌─────────────────────────────────────────────────────────────────┐
+│  1. f1live.me/sky-sports-f1-sky-f1/formula-1/1                   │
+│     La página &#34;bonita&#34;: menús NFL/NBA/F1, chat, tags, ads.       │
+│     Solo contiene un &lt;iframe&gt;.                                    │
+└────────────────────────────┬────────────────────────────────────┘
+                             │ &lt;iframe src=...&gt;
+                             ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  2. embedsports.me/motorsports/sky-sports-f1-sky-f1-stream-1     │
+│     El &#34;embed&#34;. Carga embed.min.js + siteConfig (tokens).         │
+│     Aquí vive el anti-bot y el detector de sandbox.               │
+└────────────────────────────┬────────────────────────────────────┘
+                             │ JS construye con tokens firmados
+                             ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  3. dervlin.me/sd0embed/motorsports?pid=5&amp;v=skyf1&amp;...            │
+│     El reproductor JW Player + HLS + P2P.                         │
+│     Aquí se genera la URL real del stream.                        │
+└────────────────────────────┬────────────────────────────────────┘
+                             │ construye URL firmada
+                             ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  4. seckyes.cc?scode=sv2.xxx&amp;stream=xxx&amp;expires=xxx&amp;...          │
+│     El manifiesto .m3u8 detrás de CLOUDFLARE.                     │
+│     Sin cf_clearance → 401. Sin TLS de Chrome → 400.              │
+└─────────────────────────────────────────────────────────────────┘
+</code></pre><p>Cada salto añade una capa de seguridad. Vamos una por una.</p>
+<hr>
+<h2 id="capa-1--tokens-firmados-que-caducan">Capa 1 — Tokens firmados que caducan</h2>
+<p>En la respuesta de <code>embedsports.me</code>, el servidor inyecta un JSON en cada visita:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">siteConfig</span> <span style="color:#f92672">=</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">csrf</span><span style="color:#f92672">:</span>        <span style="color:#e6db74">&#34;YjQ2MzZjNTRjZWRhYWFiZDVhMzIyNjMzN2E4OWJiMzcyθ...&#34;</span>,  <span style="color:#75715e">// base64 enorme
+</span></span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">csrf_ip</span><span style="color:#f92672">:</span>     <span style="color:#e6db74">&#34;gygZRDIEO8iTmn+1qb/aT17KR5TObPvjXvfAv+CobNIBvRSBtSKw/...&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">sec_hash</span><span style="color:#f92672">:</span>    <span style="color:#e6db74">&#34;BmMfPIIybm4sclCFeRdb2w&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">sec_expires</span><span style="color:#f92672">:</span> <span style="color:#ae81ff">1792435119</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">tracker</span><span style="color:#f92672">:</span>     <span style="color:#e6db74">&#34;pge=embed&amp;lang=en&amp;dom=em&amp;ref=...&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">trackerUrl</span><span style="color:#f92672">:</span>  <span style="color:#e6db74">&#34;https://shop.lbeato.store&#34;</span>
+</span></span><span style="display:flex;"><span>};
+</span></span></code></pre></div><h3 id="qué-es-cada-campo">Qué es cada campo</h3>
+<table>
+	<thead>
+			<tr>
+					<th>Campo</th>
+					<th>Qué es</th>
+					<th>Para qué sirve</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td><code>sec_expires</code></td>
+					<td>Timestamp Unix</td>
+					<td>La firma <strong>caduca</strong> (~60 segundos)</td>
+			</tr>
+			<tr>
+					<td><code>csrf</code></td>
+					<td>Token anti-CSRF: <code>base64(hex.hex.firma)</code></td>
+					<td>Evita peticiones falsificadas</td>
+			</tr>
+			<tr>
+					<td><code>csrf_ip</code></td>
+					<td>Token <strong>cifrado que contiene tu IP</strong></td>
+					<td>Ata la sesión a <strong>tu dirección IP</strong></td>
+			</tr>
+			<tr>
+					<td><code>sec_hash</code></td>
+					<td>Hash corto</td>
+					<td>Valida la combinación de tokens</td>
+			</tr>
+			<tr>
+					<td><code>trackerUrl</code></td>
+					<td>Dominio de tracking</td>
+					<td>Telemetría / anti-fraude</td>
+			</tr>
+	</tbody>
+</table>
+<h3 id="el-detalle-importante">El detalle importante</h3>
+<p>Fíjate en la estructura de <code>csrf</code>:</p>
+<pre tabindex="0"><code>YjQ2MzZjNTRjZWRhYWFiZDVhMzIyNjMzN2E4OWJiMzcy...  .  M...  .  ZDM4NGYwZTdlMjkz...
+└──────── primer segmento ────────┘      └─ ts ─┘   └─── firma (parece HMAC) ───┘
+</code></pre><p>Es una <strong>URL firmada</strong>. El servidor la valida con una clave secreta y rechaza cualquier manipulación.</p>
+<p><strong>Consecuencia:</strong> aunque copies la URL, muere en ~60 s y está atada a tu IP. No puedes &ldquo;guardarla&rdquo; para usar después.</p>
+<hr>
+<h2 id="capa-2--validación-de-referer-y-contexto">Capa 2 — Validación de Referer y contexto</h2>
+<p>Esta es la parte anti-hotlinking. En el código de <code>embedsports.me</code> está literal:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#75715e">// Si soy la ventana de arriba (no estoy dentro de un iframe) → BLOQUEADO
+</span></span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> (window.<span style="color:#a6e22e">top</span> <span style="color:#f92672">===</span> window.<span style="color:#a6e22e">self</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">e</span>(<span style="color:#e6db74">&#34;Direct access blocked, place iframe embed code on your website.&#34;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// Si no tengo referer → BLOQUEADO
+</span></span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>(document.<span style="color:#a6e22e">referrer</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">location</span>.<span style="color:#a6e22e">ancestorOrigins</span><span style="color:#f92672">?</span>.<span style="color:#a6e22e">length</span>))
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">throw</span> <span style="color:#a6e22e">e</span>(<span style="color:#e6db74">&#34;Referrer check failed, null referrer not allowed&#34;</span>);
+</span></span></code></pre></div><h3 id="qué-implica">Qué implica</h3>
+<p>El reproductor <strong>solo funciona dentro de un <code>&lt;iframe&gt;</code></strong> y <strong>solo con un <code>Referer</code> real</strong>:</p>
+<table>
+	<thead>
+			<tr>
+					<th>Escenario</th>
+					<th>¿Funciona?</th>
+					<th>Por qué</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>Abrir la URL del player directamente</td>
+					<td>❌</td>
+					<td><code>window.top === window.self</code></td>
+			</tr>
+			<tr>
+					<td>Abrir desde un archivo <code>file:///</code></td>
+					<td>❌</td>
+					<td>Referer = <code>null</code></td>
+			</tr>
+			<tr>
+					<td>Abrir desde una web normal (http/https)</td>
+					<td>✅</td>
+					<td>Tiene referer y está en iframe</td>
+			</tr>
+			<tr>
+					<td>Con <code>sandbox</code> en el iframe</td>
+					<td>❌</td>
+					<td>Lo detecta (ver Capa 3)</td>
+			</tr>
+	</tbody>
+</table>
+<p><strong>Consecuencia:</strong> no puedes abrir el player &ldquo;solo&rdquo;; necesitas una página padre legítima que lo embeba.</p>
+<hr>
+<h2 id="capa-3--el-detector-de-sandbox-la-trampa-genial">Capa 3 — El detector de sandbox (la trampa genial)</h2>
+<p>Esta es, sin duda, la parte más astuta y donde se responde tu pregunta principal. <strong>¡Aquí está el por qué no puedes quitar la publicidad!</strong></p>
+<h3 id="el-truco">El truco</h3>
+<p>El sitio inyecta en el DOM un objeto invisible:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">esDispositivoRaro</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">esEdge</span>) {
+</span></span><span style="display:flex;"><span>  document.<span style="color:#a6e22e">body</span>.<span style="color:#a6e22e">insertAdjacentHTML</span>(<span style="color:#e6db74">&#34;beforeend&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#39;&lt;object data=&#34;data:application/pdf;base64,aG1t&#34; &#39;</span> <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#39;width=&#34;1px&#34; height=&#34;1px&#34; &#39;</span> <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#39;style=&#34;position:absolute;top:-500px;left:-500px;visibility:hidden;&#34; &#39;</span> <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#39;onerror=&#34;sandDetect();this.remove()&#34;&gt;&lt;/object&gt;&#39;</span>);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>window.<span style="color:#a6e22e">sandDetect</span> <span style="color:#f92672">=</span> () =&gt; <span style="color:#a6e22e">e</span>(<span style="color:#e6db74">&#34;Remove sandbox attributes on the iframe tag&#34;</span>);
+</span></span></code></pre></div><h3 id="cómo-funciona-el-bait-anti-adblock">Cómo funciona (el bait anti-adblock)</h3>
+<ol>
+<li>Crea un <code>&lt;object&gt;</code> con datos basura (<code>aG1t</code> = &ldquo;hmt&rdquo; en base64).</li>
+<li>El objeto <strong>falla</strong> al cargar.</li>
+<li>Si el iframe tiene <code>sandbox</code>, el navegador <strong>bloquea</strong> la carga del objeto → dispara <code>onerror</code>.</li>
+<li><code>onerror</code> llama a <code>sandDetect()</code> → te muestra <strong>&ldquo;Remove sandbox attributes on the iframe tag&rdquo;</strong> y mata el video.</li>
+</ol>
+<h3 id="por-qué-esto-es-clave">Por qué esto es clave</h3>
+<p><strong>El video y la publicidad comparten el MISMO entorno de ejecución.</strong></p>
+<ul>
+<li>El anuncio necesita: popups, redirecciones, objetos, formularios, top-navigation.</li>
+<li>Si le pones <code>sandbox</code> al iframe para cortar eso → el objeto de prueba falla → el player <strong>detecta que bloqueaste la publicidad</strong> → <strong>se niega a reproducir</strong>.</li>
+</ul>
+<p>Es <strong>monetización coercitiva</strong> disfrazada de &ldquo;seguridad&rdquo;:</p>
+<pre tabindex="0"><code>    ┌──────────────────────────────────────┐
+    │  Elige:                              │
+    │                                      │
+    │   A) Ves el video CON publicidad  ✅ │
+    │   B) Bloqueas publicidad → NO video  │
+    │                                      │
+    │   No existe opción C.                │
+    └──────────────────────────────────────┘
+</code></pre><hr>
+<h2 id="capa-4--cloudflare-la-barrera-final">Capa 4 — Cloudflare: la barrera final</h2>
+<p>Cuando el player por fin construye la URL del stream:</p>
+<pre tabindex="0"><code>https://seckyes.cc?scode=sv2.08ab3c20...&amp;stream=yehe4ipo9...&amp;expires=1792435224
+   &amp;u_id=stlan-fd6b28f7...&amp;session_id=9e59bfde...&amp;host_id=s-b3
+</code></pre><p>Y ahí responde <strong>Cloudflare</strong>:</p>
+<pre tabindex="0"><code>HTTP/2 401
+server: cloudflare
+cf-ray: a4d44fb40ef670a7-EZE
+nel: {&#34;report_to&#34;:&#34;cf-nel&#34;,&#34;success_fraction&#34;:0.0,...}
+cf-cache-status: DYNAMIC
+</code></pre><h3 id="qué-valida-cloudflare-4-checks">Qué valida Cloudflare (4 checks)</h3>
+<h4 id="1-cookie-cf_clearance">1. Cookie <code>cf_clearance</code></h4>
+<p>Se emite <strong>solo</strong> tras pasar un challenge JavaScript (o captcha). El navegador debe resolver un problema criptográfico antes de recibirla.</p>
+<h4 id="2-fingerprint-tls-ja3ja4">2. Fingerprint TLS (JA3/JA4)</h4>
+<p>Cloudflare analiza <strong>cómo se negoció el cifrado HTTPS</strong> (orden de cifrados, extensiones, curvas). Python y curl tienen una &ldquo;firma&rdquo; distinta a Chrome.</p>
+<blockquote>
+<p><strong>Prueba real:</strong> <code>curl</code> → 401, <code>yt-dlp</code> (petición propia) → 400. Misma URL, misma cookie. Solo cambia el &ldquo;olor&rdquo; TLS.</p>
+</blockquote>
+<h4 id="3-binding-a-ip--user-agent">3. Binding a IP + User-Agent</h4>
+<p>La cookie <code>cf_clearance</code> está atada a:</p>
+<ul>
+<li>La <strong>IP</strong> que la generó</li>
+<li>El <strong>User-Agent</strong> del navegador</li>
+</ul>
+<p>Cámbialos → la cookie deja de valer.</p>
+<h4 id="4-cookies-particionadas-chips">4. Cookies particionadas (CHIPS)</h4>
+<p>Si la cookie se crea <strong>dentro de un iframe</strong>, Cloudflare la guarda <strong>particionada por el sitio de arriba</strong> (<code>SameSite=None; Secure; Partitioned</code>). <strong>No se puede reusar</strong> en otro contexto/dominio.</p>
+<hr>
+<h2 id="por-qué-no-se-puede-automatizar">Por qué NO se puede automatizar</h2>
+<p>Junta las 4 capas y obtienes una cadena de requisitos que deben cumplirse <strong>simultáneamente</strong>:</p>
+<table>
+	<thead>
+			<tr>
+					<th>Requisito</th>
+					<th>Capa que lo impone</th>
+					<th>Cómo se &ldquo;sortea&rdquo;</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>IP concreta</td>
+					<td><code>csrf_ip</code> + <code>cf_clearance</code></td>
+					<td>Misma IP (nada de proxies)</td>
+			</tr>
+			<tr>
+					<td>Token fresco (&lt;60 s)</td>
+					<td><code>sec_expires</code></td>
+					<td>Regenerar pedido por pedido</td>
+			</tr>
+			<tr>
+					<td>Dentro de un iframe con referer</td>
+					<td>Capa 2 (referer check)</td>
+					<td>Página padre real</td>
+			</tr>
+			<tr>
+					<td><strong>NO</strong> tener sandbox</td>
+					<td>Capa 3 (detector <code>&lt;object&gt;</code>)</td>
+					<td>Sacrificar bloqueo de ads</td>
+			</tr>
+			<tr>
+					<td>Pasar challenge JS</td>
+					<td>Cloudflare (<code>cf_clearance</code>)</td>
+					<td>Navegador real</td>
+			</tr>
+			<tr>
+					<td>Fingerprint TLS de Chrome</td>
+					<td>Cloudflare (JA3/JA4)</td>
+					<td>Navegador real (no curl/python)</td>
+			</tr>
+			<tr>
+					<td>Mismo UA que generó la cookie</td>
+					<td>Cloudflare binding</td>
+					<td>No cambiar UA</td>
+			</tr>
+	</tbody>
+</table>
+<h3 id="la-conclusión-dura">La conclusión dura</h3>
+<p>Es un <strong>sistema cerrado de confianza</strong>. El único cliente que acepta es:</p>
+<blockquote>
+<p><strong>Un navegador real, con tu IP, con tus cookies frescas, viendo su publicidad.</strong></p>
+</blockquote>
+<p>Todo lo demás — <code>curl</code>, <code>yt-dlp</code>, Chromium headless, iframes con <code>sandbox</code> — se detecta y se bloquea.</p>
+<h3 id="evidencia-de-nuestros-intentos">Evidencia de nuestros intentos</h3>
+<table>
+	<thead>
+			<tr>
+					<th>Intento</th>
+					<th>Resultado</th>
+					<th>Quién lo bloqueó</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td><code>curl</code> con URL firmada válida</td>
+					<td><strong>401</strong></td>
+					<td>Cloudflare (TLS fingerprint)</td>
+			</tr>
+			<tr>
+					<td><code>yt-dlp</code> (petición propia)</td>
+					<td><strong>400</strong></td>
+					<td>Cloudflare</td>
+			</tr>
+			<tr>
+					<td>Chromium headless (Selenium)</td>
+					<td><strong>403</strong> en dervlin</td>
+					<td>Anti-bot de comportamiento</td>
+			</tr>
+			<tr>
+					<td>nodriver (headless)</td>
+					<td>no navega / no arranca</td>
+					<td>Detección de automatización</td>
+			</tr>
+			<tr>
+					<td>iframe con <code>sandbox</code></td>
+					<td>cartel anti-adblock</td>
+					<td>Capa 3 (detector object)</td>
+			</tr>
+			<tr>
+					<td>Página en <code>file://</code></td>
+					<td>&ldquo;null referrer not allowed&rdquo;</td>
+					<td>Capa 2</td>
+			</tr>
+	</tbody>
+</table>
+<hr>
+<h2 id="por-qué-no-se-puede-quitar-la-publicidad">Por qué NO se puede quitar la publicidad</h2>
+<p>Respuesta directa a tu pregunta. <strong>No se puede separar el video de la publicidad</strong> por estas razones:</p>
+<ol>
+<li>
+<p><strong>Mismo circuito (Capa 3):</strong> el player detecta si bloqueas el entorno que el anuncio necesita. Bloqueas ads → no hay video.</p>
+</li>
+<li>
+<p><strong>uBlock solo corta red, no decides qué es &ldquo;el video&rdquo;:</strong> el bloqueador de anuncios corta <strong>peticiones a dominios de ads</strong>. A veces el video sigue; a veces hay una verificación de que el anuncio &ldquo;cargó&rdquo;. En este sitio, la Capa 3 asegura que la verificación falle si bloqueas.</p>
+</li>
+<li>
+<p><strong>El anti-bot está fundido con la monetización:</strong> no es que los desarrolladores sean torpes; es <strong>diseño deliberado</strong>. Es &ldquo;o aceptas la publicidad o no hay contenido&rdquo;.</p>
+</li>
+<li>
+<p><strong>Rendirse y usar un reproductor externo (mpv):</strong> ahí <strong>no hay publicidad</strong> porque no abres la web. Pero mpv necesita la cookie <code>cf_clearance</code> (Capa 4), que solo tu navegador real puede generar. Reutilizas tu sesión; no la automatizas desde cero.</p>
+</li>
+</ol>
+<hr>
+<h2 id="lo-que-sí-funciona">Lo que SÍ funciona</h2>
+<h3 id="opción-1--tu-navegador--ublock-origin-la-más-simple">Opción 1 — Tu navegador + uBlock Origin (la más simple)</h3>
+<ul>
+<li>Instala <strong>uBlock Origin</strong> (bloqueador por red, no toca el iframe).</li>
+<li>Abre el player.</li>
+<li><strong>A veces</strong> el video sigue: el bloqueador corta dominios de ads, y el player no siempre lo detecta. Es una lotería, pero es gratis.</li>
+</ul>
+<h3 id="opción-2--mpv-con-tu-cookie-capturada-la-más-estable">Opción 2 — mpv con tu cookie capturada (la más estable)</h3>
+<ol>
+<li>Abre el player en tu navegador real y dale Play.</li>
+<li>F12 → Network → filtra <code>m3u8</code> → <strong>Copy as cURL</strong>.</li>
+<li>Pasa esa URL + cookie a <code>mpv</code>/<code>yt-dlp</code> → <strong>sin publicidad, sin navegador</strong>.</li>
+</ol>
+<p>No es automatizable desde cero, pero <strong>reutiliza tu sesión ya autorizada</strong>.</p>
+<h3 id="opción-3--aprender-de-esto-lo-que-estás-haciendo">Opción 3 — Aprender de esto (lo que estás haciendo)</h3>
+<p>Entender estas capas es una excelente introducción a:</p>
+<ul>
+<li>Seguridad web ofensiva y defensiva</li>
+<li>Anti-bot / anti-scraping</li>
+<li>Privacidad y fingerprinting</li>
+</ul>
+<hr>
+<h2 id="conceptos-para-seguir-aprendiendo">Conceptos para seguir aprendiendo</h2>
+<table>
+	<thead>
+			<tr>
+					<th>Concepto</th>
+					<th>Qué es</th>
+					<th>Busca</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td><strong>JA3 / JA4</strong></td>
+					<td>Huella del handshake TLS. Delata curl vs Chrome</td>
+					<td>&ldquo;TLS fingerprinting JA3&rdquo;</td>
+			</tr>
+			<tr>
+					<td><strong>Cloudflare Turnstile</strong></td>
+					<td>El challenge JS moderno (reemplaza reCAPTCHA)</td>
+					<td>&ldquo;Cloudflare Turnstile managed challenge&rdquo;</td>
+			</tr>
+			<tr>
+					<td><strong>CHIPS</strong></td>
+					<td>Cookies particionadas por sitio de arriba</td>
+					<td>&ldquo;CHIPS partitioned cookies&rdquo;</td>
+			</tr>
+			<tr>
+					<td><strong>HMAC-signed URLs</strong></td>
+					<td>URLs firmadas con clave secreta</td>
+					<td>&ldquo;URL signing HMAC&rdquo;</td>
+			</tr>
+			<tr>
+					<td><strong>Anti-adblock bait</strong></td>
+					<td>El truco del <code>&lt;object&gt;</code> roto</td>
+					<td>&ldquo;anti-adblock bait object&rdquo;</td>
+			</tr>
+			<tr>
+					<td><strong>Token binding</strong></td>
+					<td>Atar sesiones a IP/UA</td>
+					<td>&ldquo;session token binding&rdquo;</td>
+			</tr>
+			<tr>
+					<td><strong>HLS / m3u8</strong></td>
+					<td>Formato de streaming (Apple)</td>
+					<td>&ldquo;HLS m3u8 format&rdquo;</td>
+			</tr>
+			<tr>
+					<td><strong>P2P streaming</strong></td>
+					<td>Distribuir video entre usuarios</td>
+					<td>&ldquo;P2P HLS P2pEngine&rdquo;</td>
+			</tr>
+	</tbody>
+</table>
+<h3 id="cómo-experimentar-ético">Cómo experimentar (ético)</h3>
+<ul>
+<li>Monta tu propio <strong>Cloudflare</strong> delante de un sitio de pruebas y mira los headers.</li>
+<li>Usa <strong><code>curl --http2</code></strong> vs <strong><code>curl --http1.1</code></strong> y compara respuestas.</li>
+<li>Explora <strong><code>chrome://net-export/</code></strong> para ver tus propias conexiones TLS.</li>
+<li>Lee la doc de <strong>Cloudflare sobre fingerprinting</strong> y <strong>CHIPS</strong>.</li>
+</ul>
+<hr>
+<h2 id="glosario">Glosario</h2>
+<ul>
+<li><strong>cf_clearance</strong>: cookie que demuestra que pasaste el challenge de Cloudflare. Dura 30–60 min.</li>
+<li><strong>csrf</strong>: Cross-Site Request Forgery; aquí un token firmado anti-manipulación.</li>
+<li><strong>Referer</strong>: cabecera que dice de qué página vienes. Sirve para anti-hotlinking.</li>
+<li><strong>sandbox</strong>: atributo de <code>&lt;iframe&gt;</code> que restringe lo que el contenido embebido puede hacer.</li>
+<li><strong>iframe</strong>: ventana embebida dentro de otra página.</li>
+<li><strong>m3u8 / HLS</strong>: lista de segmentos de video (manifiesto) usada para streaming.</li>
+<li><strong>JA3/JA4</strong>: hash de la configuración TLS del cliente. Un ID de &ldquo;quién llama&rdquo;.</li>
+<li><strong>CHIPS</strong>: cookies separadas por el sitio de arriba (particionadas).</li>
+<li><strong>HMAC</strong>: firma criptográfica con clave secreta.</li>
+</ul>
+<hr>
+<h2 id="resumen-final">Resumen final</h2>
+<table>
+	<thead>
+			<tr>
+					<th>Pregunta</th>
+					<th>Respuesta corta</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>¿Por qué <code>curl</code> falla?</td>
+					<td>Cloudflare detecta el fingerprint TLS</td>
+			</tr>
+			<tr>
+					<td>¿Por qué <code>yt-dlp</code> falla?</td>
+					<td>Igual: petición HTTP no es Chrome</td>
+			</tr>
+			<tr>
+					<td>¿Por qué headless falla?</td>
+					<td>Anti-bot de comportamiento (403 en dervlin)</td>
+			</tr>
+			<tr>
+					<td>¿Por qué el sandbox mata el video?</td>
+					<td>El detector <code>&lt;object&gt;</code> envenenado (Capa 3)</td>
+			</tr>
+			<tr>
+					<td>¿Por qué no puedo quitar los ads?</td>
+					<td>El video y los ads comparten circuito; si bloqueas el entorno de ads, no hay video</td>
+			</tr>
+			<tr>
+					<td>¿Se puede automatizar 100%?</td>
+					<td><strong>No</strong> de forma estable: exige navegador real + IP + cookies + ads</td>
+			</tr>
+			<tr>
+					<td>¿Qué SÍ funciona?</td>
+					<td>uBlock en tu navegador, o mpv con tu cookie capturada</td>
+			</tr>
+	</tbody>
+</table>
+<blockquote>
+<p><strong>Moraleja:</strong> la &ldquo;seguridad&rdquo; aquí no protege al usuario; protege la <strong>monetización</strong>.
+El anti-bot y el anti-adblock son la misma cosa disfrazada de dos.</p>
+</blockquote>
+<hr>
+<p><em>Análisis realizado con fines educativos. Todos los datos se obtuvieron de respuestas públicas del sitio.</em></p>
+
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+
+</footer>
+
+
+</body>
+</html>
