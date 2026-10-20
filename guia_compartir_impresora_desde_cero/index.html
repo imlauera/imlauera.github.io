@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="es">
+
+
+
+
+
+<head>
+  <meta property="og:url" content="https://imlauera.github.io/guia_compartir_impresora_desde_cero/">
+	<meta property="og:site_name" content="Imlauer">
+	<meta property="og:title" content="Guía desde cero (solo comandos): compartir una impresora de Windows y usarla desde Linux">
+	<meta property="og:description" content="Sin UI: la interfaz de Windows cambia en cada versión, los cmdlets, el registro y las herramientas de consola son estables. Esta guía se ejecuta entera por PowerShell, comando por comando, en una PC nueva con la impresora recién instalada.
+SOLUCION_impresion_Linux_a_Windows.md queda como log técnico (diagnóstico). Esta guía es el procedimiento limpio y reproducible.
+Requisitos Windows PowerShell 5.1 (powershell.exe — siempre está en Windows 10/11; no usar pwsh 7, porque Set-LocalUser y Out-Printer solo existen en 5.1). Abrirlo como Administrador: Win &#43; X → Terminal (administrador), o desde una shell normal: Start-Process powershell -Verb RunAs Comprobar que sos admin (debe dar True): ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole( [Security.Principal.WindowsBuiltInRole]::Administrator) Datos de esta guía (cambialos por los tuyos) Dato Ejemplo (tu red) Dónde verlo PC host (la de la impresora) IP 192.168.0.203, nombre LIVING ipconfig Impresora Brother HL-L1222 Printer (o HP PSC 1400 series) Get-Printer Share (recurso compartido) Brother HL-L1222 Printer net share Usuario de autenticación arctest Paso 1 Contraseña P@ssw0rd123 la elegís vos Cliente ArchLinux (CUPS &#43; SMB) Paso 8 Orden de ejecución 1 — Crear el usuario arctest 2 — Red (firewall/perfil) &#43; compartir la impresora 3 — Permiso Imprimir para arctest 4 — Política de seguridad de red (modelo clásico) 5 — (Solo HP) desactivar BIDI 6 — Limpiar spooler, activar eventos, prueba local 7 — ⚠️ Cada PC Windows cliente: borrar la impresora vieja (sin contraseña) y reagregarla CON contraseña 8 — Linux: colas CUPS e imprimir ¿Por qué un usuario? Verificado: sin credenciales se pueden listar los shares, pero no imprimir (el spooler rechaza/borra trabajos de invitados/anónimos). No borrar arctest jamás.">
+	<meta property="og:locale" content="es_es">
+	<meta property="og:type" content="article">
+		<meta property="article:published_time" content="2026-10-10T14:38:51-03:00">
+		<meta property="article:modified_time" content="2026-10-10T14:38:51-03:00">
+		<meta property="article:tag" content="Impresora">
+
+  
+	<meta itemprop="name" content="Guía desde cero (solo comandos): compartir una impresora de Windows y usarla desde Linux">
+	<meta itemprop="description" content="Sin UI: la interfaz de Windows cambia en cada versión, los cmdlets, el registro y las herramientas de consola son estables. Esta guía se ejecuta entera por PowerShell, comando por comando, en una PC nueva con la impresora recién instalada.
+SOLUCION_impresion_Linux_a_Windows.md queda como log técnico (diagnóstico). Esta guía es el procedimiento limpio y reproducible.
+Requisitos Windows PowerShell 5.1 (powershell.exe — siempre está en Windows 10/11; no usar pwsh 7, porque Set-LocalUser y Out-Printer solo existen en 5.1). Abrirlo como Administrador: Win &#43; X → Terminal (administrador), o desde una shell normal: Start-Process powershell -Verb RunAs Comprobar que sos admin (debe dar True): ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole( [Security.Principal.WindowsBuiltInRole]::Administrator) Datos de esta guía (cambialos por los tuyos) Dato Ejemplo (tu red) Dónde verlo PC host (la de la impresora) IP 192.168.0.203, nombre LIVING ipconfig Impresora Brother HL-L1222 Printer (o HP PSC 1400 series) Get-Printer Share (recurso compartido) Brother HL-L1222 Printer net share Usuario de autenticación arctest Paso 1 Contraseña P@ssw0rd123 la elegís vos Cliente ArchLinux (CUPS &#43; SMB) Paso 8 Orden de ejecución 1 — Crear el usuario arctest 2 — Red (firewall/perfil) &#43; compartir la impresora 3 — Permiso Imprimir para arctest 4 — Política de seguridad de red (modelo clásico) 5 — (Solo HP) desactivar BIDI 6 — Limpiar spooler, activar eventos, prueba local 7 — ⚠️ Cada PC Windows cliente: borrar la impresora vieja (sin contraseña) y reagregarla CON contraseña 8 — Linux: colas CUPS e imprimir ¿Por qué un usuario? Verificado: sin credenciales se pueden listar los shares, pero no imprimir (el spooler rechaza/borra trabajos de invitados/anónimos). No borrar arctest jamás.">
+	<meta itemprop="datePublished" content="2026-10-10T14:38:51-03:00">
+	<meta itemprop="dateModified" content="2026-10-10T14:38:51-03:00">
+	<meta itemprop="wordCount" content="1944">
+	<meta itemprop="keywords" content="Impresora">
+  
+	<meta name="twitter:card" content="summary">
+	<meta name="twitter:title" content="Guía desde cero (solo comandos): compartir una impresora de Windows y usarla desde Linux">
+	<meta name="twitter:description" content="Sin UI: la interfaz de Windows cambia en cada versión, los cmdlets, el registro y las herramientas de consola son estables. Esta guía se ejecuta entera por PowerShell, comando por comando, en una PC nueva con la impresora recién instalada.
+SOLUCION_impresion_Linux_a_Windows.md queda como log técnico (diagnóstico). Esta guía es el procedimiento limpio y reproducible.
+Requisitos Windows PowerShell 5.1 (powershell.exe — siempre está en Windows 10/11; no usar pwsh 7, porque Set-LocalUser y Out-Printer solo existen en 5.1). Abrirlo como Administrador: Win &#43; X → Terminal (administrador), o desde una shell normal: Start-Process powershell -Verb RunAs Comprobar que sos admin (debe dar True): ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole( [Security.Principal.WindowsBuiltInRole]::Administrator) Datos de esta guía (cambialos por los tuyos) Dato Ejemplo (tu red) Dónde verlo PC host (la de la impresora) IP 192.168.0.203, nombre LIVING ipconfig Impresora Brother HL-L1222 Printer (o HP PSC 1400 series) Get-Printer Share (recurso compartido) Brother HL-L1222 Printer net share Usuario de autenticación arctest Paso 1 Contraseña P@ssw0rd123 la elegís vos Cliente ArchLinux (CUPS &#43; SMB) Paso 8 Orden de ejecución 1 — Crear el usuario arctest 2 — Red (firewall/perfil) &#43; compartir la impresora 3 — Permiso Imprimir para arctest 4 — Política de seguridad de red (modelo clásico) 5 — (Solo HP) desactivar BIDI 6 — Limpiar spooler, activar eventos, prueba local 7 — ⚠️ Cada PC Windows cliente: borrar la impresora vieja (sin contraseña) y reagregarla CON contraseña 8 — Linux: colas CUPS e imprimir ¿Por qué un usuario? Verificado: sin credenciales se pueden listar los shares, pero no imprimir (el spooler rechaza/borra trabajos de invitados/anónimos). No borrar arctest jamás.">
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>
+    
+    Guía desde cero (solo comandos): compartir una impresora de Windows y usarla desde Linux
+    
+  </title>
+  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <link rel="canonical" href="https://imlauera.github.io/guia_compartir_impresora_desde_cero/">
+  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <meta http-equiv="X-UA-Compatible" content="chrome=1">
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <meta name="author" content="Imlauer.">
+  <meta name="description" content="Sin UI: la interfaz de Windows cambia en cada versión, los cmdlets, el registro y las herramientas de
+consola son estables. Esta guía se ejecuta entera por PowerShell, comando por comando, en una PC nueva
+con la impresora recién instalada.
+
+SOLUCION_impresion_Linux_a_Windows.md queda como log técnico (diagnóstico). Esta guía es el
+procedimiento limpio y reproducible.
+
+Requisitos
+
+Windows PowerShell 5.1 (powershell.exe — siempre está en Windows 10/11; no usar pwsh 7,
+porque Set-LocalUser y Out-Printer solo existen en 5.1).
+Abrirlo como Administrador: Win &#43; X → Terminal (administrador), o desde una shell normal:
+Start-Process powershell -Verb RunAs
+
+Comprobar que sos admin (debe dar True):
+([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole(
+    [Security.Principal.WindowsBuiltInRole]::Administrator)
+
+
+Datos de esta guía (cambialos por los tuyos)
+
+	
+			
+					Dato
+					Ejemplo (tu red)
+					Dónde verlo
+			
+	
+	
+			
+					PC host (la de la impresora)
+					IP 192.168.0.203, nombre LIVING
+					ipconfig
+			
+			
+					Impresora
+					Brother HL-L1222 Printer (o HP PSC 1400 series)
+					Get-Printer
+			
+			
+					Share (recurso compartido)
+					Brother HL-L1222 Printer
+					net share
+			
+			
+					Usuario de autenticación
+					arctest
+					Paso 1
+			
+			
+					Contraseña
+					P@ssw0rd123
+					la elegís vos
+			
+			
+					Cliente
+					ArchLinux (CUPS &#43; SMB)
+					Paso 8
+			
+	
+
+Orden de ejecución
+
+ 1 — Crear el usuario arctest
+ 2 — Red (firewall/perfil) &#43; compartir la impresora
+ 3 — Permiso Imprimir para arctest
+ 4 — Política de seguridad de red (modelo clásico)
+ 5 — (Solo HP) desactivar BIDI
+ 6 — Limpiar spooler, activar eventos, prueba local
+ 7 — ⚠️ Cada PC Windows cliente: borrar la impresora vieja (sin contraseña) y reagregarla CON contraseña
+ 8 — Linux: colas CUPS e imprimir
+
+
+¿Por qué un usuario? Verificado: sin credenciales se pueden listar los shares, pero no imprimir
+(el spooler rechaza/borra trabajos de invitados/anónimos). No borrar arctest jamás.
+">
+</head>
+<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      <figure class="image">
+        <img alt="" class="is-rounded" src="/img/memememe.jpg">
+      </figure>
+    </a>
+    <a class="navbar-item" href="https://imlauera.github.io/">
+      Imlauer
+    </a>
+    <a class="navbar-item" href="/acerca/">
+      Acerca de Mi
+    </a>
+  </div>
+  
+  
+</nav>
+
+  <section>
+    <section class='hero is-small is-link is-fullwidth'>
+      <div class="hero-body">
+<div class="container">
+  <h1 class="title">
+    Guía desde cero (solo comandos): compartir una impresora de Windows y usarla desde Linux
+  </h1>
+  <h2 class="subtitle">
+    <time datetime='2026-10-10T14:38:51-03:00'>
+      October 10, 2026
+    </time>
+    
+    <br>
+    
+    
+    
+    <a class="tag is-info" href="https://imlauera.github.io/tags/impresora/">Impresora</a>
+    
+    
+    
+  </h2>
+</div>
+
+      </div>
+    </section>
+    <section class="section">
+      <div class="container">
+<div class="content is-medium">
+  <p>Sin UI: la interfaz de Windows cambia en cada versión, los <strong>cmdlets, el registro y las herramientas de
+consola son estables</strong>. Esta guía se ejecuta entera por PowerShell, comando por comando, en una PC nueva
+con la impresora recién instalada.</p>
+<blockquote>
+<p><code>SOLUCION_impresion_Linux_a_Windows.md</code> queda como log técnico (diagnóstico). Esta guía es el
+procedimiento limpio y reproducible.</p>
+</blockquote>
+<h2 id="requisitos">Requisitos</h2>
+<ul>
+<li><strong>Windows PowerShell 5.1</strong> (<code>powershell.exe</code> — siempre está en Windows 10/11; no usar <code>pwsh</code> 7,
+porque <code>Set-LocalUser</code> y <code>Out-Printer</code> solo existen en 5.1).</li>
+<li>Abrirlo <strong>como Administrador</strong>: <code>Win + X</code> → <em>Terminal (administrador)</em>, o desde una shell normal:
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-powershell" data-lang="powershell"><span style="display:flex;"><span>Start-Process powershell -Verb RunAs
+</span></span></code></pre></div></li>
+<li>Comprobar que sos admin (debe dar <code>True</code>):
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-powershell" data-lang="powershell"><span style="display:flex;"><span>([<span style="color:#66d9ef">Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity</span>]::GetCurrent()).IsInRole(
+</span></span><span style="display:flex;"><span>    [<span style="color:#66d9ef">Security.Principal.WindowsBuiltInRole</span>]::Administrator)
+</span></span></code></pre></div></li>
+</ul>
+<h2 id="datos-de-esta-guía-cambialos-por-los-tuyos">Datos de esta guía (cambialos por los tuyos)</h2>
+<table>
+	<thead>
+			<tr>
+					<th>Dato</th>
+					<th>Ejemplo (tu red)</th>
+					<th>Dónde verlo</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>PC host (la de la impresora)</td>
+					<td>IP <code>192.168.0.203</code>, nombre <code>LIVING</code></td>
+					<td><code>ipconfig</code></td>
+			</tr>
+			<tr>
+					<td>Impresora</td>
+					<td><code>Brother HL-L1222 Printer</code> (o <code>HP PSC 1400 series</code>)</td>
+					<td><code>Get-Printer</code></td>
+			</tr>
+			<tr>
+					<td>Share (recurso compartido)</td>
+					<td><code>Brother HL-L1222 Printer</code></td>
+					<td><code>net share</code></td>
+			</tr>
+			<tr>
+					<td>Usuario de autenticación</td>
+					<td><code>arctest</code></td>
+					<td>Paso 1</td>
+			</tr>
+			<tr>
+					<td>Contraseña</td>
+					<td><code>P@ssw0rd123</code></td>
+					<td>la elegís vos</td>
+			</tr>
+			<tr>
+					<td>Cliente</td>
+					<td>ArchLinux (CUPS + SMB)</td>
+					<td>Paso 8</td>
+			</tr>
+	</tbody>
+</table>
+<h2 id="orden-de-ejecución">Orden de ejecución</h2>
+<ul>
+<li><input disabled="" type="checkbox"> <strong>1</strong> — Crear el usuario <code>arctest</code></li>
+<li><input disabled="" type="checkbox"> <strong>2</strong> — Red (firewall/perfil) + compartir la impresora</li>
+<li><input disabled="" type="checkbox"> <strong>3</strong> — Permiso <strong>Imprimir</strong> para <code>arctest</code></li>
+<li><input disabled="" type="checkbox"> <strong>4</strong> — Política de seguridad de red (modelo clásico)</li>
+<li><input disabled="" type="checkbox"> <strong>5</strong> — <em>(Solo HP)</em> desactivar BIDI</li>
+<li><input disabled="" type="checkbox"> <strong>6</strong> — Limpiar spooler, activar eventos, prueba local</li>
+<li><input disabled="" type="checkbox"> <strong>7</strong> — ⚠️ <strong>Cada PC Windows cliente: borrar la impresora vieja (sin contraseña) y reagregarla CON contraseña</strong></li>
+<li><input disabled="" type="checkbox"> <strong>8</strong> — Linux: colas CUPS e imprimir</li>
+</ul>
+<blockquote>
+<p><strong>¿Por qué un usuario?</strong> Verificado: sin credenciales se pueden <em>listar</em> los shares, pero <strong>no imprimir</strong>
+(el spooler rechaza/borra trabajos de invitados/anónimos). No borrar <code>arctest</code> jamás.</p>
+</blockquote>
+<hr>
+<h2 id="paso-1--usuario-de-autenticación">PASO 1 — Usuario de autenticación</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-powershell" data-lang="powershell"><span style="display:flex;"><span><span style="color:#75715e"># 1) crear el usuario</span>
+</span></span><span style="display:flex;"><span>net user arctest P@ssw0rd123 /add
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 2) contraseña que no caduca (imprescindible: si caduca, Linux queda sin imprimir)</span>
+</span></span><span style="display:flex;"><span>Get-LocalUser -Name arctest | Set-LocalUser -PasswordNeverExpires $true
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 3) ocultarlo de la pantalla de inicio (queda solo tu usuario visible; NO afecta a SMB)</span>
+</span></span><span style="display:flex;"><span>$k = <span style="color:#e6db74">&#34;HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\SpecialAccounts&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> (<span style="color:#f92672">-not</span> (Test-Path <span style="color:#e6db74">&#34;</span>$k<span style="color:#e6db74">\UserList&#34;</span>)) { New-Item <span style="color:#e6db74">&#34;</span>$k<span style="color:#e6db74">\UserList&#34;</span> -Force | Out-Null }
+</span></span><span style="display:flex;"><span>New-ItemProperty -Path <span style="color:#e6db74">&#34;</span>$k<span style="color:#e6db74">\UserList&#34;</span> -Name <span style="color:#e6db74">&#34;arctest&#34;</span> -Value <span style="color:#ae81ff">0</span> -PropertyType DWord -Force | Out-Null
+</span></span></code></pre></div><p>⚠️ <strong>Nunca</strong> <code>net user arctest /active:no</code>: una cuenta deshabilitada <strong>no puede autenticar por SMB</strong>.</p>
+<p><strong>✅ Verificar:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-powershell" data-lang="powershell"><span style="display:flex;"><span>net user arctest          <span style="color:#75715e"># debe listar sin errores</span>
+</span></span></code></pre></div><hr>
+<h2 id="paso-2--red--compartir-la-impresora">PASO 2 — Red + compartir la impresora</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-powershell" data-lang="powershell"><span style="display:flex;"><span><span style="color:#75715e"># 2.0 red: perfil privado y firewall abierto (si está &#34;Público&#34;, nada funciona)</span>
+</span></span><span style="display:flex;"><span>Get-NetConnectionProfile | Set-NetConnectionProfile -NetworkCategory Private
+</span></span><span style="display:flex;"><span>Get-NetFirewallRule | Where-Object { $_.DisplayGroup <span style="color:#f92672">-match</span> <span style="color:#e6db74">&#39;impresora|printer|descubrimiento|discovery&#39;</span> } |
+</span></span><span style="display:flex;"><span>    Enable-NetFirewallRule
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 2.1 ver el nombre EXACTO de la impresora y su puerto</span>
+</span></span><span style="display:flex;"><span>Get-Printer | Format-Table Name, PortName, Shared, ShareName
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 2.2 compartir (el share lleva el mismo nombre que la impresora)</span>
+</span></span><span style="display:flex;"><span>Set-Printer -Name <span style="color:#e6db74">&#34;Brother HL-L1222 Printer&#34;</span> -Shared $true -ShareName <span style="color:#e6db74">&#34;Brother HL-L1222 Printer&#34;</span>
+</span></span></code></pre></div><p><strong>✅ Verificar:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-powershell" data-lang="powershell"><span style="display:flex;"><span>net share                                     <span style="color:#75715e"># debe aparecer el share de la impresora</span>
+</span></span><span style="display:flex;"><span>Get-SmbShare | Format-Table Name, Path
+</span></span></code></pre></div><hr>
+<h2 id="paso-3--permiso-imprimir-para-arctest">PASO 3 — Permiso &ldquo;Imprimir&rdquo; para <code>arctest</code></h2>
+<p>PowerShell sí puede (con <code>Set-Printer -PermissionSDDL</code>; hace poco era imposible sin P/Invoke):
+toma el SDDL actual, mete un ACE de impresión para el SID de <code>arctest</code> y lo vuelve a aplicar.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-powershell" data-lang="powershell"><span style="display:flex;"><span>$pr  = <span style="color:#e6db74">&#34;Brother HL-L1222 Printer&#34;</span>
+</span></span><span style="display:flex;"><span>$sid = (New-Object System.Security.Principal.NTAccount(<span style="color:#e6db74">&#39;arctest&#39;</span>)).Translate(
+</span></span><span style="display:flex;"><span>         [<span style="color:#66d9ef">System.Security.Principal.SecurityIdentifier</span>]).Value
+</span></span><span style="display:flex;"><span>$sddl = (Get-Printer -Name $pr -Full).PermissionSDDL
+</span></span><span style="display:flex;"><span>$ace  = <span style="color:#e6db74">&#34;(A;;SWRC;;;</span>$sid<span style="color:#e6db74">)&#34;</span>      <span style="color:#75715e"># SW = permiso Print</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> ($sddl <span style="color:#f92672">-notmatch</span> [<span style="color:#66d9ef">regex</span>]::Escape($sid)) {
+</span></span><span style="display:flex;"><span>    $nuevo = ([<span style="color:#66d9ef">regex</span>]<span style="color:#e6db74">&#39;D:[A-Z]*&#39;</span>).Replace($sddl, { <span style="color:#66d9ef">param</span>($m) $m.Value + $ace }, <span style="color:#ae81ff">1</span>)  <span style="color:#75715e"># al inicio del DACL</span>
+</span></span><span style="display:flex;"><span>    Set-Printer -Name $pr -PermissionSDDL $nuevo
+</span></span><span style="display:flex;"><span>    Write-Host <span style="color:#e6db74">&#34;Permiso Print agregado para arctest (</span>$sid<span style="color:#e6db74">)&#34;</span>
+</span></span><span style="display:flex;"><span>} <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>    Write-Host <span style="color:#e6db74">&#34;arctest ya tenía permiso&#34;</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><strong>✅ Verificar:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-powershell" data-lang="powershell"><span style="display:flex;"><span>(Get-Printer -Name $pr -Full).PermissionSDDL   <span style="color:#75715e"># debe verse el SID de arctest (S-1-5-21-...)</span>
+</span></span></code></pre></div><hr>
+<h2 id="paso-4--política-de-seguridad-de-red-modelo-clásico">PASO 4 — Política de seguridad de red (modelo clásico)</h2>
+<p>4 valores (por defecto existen todos):</p>
+<table>
+	<thead>
+			<tr>
+					<th>Valor</th>
+					<th>Ruta (HKLM)</th>
+					<th>Dato</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td><code>ForceGuest</code></td>
+					<td><code>SYSTEM\CurrentControlSet\Control\Lsa</code></td>
+					<td><strong>0</strong> (modelo clásico)</td>
+			</tr>
+			<tr>
+					<td><code>RestrictAnonymous</code></td>
+					<td><code>SYSTEM\CurrentControlSet\Control\Lsa</code></td>
+					<td><strong>0</strong></td>
+			</tr>
+			<tr>
+					<td><code>EveryoneIncludesAnonymous</code></td>
+					<td><code>SYSTEM\CurrentControlSet\Control\Lsa\MSV1_0</code></td>
+					<td><strong>1</strong></td>
+			</tr>
+			<tr>
+					<td><code>RestrictNullSessAccess</code></td>
+					<td><code>SYSTEM\CurrentControlSet\Control\Lsa\MSV1_0</code></td>
+					<td><strong>0</strong></td>
+			</tr>
+	</tbody>
+</table>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-powershell" data-lang="powershell"><span style="display:flex;"><span>$n = <span style="color:#e6db74">&#34;HKLM:\SYSTEM\CurrentControlSet\Control\Lsa&#34;</span>
+</span></span><span style="display:flex;"><span>$m = <span style="color:#e6db74">&#34;</span>$n<span style="color:#e6db74">\MSV1_0&#34;</span>
+</span></span><span style="display:flex;"><span>Set-ItemProperty $n -Name ForceGuest                -Value <span style="color:#ae81ff">0</span> -Type DWord
+</span></span><span style="display:flex;"><span>Set-ItemProperty $n -Name RestrictAnonymous         -Value <span style="color:#ae81ff">0</span> -Type DWord
+</span></span><span style="display:flex;"><span>Set-ItemProperty $m -Name EveryoneIncludesAnonymous -Value <span style="color:#ae81ff">1</span> -Type DWord
+</span></span><span style="display:flex;"><span>Set-ItemProperty $m -Name RestrictNullSessAccess    -Value <span style="color:#ae81ff">0</span> -Type DWord
+</span></span></code></pre></div><p><em>(Si alguno faltara: <code>New-ItemProperty -Path $n -Name X -Value 0 -PropertyType DWord -Force</code>.)</em></p>
+<p>El usuario <strong>Invitado</strong> puede quedar deshabilitado; esta guía no depende de él:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-powershell" data-lang="powershell"><span style="display:flex;"><span>net user Invitado /active<span style="color:#960050;background-color:#1e0010">:</span>no
+</span></span></code></pre></div><p><strong>✅ Verificar:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-powershell" data-lang="powershell"><span style="display:flex;"><span>Get-ItemProperty $n -Name ForceGuest, RestrictAnonymous | Select-Object ForceGuest, RestrictAnonymous
+</span></span><span style="display:flex;"><span>Get-ItemProperty $m -Name EveryoneIncludesAnonymous, RestrictNullSessAccess |
+</span></span><span style="display:flex;"><span>    Select-Object EveryoneIncludesAnonymous, RestrictNullSessAccess
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># deben dar: 0, 0, 1, 0</span>
+</span></span></code></pre></div><hr>
+<h2 id="paso-5--solo-hp-desactivar-bidi">PASO 5 — <em>(Solo HP)</em> Desactivar BIDI</h2>
+<p>Con BIDI activo, Windows consulta el estado por USB, lee un falso &ldquo;cartucho vacío&rdquo; y <strong>detiene el job</strong>
+(la HP hace ruido y se traba). Se limpia el bit <code>0x800</code> de <code>Attributes</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-powershell" data-lang="powershell"><span style="display:flex;"><span>$hp = <span style="color:#e6db74">&#34;HKLM:\SYSTEM\CurrentControlSet\Control\Print\Printers\HP PSC 1400 series&#34;</span>
+</span></span><span style="display:flex;"><span>$v  = (Get-ItemProperty $hp).Attributes
+</span></span><span style="display:flex;"><span>Set-ItemProperty $hp -Name Attributes -Value ($v <span style="color:#f92672">-band</span> 0xFFFFF7FF) -Type DWord
+</span></span><span style="display:flex;"><span>Restart-Service Spooler
+</span></span></code></pre></div><p><strong>✅ Verificar:</strong> <code>Get-ItemProperty $hp | Select-Object Attributes</code> → el bit 0x800 apagado
+(en esa HP el valor quedó <code>0x208</code>).</p>
+<hr>
+<h2 id="paso-6--spooler-limpio-eventos-y-prueba-local">PASO 6 — Spooler limpio, eventos y prueba local</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-powershell" data-lang="powershell"><span style="display:flex;"><span><span style="color:#75715e"># 6.1 vaciar trabajos atascados y reiniciar el servicio</span>
+</span></span><span style="display:flex;"><span>Get-Printer | ForEach-Object { Get-PrintJob -PrinterName $_.Name -ErrorAction SilentlyContinue | Remove-PrintJob }
+</span></span><span style="display:flex;"><span>Stop-Service Spooler -Force
+</span></span><span style="display:flex;"><span>Remove-Item <span style="color:#e6db74">&#34;C:\Windows\System32\spool\PRINTERS\*&#34;</span> -Force -Recurse -ErrorAction SilentlyContinue
+</span></span><span style="display:flex;"><span>Start-Service Spooler
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 6.2 activar el registro de eventos de impresión (para poder verificar con el 307)</span>
+</span></span><span style="display:flex;"><span>wevtutil sl Microsoft-Windows-PrintService/Operational /e:true
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 6.3 imprimir una prueba desde Windows</span>
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;Prueba de impresión </span>$(Get-Date)<span style="color:#e6db74">&#34;</span> | Out-Printer -Name <span style="color:#e6db74">&#34;Brother HL-L1222 Printer&#34;</span>
+</span></span></code></pre></div><p><strong>✅ Verificar (evento 307 = &ldquo;documento impreso&rdquo;):</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-powershell" data-lang="powershell"><span style="display:flex;"><span>Get-WinEvent -FilterHashtable @{LogName=<span style="color:#e6db74">&#39;Microsoft-Windows-PrintService/Operational&#39;</span>; Id=<span style="color:#ae81ff">307</span>} -MaxEvents <span style="color:#ae81ff">3</span> |
+</span></span><span style="display:flex;"><span>    Format-List TimeCreated, Message
+</span></span></code></pre></div><p>Si salió la página desde Windows, <strong>el host está listo</strong>.</p>
+<hr>
+<h2 id="paso-7---cada-pc-windows-cliente-borrar-la-impresora-vieja-y-reagregarla-con-contraseña">PASO 7 — ⚠️ Cada PC Windows cliente: borrar la impresora vieja y reagregarla CON contraseña</h2>
+<blockquote>
+<p><strong>El paso que faltaba.</strong> Las PCs Windows que ya la tenían agregada la tenían conectada <strong>sin
+contraseña</strong> (invitado). Después de los Pasos 1–6 hay que <strong>quitar esa conexión vieja, borrar las
+credenciales guardadas del host y agregarla de nuevo autenticando con <code>arctest</code></strong>. Windows usa la
+conexión cacheada: si no la borrás, puede seguir fallando o pedir credenciales de forma errática.
+Ejecutar en <strong>cada</strong> PC Windows cliente.</p>
+</blockquote>
+<h3 id="71-quitar-la-impresora-vieja">7.1 Quitar la impresora vieja</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-powershell" data-lang="powershell"><span style="display:flex;"><span>Get-Printer | Where-Object Name <span style="color:#f92672">-like</span> <span style="color:#e6db74">&#39;\\192.168.0.203*&#39;</span> | Remove-Printer
+</span></span></code></pre></div><h3 id="72-borrar-credenciales-guardadas-del-host">7.2 Borrar credenciales guardadas del host</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-powershell" data-lang="powershell"><span style="display:flex;"><span>cmdkey /list | findstr /i <span style="color:#e6db74">&#34;192.168.0.203&#34;</span>            <span style="color:#75715e"># ver qué hay guardado</span>
+</span></span><span style="display:flex;"><span>cmdkey /delete<span style="color:#960050;background-color:#1e0010">:</span><span style="color:#ae81ff">192.168</span>.0.203                         <span style="color:#75715e"># borrar</span>
+</span></span><span style="display:flex;"><span>cmdkey /delete<span style="color:#960050;background-color:#1e0010">:</span>LegacyGeneric<span style="color:#960050;background-color:#1e0010">:</span>target=<span style="color:#ae81ff">192.168</span>.0.203    <span style="color:#75715e"># por si figuraba con ese formato</span>
+</span></span></code></pre></div><h3 id="73-agregarla-de-nuevo-ahora-con-usuario-y-contraseña">7.3 Agregarla de nuevo, ahora con usuario y contraseña</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-powershell" data-lang="powershell"><span style="display:flex;"><span><span style="color:#75715e"># 1) dejar guardadas las credenciales del host ANTES de conectar</span>
+</span></span><span style="display:flex;"><span>cmdkey /add<span style="color:#960050;background-color:#1e0010">:</span><span style="color:#ae81ff">192.168</span>.0.203 /user<span style="color:#960050;background-color:#1e0010">:</span>arctest /pass<span style="color:#960050;background-color:#1e0010">:</span>P@ssw0rd123
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 2) conectar la impresora de red (pide credenciales si el paso anterior no bastó)</span>
+</span></span><span style="display:flex;"><span>Add-Printer -ConnectionName <span style="color:#e6db74">&#34;\\192.168.0.203\Brother HL-L1222 Printer&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 3) opcional: impresora predeterminada</span>
+</span></span><span style="display:flex;"><span>(New-Object -ComObject WScript.Network).SetDefaultPrinter(<span style="color:#e6db74">&#34;\\192.168.0.203\Brother HL-L1222 Printer&#34;</span>)
+</span></span></code></pre></div><p>Fallback si da &ldquo;acceso denegado&rdquo; (fuerza una sesión SMB autenticada al servidor primero):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-powershell" data-lang="powershell"><span style="display:flex;"><span>net use \\<span style="color:#ae81ff">192.168</span>.0.<span style="color:#ae81ff">203</span>\print$ /user<span style="color:#960050;background-color:#1e0010">:</span>arctest P@ssw0rd123 /persistent<span style="color:#960050;background-color:#1e0010">:</span>no
+</span></span><span style="display:flex;"><span>Add-Printer -ConnectionName <span style="color:#e6db74">&#34;\\192.168.0.203\Brother HL-L1222 Printer&#34;</span>
+</span></span><span style="display:flex;"><span>net use \\<span style="color:#ae81ff">192.168</span>.0.<span style="color:#ae81ff">203</span>\print$ /delete
+</span></span></code></pre></div><h3 id="74--verificar">7.4 ✅ Verificar</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-powershell" data-lang="powershell"><span style="display:flex;"><span>Get-Printer | Where-Object Name <span style="color:#f92672">-like</span> <span style="color:#e6db74">&#39;\\192.168.0.203*&#39;</span>   <span style="color:#75715e"># la impresora debe figurar</span>
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;Prueba desde cliente </span>$(Get-Date)<span style="color:#e6db74">&#34;</span> | Out-Printer -Name <span style="color:#e6db74">&#34;\\192.168.0.203\Brother HL-L1222 Printer&#34;</span>
+</span></span></code></pre></div><p>Y en el <strong>host</strong>: evento 307 (comando del Paso 6).</p>
+<hr>
+<h2 id="paso-8--linux-colas-cups-e-imprimir">PASO 8 — Linux: colas CUPS e imprimir</h2>
+<p><em>(Acá obvio que no hay PowerShell: son comandos de la propia máquina Linux.)</em></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># 8.1 paquetes</span>
+</span></span><span style="display:flex;"><span>sudo pacman -S --needed cups cups-filters ghostscript gutenprint hplip a2ps
+</span></span><span style="display:flex;"><span>sudo systemctl enable --now cups
+</span></span><span style="display:flex;"><span>yay -S brother-hll1222                      <span style="color:#75715e"># driver oficial Brother (AUR)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.2 encontrar el PPD instalado</span>
+</span></span><span style="display:flex;"><span>find /usr/share/ppd -iname <span style="color:#e6db74">&#39;*1222*&#39;</span>         <span style="color:#75715e"># HP: find /usr/share/ppd -iname &#39;*psc_1400*&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.3 crear la cola (renderiza en Linux y envía por SMB al host Windows)</span>
+</span></span><span style="display:flex;"><span>sudo lpadmin -p Brother1222 -E -P /usr/share/ppd/Brother/HL1222.ppd <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -v <span style="color:#e6db74">&#39;smb://arctest:P@ssw0rd123@192.168.0.203/Brother HL-L1222 Printer&#39;</span>
+</span></span><span style="display:flex;"><span>sudo lpadmin -d Brother1222
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># HP equivalente:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># sudo lpadmin -p HP1400 -E -P /usr/share/ppd/hplip/HP/hp-psc_1400_series.ppd \</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   -v &#39;smb://arctest:P@ssw0rd123@192.168.0.203/HP PSC 1400 series&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 8.4 imprimir y verificar</span>
+</span></span><span style="display:flex;"><span>lpstat -p -d
+</span></span><span style="display:flex;"><span>lp -d Brother1222 documento.pdf
+</span></span></code></pre></div><blockquote>
+<p><strong>URI:</strong> <code>smb://USUARIO:CONTRASEÑA@IP/NOMBRE_DEL_SHARE</code>. Las de arriba son las que <strong>ya funcionaron
+probadas</strong>. Si cambiás la contraseña y falla la autenticación, codificá los caracteres especiales
+(<code>@</code> → <code>%40</code>).</p>
+</blockquote>
+<p><strong>✅ Verificar:</strong> evento <strong>307</strong> en el host. Si el trabajo aparece y se borra solo (eventos 800 → 310),
+volver a los Pasos 1, 3 y 7.</p>
+<p>Debug si hace falta:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo cupsctl LogLevel<span style="color:#f92672">=</span>debug2
+</span></span><span style="display:flex;"><span>tail -f /var/log/cups/error_log
+</span></span><span style="display:flex;"><span>smbclient -N -L //192.168.0.203                       <span style="color:#75715e"># listar shares sin credenciales (no imprime)</span>
+</span></span><span style="display:flex;"><span>smbclient -L //192.168.0.203 -U <span style="color:#e6db74">&#39;arctest%P@ssw0rd123&#39;</span> <span style="color:#75715e"># con credenciales</span>
+</span></span></code></pre></div><hr>
+<h1 id="apéndice-a--todo-el-setup-del-host-en-un-solo-bloque-copiarpegar">Apéndice A — Todo el setup del host en un solo bloque (copiar/pegar)</h1>
+<p>Ajustá las variables y ejecutá todo junto (Windows PowerShell 5.1 como admin):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-powershell" data-lang="powershell"><span style="display:flex;"><span><span style="color:#75715e"># ===== DATOS =====</span>
+</span></span><span style="display:flex;"><span>$Impresora = <span style="color:#e6db74">&#34;Brother HL-L1222 Printer&#34;</span>
+</span></span><span style="display:flex;"><span>$Usuario   = <span style="color:#e6db74">&#34;arctest&#34;</span>
+</span></span><span style="display:flex;"><span>$Pass      = <span style="color:#e6db74">&#34;P@ssw0rd123&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ===== 1 USUARIO =====</span>
+</span></span><span style="display:flex;"><span>net user $Usuario $Pass /add
+</span></span><span style="display:flex;"><span>Get-LocalUser -Name $Usuario | Set-LocalUser -PasswordNeverExpires $true
+</span></span><span style="display:flex;"><span>$k = <span style="color:#e6db74">&#34;HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\SpecialAccounts&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> (<span style="color:#f92672">-not</span> (Test-Path <span style="color:#e6db74">&#34;</span>$k<span style="color:#e6db74">\UserList&#34;</span>)) { New-Item <span style="color:#e6db74">&#34;</span>$k<span style="color:#e6db74">\UserList&#34;</span> -Force | Out-Null }
+</span></span><span style="display:flex;"><span>New-ItemProperty -Path <span style="color:#e6db74">&#34;</span>$k<span style="color:#e6db74">\UserList&#34;</span> -Name $Usuario -Value <span style="color:#ae81ff">0</span> -PropertyType DWord -Force | Out-Null
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ===== 2 RED + COMPARTIR =====</span>
+</span></span><span style="display:flex;"><span>Get-NetConnectionProfile | Set-NetConnectionProfile -NetworkCategory Private
+</span></span><span style="display:flex;"><span>Get-NetFirewallRule | Where-Object { $_.DisplayGroup <span style="color:#f92672">-match</span> <span style="color:#e6db74">&#39;impresora|printer|descubrimiento|discovery&#39;</span> } |
+</span></span><span style="display:flex;"><span>    Enable-NetFirewallRule
+</span></span><span style="display:flex;"><span>Set-Printer -Name $Impresora -Shared $true -ShareName $Impresora
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ===== 3 PERMISO PRINT =====</span>
+</span></span><span style="display:flex;"><span>$sid  = (New-Object System.Security.Principal.NTAccount($Usuario)).Translate(
+</span></span><span style="display:flex;"><span>         [<span style="color:#66d9ef">System.Security.Principal.SecurityIdentifier</span>]).Value
+</span></span><span style="display:flex;"><span>$sddl = (Get-Printer -Name $Impresora -Full).PermissionSDDL
+</span></span><span style="display:flex;"><span>$ace  = <span style="color:#e6db74">&#34;(A;;SWRC;;;</span>$sid<span style="color:#e6db74">)&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> ($sddl <span style="color:#f92672">-notmatch</span> [<span style="color:#66d9ef">regex</span>]::Escape($sid)) {
+</span></span><span style="display:flex;"><span>    $nuevo = ([<span style="color:#66d9ef">regex</span>]<span style="color:#e6db74">&#39;D:[A-Z]*&#39;</span>).Replace($sddl, { <span style="color:#66d9ef">param</span>($m) $m.Value + $ace }, <span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>    Set-Printer -Name $Impresora -PermissionSDDL $nuevo
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ===== 4 POLÍTICA =====</span>
+</span></span><span style="display:flex;"><span>$n = <span style="color:#e6db74">&#34;HKLM:\SYSTEM\CurrentControlSet\Control\Lsa&#34;</span>
+</span></span><span style="display:flex;"><span>$m = <span style="color:#e6db74">&#34;</span>$n<span style="color:#e6db74">\MSV1_0&#34;</span>
+</span></span><span style="display:flex;"><span>Set-ItemProperty $n -Name ForceGuest                -Value <span style="color:#ae81ff">0</span> -Type DWord
+</span></span><span style="display:flex;"><span>Set-ItemProperty $n -Name RestrictAnonymous         -Value <span style="color:#ae81ff">0</span> -Type DWord
+</span></span><span style="display:flex;"><span>Set-ItemProperty $m -Name EveryoneIncludesAnonymous -Value <span style="color:#ae81ff">1</span> -Type DWord
+</span></span><span style="display:flex;"><span>Set-ItemProperty $m -Name RestrictNullSessAccess    -Value <span style="color:#ae81ff">0</span> -Type DWord
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ===== 5 (SOLO HP) BIDI OFF =====</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># $hp = &#34;HKLM:\SYSTEM\CurrentControlSet\Control\Print\Printers\HP PSC 1400 series&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># $v  = (Get-ItemProperty $hp).Attributes</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Set-ItemProperty $hp -Name Attributes -Value ($v -band 0xFFFFF7FF) -Type DWord</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ===== 6 SPOOLER + EVENTOS + PRUEBA =====</span>
+</span></span><span style="display:flex;"><span>Get-Printer | ForEach-Object { Get-PrintJob -PrinterName $_.Name -ErrorAction SilentlyContinue | Remove-PrintJob }
+</span></span><span style="display:flex;"><span>Stop-Service Spooler -Force
+</span></span><span style="display:flex;"><span>Remove-Item <span style="color:#e6db74">&#34;C:\Windows\System32\spool\PRINTERS\*&#34;</span> -Force -Recurse -ErrorAction SilentlyContinue
+</span></span><span style="display:flex;"><span>Start-Service Spooler
+</span></span><span style="display:flex;"><span>wevtutil sl Microsoft-Windows-PrintService/Operational /e:true
+</span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;Prueba </span>$(Get-Date)<span style="color:#e6db74">&#34;</span> | Out-Printer -Name $Impresora
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># ===== ✅ VERIFICAR =====</span>
+</span></span><span style="display:flex;"><span>net share
+</span></span><span style="display:flex;"><span>Get-Printer | Format-Table Name, Shared, ShareName
+</span></span><span style="display:flex;"><span>(Get-Printer -Name $Impresora -Full).PermissionSDDL
+</span></span><span style="display:flex;"><span>Get-WinEvent -FilterHashtable @{LogName=<span style="color:#e6db74">&#39;Microsoft-Windows-PrintService/Operational&#39;</span>; Id=<span style="color:#ae81ff">307</span>} -MaxEvents <span style="color:#ae81ff">1</span> |
+</span></span><span style="display:flex;"><span>    Format-List TimeCreated, Message
+</span></span></code></pre></div><p><strong>⚠️ En cada PC Windows cliente</strong> (Paso 7): <code>Remove-Printer</code> de la vieja → <code>cmdkey /delete</code> →
+<code>cmdkey /add</code> con <code>arctest</code> → <code>Add-Printer -ConnectionName</code>.</p>
+<hr>
+<h1 id="apéndice-b--linux-en-orden">Apéndice B — Linux en orden</h1>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo pacman -S --needed cups cups-filters ghostscript gutenprint hplip a2ps
+</span></span><span style="display:flex;"><span>sudo systemctl enable --now cups
+</span></span><span style="display:flex;"><span>yay -S brother-hll1222
+</span></span><span style="display:flex;"><span>find /usr/share/ppd -iname <span style="color:#e6db74">&#39;*1222*&#39;</span>
+</span></span><span style="display:flex;"><span>sudo lpadmin -p Brother1222 -E -P /usr/share/ppd/Brother/HL1222.ppd <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -v <span style="color:#e6db74">&#39;smb://arctest:P@ssw0rd123@192.168.0.203/Brother HL-L1222 Printer&#39;</span>
+</span></span><span style="display:flex;"><span>sudo lpadmin -d Brother1222
+</span></span><span style="display:flex;"><span>lpstat -p -d
+</span></span><span style="display:flex;"><span>lp -d Brother1222 documento.pdf
+</span></span></code></pre></div><hr>
+<h1 id="apéndice-c--problemas-conocidos-y-su-causa-real">Apéndice C — Problemas conocidos y su causa real</h1>
+<table>
+	<thead>
+			<tr>
+					<th>Síntoma</th>
+					<th>Causa real / solución</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>Job llega como &ldquo;documento remoto de bajo nivel&rdquo;, <strong>0 páginas</strong>, sin ruido</td>
+					<td>Impresora <strong>GDI/host-based</strong>: no acepta texto crudo. Renderizar en Linux con el driver correcto y enviar <strong>PDF</strong> (nunca <code>-o raw</code>).</td>
+			</tr>
+			<tr>
+					<td>Brother no imprime (410 bytes, 0 páginas)</td>
+					<td>Falta el driver (<code>brother-hll1222</code> desde AUR).</td>
+			</tr>
+			<tr>
+					<td>HP hace ruido y se traba; &ldquo;cartucho vacío&rdquo; falso</td>
+					<td><strong>BIDI activo</strong> → Paso 5 (bit 0x800).</td>
+			</tr>
+			<tr>
+					<td><code>NT_STATUS_ACCESS_DENIED</code></td>
+					<td>Sin credenciales válidas → Pasos 1 (usuario), 3 (permiso Print) y 7 (reagregar con contraseña).</td>
+			</tr>
+			<tr>
+					<td>El trabajo llega y Windows lo borra solo (evento 800 y luego 310)</td>
+					<td>El spooler rechaza invitados/anónimos: imprimir autenticado con <code>arctest</code>.</td>
+			</tr>
+			<tr>
+					<td>Las PCs Windows dejaron de imprimir tras los cambios</td>
+					<td>Paso 7: la conexión vieja quedó sin credenciales → borrar y reagregar.</td>
+			</tr>
+			<tr>
+					<td>&ldquo;Acceso denegado&rdquo; o &ldquo;no se encuentra la ruta&rdquo; al agregar</td>
+					<td>Firewall/perfil (Paso 2), credenciales sin guardar, o spooler caído.</td>
+			</tr>
+			<tr>
+					<td><code>texttopdf</code> crasheaba (signal 11) en CUPS</td>
+					<td>Se enviaba <code>text/plain</code>; enviar <strong>PDF</strong> evita ese filtro.</td>
+			</tr>
+	</tbody>
+</table>
+<hr>
+<h1 id="apéndice-d--limpieza-y-notas">Apéndice D — Limpieza y notas</h1>
+<ul>
+<li><strong>No borrar <code>arctest</code></strong>: única cuenta con la que Linux y las demás PCs imprimen.</li>
+<li>En la PC host vieja quedaron scripts de diagnóstico en <code>C:\Users\Public\</code> (<code>hp.ps1</code>, <code>hpfix.ps1</code>,
+<code>hpdiag.ps1</code>, <code>state.ps1</code>, <code>dump.ps1</code>, <code>sec.ps1</code>, <code>setacl2.ps1</code>, <code>share.ps1</code>): se pueden borrar.</li>
+<li>El trabajo <strong>se renderiza en Linux</strong>; Windows solo hace de spooler/interfaz con la impresora USB.</li>
+<li>Prueba final de &ldquo;todo OK&rdquo;: imprimir un PDF desde Linux → evento <strong>307</strong> en el host.</li>
+</ul>
+
+</div>
+
+
+      </div>
+    </section>
+  </section><script 
+src="/quiz/quizdown.js">
+</script>
+<script 
+src="/quiz/quizdownKatex.js">
+</script>
+<script 
+src="/quiz/quizdownHighlight.js">
+</script>
+<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
+<footer class="footer">
+  <div class="content has-text-centered">
+    
+    
+    <p>
+      
+      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
+        <span>
+          RSS
+        </span>
+      </a>
+      
+      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
+
+      
+      
+    </p>
+    
+  </div>
+
+
+
+
+
+
+<script type="text/javascript"
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
+</script>
+
+</footer>
+
+
+</body>
+</html>
