@@ -31,7 +31,7 @@ GitHub&#43;1
 Antigravity permite ejecutar tareas de programación y utilizar herramientas desde la terminal, con un plan de $0 y cuotas limitadas.">
 	<meta itemprop="datePublished" content="2026-10-28T17:59:54-03:00">
 	<meta itemprop="dateModified" content="2026-10-28T17:59:54-03:00">
-	<meta itemprop="wordCount" content="419">
+	<meta itemprop="wordCount" content="1774">
 	<meta itemprop="keywords" content="Ai">
   
 	<meta name="twitter:card" content="summary">
@@ -196,6 +196,299 @@ copilot
 <p>También podés reducir el consumo usando conversaciones nuevas para tareas distintas y evitando mandar repositorios completos cuando solo necesitás modificar unos archivos.</p>
 <p>Y algo importante: los modelos gratuitos locales con Ollama no tienen cuotas, pero en una máquina con 4 GB de RAM difícilmente consigas un agente comparable a Claude Code para tareas complejas.</p>
 <p>Mi recomendación: conservá OpenCode como agente principal, probá GLM-5.3 Flash y DeepSeek V4.1 Flash, e instalá Antigravity CLI como segundo agente. Así tenés dos servicios distintos para seguir trabajando cuando uno alcance su límite, sin pagar suscripciones.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#!/usr/bin/env bash</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Borra las credenciales de la cuenta de Google de Antigravity CLI (agy)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># sin tocar el historial de conversaciones.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Uso:</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   agy-borrar-cuenta              # pide confirmación</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   agy-borrar-cuenta --si         # sin preguntar (yes)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#   agy-borrar-cuenta --dry-run    # solo muestra qué haría</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Qué borra:  ~/.gemini/antigravity-cli/antigravity-oauth-token</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Qué conserva: conversations/, brain/, history.jsonl,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#               conversation_summaries.db, settings.json, proyectos, MCP...</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Después de ejecutarlo tendrás que volver a iniciar sesión al abrir `agy`.</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>set -uo pipefail
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>CONFIG_DIR<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>AGY_CONFIG_DIR<span style="color:#66d9ef">:-</span>$HOME/.gemini/antigravity-cli<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Archivos que contienen credenciales/identidad de la cuenta de Google.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># (Si en el futuro Antigravity añade más, se agregan aquí.)</span>
+</span></span><span style="display:flex;"><span>ARCHIVOS_CUENTA<span style="color:#f92672">=(</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;</span>$CONFIG_DIR<span style="color:#e6db74">/antigravity-oauth-token&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Rutas que NUNCA se deben tocar (historial).</span>
+</span></span><span style="display:flex;"><span>HISTORIAL<span style="color:#f92672">=(</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;</span>$CONFIG_DIR<span style="color:#e6db74">/conversations&#34;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;</span>$CONFIG_DIR<span style="color:#e6db74">/brain&#34;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;</span>$CONFIG_DIR<span style="color:#e6db74">/history.jsonl&#34;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#e6db74">&#34;</span>$CONFIG_DIR<span style="color:#e6db74">/conversation_summaries.db&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>DRY_RUN<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>ASUMIR_SI<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> arg in <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;</span>; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;</span>$arg<span style="color:#e6db74">&#34;</span> in
+</span></span><span style="display:flex;"><span>    --dry-run|-n<span style="color:#f92672">)</span> DRY_RUN<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span> ;;
+</span></span><span style="display:flex;"><span>    --si|--yes|-y<span style="color:#f92672">)</span> ASUMIR_SI<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span> ;;
+</span></span><span style="display:flex;"><span>    -h|--help<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>      sed -n <span style="color:#e6db74">&#39;2,14p&#39;</span> <span style="color:#e6db74">&#34;</span>$0<span style="color:#e6db74">&#34;</span> | sed <span style="color:#e6db74">&#39;s/^# \{0,1\}//&#39;</span>
+</span></span><span style="display:flex;"><span>      exit <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>      ;;
+</span></span><span style="display:flex;"><span>    *<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>      echo <span style="color:#e6db74">&#34;Opción desconocida: </span>$arg<span style="color:#e6db74"> (usa --help)&#34;</span> &gt;&amp;<span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>      exit <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>      ;;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">esac</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> ! -d <span style="color:#e6db74">&#34;</span>$CONFIG_DIR<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;No existe </span>$CONFIG_DIR<span style="color:#e6db74"> — ¿está instalado Antigravity CLI?&#34;</span> &gt;&amp;<span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>  exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Inventario previo del historial, para comprobar que no se toca.</span>
+</span></span><span style="display:flex;"><span>historial_antes<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>
+</span></span><span style="display:flex;"><span>  find <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>HISTORIAL[@]<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> -type f 2&gt;/dev/null | wc -l
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>existentes<span style="color:#f92672">=()</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> f in <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>ARCHIVOS_CUENTA[@]<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">[[</span> -e <span style="color:#e6db74">&#34;</span>$f<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">&amp;&amp;</span> existentes<span style="color:#f92672">+=(</span><span style="color:#e6db74">&#34;</span>$f<span style="color:#e6db74">&#34;</span><span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">${#</span>existentes[@]<span style="color:#e6db74">}</span> -eq <span style="color:#ae81ff">0</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;No hay archivos de cuenta que borrar en </span>$CONFIG_DIR<span style="color:#e6db74">.&#34;</span>
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;Parece que ya no hay sesión de Google guardada.&#34;</span>
+</span></span><span style="display:flex;"><span>  exit <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;Se van a borrar (credenciales de la cuenta):&#34;</span>
+</span></span><span style="display:flex;"><span>printf <span style="color:#e6db74">&#39;  - %s\n&#39;</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>existentes[@]<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>echo
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;Se conserva (historial y ajustes):&#34;</span>
+</span></span><span style="display:flex;"><span>printf <span style="color:#e6db74">&#39;  - %s\n&#39;</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>HISTORIAL[@]<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>echo
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> $DRY_RUN -eq <span style="color:#ae81ff">1</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;[dry-run] No se borró nada.&#34;</span>
+</span></span><span style="display:flex;"><span>  exit <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> $ASUMIR_SI -eq <span style="color:#ae81ff">0</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>  read -r -p <span style="color:#e6db74">&#34;¿Borrar la cuenta guardada? [s/N] &#34;</span> resp
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;</span>$resp<span style="color:#e6db74">&#34;</span> in
+</span></span><span style="display:flex;"><span>    s|S|si|Si|SI|y|Y|yes<span style="color:#f92672">)</span> ;;
+</span></span><span style="display:flex;"><span>    *<span style="color:#f92672">)</span> echo <span style="color:#e6db74">&#34;Cancelado.&#34;</span>; exit <span style="color:#ae81ff">0</span> ;;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">esac</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>borrado_ok<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> f in <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>existentes[@]<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> command -v shred &gt;/dev/null 2&gt;&amp;1; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    shred -u -- <span style="color:#e6db74">&#34;</span>$f<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">||</span> <span style="color:#f92672">{</span> echo <span style="color:#e6db74">&#34;ERROR: no se pudo borrar </span>$f<span style="color:#e6db74">&#34;</span> &gt;&amp;2; borrado_ok<span style="color:#f92672">=</span>0; <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>    rm -f -- <span style="color:#e6db74">&#34;</span>$f<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">||</span> <span style="color:#f92672">{</span> echo <span style="color:#e6db74">&#34;ERROR: no se pudo borrar </span>$f<span style="color:#e6db74">&#34;</span> &gt;&amp;2; borrado_ok<span style="color:#f92672">=</span>0; <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">[[</span> -e <span style="color:#e6db74">&#34;</span>$f<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">{</span> echo <span style="color:#e6db74">&#34;ERROR: </span>$f<span style="color:#e6db74"> sigue existiendo&#34;</span> &gt;&amp;2; borrado_ok<span style="color:#f92672">=</span>0; <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>historial_despues<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>
+</span></span><span style="display:flex;"><span>  find <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>HISTORIAL[@]<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> -type f 2&gt;/dev/null | wc -l
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>echo
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> $borrado_ok -eq <span style="color:#ae81ff">1</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;Credenciales de la cuenta borradas.&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;Hubo errores al borrar (ver arriba).&#34;</span> &gt;&amp;<span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span>$historial_antes<span style="color:#e6db74">&#34;</span> -eq <span style="color:#e6db74">&#34;</span>$historial_despues<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;Historial intacto: </span>$historial_despues<span style="color:#e6db74"> archivos.&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;AVISO: el número de archivos de historial cambió (</span>$historial_antes<span style="color:#e6db74"> → </span>$historial_despues<span style="color:#e6db74">).&#34;</span> &gt;&amp;<span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;La próxima vez que abras &#39;agy&#39; tendrás que iniciar sesión de nuevo.&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Aviso: el email de la cuenta puede aparecer dentro del historial</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># (transcripciones). Eso NO se toca aquí porque pediste conservarlo.</span>
+</span></span><span style="display:flex;"><span>exit <span style="color:#66d9ef">$((</span> borrado_ok <span style="color:#f92672">==</span> <span style="color:#ae81ff">1</span> ? <span style="color:#ae81ff">0</span> : <span style="color:#ae81ff">1</span> <span style="color:#66d9ef">))</span>
+</span></span></code></pre></div><hr>
+<h2 id="5-chatgpt--codex-con-oauth-sin-api-key-y-sin-pagar">5. ChatGPT / Codex con OAuth: sin API key y sin pagar</h2>
+<p>OpenAI también se puede usar sin API key: la cuenta de ChatGPT permite autenticarse por OAuth y el proyecto <a href="https://github.com/EvanZhouDev/openai-oauth"><code>openai-oauth</code></a> expone una API compatible con OpenAI. OpenCode se conecta como si fuera un proveedor normal, con tool calls nativos.</p>
+<h3 id="requisitos">Requisitos</h3>
+<ul>
+<li>Una cuenta de ChatGPT (el plan free alcanza, pero el cupo es chico).</li>
+<li>Node.js y npm.</li>
+<li>Un navegador para autorizar una sola vez.</li>
+</ul>
+<h3 id="instalación">Instalación</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mkdir -p ~/openai-oauth
+</span></span><span style="display:flex;"><span>cd ~/openai-oauth
+</span></span><span style="display:flex;"><span>npm init -y
+</span></span><span style="display:flex;"><span>npm install openai-oauth@2.0.0
+</span></span><span style="display:flex;"><span>npx openai-oauth@2.0.0 login
+</span></span></code></pre></div><p>Si la máquina es headless (sin entorno gráfico), usá:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>npx openai-oauth@2.0.0 login --no-open
+</span></span></code></pre></div><p>Te va a imprimir una URL de <code>auth.openai.com</code>. Abrila en cualquier navegador donde ya tengas la sesión de ChatGPT, elegí la cuenta, aceptá el consentimiento de Codex y listo. El callback vuelve a <code>http://localhost:1455/auth/callback</code> y las credenciales quedan en:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>~/.codex/auth.json   <span style="color:#75715e"># permisos 600</span>
+</span></span></code></pre></div><h3 id="levantar-el-proxy">Levantar el proxy</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>npx openai-oauth@2.0.0 --host 127.0.0.1 --port <span style="color:#ae81ff">10531</span>
+</span></span></code></pre></div><p>Eso expone:</p>
+<pre tabindex="0"><code>http://127.0.0.1:10531/v1
+</code></pre><p>con endpoints compatibles con OpenAI (<code>/v1/models</code>, <code>/v1/chat/completions</code>, <code>/v1/responses</code>).</p>
+<h3 id="servicio-systemd-opcional">Servicio systemd (opcional)</h3>
+<p>Para que arranque solo:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-ini" data-lang="ini"><span style="display:flex;"><span><span style="color:#75715e"># ~/.config/systemd/user/openai-oauth.service</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">[Unit]</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">Description</span><span style="color:#f92672">=</span><span style="color:#e6db74">OpenAI OAuth proxy</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">After</span><span style="color:#f92672">=</span><span style="color:#e6db74">network-online.target</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">Wants</span><span style="color:#f92672">=</span><span style="color:#e6db74">network-online.target</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">[Service]</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">Type</span><span style="color:#f92672">=</span><span style="color:#e6db74">simple</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">WorkingDirectory</span><span style="color:#f92672">=</span><span style="color:#e6db74">%h/openai-oauth</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">ExecStart</span><span style="color:#f92672">=</span><span style="color:#e6db74">/usr/bin/node %h/openai-oauth/node_modules/openai-oauth/dist/cli.js --host 127.0.0.1 --port 10531</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">Restart</span><span style="color:#f92672">=</span><span style="color:#e6db74">always</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">RestartSec</span><span style="color:#f92672">=</span><span style="color:#e6db74">3</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">[Install]</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">WantedBy</span><span style="color:#f92672">=</span><span style="color:#e6db74">default.target</span>
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>systemctl --user daemon-reload
+</span></span><span style="display:flex;"><span>systemctl --user enable --now openai-oauth.service
+</span></span><span style="display:flex;"><span>systemctl --user status openai-oauth.service
+</span></span></code></pre></div><h3 id="configurar-opencode">Configurar OpenCode</h3>
+<p>En <code>~/.config/opencode/opencode.json</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-jsonc" data-lang="jsonc"><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;providers&#34;</span>: {
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&#34;chatgpt-oauth&#34;</span>: {
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">&#34;name&#34;</span>: <span style="color:#e6db74">&#34;ChatGPT (OAuth)&#34;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">&#34;package&#34;</span>: <span style="color:#e6db74">&#34;@opencode/ai/providers/openai-compatible&#34;</span>,
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">&#34;settings&#34;</span>: {
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&#34;baseURL&#34;</span>: <span style="color:#e6db74">&#34;http://127.0.0.1:10531/v1&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&#34;apiKey&#34;</span>: <span style="color:#e6db74">&#34;dummy&#34;</span>
+</span></span><span style="display:flex;"><span>      },
+</span></span><span style="display:flex;"><span>      <span style="color:#f92672">&#34;models&#34;</span>: {
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&#34;gpt-6-luna&#34;</span>: {
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">&#34;name&#34;</span>: <span style="color:#e6db74">&#34;GPT-6 Luna&#34;</span>,
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">&#34;capabilities&#34;</span>: { <span style="color:#f92672">&#34;tools&#34;</span>: <span style="color:#66d9ef">true</span>, <span style="color:#f92672">&#34;input&#34;</span>: [<span style="color:#e6db74">&#34;text&#34;</span>, <span style="color:#e6db74">&#34;image&#34;</span>], <span style="color:#f92672">&#34;output&#34;</span>: [<span style="color:#e6db74">&#34;text&#34;</span>] },
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">&#34;limit&#34;</span>: { <span style="color:#f92672">&#34;context&#34;</span>: <span style="color:#ae81ff">500000</span>, <span style="color:#f92672">&#34;output&#34;</span>: <span style="color:#ae81ff">32768</span> }
+</span></span><span style="display:flex;"><span>        },
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&#34;gpt-5.6-terra&#34;</span>: {
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">&#34;name&#34;</span>: <span style="color:#e6db74">&#34;GPT-5.6 Terra&#34;</span>,
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">&#34;capabilities&#34;</span>: { <span style="color:#f92672">&#34;tools&#34;</span>: <span style="color:#66d9ef">true</span>, <span style="color:#f92672">&#34;input&#34;</span>: [<span style="color:#e6db74">&#34;text&#34;</span>, <span style="color:#e6db74">&#34;image&#34;</span>], <span style="color:#f92672">&#34;output&#34;</span>: [<span style="color:#e6db74">&#34;text&#34;</span>] },
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">&#34;limit&#34;</span>: { <span style="color:#f92672">&#34;context&#34;</span>: <span style="color:#ae81ff">272000</span>, <span style="color:#f92672">&#34;output&#34;</span>: <span style="color:#ae81ff">32768</span> }
+</span></span><span style="display:flex;"><span>        },
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&#34;gpt-5.6-luna&#34;</span>: {
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">&#34;name&#34;</span>: <span style="color:#e6db74">&#34;GPT-5.6 Luna&#34;</span>,
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">&#34;capabilities&#34;</span>: { <span style="color:#f92672">&#34;tools&#34;</span>: <span style="color:#66d9ef">true</span>, <span style="color:#f92672">&#34;input&#34;</span>: [<span style="color:#e6db74">&#34;text&#34;</span>, <span style="color:#e6db74">&#34;image&#34;</span>], <span style="color:#f92672">&#34;output&#34;</span>: [<span style="color:#e6db74">&#34;text&#34;</span>] },
+</span></span><span style="display:flex;"><span>          <span style="color:#f92672">&#34;limit&#34;</span>: { <span style="color:#f92672">&#34;context&#34;</span>: <span style="color:#ae81ff">272000</span>, <span style="color:#f92672">&#34;output&#34;</span>: <span style="color:#ae81ff">32768</span> }
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>      }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>El <code>apiKey: &quot;dummy&quot;</code> es solo para que el cliente OpenAI-compatible no se queje; el proxy lo ignora.</p>
+<p>Después abrís OpenCode, <code>/models</code> → <strong>ChatGPT (OAuth)</strong> → <strong>GPT-6 Luna</strong>.</p>
+<h3 id="si-el-proxy-corre-en-otra-máquina">Si el proxy corre en otra máquina</h3>
+<p>Dejalo escuchando en <code>127.0.0.1</code> y llevá el puerto por SSH:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ssh -N -L 127.0.0.1:10531:127.0.0.1:10531 usuario@otra-maquina
+</span></span></code></pre></div><p>Así no lo exponés a la LAN.</p>
+<h3 id="aviso-importante-el-plan-free-tiene-poco-cupo">Aviso importante: el plan free tiene poco cupo</h3>
+<p>El plan free de ChatGPT incluye acceso a Codex, pero con un cupo muy chico. No es para uso intensivo: dos o tres pedidos con tool calls pueden agotarlo. No te cobran nada, simplemente se corta hasta que resetee. El cupo se comparte con Codex CLI/IDE.</p>
+<p>Para no gastarlo en tareas de mantenimiento, podés hacer que los agentes internos de OpenCode usen un modelo gratis:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-jsonc" data-lang="jsonc"><span style="display:flex;"><span><span style="color:#e6db74">&#34;agents&#34;</span><span style="color:#960050;background-color:#1e0010">:</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;title&#34;</span>: { <span style="color:#f92672">&#34;model&#34;</span>: <span style="color:#e6db74">&#34;opencode/big-pickle&#34;</span> },
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;summary&#34;</span>: { <span style="color:#f92672">&#34;model&#34;</span>: <span style="color:#e6db74">&#34;opencode/big-pickle&#34;</span> },
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;compaction&#34;</span>: { <span style="color:#f92672">&#34;model&#34;</span>: <span style="color:#e6db74">&#34;opencode/big-pickle&#34;</span> }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Así los títulos, resúmenes y la compactación no consumen el cupo de ChatGPT.</p>
+<hr>
+<h2 id="6-más-modelos-gratis-con-cuenta-web-sin-api-key">6. Más modelos gratis con cuenta web (sin API key)</h2>
+<p>Estos son los que podés usar sin pagar y sin pegar una API key. Todos dependen de una cuenta web y tienen límites.</p>
+<table>
+	<thead>
+			<tr>
+					<th>Servicio</th>
+					<th>Cuenta</th>
+					<th>Modelos</th>
+					<th>Límite</th>
+					<th>Cómo se usa</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>OpenCode Zen</td>
+					<td>No hace falta</td>
+					<td><code>big-pickle</code>, <code>flint-40b-free</code>, <code>glm-5.3-flash-free</code>, <code>deepseek-v4.1-flash-free</code>, <code>mimo-v2.6-flash-free</code>, <code>nemotron-3.5-lightning-free</code>, <code>nemotron-3.5-super-vl-free</code>, <code>beam-free</code></td>
+					<td>Límites del servicio</td>
+					<td>Ya viene en OpenCode; <code>/models</code></td>
+			</tr>
+			<tr>
+					<td>ChatGPT / Codex</td>
+					<td>ChatGPT (free, Plus o Pro)</td>
+					<td><code>gpt-6-luna</code>, <code>gpt-5.6-terra</code>, <code>gpt-5.6-luna</code></td>
+					<td>Free: cupo chico; Plus/Pro: más</td>
+					<td><code>openai-oauth</code> + OpenCode</td>
+			</tr>
+			<tr>
+					<td>GitHub Copilot</td>
+					<td>GitHub (Copilot Free)</td>
+					<td>Los que habilite tu cuenta (GPT-4.1, Claude Sonnet, Gemini, etc.)</td>
+					<td>Créditos mensuales</td>
+					<td><code>opencode auth login</code> → GitHub Copilot</td>
+			</tr>
+			<tr>
+					<td>Antigravity</td>
+					<td>Google</td>
+					<td><code>gemini-3.8-flash-high</code>, <code>gemini-3.8-flash-medium</code>, <code>gemini-3.8-flash-low</code>, <code>claude-sonnet-4-6</code>, <code>claude-opus-4-6-thinking</code>, <code>gpt-oss-120b-medium</code></td>
+					<td>Cuota free</td>
+					<td>CLI <code>agy</code></td>
+			</tr>
+			<tr>
+					<td>Qwen Code OAuth</td>
+					<td>—</td>
+					<td>—</td>
+					<td>Discontinuado</td>
+					<td>—</td>
+			</tr>
+	</tbody>
+</table>
+<p>OpenRouter queda afuera de esta lista porque pide una API key, aunque sea gratis. Tiene modelos <code>:free</code> con un límite de 50 solicitudes diarias.</p>
+<h3 id="github-copilot-en-opencode">GitHub Copilot en OpenCode</h3>
+<p>Copilot usa OAuth de dispositivo, no API key:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>opencode auth login
+</span></span></code></pre></div><p>Elegí <strong>GitHub Copilot</strong> → <strong>GitHub.com</strong> y seguí el flujo: te da un código, abrís <code>https://github.com/login/device</code>, lo pegás y autorizás. OpenCode detecta el plan y trae la lista de modelos de tu cuenta.</p>
+<p>La cuenta necesita acceso a <strong>Copilot Chat</strong>. Si no tenés suscripción, el plan <strong>Copilot Free</strong> alcanza, con créditos mensuales limitados.</p>
+<h3 id="antigravity-los-modelos-que-trae-hoy">Antigravity: los modelos que trae hoy</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>agy models
+</span></span></code></pre></div><p>En mi cuenta devuelve:</p>
+<pre tabindex="0"><code>gemini-3.8-flash-high      Gemini 3.8 Flash (High)
+gemini-3.8-flash-medium    Gemini 3.8 Flash (Medium)
+gemini-3.8-flash-low       Gemini 3.8 Flash (Low)
+claude-sonnet-4-6          Claude Sonnet 4.6 (Thinking)
+claude-opus-4-6-thinking   Claude Opus 4.6 (Thinking)
+gpt-oss-120b-medium        GPT-OSS 120B (Medium)
+</code></pre><p>Se usa con su propio CLI:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>agy -p <span style="color:#e6db74">&#34;Explicá este error&#34;</span> --model gemini-3.8-flash-high
+</span></span></code></pre></div><p>Antigravity no tiene, hasta donde probé, una API compatible con OpenAI, así que no se puede enchufar a OpenCode como proveedor. La estrategia es usarlo como <strong>segundo agente</strong> cuando OpenCode se queda sin cuota.</p>
+<h3 id="estrategia-para-no-pagar">Estrategia para no pagar</h3>
+<ol>
+<li><strong>Día a día:</strong> los modelos gratis de OpenCode (<code>big-pickle</code>, <code>flint-40b-free</code>, GLM-5.3 Flash, DeepSeek V4.1 Flash).</li>
+<li><strong>Segundo agente:</strong> Antigravity (<code>agy</code>) con Gemini 3.8 Flash o Claude Sonnet 4.6.</li>
+<li><strong>Tercer agente:</strong> GitHub Copilot Free.</li>
+<li><strong>ChatGPT/Codex:</strong> solo para lo difícil, porque el cupo free es chico.</li>
+<li><strong>Ahorro extra:</strong> usá conversaciones nuevas para tareas distintas, no mandes repos completos y configurá <code>agents.title/summary/compaction</code> con un modelo gratis.</li>
+</ol>
+<p>Ninguno de estos métodos es oficial ni está garantizado: OpenAI, Google y GitHub pueden cambiar los límites, los modelos o el acceso cuando quieran. La ventaja es que no hay tarjeta ni factura: si se termina la cuota, esperás o cambiás de agente.</p>
 
 </div>
 

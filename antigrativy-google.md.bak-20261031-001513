@@ -1,0 +1,240 @@
+---
+title: "Antigravity Google"
+date: 2026-10-28T17:59:54-03:00
+tags: ['ai']
+---
+
+Los agentes de IA son de lo mejor empezando por opencode.
+
+## Google Antigravity CLI: mi alternativa favorita
+
+Plan gratuito
+
+Agente autónomo de terminal
+
+Google reemplazó el acceso gratuito individual de Gemini CLI por Antigravity CLI el 18 de junio de 2026. Es importante porque muchos tutoriales todavía recomiendan el viejo Gemini CLI.&#x20;
+
+[image](https://www.google.com/s2/favicons?domain=https://github.com\&sz=32)
+
+GitHub+1
+
+
+
+Antigravity permite ejecutar tareas de programación y utilizar herramientas desde la terminal, con un plan de $0 y cuotas limitadas.
+
+En Arch Linux:
+
+```
+curl -fsSL https://antigravity.google/cli/install.sh -o /tmp/agy-install.sh
+less /tmp/agy-install.sh
+bash /tmp/agy-install.sh
+```
+
+Luego:
+
+```
+~/.local/bin/agy
+```
+
+Te pedirá iniciar sesión con Google. Es una alternativa genuina a Claude Code, aunque necesita autenticación y está sujeta a límites gratuitos.&#x20;
+
+[image](https://www.google.com/s2/favicons?domain=https://antigravity.google\&sz=32)
+
+Google Antigravity Docs
+
+
+
+## 3. GitHub Copilot CLI: otro agente gratuito
+
+GitHub ofrece Copilot CLI en su plan Free. Puede modificar archivos, ejecutar herramientas y trabajar autónomamente sobre proyectos.
+
+Instalación:
+
+```
+npm install -g @github/copilot
+copilot
+```
+
+Dentro de Copilot escribí `/login` para autenticarte.
+
+Tiene créditos gratuitos mensuales y funciona directamente en Linux. Su inconveniente es que la cuota también se termina.&#x20;
+
+[image](https://www.google.com/s2/favicons?domain=https://docs.github.com\&sz=32)
+
+GitHub Docs+1
+
+
+
+## 4. OpenRouter: más modelos sin pagar
+
+OpenRouter tiene modelos gratuitos que podés conectar a OpenCode utilizando una API key.
+
+Su límite gratuito normal es de 50 solicitudes diarias, compartidas entre los modelos gratuitos. No alcanza para sesiones muy largas de agente, pero sirve como reserva.&#x20;
+
+[image](https://www.google.com/s2/favicons?domain=https://openrouter.ai\&sz=32)
+
+OpenRouter
+
+
+
+Modelos disponibles: [OpenRouter Free Models](https://openrouter.ai/collections/free-models?utm_source=chatgpt.com).
+
+## Comparación
+
+| Alternativa                  | Gratis                     | Sirve como agente  |
+| ---------------------------- | -------------------------- | ------------------ |
+| OpenCode + GLM/DeepSeek Free | Sí, con límites            | Sí                 |
+| Antigravity CLI              | Sí, con límites            | Sí                 |
+| GitHub Copilot CLI           | Sí, con créditos mensuales | Sí                 |
+| OpenRouter Free              | 50 solicitudes/día         | Depende del modelo |
+| Qwen Code OAuth              | No, discontinuado          | —                  |
+| Groq gratuito                | Sí, con límites            | Calidad variable   |
+
+Qwen Code tenía una opción OAuth gratuita muy interesante, pero fue discontinuada el 15 de abril de 2026.&#x20;
+
+[image](https://www.google.com/s2/favicons?domain=https://qwenlm.github.io\&sz=32)
+
+Qwen Code Docs
+
+
+
+## ¿Cómo extender tus créditos sin pagar?
+
+No encontré un método oficial para aumentar ilimitadamente los créditos de Big Pickle. La estrategia práctica es combinar cuotas independientes: OpenCode gratuito, Antigravity Free y Copilot Free.
+
+También podés reducir el consumo usando conversaciones nuevas para tareas distintas y evitando mandar repositorios completos cuando solo necesitás modificar unos archivos.
+
+Y algo importante: los modelos gratuitos locales con Ollama no tienen cuotas, pero en una máquina con 4 GB de RAM difícilmente consigas un agente comparable a Claude Code para tareas complejas.
+
+Mi recomendación: conservá OpenCode como agente principal, probá GLM-5.3 Flash y DeepSeek V4.1 Flash, e instalá Antigravity CLI como segundo agente. Así tenés dos servicios distintos para seguir trabajando cuando uno alcance su límite, sin pagar suscripciones.
+
+
+
+```bash
+
+#!/usr/bin/env bash
+# Borra las credenciales de la cuenta de Google de Antigravity CLI (agy)
+# sin tocar el historial de conversaciones.
+#
+# Uso:
+#   agy-borrar-cuenta              # pide confirmación
+#   agy-borrar-cuenta --si         # sin preguntar (yes)
+#   agy-borrar-cuenta --dry-run    # solo muestra qué haría
+#
+# Qué borra:  ~/.gemini/antigravity-cli/antigravity-oauth-token
+# Qué conserva: conversations/, brain/, history.jsonl,
+#               conversation_summaries.db, settings.json, proyectos, MCP...
+#
+# Después de ejecutarlo tendrás que volver a iniciar sesión al abrir `agy`.
+
+set -uo pipefail
+
+CONFIG_DIR="${AGY_CONFIG_DIR:-$HOME/.gemini/antigravity-cli}"
+
+# Archivos que contienen credenciales/identidad de la cuenta de Google.
+# (Si en el futuro Antigravity añade más, se agregan aquí.)
+ARCHIVOS_CUENTA=(
+  "$CONFIG_DIR/antigravity-oauth-token"
+)
+
+# Rutas que NUNCA se deben tocar (historial).
+HISTORIAL=(
+  "$CONFIG_DIR/conversations"
+  "$CONFIG_DIR/brain"
+  "$CONFIG_DIR/history.jsonl"
+  "$CONFIG_DIR/conversation_summaries.db"
+)
+
+DRY_RUN=0
+ASUMIR_SI=0
+
+for arg in "$@"; do
+  case "$arg" in
+    --dry-run|-n) DRY_RUN=1 ;;
+    --si|--yes|-y) ASUMIR_SI=1 ;;
+    -h|--help)
+      sed -n '2,14p' "$0" | sed 's/^# \{0,1\}//'
+      exit 0
+      ;;
+    *)
+      echo "Opción desconocida: $arg (usa --help)" >&2
+      exit 2
+      ;;
+  esac
+done
+
+if [[ ! -d "$CONFIG_DIR" ]]; then
+  echo "No existe $CONFIG_DIR — ¿está instalado Antigravity CLI?" >&2
+  exit 1
+fi
+
+# Inventario previo del historial, para comprobar que no se toca.
+historial_antes=$(
+  find "${HISTORIAL[@]}" -type f 2>/dev/null | wc -l
+)
+
+existentes=()
+for f in "${ARCHIVOS_CUENTA[@]}"; do
+  [[ -e "$f" ]] && existentes+=("$f")
+done
+
+if [[ ${#existentes[@]} -eq 0 ]]; then
+  echo "No hay archivos de cuenta que borrar en $CONFIG_DIR."
+  echo "Parece que ya no hay sesión de Google guardada."
+  exit 0
+fi
+
+echo "Se van a borrar (credenciales de la cuenta):"
+printf '  - %s\n' "${existentes[@]}"
+echo
+echo "Se conserva (historial y ajustes):"
+printf '  - %s\n' "${HISTORIAL[@]}"
+echo
+
+if [[ $DRY_RUN -eq 1 ]]; then
+  echo "[dry-run] No se borró nada."
+  exit 0
+fi
+
+if [[ $ASUMIR_SI -eq 0 ]]; then
+  read -r -p "¿Borrar la cuenta guardada? [s/N] " resp
+  case "$resp" in
+    s|S|si|Si|SI|y|Y|yes) ;;
+    *) echo "Cancelado."; exit 0 ;;
+  esac
+fi
+
+borrado_ok=1
+for f in "${existentes[@]}"; do
+  if command -v shred >/dev/null 2>&1; then
+    shred -u -- "$f" || { echo "ERROR: no se pudo borrar $f" >&2; borrado_ok=0; }
+  else
+    rm -f -- "$f" || { echo "ERROR: no se pudo borrar $f" >&2; borrado_ok=0; }
+  fi
+  [[ -e "$f" ]] && { echo "ERROR: $f sigue existiendo" >&2; borrado_ok=0; }
+done
+
+historial_despues=$(
+  find "${HISTORIAL[@]}" -type f 2>/dev/null | wc -l
+)
+
+echo
+if [[ $borrado_ok -eq 1 ]]; then
+  echo "Credenciales de la cuenta borradas."
+else
+  echo "Hubo errores al borrar (ver arriba)." >&2
+fi
+
+if [[ "$historial_antes" -eq "$historial_despues" ]]; then
+  echo "Historial intacto: $historial_despues archivos."
+else
+  echo "AVISO: el número de archivos de historial cambió ($historial_antes → $historial_despues)." >&2
+fi
+
+echo "La próxima vez que abras 'agy' tendrás que iniciar sesión de nuevo."
+
+# Aviso: el email de la cuenta puede aparecer dentro del historial
+# (transcripciones). Eso NO se toca aquí porque pediste conservarlo.
+exit $(( borrado_ok == 1 ? 0 : 1 ))
+
+```
