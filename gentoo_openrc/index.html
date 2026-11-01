@@ -29,7 +29,7 @@ Instalé OBS Studio en Gentoo sin mirar las banderas (USE Flags) cuando ejecuté
 Con el comando emerge -pv obs-studio pude ver las banderas y leyendo la Wiki de Gentoo de OBS me dí cuenta que tengo que habilitar las siguientes banderas para tener esas funcionalidades:">
 	<meta itemprop="datePublished" content="2025-06-22T22:25:52-03:00">
 	<meta itemprop="dateModified" content="2025-06-22T22:25:52-03:00">
-	<meta itemprop="wordCount" content="8653">
+	<meta itemprop="wordCount" content="8957">
 	<meta itemprop="keywords" content="Gentoo">
   
 	<meta name="twitter:card" content="summary">
@@ -370,7 +370,7 @@ El handbook sugiere para WiFi: <code>emerge net-wireless/iw net-wireless/wpa_sup
 </span></span></code></pre></div><h5 id="usando-grub-como-boot-loader">Usando <code>GRUB</code> como boot loader</h5>
 <p>Uso la opción <code>--removable</code> porque en algunas placas madres con pobres implementaciones UEFI parece que solo funcionan con el directorio <code>/BOOT/BOOT</code> para el archivo <code>.EFI</code>. El instalador GRUB crea el <code>.EFI</code> archivo en esa ubicación automáticamente agregando la opción <code>--removable</code>.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>grub-install --target<span style="color:#f92672">=</span>x86_64-efi --efi-directory<span style="color:#f92672">=</span>/boot --removable   
-</span></span></code></pre></div><h6 id="si-instalaste-el-binario-de-grub-ahora-lo-tendrás-que-compilar-porque-el-binario-de-grub-no-posee-la-banderause-flag-">Si instalaste el binario de <code>GRUB</code> ahora lo tendrás que compilar porque el <strong>binario de GRUB no posee la bandera(USE flag) <code>mount</code> habilitada</strong>.</h6>
+</span></span></code></pre></div><h6 id="si-instalaste-el-binario-de-grub-ahora-lo-tendrás-que-compilar-porque-el-binario-de-grub-no-posee-la-banderause-flag-mount-habilitada">Si instalaste el binario de <code>GRUB</code> ahora lo tendrás que compilar porque el <strong>binario de GRUB no posee la bandera(USE flag) <code>mount</code> habilitada</strong>.</h6>
 <p>En el archivo <code>/etc/portage/package.use/os-prober</code> agregá:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>&gt;<span style="color:#f92672">=</span>sys-boot/grub-2.12-r7 mount   
 </span></span></code></pre></div><p>Instalamos OS-PROBER para detectar otras distros.</p>
@@ -417,7 +417,40 @@ Agregá al final:</p>
 </span></span><span style="display:flex;"><span>sudo emerge -G sys-devel/bc btop evince falkon gimp imagemagick jq neomutt pcmanfm-qt samba translate-shell wget wl-clipboard xhost xwayland libreoffice mpv git nim thunderbird grim
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>sudo emerge yt-dlp xdg-desktop-portal-wlr xdg-desktop-portal-wlr vim firefox-bin wmenu telegram-desktop-bin qbittorent tor rclone proxychains unrar unzip tor torsocks os-prober
-</span></span></code></pre></div><h1 id="actualización-2026">Actualización 2026</h1>
+</span></span></code></pre></div><h3 id="instalar-como-pacman-descargar-todo-y-después-instalar-en-paralelo">Instalar como pacman: descargar todo y después instalar en paralelo</h3>
+<p>Portage por defecto instala de a un paquete. Para que haga como pacman (primero baja todo, después instala en paralelo), agregá esto a <code>/etc/portage/make.conf</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Permite mergear/instalar varios paquetes a la vez</span>
+</span></span><span style="display:flex;"><span>FEATURES<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>FEATURES<span style="color:#e6db74">}</span><span style="color:#e6db74"> parallel-install&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Opcional: publica el estado para poder usar `emerge --status`</span>
+</span></span><span style="display:flex;"><span>FEATURES<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>FEATURES<span style="color:#e6db74">}</span><span style="color:#e6db74"> observability&#34;</span>
+</span></span></code></pre></div><p>Después, para una lista de paquetes:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># 1) Primero descargá TODO (binarios y fuentes) sin instalar nada</span>
+</span></span><span style="display:flex;"><span>emerge -g --fetchonly --jobs<span style="color:#f92672">=</span><span style="color:#ae81ff">4</span> sys-boot/grub x11-base/xorg-server x11-wm/dwm
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 2) Recién ahí instalá, 4 paquetes a la vez</span>
+</span></span><span style="display:flex;"><span>emerge -g --jobs<span style="color:#f92672">=</span><span style="color:#ae81ff">4</span> sys-boot/grub x11-base/xorg-server x11-wm/dwm
+</span></span></code></pre></div><p>Y para actualizar todo el sistema:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>emerge --sync
+</span></span><span style="display:flex;"><span>emerge -g --fetchonly -uDN @world
+</span></span><span style="display:flex;"><span>emerge -g --jobs<span style="color:#f92672">=</span><span style="color:#ae81ff">4</span> -uDN @world
+</span></span></code></pre></div><p>Notas importantes:</p>
+<ul>
+<li><code>--jobs=N</code> es <strong>cuántos paquetes</strong> se procesan a la vez. No confundir con <code>MAKEOPTS=&quot;-jN&quot;</code>, que son los hilos de compilación de <strong>cada</strong> paquete. Si usás distcc, no infles los dos a la vez.</li>
+<li>Con <code>parallel-install</code> + <code>merge-wait</code>, Portage junta las instalaciones en lotes. Si querés que instale apenas termina cada paquete (útil cuando son <strong>solo binarios</strong>), agregá <code>-merge-wait</code>:
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>FEATURES<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>FEATURES<span style="color:#e6db74">}</span><span style="color:#e6db74"> -merge-wait&#34;</span>
+</span></span></code></pre></div></li>
+<li>Con <code>--jobs</code> la salida de cada paquete va a logs separados. Para ver el progreso en vivo:
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>tail -f /var/log/emerge.log
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># o, si activaste observability:</span>
+</span></span><span style="display:flex;"><span>emerge --status
+</span></span></code></pre></div></li>
+<li><strong>No agregues <code>--quiet</code></strong> a <code>EMERGE_DEFAULT_OPTS</code> si querés ver qué está haciendo. En esta guía aparece <code>EMERGE_DEFAULT_OPTS=&quot;--quiet&quot;</code>; sacalo o vas a ver todo en silencio.</li>
+<li>Cuidado con <code>--binpkg-respect-use=n</code> global en OpenRC: puede bajar binarios compilados con systemd/elogind y romper dependencias. Usalo solo en paquetes puntuales o revisá el <code>emerge -p</code> antes.</li>
+<li>En una netbook de 4 hilos, <code>--jobs=3</code> o <code>--jobs=4</code> es razonable. Si se pone lenta o empieza a hacer swap, bajá a <code>--jobs=2</code>.</li>
+</ul>
+<p>En esta instalación se notó bastante la diferencia: bajó los 57 paquetes pendientes primero y después los fue instalando de a 4, en vez de esperar paquete por paquete.</p>
+<h1 id="actualización-2026">Actualización 2026</h1>
 <h3 id="intenté-instalar-gentoo-gnulinux-con-archlinux-dual-boot">Intenté instalar Gentoo GNU/Linux con ArchLinux (dual boot)</h3>
 <p>Si después de toda la instalación al bootear ArchLinux te dice: <code>Failed to mount /boot</code> es porque estás usando el kernel de Gentoo para bootear ArchLinux. Tenes que bootear desde le USB Live y montar la particion de ArchLinux y EFI en /mnt/arch y /mnt/arch/boot y arch-chroot /mnt/arch y reinstalar linux <code>pacman -S linux</code>  luego ejecutá <code>grub-mkconfig -o...</code> pero te va a detectar mal Gentoo tenes que crear un archivo en <code>/etc/grub.d/40_custom</code> y agregar manualmente la entrada porque si compartís <code>/boot</code> os-prober no lo detecta bien.</p>
 <p>Pero cuando intenté botear ArchLinux me decía que el kernel de Gentoo no tiene soporte VFAT, FAT32.
@@ -758,7 +791,7 @@ Me olvidé de agregar <code>&quot;dist-kernel&quot;</code>.</p>
 <hr>
 <h1 id="guía-de-optimización-gentoo---celeron-n2806">Guía de Optimización Gentoo - Celeron N2806</h1>
 <h2 id="-problemas-críticos-detectados">🚨 PROBLEMAS CRÍTICOS DETECTADOS</h2>
-<h3 id="1-video_">1. <strong>VIDEO_CARDS incorrectos</strong></h3>
+<h3 id="1-video_cards-incorrectos">1. <strong>VIDEO_CARDS incorrectos</strong></h3>
 <p>Tu <code>make.conf</code> tiene:</p>
 <pre tabindex="0"><code>VIDEO_CARDS=&#34;amdgpu fbdev intel nouveau radeon radeonsi vesa dummy&#34;
 </code></pre><p><strong>INCORRECTO</strong> - Estás compilando drivers AMD/Nouveau que NO USAS.</p>
