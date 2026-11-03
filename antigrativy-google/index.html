@@ -31,7 +31,7 @@ GitHub&#43;1
 Antigravity permite ejecutar tareas de programación y utilizar herramientas desde la terminal, con un plan de $0 y cuotas limitadas.">
 	<meta itemprop="datePublished" content="2026-10-28T17:59:54-03:00">
 	<meta itemprop="dateModified" content="2026-10-28T17:59:54-03:00">
-	<meta itemprop="wordCount" content="2923">
+	<meta itemprop="wordCount" content="4490">
 	<meta itemprop="keywords" content="Ai">
   
 	<meta name="twitter:card" content="summary">
@@ -660,7 +660,6 @@ gpt-oss-120b-medium        GPT-OSS 120B (Medium)
 <li><strong>MiMo</strong> → si querés algo tipo OpenCode con key gratis</li>
 <li><strong>OB-1</strong> → cuando Freebuff esté ocupado</li>
 </ol>
-<p>¿Guardo esto en <code>~/agentes-ia-status.md</code>?</p>
 <p>Opción adicional que no estaba en la lista:</p>
 <p>OmniRoute: gateway MIT con un solo endpoint que soporta 22+ proveedores vía cookies web (ChatGPT, Claude, Gemini, DeepSeek, Grok, Copilot, HuggingChat, etc.) y 375+ proveedores en total. Funciona como proxy compatible con OpenAI, así que se integra con Claude Code, Codex, Cursor, Cline, Copilot, etc. Comprime tokens con RTK+Caveman (ahorro 15-95%).  Es probablemente la opción más versátil si ya usás algún agente de código y querés redirigirlo a tu cuenta web.
 Sobre ask-gemini: no logré confirmarlo en PyPI ni GitHub con ese nombre exacto. Lo que sí existe y hace lo mismo es gemini-web-cli (escrito en Go), que importa las cookies __Secure-1PSID y __Secure-1PSIDTS, tiene modo interactivo, lista chats y hasta expone un servidor REST compatible con OpenAI + endpoint MCP.</p>
@@ -696,6 +695,165 @@ La primera vez que ejecutes <code>leo</code> o <code>leo ask</code>, la herramie
 <h3 id="-recomendación-1">🎯 Recomendación</h3>
 <p>Si lo que te gustó de GemCLI fue <strong>reutilizar tu sesión web y tener herramientas de agente</strong>, <strong><code>leo-cli</code> es la opción directa para Brave</strong>. Instálalo, ejecuta <code>leo doctor</code> para confirmar que todo está en orden, y prueba primero con <code>leo ask</code> antes de lanzarte al modo <code>leo agent</code>.</p>
 <p>Eso sí: como todo este tipo de herramientas, <strong>no es oficial</strong> y puede dejar de funcionar si Brave cambia la interfaz de Leo. Úsalo con una cuenta que no sea crítica y revisa que el paquete sea el correcto (<code>@eliyantosarage/leo-cli</code>) antes de instalarlo.</p>
+<p>Sí, el ecosistema de &ldquo;hacks de sesión web&rdquo; es bastante amplio. Te los agrupo por <strong>capacidad real de agente</strong> (los que pueden editar archivos y ejecutar comandos) y por <strong>proveedor</strong>, con los comandos de instalación y uso.</p>
+<hr>
+<h3 id="-agentes-autónomos-que-usan-tu-sesión-web-los-más-parecidos-a-gemcli-en-capacidades">🧠 Agentes autónomos que usan tu sesión web (los más parecidos a GemCLI en capacidades)</h3>
+<p><strong>ClaudeCode-Next</strong> (Claude)
+Es probablemente el más directo: usa la interfaz web de Claude.ai, extrae tu sesión una vez y funciona como agente completo desde la terminal (lee/escribe archivos, ejecuta comandos, refactoriza, modo agente interactivo).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pip install <span style="color:#e6db74">&#34;claudecode-next[browser]&#34;</span>
+</span></span><span style="display:flex;"><span>playwright install chromium
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>claudecode-next --auto-fetch        <span style="color:#75715e"># importa cookies de Chrome</span>
+</span></span><span style="display:flex;"><span>claudecode-next --agent <span style="color:#e6db74">&#34;Refactoriza utils.py para usar pathlib&#34;</span>
+</span></span><span style="display:flex;"><span>claudecode-next --prompt <span style="color:#e6db74">&#34;Explica este error&#34;</span>
+</span></span></code></pre></div><p>También tiene <code>--login</code> (abre navegador) y <code>--manual</code> (pegar cookies a mano).</p>
+<p><strong>Dulus</strong> (Gemini por defecto, también Claude y GPT)
+Runtime de agente en Python que arranca capturando una <strong>sesión anónima de Gemini</strong> sin API key ni cuenta. Tiene CLI, GUI, web y Telegram, y puede ejecutar comandos bash en tu terminal.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pip install dulus
+</span></span><span style="display:flex;"><span>dulus
+</span></span></code></pre></div><p>Para otros proveedores, dentro del runtime puedes cambiar a Claude o GPT (siempre que tengas sesión web iniciada en el navegador).</p>
+<hr>
+<h3 id="-multiproveedor-varios-modelos-desde-una-sola-herramienta">🌐 Multi‑proveedor (varios modelos desde una sola herramienta)</h3>
+<p><strong>surf-cli</strong>
+Controla tu Chrome real mediante una extensión y permite <strong>consultar ChatGPT, Gemini, Perplexity y Grok usando tus logins del navegador, sin API keys</strong>. No es un agente autónomo por sí mismo, pero está pensado para que agentes como Claude Code o Cursor lo usen como &ldquo;herramienta de navegador&rdquo;.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>npm install -g surf-cli
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Instalar la extensión en Chrome (Developer mode → Load unpacked → ruta que imprime:)</span>
+</span></span><span style="display:flex;"><span>surf extension-path
+</span></span><span style="display:flex;"><span>surf install &lt;extension-id&gt;
+</span></span></code></pre></div><p>Uso:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>surf go <span style="color:#e6db74">&#34;https://chatgpt.com&#34;</span>
+</span></span><span style="display:flex;"><span>surf read
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># O consultas directas:</span>
+</span></span><span style="display:flex;"><span>surf ask chatgpt <span style="color:#e6db74">&#34;resume este error&#34;</span>
+</span></span></code></pre></div><p><strong>mcp-ai-router</strong>
+Servidor MCP (stdio) que automatiza sesiones web autenticadas de <strong>Gemini, ChatGPT, Claude, DeepSeek y Kimi</strong> mediante un Chromium propio (CloakBrowser). No es un agente, pero cualquier cliente MCP (Claude Code, Cursor, Claude Desktop) puede usarlo como proveedor de modelos.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pipx install mcp-ai-router
+</span></span><span style="display:flex;"><span>ai-router browser login          <span style="color:#75715e"># abre ventanas para loguearte una vez</span>
+</span></span><span style="display:flex;"><span>ai-router browser status         <span style="color:#75715e"># verifica que estén &#34;logged_in&#34;</span>
+</span></span></code></pre></div><p>Luego lo añades a tu cliente MCP:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;mcpServers&#34;</span>: {
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&#34;ai-router&#34;</span>: { <span style="color:#f92672">&#34;command&#34;</span>: <span style="color:#e6db74">&#34;ai-router&#34;</span>, <span style="color:#f92672">&#34;args&#34;</span>: [<span style="color:#e6db74">&#34;serve&#34;</span>] }
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><strong>WebModel Bridge</strong>
+Proxy local que convierte <strong>9 webs de IA</strong> (Claude, ChatGPT, DeepSeek, Gemini, Grok, Perplexity, Kimi, Qwen, GLM) en una <strong>API compatible con OpenAI y Anthropic</strong>. Usa Chrome real vía CDP, heredando cookies y fingerprint. No es un agente, pero permite que Cursor, Claude Code o cualquier cliente OpenAI apunten a <code>http://localhost:3456</code> y usen esas webs gratis.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># (Requiere Node 20+ y Chrome corriendo con remote debugging)</span>
+</span></span><span style="display:flex;"><span>git clone https://github.com/.../webmodel-bridge
+</span></span><span style="display:flex;"><span>cd webmodel-bridge
+</span></span><span style="display:flex;"><span>npm install
+</span></span><span style="display:flex;"><span>npm start
+</span></span></code></pre></div><p>Luego en tu cliente OpenAI:</p>
+<pre tabindex="0"><code>baseURL: http://localhost:3456/v1
+apiKey: dummy
+</code></pre><p><strong>llm-cookie-bridge</strong> (Python)
+Librería, no CLI. Da una interfaz async única para hablar con <strong>Gemini, ChatGPT, Claude, Perplexity, HuggingFace Chat, Grok, Phind, DeepSeek, You.com, Pi.ai, Meta AI, Mistral Le Chat y Copilot</strong> usando cookies de sesión. Útil si quieres construir tu propio agente sin depender de un CLI ya hecho.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pip install llm-cookie-bridge
+</span></span></code></pre></div><p>Uso mínimo (ejemplo con ChatGPT):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">from</span> llm_cookie_bridge <span style="color:#f92672">import</span> LLMCookieBridge
+</span></span><span style="display:flex;"><span>bridge <span style="color:#f92672">=</span> LLMCookieBridge<span style="color:#f92672">.</span>create(<span style="color:#e6db74">&#34;chatgpt&#34;</span>, cookies<span style="color:#f92672">=</span>{<span style="color:#e6db74">&#34;__Secure-next-auth.session-token&#34;</span>: <span style="color:#e6db74">&#34;...&#34;</span>})
+</span></span></code></pre></div><hr>
+<h3 id="-cli-de-consultachat-por-proveedor-sin-tool-calling">💬 CLI de consulta/chat por proveedor (sin tool calling)</h3>
+<p><strong>Hajimi</strong> (Gemini)
+CLI + servidor MCP para Gemini Web. Pide tus cookies <code>__Secure-1PSID</code> y <code>__Secure-1PSIDTS</code> (las sacas de DevTools) o las detecta desde un archivo. Tiene generación de texto, imágenes, análisis de archivos y sesiones persistentes, pero <strong>no tool calling</strong> (no edita archivos por sí solo).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>git clone https://github.com/ssttkkl/hajimi
+</span></span><span style="display:flex;"><span>cd hajimi
+</span></span><span style="display:flex;"><span>uv sync
+</span></span><span style="display:flex;"><span>gemini-web auth setup
+</span></span><span style="display:flex;"><span>gemini-web generate <span style="color:#e6db74">&#34;Hola&#34;</span>
+</span></span></code></pre></div><p><strong>gemini-web-cli</strong> (Gemini)
+CLI + modo OpenAI-compatible + MCP. Permite conversación, generación de imágenes/vídeo/música, Deep Research y Notebook. <strong>No soporta tool call</strong>, así que es para consultas y automatización, no para agente autónomo de código.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Instalación según el repo (Leechael/gemini-web-cli)</span>
+</span></span><span style="display:flex;"><span>gemini-web-cli ask <span style="color:#e6db74">&#34;Explain quantum computing&#34;</span>
+</span></span><span style="display:flex;"><span>gemini-web-cli serve --port <span style="color:#ae81ff">8080</span>   <span style="color:#75715e"># API OpenAI-compatible</span>
+</span></span></code></pre></div><p><strong>ask-gemini</strong> (Gemini)
+CLI ligero que detecta automáticamente cookies de Chrome o Edge. Solo chat, sin herramientas.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pip install ask-gemini
+</span></span><span style="display:flex;"><span>ask-gemini <span style="color:#e6db74">&#34;Hola&#34;</span>
+</span></span><span style="display:flex;"><span>ask-gemini --chat
+</span></span></code></pre></div><p><strong>chatgpt-web-mcp</strong> (ChatGPT)
+Servidor MCP que usa Playwright y cookies de ChatGPT. No es agente autónomo, pero lo puedes conectar a Claude Desktop/Cursor como herramienta de consulta.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>npx -y chatgpt-web-mcp setup        <span style="color:#75715e"># login interactivo</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Luego configuras el MCP server en tu cliente</span>
+</span></span></code></pre></div><p><strong>xse-chat</strong> (ChatGPT)
+CLI de chat vía Puppeteer. Exportas cookies de ChatGPT a <code>cookies/chatgpt.json</code> con una extensión tipo EditThisCookie y luego consultas desde terminal.</p>
+<p><strong>swift-grok</strong> (Grok)
+CLI para Grok que genera credenciales desde cookies de <code>grok.com</code> (<code>grok auth</code>). <strong>Ojo: el CLI requiere macOS 14+</strong>, así que en tu Arch Linux no te sirve directamente. Para Linux, usa Grok a través de <strong>surf-cli</strong>, <strong>mcp-ai-router</strong> o <strong>WebModel Bridge</strong>.</p>
+<hr>
+<h3 id="-multiproveedor-navaja-suiza">📋 Multi‑proveedor &ldquo;navaja suiza&rdquo;</h3>
+<p><strong>@vk007/mikacli</strong>
+No es un agente LLM, pero es una herramienta de automatización que maneja <strong>120 proveedores</strong> (incluyendo LLMs, GitHub, Google, etc.) reutilizando sesiones de navegador guardadas. Puede consultar ChatGPT, Qwen y otros desde la terminal con <code>--json</code> para que agentes lo usen.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>npm install -g @vk007/mikacli
+</span></span><span style="display:flex;"><span>mikacli login --browser
+</span></span><span style="display:flex;"><span>mikacli llm chatgpt text <span style="color:#e6db74">&#34;Write release notes&#34;</span>
+</span></span></code></pre></div><hr>
+<h3 id="-lo-que-debes-tener-en-cuenta-con-todos-estos">⚠️ Lo que debes tener en cuenta con todos estos</h3>
+<ul>
+<li><strong>No son oficiales</strong>: la mayoría extrae cookies o automatiza la web, lo que puede violar los Términos de Servicio del proveedor y romperse cuando cambien la interfaz.</li>
+<li><strong>Seguridad de las cookies</strong>: si una herramienta te pide tus cookies de sesión, trátalas como contraseñas. Usa una cuenta que no sea crítica y revisa que el paquete sea el correcto antes de instalarlo.</li>
+<li><strong>Caducidad</strong>: las cookies de ChatGPT suelen durar 30–90 días; las de Claude y Gemini, menos. Cuando falle la autenticación, tendrás que volver a hacer el login.</li>
+<li><strong>Tool calling real</strong>: si lo que buscas es que el agente <strong>edite archivos y ejecute comandos</strong> (como GemCLI), las opciones más directas de esta lista son <strong>ClaudeCode-Next</strong> y <strong>Dulus</strong>. El resto son más bien puentes para consultar modelos o para que otros agentes los usen como herramienta.</li>
+</ul>
+<p>Sí, existen bastantes proyectos con la misma filosofía que GemCLI: <strong>reutilizar la sesión web que ya tienes iniciada en el navegador</strong> para usarla como agente de terminal, sin pasar por la API oficial ni pagar por token.</p>
+<p>La mecánica suele ser la misma: la herramienta abre un perfil de Chrome/Chromium dedicado (o importa tus cookies) donde ya estás logueado, y desde ahí opera la interfaz web del asistente. Por eso venían funcionando opciones como GemCLI, y por eso hay alternativas equivalentes para otros modelos.</p>
+<h3 id="-para-chatgpt">🧠 Para ChatGPT</h3>
+<ul>
+<li>
+<p><strong>Sengptr</strong>: es un fork mantenido de Sengpt. Corre ChatGPT en un perfil de Chromium dedicado y permite conversaciones interactivas, prompts de una sola vez o <em>pipear</em> archivos directamente desde la terminal.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pip install sengptr
+</span></span><span style="display:flex;"><span>sengptr --login   <span style="color:#75715e"># primera vez, abre Chromium para el login</span>
+</span></span><span style="display:flex;"><span>sengptr <span style="color:#e6db74">&#34;explica este error de compilación&#34;</span>
+</span></span></code></pre></div></li>
+<li>
+<p><strong>WTAgent</strong>: CLI open-source (MIT) que convierte tu cuenta web de ChatGPT en un agente estilo Codex. Lee archivos del proyecto, planifica cambios, edita y ejecuta comandos/tests. También soporta Claude, Gemini, DeepSeek, Grok, Kimi y GLM con el flag <code>--model</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>npm i -g wtagent
+</span></span><span style="display:flex;"><span>wtagent
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># dentro, o con:</span>
+</span></span><span style="display:flex;"><span>wtagent --model claude
+</span></span></code></pre></div></li>
+<li>
+<p><strong>chatferry</strong>: CLI que permite hablar con ChatGPT y Claude usando tus propias sesiones del navegador, sin API keys.</p>
+</li>
+</ul>
+<h3 id="-para-claude">🧠 Para Claude</h3>
+<ul>
+<li>
+<p><strong>claudecode-next</strong>: agente de código no oficial que corre sobre la interfaz web de Claude.ai. Lee/escribe archivos, ejecuta comandos, busca y refactoriza código, y tiene modo agente autónomo. Extrae la sesión de tu navegador una vez y luego funciona completamente desde la CLI.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pip install claudecode-next
+</span></span><span style="display:flex;"><span>claudecode-next --auto-fetch   <span style="color:#75715e"># importa cookies de Chrome</span>
+</span></span><span style="display:flex;"><span>claudecode-next --agent <span style="color:#e6db74">&#34;Refactoriza utils.py para usar pathlib&#34;</span>
+</span></span></code></pre></div></li>
+<li>
+<p><strong>WTAgent</strong> también cubre Claude (<code>wtagent --model claude</code>), como vimos arriba.</p>
+</li>
+</ul>
+<h3 id="-para-gemini-además-de-gemcli">🧠 Para Gemini (además de GemCLI)</h3>
+<ul>
+<li><strong>ask-gemini</strong>: CLI que habla con la interfaz web de Gemini. No necesita API key: detecta automáticamente las cookies de Chrome o Edge, o permite configurarlas manualmente (<code>__Secure-1PSID</code> y <code>__Secure-1PSIDTS</code>). Tiene modo chat interactivo, sesiones con nombre y puede reanudar conversaciones que ya tengas abiertas en la web.
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pip install ask-gemini
+</span></span><span style="display:flex;"><span>ask-gemini <span style="color:#e6db74">&#34;Hola&#34;</span>
+</span></span><span style="display:flex;"><span>ask-gemini --chat   <span style="color:#75715e"># modo interactivo</span>
+</span></span></code></pre></div></li>
+</ul>
+<h3 id="-multi-proveedor-varios-modelos-en-una-sola-herramienta">🌐 Multi-proveedor (varios modelos en una sola herramienta)</h3>
+<ul>
+<li>
+<p><strong>Portal (<code>@kabxx/portal</code>)</strong>: es probablemente la alternativa más directa y completa a GemCLI. Lanza un Chromium real y maneja ChatGPT, Gemini, DeepSeek, Doubao, Grok, GLM, Qwen y Kimi desde una sola TUI. Soporta herramientas locales (comandos, parches de archivos, imágenes), login persistente y ejecución <em>headless</em> con <code>portal exec</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>npm install --global @kabxx/portal@latest
+</span></span><span style="display:flex;"><span>portal
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># dentro:</span>
+</span></span><span style="display:flex;"><span>/thread agent chatgpt
+</span></span></code></pre></div><p>O para una tarea puntual:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>portal exec --provider chatgpt <span style="color:#e6db74">&#34;Resume este repositorio&#34;</span>
+</span></span></code></pre></div></li>
+<li>
+<p><strong>OpenClaw Zero Token</strong>: fork de OpenClaw centrado en eliminar el coste de tokens. Te logueas una vez en el navegador y luego llama a ChatGPT, Claude, Gemini, DeepSeek, Qwen, GLM, Manus y otros a través de una puerta de enlace unificada.</p>
+</li>
+</ul>
+<h3 id="-lo-que-debes-tener-en-cuenta-antes-de-probar">⚠️ Lo que debes tener en cuenta antes de probar</h3>
+<p>Este tipo de herramientas <strong>no son oficiales</strong>. En la mayoría de los casos sus propios autores advierten que pueden violar los Términos de Servicio del proveedor y que pueden dejar de funcionar en cualquier momento si cambian la web o los mecanismos de autenticación.</p>
+<p>También hay un riesgo de seguridad: para funcionar necesitan acceso a tus cookies de sesión, y algunas herramientas piden permisos amplios sobre el navegador. Si vas a probarlas, conviene hacerlo con una cuenta que no sea crítica y revisar qué hace exactamente el binario o el paquete antes de darle acceso.</p>
+<p>Dicho esto, <strong>Portal</strong> es la que más se parece a lo que ya te gustó de GemCLI: una sola interfaz, varios modelos y herramientas de agente reales sin API key. Si quieres probar otra, empezaría por ahí.</p>
 
 </div>
 
