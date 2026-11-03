@@ -31,7 +31,7 @@ GitHub&#43;1
 Antigravity permite ejecutar tareas de programación y utilizar herramientas desde la terminal, con un plan de $0 y cuotas limitadas.">
 	<meta itemprop="datePublished" content="2026-10-28T17:59:54-03:00">
 	<meta itemprop="dateModified" content="2026-10-28T17:59:54-03:00">
-	<meta itemprop="wordCount" content="4490">
+	<meta itemprop="wordCount" content="5232">
 	<meta itemprop="keywords" content="Ai">
   
 	<meta name="twitter:card" content="summary">
@@ -854,6 +854,75 @@ No es un agente LLM, pero es una herramienta de automatización que maneja <stro
 <p>Este tipo de herramientas <strong>no son oficiales</strong>. En la mayoría de los casos sus propios autores advierten que pueden violar los Términos de Servicio del proveedor y que pueden dejar de funcionar en cualquier momento si cambian la web o los mecanismos de autenticación.</p>
 <p>También hay un riesgo de seguridad: para funcionar necesitan acceso a tus cookies de sesión, y algunas herramientas piden permisos amplios sobre el navegador. Si vas a probarlas, conviene hacerlo con una cuenta que no sea crítica y revisar qué hace exactamente el binario o el paquete antes de darle acceso.</p>
 <p>Dicho esto, <strong>Portal</strong> es la que más se parece a lo que ya te gustó de GemCLI: una sola interfaz, varios modelos y herramientas de agente reales sin API key. Si quieres probar otra, empezaría por ahí.</p>
+<p>Exacto, SendGPTR es solo un puente de chat: te permite hablar con el modelo a través de tu sesión web, pero no tiene la capacidad de <strong>actuar</strong> sobre tu sistema. Para que un modelo web (como ChatGPT o Gemini) tome el control de tu PC, necesitas una capa adicional que le proporcione &ldquo;herramientas&rdquo; (tool calling) para leer archivos, escribir código y ejecutar comandos en tu terminal.</p>
+<p>La buena noticia es que existen varias herramientas que hacen exactamente eso, usando tu sesión del navegador como backend. Aquí tienes las opciones más directas, ordenadas de la más sencilla a la más potente.</p>
+<h3 id="-portal-la-opción-más-directa-y-completa">🥇 Portal: la opción más directa y completa</h3>
+<p><strong>Portal</strong> es probablemente la herramienta que mejor se adapta a lo que buscas. Lanza un Chromium real, se conecta a la web de ChatGPT (o Gemini, DeepSeek, etc.) usando tu sesión ya iniciada, y le otorga <strong>herramientas locales</strong> para que el modelo pueda ejecutar comandos, aplicar parches a archivos y trabajar de forma autónoma.</p>
+<p><strong>Instalación:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>npm install --global @kabxx/portal@latest
+</span></span></code></pre></div><p><strong>Uso (modo interactivo):</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>portal
+</span></span></code></pre></div><p>Dentro de la TUI, creas un hilo de agente y le das una tarea:</p>
+<pre tabindex="0"><code>/thread agent chatgpt
+Resume este repositorio e identifica el módulo de mayor riesgo.
+</code></pre><p><strong>Uso (tarea única, sin TUI):</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>portal exec --provider chatgpt <span style="color:#e6db74">&#34;Resume este repositorio.&#34;</span>
+</span></span></code></pre></div><p>Portal soporta ChatGPT, Gemini, DeepSeek, Doubao, Grok, GLM, Qwen y Kimi. Es la opción más &ldquo;todo-terreno&rdquo;.</p>
+<hr>
+<h3 id="-catdesk-chatgpt-web-como-agente-de-código">🥈 CatDesk: ChatGPT Web como agente de código</h3>
+<p><strong>CatDesk</strong> convierte la web de ChatGPT en un agente de codificación completo. Funciona como un <strong>servidor MCP local</strong> que le da a ChatGPT Web las herramientas <code>write</code> y <code>run_command</code> para editar archivos y ejecutar comandos en tu máquina.</p>
+<p><strong>Instalación:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>npm install -g catdesk
+</span></span></code></pre></div><p><strong>Uso:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>catdesk
+</span></span></code></pre></div><p><em>(Requiere una suscripción de ChatGPT Plus o superior para usar la función de &ldquo;Custom Connector&rdquo; que conecta la web con el servidor local)</em>.</p>
+<blockquote>
+<p>⚠️ <strong>Advertencia importante</strong>: El propio autor de CatDesk recomienda encarecidamente ejecutarlo dentro de una <strong>VM o contenedor</strong> (como DevContainer), porque el agente tiene permisos para borrar discos o causar daños inesperados.</p>
+</blockquote>
+<hr>
+<h3 id="-forge-agent-agente-autónomo-multi-modelo">🥉 Forge Agent: agente autónomo multi-modelo</h3>
+<p><strong>Forge Agent</strong> es un agente de codificación autónomo que funciona con <strong>DeepSeek, ChatGPT o Gemini</strong> a través de la automatización del navegador. No necesita API key y está diseñado para leer archivos, escribir código, ejecutar comandos y <strong>repetir el bucle hasta terminar la tarea</strong>.</p>
+<p><strong>Instalación:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>npm install -g forge-agent
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># o el alias corto:</span>
+</span></span><span style="display:flex;"><span>npm install -g @omar-azam/forge-agent
+</span></span></code></pre></div><p><strong>Uso:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Tarea única</span>
+</span></span><span style="display:flex;"><span>forge <span style="color:#e6db74">&#34;construye una API REST con Express y JWT&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Modo interactivo (múltiples tareas con contexto compartido)</span>
+</span></span><span style="display:flex;"><span>forge --interactive
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Especificar modelo</span>
+</span></span><span style="display:flex;"><span>forge --model<span style="color:#f92672">=</span>gemini <span style="color:#e6db74">&#34;escribe tests unitarios para auth.js&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Ver el plan antes de ejecutar</span>
+</span></span><span style="display:flex;"><span>forge --plan <span style="color:#e6db74">&#34;migra esta app a TypeScript&#34;</span>
+</span></span></code></pre></div><p>Forge incluye <strong>37+ herramientas integradas</strong> (I/O de archivos, shell, git, búsqueda, tests, paquetes, etc.) y perfiles de agente preconfigurados (backend, frontend, data-science, devops).</p>
+<hr>
+<h3 id="-otras-alternativas-específicas">🔧 Otras alternativas específicas</h3>
+<p><strong>Dulus (para Gemini)</strong>
+Si prefieres usar Gemini en lugar de ChatGPT, Dulus es un runtime de agente que captura tu sesión web (incluso la anónima, sin login) y la convierte en un agente con tool calling: lee y edita archivos, ejecuta Bash, busca en tu repo y hace commits.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pip install -U dulus
+</span></span><span style="display:flex;"><span>dulus
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># o con el instalador:</span>
+</span></span><span style="display:flex;"><span>curl -fsSL https://raw.githubusercontent.com/KevRojo/Dulus/main/install.sh | bash
+</span></span></code></pre></div><p><strong>chatgpt-browser-agent</strong>
+Es un daemon de navegador persistente + servidor MCP + bucle de agente. Permite que ChatGPT explore tu código con comandos de shell (<code>===RUN===</code>) y proponga ediciones de archivos (<code>===FILE===</code>).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>git clone https://github.com/abdallhMoukdad/chatgpt-browser-agent.git
+</span></span><span style="display:flex;"><span>cd chatgpt-browser-agent
+</span></span><span style="display:flex;"><span>npm install
+</span></span><span style="display:flex;"><span>node chatgpt.js --login   <span style="color:#75715e"># login único</span>
+</span></span><span style="display:flex;"><span>node agent.js             <span style="color:#75715e"># bucle de agente autónomo</span>
+</span></span></code></pre></div><hr>
+<h3 id="-advertencia-de-seguridad-crucial">⚠️ Advertencia de seguridad crucial</h3>
+<p>Todas estas herramientas otorgan a un modelo de IA <strong>control directo sobre tu sistema de archivos y tu shell</strong>. Esto significa que, en teoría, el modelo podría ejecutar comandos destructivos por error o por una alucinación.</p>
+<ul>
+<li><strong>Nunca las ejecutes en tu sistema principal sin aislamiento.</strong> La recomendación universal es usar una <strong>máquina virtual (VM)</strong>, un <strong>contenedor (Docker/DevContainer)</strong> o, como mínimo, un <strong>directorio de proyecto aislado</strong> y sin acceso a credenciales sensibles.</li>
+<li><strong>Revisa siempre los comandos</strong> antes de que el agente los ejecute, si la herramienta lo permite.</li>
+<li><strong>No les des acceso a tus claves SSH, tokens de AWS o archivos de configuración críticos.</strong></li>
+</ul>
+<p>En resumen: <strong>Portal</strong> es la opción más equilibrada para empezar (soporta varios modelos y tiene una TUI clara), mientras que <strong>CatDesk</strong> y <strong>Forge Agent</strong> son más específicas para tareas de codificación autónoma. Cualquiera de ellas te dará el control real sobre tu PC que SendGPTR no puede ofrecerte.</p>
 
 </div>
 
