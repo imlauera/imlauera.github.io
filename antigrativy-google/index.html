@@ -31,7 +31,7 @@ GitHub&#43;1
 Antigravity permite ejecutar tareas de programación y utilizar herramientas desde la terminal, con un plan de $0 y cuotas limitadas.">
 	<meta itemprop="datePublished" content="2026-10-28T17:59:54-03:00">
 	<meta itemprop="dateModified" content="2026-10-28T17:59:54-03:00">
-	<meta itemprop="wordCount" content="2320">
+	<meta itemprop="wordCount" content="2923">
 	<meta itemprop="keywords" content="Ai">
   
 	<meta name="twitter:card" content="summary">
@@ -661,6 +661,41 @@ gpt-oss-120b-medium        GPT-OSS 120B (Medium)
 <li><strong>OB-1</strong> → cuando Freebuff esté ocupado</li>
 </ol>
 <p>¿Guardo esto en <code>~/agentes-ia-status.md</code>?</p>
+<p>Opción adicional que no estaba en la lista:</p>
+<p>OmniRoute: gateway MIT con un solo endpoint que soporta 22+ proveedores vía cookies web (ChatGPT, Claude, Gemini, DeepSeek, Grok, Copilot, HuggingChat, etc.) y 375+ proveedores en total. Funciona como proxy compatible con OpenAI, así que se integra con Claude Code, Codex, Cursor, Cline, Copilot, etc. Comprime tokens con RTK+Caveman (ahorro 15-95%).  Es probablemente la opción más versátil si ya usás algún agente de código y querés redirigirlo a tu cuenta web.
+Sobre ask-gemini: no logré confirmarlo en PyPI ni GitHub con ese nombre exacto. Lo que sí existe y hace lo mismo es gemini-web-cli (escrito en Go), que importa las cookies __Secure-1PSID y __Secure-1PSIDTS, tiene modo interactivo, lista chats y hasta expone un servidor REST compatible con OpenAI + endpoint MCP.</p>
+<p>Riesgo concreto que vale la pena mencionar: estos proyectos rompen cada vez que el proveedor cambia el HTML, los nombres de cookies o la estructura de la página. Sengpt original murió por eso. Sengptr y WTAgent son forks mantenidos precisamente para resolverlo, pero no hay garantía de que sigan funcionando. Usá siempre una cuenta secundaria.</p>
+<p>Sí, existe un “hack” equivalente a GemCLI pero para <strong>Brave Leo</strong>: se llama <strong><code>@eliyantosarage/leo-cli</code></strong> y lleva la IA de Brave (la que ves en <code>chrome://leo-ai</code>) a la terminal usando automatización del navegador vía Playwright + CDP.</p>
+<h3 id="-leo-cli-brave-leo-en-la-terminal">🦁 Leo CLI (Brave Leo en la terminal)</h3>
+<p><strong>Instalación</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>npm i -g @eliyantosarage/leo-cli
+</span></span><span style="display:flex;"><span>leo doctor          <span style="color:#75715e"># verifica que Brave, CDP y Playwright estén OK</span>
+</span></span></code></pre></div><p><strong>Requisitos</strong>: Node.js ≥18 y <strong>Brave Browser</strong> instalado (Stable o Beta).</p>
+<p><strong>Autenticación (una sola vez)</strong>
+La primera vez que ejecutes <code>leo</code> o <code>leo ask</code>, la herramienta abrirá Brave para capturar tu sesión de Leo y guardará las credenciales en <code>~/.leo-cli/cache/leo-auth.json</code>. Después ya puedes usarlo sin tener Brave abierto:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>leo ask --transport direct <span style="color:#e6db74">&#34;tu pregunta&#34;</span>
+</span></span></code></pre></div><p>O forzar una captura fresca por prompt (abre Brave un segundo y lo cierra):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>leo ask --transport mitm <span style="color:#e6db74">&#34;tu pregunta&#34;</span>
+</span></span></code></pre></div><p><strong>Uso como agente (lo importante)</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>leo agent <span style="color:#e6db74">&#34;revisa este proyecto y sugiere mejoras&#34;</span>
+</span></span></code></pre></div><p>El modo <code>agent</code> tiene <strong>tool calling estilo Claude Code</strong>: leer/escribir archivos, ejecutar comandos de shell, buscar código (Grep/Glob), fetch de URLs, gestión de tareas y subagentes.</p>
+<p><strong>Chat interactivo</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>leo chat
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># o con TUI experimental:</span>
+</span></span><span style="display:flex;"><span>leo chat --tui
+</span></span></code></pre></div><p><strong>Ver modelos disponibles</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>leo models
+</span></span></code></pre></div><p>Soporta varios modelos de Leo (automático, Qwen, Mistral, DeepSeek, etc.).</p>
+<h3 id="-cómo-funciona-el-truco">🧠 Cómo funciona el “truco”</h3>
+<p>Leo CLI no usa una API key: <strong>automatiza el navegador</strong>. Escribe tu prompt en el input de Leo (<code>data-testid=&quot;leo-input&quot;</code>), pulsa el botón de enviar y espera a que el DOM se estabilice para extraer la respuesta final. Por eso necesita Brave instalado y una sesión de Leo activa (aunque sea la capa gratuita).</p>
+<h3 id="-alternativas-que-quizás-veas-por-ahí">⚠️ Alternativas que quizás veas por ahí</h3>
+<ul>
+<li><strong><code>tgpt</code></strong>: es más simple y también lista “Brave Leo” como proveedor, pero <strong>no es un agente</strong>: no tiene tool calling ni puede editar archivos. Es solo chat.</li>
+<li><strong><code>@brave/bravebot</code></strong>: es un agente oficial de Brave, pero <strong>no es un hack de sesión web</strong>; se instala como un agente general y probablemente requiera su propia configuración/API, no reutiliza tu sesión de Leo del navegador.</li>
+</ul>
+<h3 id="-recomendación-1">🎯 Recomendación</h3>
+<p>Si lo que te gustó de GemCLI fue <strong>reutilizar tu sesión web y tener herramientas de agente</strong>, <strong><code>leo-cli</code> es la opción directa para Brave</strong>. Instálalo, ejecuta <code>leo doctor</code> para confirmar que todo está en orden, y prueba primero con <code>leo ask</code> antes de lanzarte al modo <code>leo agent</code>.</p>
+<p>Eso sí: como todo este tipo de herramientas, <strong>no es oficial</strong> y puede dejar de funcionar si Brave cambia la interfaz de Leo. Úsalo con una cuenta que no sea crítica y revisa que el paquete sea el correcto (<code>@eliyantosarage/leo-cli</code>) antes de instalarlo.</p>
 
 </div>
 
