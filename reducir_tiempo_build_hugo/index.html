@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Cómo bajé el build de Hugo de 50 s a 24 s · Imlauer</title>
+  <title>Cómo bajé el build de Hugo a la mitad (y recuperé los tags) · Imlauer</title>
   <meta name="description" content="imlauerandres [at] gmail.com">
   <link rel="canonical" href="https://imlauera.github.io/reducir_tiempo_build_hugo/">
   <link rel="alternate" type="application/rss+xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
@@ -17,35 +17,32 @@
   <main>
     
 <article class="post">
-  <h1>Cómo bajé el build de Hugo de 50 s a 24 s</h1>
+  <h1>Cómo bajé el build de Hugo a la mitad (y recuperé los tags)</h1>
   <p class="meta">
     <time datetime="2026-11-11">2026-11-11</time>
-    <span class="tags"> · hugo, blog, performance</span>
+    <span class="tags"> · <a href="/tags/hugo/">hugo</a>, <a href="/tags/blog/">blog</a>, <a href="/tags/performance/">performance</a></span>
   </p>
   <div class="content">
-    <p>Mi blog tiene 1194 archivos Markdown, 20 MB de contenido y 597 tags. <code>hugo</code>
-tardaba ~50 s en esta PC. Con tres cambios bajó a ~24 s (52% menos).</p>
+    <p>Mi blog tiene 1194 archivos Markdown, 20 MB de contenido y 595 tags. <code>hugo</code>
+tardaba ~50 s. Ahora el build usa ~27 s de CPU y, con el navegador cerrado,
+termina en ~25–30 s.</p>
 <h2 id="medir-antes-de-tocar">Medir antes de tocar</h2>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>time hugo --quiet --renderToMemory
 </span></span><span style="display:flex;"><span>hugo --renderToMemory --templateMetrics
 </span></span></code></pre></div><p><code>--renderToMemory</code> compila sin escribir <code>public/</code>. <code>--templateMetrics</code> muestra
-qué template consume el tiempo.</p>
-<p>El perfil daba:</p>
+qué template consume el tiempo. Ojo con <code>time</code>: si <code>real</code> es mucho mayor que
+<code>user+sys</code>, el problema es la carga de la máquina (navegador, etc.), no Hugo.</p>
+<h2 id="qué-encontré">Qué encontré</h2>
 <ul>
-<li><code>single.html</code>: 61 s acumulados (1087 páginas).</li>
-<li><code>rss.xml</code>: 25 s acumulados, con un feed de <strong>13 s</strong>.</li>
-<li><code>list.html</code>: 10 s (597 páginas de tag).</li>
+<li><code>rss.xml</code>: 25 s acumulados, con un feed de <strong>13 s</strong>. El RSS por defecto recorre
+todos los posts y calcula <code>.Summary</code> de cada uno.</li>
+<li><code>list.html</code>: 10 s por las 595 páginas de tag.</li>
+<li><code>single.html</code>: el resto, sobre todo por 4 posts gigantes (2.4 MB, 2.3 MB,
+1.1 MB, 0.9 MB).</li>
 </ul>
-<h2 id="1-desactivar-páginas-de-tag">1. Desactivar páginas de tag</h2>
-<p>Los tags se usaban solo como etiquetas. Generar 597 páginas <code>/tags/...</code> y sus
-feeds costaba ~35 s. En <code>config.toml</code>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-toml" data-lang="toml"><span style="display:flex;"><span><span style="color:#a6e22e">disableKinds</span> = [<span style="color:#e6db74">&#34;taxonomy&#34;</span>, <span style="color:#e6db74">&#34;term&#34;</span>]
-</span></span></code></pre></div><p>Y en el template del post, los tags quedan como texto:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-go-html-template" data-lang="go-html-template"><span style="display:flex;"><span><span style="color:#75715e">{{</span> <span style="color:#66d9ef">with</span> <span style="color:#a6e22e">.Params.tags</span> <span style="color:#75715e">}}</span>&lt;<span style="color:#f92672">span</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;tags&#34;</span>&gt; · <span style="color:#75715e">{{</span> <span style="color:#a6e22e">delimit</span> <span style="color:#a6e22e">.</span> <span style="color:#e6db74">&#34;, &#34;</span> <span style="color:#75715e">}}</span>&lt;/<span style="color:#f92672">span</span>&gt;<span style="color:#75715e">{{</span> <span style="color:#66d9ef">end</span> <span style="color:#75715e">}}</span>
-</span></span></code></pre></div><h2 id="2-rss-liviano">2. RSS liviano</h2>
-<p>El RSS por defecto recorre <strong>todos</strong> los posts y calcula <code>.Summary</code> de cada uno.
-Con 1093 páginas eso eran ~11 s. Reemplacé <code>layouts/_default/rss.xml</code> por uno
-que lista solo los últimos 20, sin contenido:</p>
+<h2 id="1-rss-liviano-sin-contenido">1. RSS liviano (sin contenido)</h2>
+<p>Reemplacé <code>layouts/_default/rss.xml</code> por uno que lista solo los últimos 20,
+sin <code>.Summary</code>:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-xml" data-lang="xml"><span style="display:flex;"><span>{{ range first 20 .Pages }}
 </span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;item&gt;</span>
 </span></span><span style="display:flex;"><span>  <span style="color:#f92672">&lt;title&gt;</span>{{ .Title }}<span style="color:#f92672">&lt;/title&gt;</span>
@@ -54,19 +51,38 @@ que lista solo los últimos 20, sin contenido:</p>
 </span></span><span style="display:flex;"><span>  <span style="color:#f92672">&lt;guid&gt;</span>{{ .Permalink }}<span style="color:#f92672">&lt;/guid&gt;</span>
 </span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;/item&gt;</span>
 </span></span><span style="display:flex;"><span>{{ end }}
-</span></span></code></pre></div><h2 id="3-theme-minimalista">3. Theme minimalista</h2>
+</span></span></code></pre></div><p>También desactivé el RSS por tag en <code>config.toml</code>, que generaba 595 feeds
+inútiles:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-toml" data-lang="toml"><span style="display:flex;"><span>[<span style="color:#a6e22e">outputs</span>]
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">home</span> = [<span style="color:#e6db74">&#34;HTML&#34;</span>, <span style="color:#e6db74">&#34;RSS&#34;</span>]
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">section</span> = [<span style="color:#e6db74">&#34;HTML&#34;</span>, <span style="color:#e6db74">&#34;RSS&#34;</span>]
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">taxonomy</span> = [<span style="color:#e6db74">&#34;HTML&#34;</span>]
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">term</span> = [<span style="color:#e6db74">&#34;HTML&#34;</span>]
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">page</span> = [<span style="color:#e6db74">&#34;HTML&#34;</span>]
+</span></span></code></pre></div><h2 id="2-theme-minimalista">2. Theme minimalista</h2>
 <p>Saqué Bulma y el navbar con imagen. Ahora hay un <code>baseof.html</code> de una columna,
-un <code>index.html</code> con lista y paginación, y un CSS de ~2 KB. Además bajé
-<code>pagination.pagerSize</code> de 250 a 50.</p>
+un <code>index.html</code> con lista y paginación, y un CSS de ~2 KB. El ancho es 100%,
+la letra es un poco más grande y el resaltado de código sigue con Chroma/Monokai.</p>
+<p>La paginación quedó en 250 posts por página (<code>pagination.pagerSize = 250</code>),
+o sea 5 páginas.</p>
+<h2 id="3-tags-páginas-sí-feeds-no">3. Tags: páginas sí, feeds no</h2>
+<p>Los tags son útiles, así que las páginas <code>/tags/...</code> siguen existiendo. Lo que
+saqué es el RSS de cada tag. En cada post los tags enlazan a su página:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-go-html-template" data-lang="go-html-template"><span style="display:flex;"><span><span style="color:#75715e">{{</span> <span style="color:#66d9ef">with</span> <span style="color:#a6e22e">.Params.tags</span> <span style="color:#75715e">}}</span>
+</span></span><span style="display:flex;"><span>  &lt;<span style="color:#f92672">span</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;tags&#34;</span>&gt; · <span style="color:#75715e">{{</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">$i</span><span style="color:#f92672">,</span> <span style="color:#a6e22e">$tag</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">.</span> <span style="color:#75715e">}}{{</span> <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">$i</span> <span style="color:#75715e">}}</span>, <span style="color:#75715e">{{</span> <span style="color:#66d9ef">end</span> <span style="color:#75715e">}}</span>&lt;<span style="color:#f92672">a</span> <span style="color:#a6e22e">href</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/tags/</span><span style="color:#75715e">{{</span> <span style="color:#a6e22e">$tag</span> <span style="color:#f92672">|</span> <span style="color:#a6e22e">urlize</span> <span style="color:#75715e">}}</span><span style="color:#e6db74">/&#34;</span>&gt;<span style="color:#75715e">{{</span> <span style="color:#a6e22e">$tag</span> <span style="color:#75715e">}}</span>&lt;/<span style="color:#f92672">a</span>&gt;<span style="color:#75715e">{{</span> <span style="color:#66d9ef">end</span> <span style="color:#75715e">}}</span>&lt;/<span style="color:#f92672">span</span>&gt;
+</span></span><span style="display:flex;"><span><span style="color:#75715e">{{</span> <span style="color:#66d9ef">end</span> <span style="color:#75715e">}}</span>
+</span></span></code></pre></div><p>Uso <code>.Params.tags</code> + <code>urlize</code> en vez de <code>.GetTerms</code>: <code>.GetTerms</code> obligaba a
+resolver las taxonomías en cada página y casi duplicaba el tiempo de
+<code>single.html</code>.</p>
 <h2 id="resultado">Resultado</h2>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>antes:   49.5 s
-</span></span><span style="display:flex;"><span>después: 23.7 s   (-52%)
-</span></span></code></pre></div><p>El resaltado de código en los bloques con lenguaje (bash, python, etc.) sigue
-funcionando con Chroma/Monokai.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>CPU del build:   ~27 s (user+sys)
+</span></span><span style="display:flex;"><span>con navegador cerrado: ~25–30 s
+</span></span><span style="display:flex;"><span>con Chromium/Falkon abiertos: 50 s o más
+</span></span></code></pre></div><p>La diferencia entre <code>real</code> y <code>user+sys</code> es contención de CPU. Si el build se
+siente lento, cerrá el navegador antes de correr <code>add_commit_push.sh</code>.</p>
 <h2 id="si-querés-exprimirlo-más">Si querés exprimirlo más</h2>
-<p>Quedan 4 posts gigantes (2.4 MB, 2.3 MB, 1.1 MB, 0.9 MB) que dominan el
-<code>single.html</code>. Si no los necesitás como páginas, movelos fuera de <code>content/</code>
-o marcalos con:</p>
+<p>Los 4 posts gigantes siguen dominando <code>single.html</code>. Si no los necesitás como
+páginas, movelos fuera de <code>content/</code> o marcalos con:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">_build</span>:
 </span></span><span style="display:flex;"><span>  <span style="color:#f92672">render</span>: <span style="color:#ae81ff">never</span>
 </span></span><span style="display:flex;"><span>  <span style="color:#f92672">list</span>: <span style="color:#ae81ff">never</span>
