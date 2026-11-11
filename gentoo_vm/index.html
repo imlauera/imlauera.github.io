@@ -1,147 +1,29 @@
 <!DOCTYPE html>
 <html lang="es">
-
-
-
-
-
 <head>
-  <meta property="og:url" content="https://imlauera.github.io/gentoo_vm/">
-	<meta property="og:site_name" content="Imlauer">
-	<meta property="og:title" content="Gentoo VM desde la TTY.">
-	<meta property="og:description" content="Esto fue un fail porque mi netbook g5 es muy vieja y me tiraba un kernel panic. Lo que hice fue reinstalar archlinux y dejar una partición libre para instalar gentoo o kiss linux o cualquier otra distro que quiera instalar usando un entorno chroot :) es una mejor solución porque al no ser una máquina virtual puedo usar todo el CPU.
-Decime como bootearlo dame los comandos no me tires un texto tan largo. [I] esotericwarfare@arch ~&gt; wget https://mimas.co.ext.planetunix.net/pub/gentoo/releases/amd64/autobuilds/current-di-amd64-cloudinit/di-amd64-cloudinit-20251228T163057Z.qcow2 --2025-12-30 11:54:22-- https://mimas.co.ext.planetunix.net/pub/gentoo/releases/amd64/autobuilds/current-di-amd64-cloudinit/di-amd64-cloudinit-20251228T163057Z.qcow2 Loaded CA certificate &#39;/etc/ssl/certs/ca-certificates.crt&#39; Resolving mimas.co.ext.planetunix.net (mimas.co.ext.planetunix.net)... 38.180.182.84, 2a02:c6c1:151:202:0:1:0:10 Connecting to mimas.co.ext.planetunix.net (mimas.co.ext.planetunix.net)|38.180.182.84|:443... connected. HTTP request sent, awaiting response... 200 OK Length: 1398931456 (1.3G) [text/plain] Saving to: ‘di-amd64-cloudinit-20251228T163057Z.qcow2’ di-amd64-cloudinit-20251228T163057Z.qcow2 100%[======================================================================================================&gt;] 1.30G 4.88MB/s in 3m 1s Last-modified header invalid -- time-stamp ignored. 2025-12-30 11:57:24 (7.37 MB/s) - ‘di-amd64-cloudinit-20251228T163057Z.qcow2’ saved [1398931456/1398931456] # Crear cloud-init ISO cat &gt; user-data &lt;&lt; EOF #cloud-config users: - name: gentoo sudo: ALL=(ALL) NOPASSWD:ALL ssh_authorized_keys: - $(cat ~/.ssh/id_rsa.pub) chpasswd: list: | gentoo:gentoo expire: false ssh_pwauth: true EOF echo &#34;instance-id: vm1&#34; &gt; meta-data genisoimage -output cloud-init.iso -volid cidata -joliet -rock user-data meta-data # Bootear la VM qemu-system-x86_64 \ -enable-kvm \ -m 2048 \ -cpu host \ -smp 2 \ -drive file=di-amd64-cloudinit-20251228T163057Z.qcow2,format=qcow2,if=virtio \ -cdrom cloud-init.iso \ -net nic,model=virtio \ -net user,hostfwd=tcp::2222-:22 \ -nographic # Conectar por SSH (desde otra terminal) ssh -p 2222 gentoo@localhost Si no tenés genisoimage: pacman -S cdrtools">
-	<meta property="og:locale" content="es_es">
-	<meta property="og:type" content="article">
-		<meta property="article:published_time" content="2025-12-30T12:00:30-03:00">
-		<meta property="article:modified_time" content="2025-12-30T12:00:30-03:00">
-		<meta property="article:tag" content="Vm">
-
-  
-	<meta itemprop="name" content="Gentoo VM desde la TTY.">
-	<meta itemprop="description" content="Esto fue un fail porque mi netbook g5 es muy vieja y me tiraba un kernel panic. Lo que hice fue reinstalar archlinux y dejar una partición libre para instalar gentoo o kiss linux o cualquier otra distro que quiera instalar usando un entorno chroot :) es una mejor solución porque al no ser una máquina virtual puedo usar todo el CPU.
-Decime como bootearlo dame los comandos no me tires un texto tan largo. [I] esotericwarfare@arch ~&gt; wget https://mimas.co.ext.planetunix.net/pub/gentoo/releases/amd64/autobuilds/current-di-amd64-cloudinit/di-amd64-cloudinit-20251228T163057Z.qcow2 --2025-12-30 11:54:22-- https://mimas.co.ext.planetunix.net/pub/gentoo/releases/amd64/autobuilds/current-di-amd64-cloudinit/di-amd64-cloudinit-20251228T163057Z.qcow2 Loaded CA certificate &#39;/etc/ssl/certs/ca-certificates.crt&#39; Resolving mimas.co.ext.planetunix.net (mimas.co.ext.planetunix.net)... 38.180.182.84, 2a02:c6c1:151:202:0:1:0:10 Connecting to mimas.co.ext.planetunix.net (mimas.co.ext.planetunix.net)|38.180.182.84|:443... connected. HTTP request sent, awaiting response... 200 OK Length: 1398931456 (1.3G) [text/plain] Saving to: ‘di-amd64-cloudinit-20251228T163057Z.qcow2’ di-amd64-cloudinit-20251228T163057Z.qcow2 100%[======================================================================================================&gt;] 1.30G 4.88MB/s in 3m 1s Last-modified header invalid -- time-stamp ignored. 2025-12-30 11:57:24 (7.37 MB/s) - ‘di-amd64-cloudinit-20251228T163057Z.qcow2’ saved [1398931456/1398931456] # Crear cloud-init ISO cat &gt; user-data &lt;&lt; EOF #cloud-config users: - name: gentoo sudo: ALL=(ALL) NOPASSWD:ALL ssh_authorized_keys: - $(cat ~/.ssh/id_rsa.pub) chpasswd: list: | gentoo:gentoo expire: false ssh_pwauth: true EOF echo &#34;instance-id: vm1&#34; &gt; meta-data genisoimage -output cloud-init.iso -volid cidata -joliet -rock user-data meta-data # Bootear la VM qemu-system-x86_64 \ -enable-kvm \ -m 2048 \ -cpu host \ -smp 2 \ -drive file=di-amd64-cloudinit-20251228T163057Z.qcow2,format=qcow2,if=virtio \ -cdrom cloud-init.iso \ -net nic,model=virtio \ -net user,hostfwd=tcp::2222-:22 \ -nographic # Conectar por SSH (desde otra terminal) ssh -p 2222 gentoo@localhost Si no tenés genisoimage: pacman -S cdrtools">
-	<meta itemprop="datePublished" content="2025-12-30T12:00:30-03:00">
-	<meta itemprop="dateModified" content="2025-12-30T12:00:30-03:00">
-	<meta itemprop="wordCount" content="610">
-	<meta itemprop="keywords" content="Vm">
-  
-	<meta name="twitter:card" content="summary">
-	<meta name="twitter:title" content="Gentoo VM desde la TTY.">
-	<meta name="twitter:description" content="Esto fue un fail porque mi netbook g5 es muy vieja y me tiraba un kernel panic. Lo que hice fue reinstalar archlinux y dejar una partición libre para instalar gentoo o kiss linux o cualquier otra distro que quiera instalar usando un entorno chroot :) es una mejor solución porque al no ser una máquina virtual puedo usar todo el CPU.
-Decime como bootearlo dame los comandos no me tires un texto tan largo. [I] esotericwarfare@arch ~&gt; wget https://mimas.co.ext.planetunix.net/pub/gentoo/releases/amd64/autobuilds/current-di-amd64-cloudinit/di-amd64-cloudinit-20251228T163057Z.qcow2 --2025-12-30 11:54:22-- https://mimas.co.ext.planetunix.net/pub/gentoo/releases/amd64/autobuilds/current-di-amd64-cloudinit/di-amd64-cloudinit-20251228T163057Z.qcow2 Loaded CA certificate &#39;/etc/ssl/certs/ca-certificates.crt&#39; Resolving mimas.co.ext.planetunix.net (mimas.co.ext.planetunix.net)... 38.180.182.84, 2a02:c6c1:151:202:0:1:0:10 Connecting to mimas.co.ext.planetunix.net (mimas.co.ext.planetunix.net)|38.180.182.84|:443... connected. HTTP request sent, awaiting response... 200 OK Length: 1398931456 (1.3G) [text/plain] Saving to: ‘di-amd64-cloudinit-20251228T163057Z.qcow2’ di-amd64-cloudinit-20251228T163057Z.qcow2 100%[======================================================================================================&gt;] 1.30G 4.88MB/s in 3m 1s Last-modified header invalid -- time-stamp ignored. 2025-12-30 11:57:24 (7.37 MB/s) - ‘di-amd64-cloudinit-20251228T163057Z.qcow2’ saved [1398931456/1398931456] # Crear cloud-init ISO cat &gt; user-data &lt;&lt; EOF #cloud-config users: - name: gentoo sudo: ALL=(ALL) NOPASSWD:ALL ssh_authorized_keys: - $(cat ~/.ssh/id_rsa.pub) chpasswd: list: | gentoo:gentoo expire: false ssh_pwauth: true EOF echo &#34;instance-id: vm1&#34; &gt; meta-data genisoimage -output cloud-init.iso -volid cidata -joliet -rock user-data meta-data # Bootear la VM qemu-system-x86_64 \ -enable-kvm \ -m 2048 \ -cpu host \ -smp 2 \ -drive file=di-amd64-cloudinit-20251228T163057Z.qcow2,format=qcow2,if=virtio \ -cdrom cloud-init.iso \ -net nic,model=virtio \ -net user,hostfwd=tcp::2222-:22 \ -nographic # Conectar por SSH (desde otra terminal) ssh -p 2222 gentoo@localhost Si no tenés genisoimage: pacman -S cdrtools">
-
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>
-    
-    Gentoo VM desde la TTY.
-    
-  </title>
-  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <title>Gentoo VM desde la TTY. · Imlauer</title>
+  <meta name="description" content="imlauerandres [at] gmail.com">
   <link rel="canonical" href="https://imlauera.github.io/gentoo_vm/">
-  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
-  <meta http-equiv="X-UA-Compatible" content="chrome=1">
-  <meta name="HandheldFriendly" content="True">
-  <meta name="MobileOptimized" content="320">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="referrer" content="no-referrer">
-  <meta name="author" content="Imlauer.">
-  <meta name="description" content="Esto fue un fail porque mi netbook g5 es muy vieja y me tiraba un kernel panic. Lo que hice fue reinstalar archlinux y dejar una partición libre para instalar gentoo o kiss linux o cualquier otra distro que quiera instalar usando un entorno chroot :) es una mejor solución porque al no ser una máquina virtual puedo usar todo el CPU.
-Decime como bootearlo dame los comandos no me tires un texto tan largo. [I] esotericwarfare@arch ~&gt; wget https://mimas.co.ext.planetunix.net/pub/gentoo/releases/amd64/autobuilds/current-di-amd64-cloudinit/di-amd64-cloudinit-20251228T163057Z.qcow2
---2025-12-30 11:54:22--  https://mimas.co.ext.planetunix.net/pub/gentoo/releases/amd64/autobuilds/current-di-amd64-cloudinit/di-amd64-cloudinit-20251228T163057Z.qcow2
-Loaded CA certificate &#39;/etc/ssl/certs/ca-certificates.crt&#39;
-Resolving mimas.co.ext.planetunix.net (mimas.co.ext.planetunix.net)... 38.180.182.84, 2a02:c6c1:151:202:0:1:0:10
-Connecting to mimas.co.ext.planetunix.net (mimas.co.ext.planetunix.net)|38.180.182.84|:443... connected.
-HTTP request sent, awaiting response... 200 OK
-Length: 1398931456 (1.3G) [text/plain]
-Saving to: ‘di-amd64-cloudinit-20251228T163057Z.qcow2’
-di-amd64-cloudinit-20251228T163057Z.qcow2       100%[======================================================================================================&gt;]   1.30G  4.88MB/s    in 3m 1s   
-Last-modified header invalid -- time-stamp ignored.
-2025-12-30 11:57:24 (7.37 MB/s) - ‘di-amd64-cloudinit-20251228T163057Z.qcow2’ saved [1398931456/1398931456]
-
-# Crear cloud-init ISO
-cat &gt; user-data &lt;&lt; EOF
-#cloud-config
-users:
-  - name: gentoo
-    sudo: ALL=(ALL) NOPASSWD:ALL
-    ssh_authorized_keys:
-      - $(cat ~/.ssh/id_rsa.pub)
-chpasswd:
-  list: |
-    gentoo:gentoo
-  expire: false
-ssh_pwauth: true
-EOF
-
-echo &#34;instance-id: vm1&#34; &gt; meta-data
-
-genisoimage -output cloud-init.iso -volid cidata -joliet -rock user-data meta-data
-
-# Bootear la VM
-qemu-system-x86_64 \
-  -enable-kvm \
-  -m 2048 \
-  -cpu host \
-  -smp 2 \
-  -drive file=di-amd64-cloudinit-20251228T163057Z.qcow2,format=qcow2,if=virtio \
-  -cdrom cloud-init.iso \
-  -net nic,model=virtio \
-  -net user,hostfwd=tcp::2222-:22 \
-  -nographic
-
-# Conectar por SSH (desde otra terminal)
-ssh -p 2222 gentoo@localhost
-Si no tenés genisoimage: pacman -S cdrtools">
+  <link rel="alternate" type="application/rss+xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <link rel="stylesheet" href="/css/style.css">
 </head>
-<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
-  <div class="navbar-brand">
-    <a class="navbar-item" href="https://imlauera.github.io/">
-      <figure class="image">
-        <img alt="" class="is-rounded" src="/img/memememe.jpg">
-      </figure>
-    </a>
-    <a class="navbar-item" href="https://imlauera.github.io/">
-      Imlauer
-    </a>
-    <a class="navbar-item" href="/acerca/">
-      Acerca de Mi
-    </a>
-  </div>
-  
-  
-</nav>
+<body>
+  <header class="site-header">
+  <a class="site-title" href="/">Imlauer</a>
+</header>
 
-  <section>
-    <section class='hero is-small is-link is-fullwidth'>
-      <div class="hero-body">
-<div class="container">
-  <h1 class="title">
-    Gentoo VM desde la TTY.
-  </h1>
-  <h2 class="subtitle">
-    <time datetime='2025-12-30T12:00:30-03:00'>
-      December 30, 2025
-    </time>
+  <main>
     
-    <br>
-    
-    
-    
-    <a class="tag is-info" href="https://imlauera.github.io/tags/vm/">Vm</a>
-    
-    
-    
-  </h2>
-</div>
-
-      </div>
-    </section>
-    <section class="section">
-      <div class="container">
-<div class="content is-medium">
-  <p>Esto fue un fail porque mi netbook g5 es muy vieja y me tiraba un kernel panic. Lo que hice fue reinstalar archlinux y dejar una partición libre para instalar gentoo o kiss linux o cualquier otra distro que quiera instalar usando un entorno chroot :) es una mejor solución porque al no ser una máquina virtual puedo usar todo el CPU.</p>
+<article class="post">
+  <h1>Gentoo VM desde la TTY.</h1>
+  <p class="meta">
+    <time datetime="2025-12-30">2025-12-30</time>
+    <span class="tags"> · vm</span>
+  </p>
+  <div class="content">
+    <p>Esto fue un fail porque mi netbook g5 es muy vieja y me tiraba un kernel panic. Lo que hice fue reinstalar archlinux y dejar una partición libre para instalar gentoo o kiss linux o cualquier otra distro que quiera instalar usando un entorno chroot :) es una mejor solución porque al no ser una máquina virtual puedo usar todo el CPU.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>Decime como bootearlo dame los comandos no me tires un texto tan largo. <span style="color:#f92672">[</span>I<span style="color:#f92672">]</span> esotericwarfare@arch ~&gt; wget https://mimas.co.ext.planetunix.net/pub/gentoo/releases/amd64/autobuilds/current-di-amd64-cloudinit/di-amd64-cloudinit-20251228T163057Z.qcow2
 </span></span><span style="display:flex;"><span>--2025-12-30 11:54:22--  https://mimas.co.ext.planetunix.net/pub/gentoo/releases/amd64/autobuilds/current-di-amd64-cloudinit/di-amd64-cloudinit-20251228T163057Z.qcow2
 </span></span><span style="display:flex;"><span>Loaded CA certificate <span style="color:#e6db74">&#39;/etc/ssl/certs/ca-certificates.crt&#39;</span>
@@ -304,55 +186,16 @@ Si no tenés genisoimage: pacman -S cdrtools">
 </span></span></span><span style="display:flex;"><span>  -nographic
 </span></span></code></pre></div><p>Esperá y probá SSH.</p>
 
-</div>
-
-
-      </div>
-    </section>
-  </section><script 
-src="/quiz/quizdown.js">
-</script>
-<script 
-src="/quiz/quizdownKatex.js">
-</script>
-<script 
-src="/quiz/quizdownHighlight.js">
-</script>
-<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
-<footer class="footer">
-  <div class="content has-text-centered">
-    
-    
-    <p>
-      
-      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
-        <span>
-          RSS
-        </span>
-      </a>
-      
-      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
-
-      
-      
-    </p>
-    
   </div>
+</article>
 
-
-
-
-
-
-<script type="text/javascript"
-  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
-  </script>
-<script type="text/x-mathjax-config">
-  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
-</script>
-
+  </main>
+  <footer class="site-footer">
+  <a href="/acerca/">acerca</a> · <a href="/servicios/">servicios</a> ·
+  <a href="/index.xml">rss</a> · 
+  <a href="https://github.com/imlauera/">github</a>
 </footer>
 
-
+  
 </body>
 </html>

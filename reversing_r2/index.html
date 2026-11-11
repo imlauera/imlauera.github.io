@@ -1,154 +1,29 @@
 <!DOCTYPE html>
 <html lang="es">
-
-
-
-
-
 <head>
-  <meta property="og:url" content="https://imlauera.github.io/reversing_r2/">
-	<meta property="og:site_name" content="Imlauer">
-	<meta property="og:title" content="Reversing con radare">
-	<meta property="og:description" content="r2 /bin/ls aaa # analiza el binario afl # Lista las funciones s main # selecciona una función # decompila pdf # asm pdd # r2ai pdg # ghidra Ejemplo:
-// gcc bucle.c -o bucle #include &lt;stdio.h&gt; int main(){ for (int i = 0; i &lt; 100; i&#43;&#43;) printf(&#34;i: %d\n&#34;,i); return 0; } Analizamos el binario con radare:
-r2 bucle aaa afl s main pdf Este es el código ASM generado por radare:
-; DATA XREF from entry0 @ 0x1058(r) ┌ 59: int main (int argc, char **argv, char **envp); │ afv: vars(1:sp[0xc..0xc]) │ 0x00001139 55 push rbp ; Inicializa la pila │ 0x0000113a 4889e5 mov rbp, rsp ; Carga rsp a la base de la pila (rbp). │ 0x0000113d 4883ec10 sub rsp, 0x10 ; 0x10 = 16 en hexadecimal. Crea 16 bits de espacio para las variables. │ 0x00001141 c745fc0000.. mov dword [var_4h], 0 ; Mueve 0 a var_4h │ ┌─&lt; 0x00001148 eb1d jmp 0x1167 ; Salta a la dirección 0x1167 │ │ ; CODE XREF from main @ 0x116b(x) │ ┌──&gt; 0x0000114a 8b45fc mov eax, dword [var_4h] ; Mueve el contenido de var_4h a eax │ ■│ 0x0000114d 89c6 mov esi, eax ; Mueve el eax a esi │ ■│ 0x0000114f 488d05ae0e.. lea rax, str.i:__d_n ; 0x2004 ; &#34;i: %d\n&#34; ; Mueve la string a rax │ ■│ 0x00001156 4889c7 mov rdi, rax ; const char *format - carga el rax a rdi │ ■│ 0x00001159 b800000000 mov eax, 0 ; carga 0 al eax │ ■│ 0x0000115e e8cdfeffff call sym.imp.printf ; int printf(const char *format) - llama a printf │ ■│ 0x00001163 8345fc01 add dword [var_4h], 1 ; suma 1 al contenido de var_4h │ ■│ ; CODE XREF from main @ 0x1148(x) │ ■└─&gt; 0x00001167 837dfc63 cmp dword [var_4h], 0x63 ; &#39;c&#39; - Compara contenido 0x63 = 99 en hexadecimal con el contenido de var_4h que es inicializado en 0. │ └──&lt; 0x0000116b 7edd jle 0x114a ; Salta si el contenido de var_4h es menor a 99. │ 0x0000116d b800000000 mov eax, 0 # Mueve el 0 al eax. │ 0x00001172 c9 leave └ 0x00001173 c3 ret Otro código en C:">
-	<meta property="og:locale" content="es_es">
-	<meta property="og:type" content="article">
-		<meta property="article:published_time" content="2024-11-11T14:40:37-03:00">
-		<meta property="article:modified_time" content="2024-11-11T14:40:37-03:00">
-		<meta property="article:tag" content="R2">
-
-  
-	<meta itemprop="name" content="Reversing con radare">
-	<meta itemprop="description" content="r2 /bin/ls aaa # analiza el binario afl # Lista las funciones s main # selecciona una función # decompila pdf # asm pdd # r2ai pdg # ghidra Ejemplo:
-// gcc bucle.c -o bucle #include &lt;stdio.h&gt; int main(){ for (int i = 0; i &lt; 100; i&#43;&#43;) printf(&#34;i: %d\n&#34;,i); return 0; } Analizamos el binario con radare:
-r2 bucle aaa afl s main pdf Este es el código ASM generado por radare:
-; DATA XREF from entry0 @ 0x1058(r) ┌ 59: int main (int argc, char **argv, char **envp); │ afv: vars(1:sp[0xc..0xc]) │ 0x00001139 55 push rbp ; Inicializa la pila │ 0x0000113a 4889e5 mov rbp, rsp ; Carga rsp a la base de la pila (rbp). │ 0x0000113d 4883ec10 sub rsp, 0x10 ; 0x10 = 16 en hexadecimal. Crea 16 bits de espacio para las variables. │ 0x00001141 c745fc0000.. mov dword [var_4h], 0 ; Mueve 0 a var_4h │ ┌─&lt; 0x00001148 eb1d jmp 0x1167 ; Salta a la dirección 0x1167 │ │ ; CODE XREF from main @ 0x116b(x) │ ┌──&gt; 0x0000114a 8b45fc mov eax, dword [var_4h] ; Mueve el contenido de var_4h a eax │ ■│ 0x0000114d 89c6 mov esi, eax ; Mueve el eax a esi │ ■│ 0x0000114f 488d05ae0e.. lea rax, str.i:__d_n ; 0x2004 ; &#34;i: %d\n&#34; ; Mueve la string a rax │ ■│ 0x00001156 4889c7 mov rdi, rax ; const char *format - carga el rax a rdi │ ■│ 0x00001159 b800000000 mov eax, 0 ; carga 0 al eax │ ■│ 0x0000115e e8cdfeffff call sym.imp.printf ; int printf(const char *format) - llama a printf │ ■│ 0x00001163 8345fc01 add dword [var_4h], 1 ; suma 1 al contenido de var_4h │ ■│ ; CODE XREF from main @ 0x1148(x) │ ■└─&gt; 0x00001167 837dfc63 cmp dword [var_4h], 0x63 ; &#39;c&#39; - Compara contenido 0x63 = 99 en hexadecimal con el contenido de var_4h que es inicializado en 0. │ └──&lt; 0x0000116b 7edd jle 0x114a ; Salta si el contenido de var_4h es menor a 99. │ 0x0000116d b800000000 mov eax, 0 # Mueve el 0 al eax. │ 0x00001172 c9 leave └ 0x00001173 c3 ret Otro código en C:">
-	<meta itemprop="datePublished" content="2024-11-11T14:40:37-03:00">
-	<meta itemprop="dateModified" content="2024-11-11T14:40:37-03:00">
-	<meta itemprop="wordCount" content="984">
-	<meta itemprop="keywords" content="R2">
-  
-	<meta name="twitter:card" content="summary">
-	<meta name="twitter:title" content="Reversing con radare">
-	<meta name="twitter:description" content="r2 /bin/ls aaa # analiza el binario afl # Lista las funciones s main # selecciona una función # decompila pdf # asm pdd # r2ai pdg # ghidra Ejemplo:
-// gcc bucle.c -o bucle #include &lt;stdio.h&gt; int main(){ for (int i = 0; i &lt; 100; i&#43;&#43;) printf(&#34;i: %d\n&#34;,i); return 0; } Analizamos el binario con radare:
-r2 bucle aaa afl s main pdf Este es el código ASM generado por radare:
-; DATA XREF from entry0 @ 0x1058(r) ┌ 59: int main (int argc, char **argv, char **envp); │ afv: vars(1:sp[0xc..0xc]) │ 0x00001139 55 push rbp ; Inicializa la pila │ 0x0000113a 4889e5 mov rbp, rsp ; Carga rsp a la base de la pila (rbp). │ 0x0000113d 4883ec10 sub rsp, 0x10 ; 0x10 = 16 en hexadecimal. Crea 16 bits de espacio para las variables. │ 0x00001141 c745fc0000.. mov dword [var_4h], 0 ; Mueve 0 a var_4h │ ┌─&lt; 0x00001148 eb1d jmp 0x1167 ; Salta a la dirección 0x1167 │ │ ; CODE XREF from main @ 0x116b(x) │ ┌──&gt; 0x0000114a 8b45fc mov eax, dword [var_4h] ; Mueve el contenido de var_4h a eax │ ■│ 0x0000114d 89c6 mov esi, eax ; Mueve el eax a esi │ ■│ 0x0000114f 488d05ae0e.. lea rax, str.i:__d_n ; 0x2004 ; &#34;i: %d\n&#34; ; Mueve la string a rax │ ■│ 0x00001156 4889c7 mov rdi, rax ; const char *format - carga el rax a rdi │ ■│ 0x00001159 b800000000 mov eax, 0 ; carga 0 al eax │ ■│ 0x0000115e e8cdfeffff call sym.imp.printf ; int printf(const char *format) - llama a printf │ ■│ 0x00001163 8345fc01 add dword [var_4h], 1 ; suma 1 al contenido de var_4h │ ■│ ; CODE XREF from main @ 0x1148(x) │ ■└─&gt; 0x00001167 837dfc63 cmp dword [var_4h], 0x63 ; &#39;c&#39; - Compara contenido 0x63 = 99 en hexadecimal con el contenido de var_4h que es inicializado en 0. │ └──&lt; 0x0000116b 7edd jle 0x114a ; Salta si el contenido de var_4h es menor a 99. │ 0x0000116d b800000000 mov eax, 0 # Mueve el 0 al eax. │ 0x00001172 c9 leave └ 0x00001173 c3 ret Otro código en C:">
-
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>
-    
-    Reversing con radare
-    
-  </title>
-  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <title>Reversing con radare · Imlauer</title>
+  <meta name="description" content="imlauerandres [at] gmail.com">
   <link rel="canonical" href="https://imlauera.github.io/reversing_r2/">
-  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
-  <meta http-equiv="X-UA-Compatible" content="chrome=1">
-  <meta name="HandheldFriendly" content="True">
-  <meta name="MobileOptimized" content="320">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="referrer" content="no-referrer">
-  <meta name="author" content="Imlauer.">
-  <meta name="description" content="r2 /bin/ls
-aaa # analiza el binario
-afl # Lista las funciones
-s main # selecciona una función
-# decompila
-pdf # asm
-pdd # r2ai
-pdg # ghidra
-Ejemplo:
-// gcc bucle.c -o bucle
-#include &lt;stdio.h&gt;
-
-int main(){
-        for (int i = 0; i &lt; 100; i&#43;&#43;) printf(&#34;i: %d\n&#34;,i);
-        return 0;
-}
-Analizamos el binario con radare:
-r2 bucle
-aaa
-afl 
-s main
-pdf
-
-Este es el código ASM generado por radare:
-            ; DATA XREF from entry0 @ 0x1058(r)
-┌ 59: int main (int argc, char **argv, char **envp);
-│ afv: vars(1:sp[0xc..0xc])
-│           0x00001139      55             push rbp  ; Inicializa la pila
-│           0x0000113a      4889e5         mov rbp, rsp ; Carga rsp a la base de la pila (rbp).
-│           0x0000113d      4883ec10       sub rsp, 0x10 ; 0x10 = 16 en hexadecimal. Crea 16 bits de espacio para las variables.
-│           0x00001141      c745fc0000..   mov dword [var_4h], 0 ; Mueve 0 a var_4h
-│       ┌─&lt; 0x00001148      eb1d           jmp 0x1167 ; Salta a la dirección 0x1167
-│       │   ; CODE XREF from main @ 0x116b(x)
-│      ┌──&gt; 0x0000114a      8b45fc         mov eax, dword [var_4h] ; Mueve el contenido de var_4h a eax
-│      ■│   0x0000114d      89c6           mov esi, eax ; Mueve el eax a esi
-│      ■│   0x0000114f      488d05ae0e..   lea rax, str.i:__d_n        ; 0x2004 ; &#34;i: %d\n&#34; ; Mueve la string a rax
-│      ■│   0x00001156      4889c7         mov rdi, rax                ; const char *format - carga el rax a rdi
-│      ■│   0x00001159      b800000000     mov eax, 0 ; carga 0 al eax
-│      ■│   0x0000115e      e8cdfeffff     call sym.imp.printf         ; int printf(const char *format) - llama a printf
-│      ■│   0x00001163      8345fc01       add dword [var_4h], 1 ; suma 1 al contenido de var_4h
-│      ■│   ; CODE XREF from main @ 0x1148(x)
-│      ■└─&gt; 0x00001167      837dfc63       cmp dword [var_4h], 0x63    ; &#39;c&#39; - Compara contenido 0x63 = 99 en hexadecimal con el contenido de var_4h que es inicializado en 0.
-│      └──&lt; 0x0000116b      7edd           jle 0x114a ; Salta si el contenido de var_4h es menor a 99.
-│           0x0000116d      b800000000     mov eax, 0 # Mueve el 0 al eax.
-│           0x00001172      c9             leave
-└           0x00001173      c3             ret
-
-Otro código en C:">
+  <link rel="alternate" type="application/rss+xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <link rel="stylesheet" href="/css/style.css">
 </head>
-<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
-  <div class="navbar-brand">
-    <a class="navbar-item" href="https://imlauera.github.io/">
-      <figure class="image">
-        <img alt="" class="is-rounded" src="/img/memememe.jpg">
-      </figure>
-    </a>
-    <a class="navbar-item" href="https://imlauera.github.io/">
-      Imlauer
-    </a>
-    <a class="navbar-item" href="/acerca/">
-      Acerca de Mi
-    </a>
-  </div>
-  
-  
-</nav>
+<body>
+  <header class="site-header">
+  <a class="site-title" href="/">Imlauer</a>
+</header>
 
-  <section>
-    <section class='hero is-small is-link is-fullwidth'>
-      <div class="hero-body">
-<div class="container">
-  <h1 class="title">
-    Reversing con radare
-  </h1>
-  <h2 class="subtitle">
-    <time datetime='2024-11-11T14:40:37-03:00'>
-      November 11, 2024
-    </time>
+  <main>
     
-    <br>
-    
-    
-    
-    <a class="tag is-info" href="https://imlauera.github.io/tags/r2/">R2</a>
-    
-    
-    
-  </h2>
-</div>
-
-      </div>
-    </section>
-    <section class="section">
-      <div class="container">
-<div class="content is-medium">
-  <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>r2 /bin/ls
+<article class="post">
+  <h1>Reversing con radare</h1>
+  <p class="meta">
+    <time datetime="2024-11-11">2024-11-11</time>
+    <span class="tags"> · r2</span>
+  </p>
+  <div class="content">
+    <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>r2 /bin/ls
 </span></span><span style="display:flex;"><span>aaa <span style="color:#75715e"># analiza el binario</span>
 </span></span><span style="display:flex;"><span>afl <span style="color:#75715e"># Lista las funciones</span>
 </span></span><span style="display:flex;"><span>s main <span style="color:#75715e"># selecciona una función</span>
@@ -289,55 +164,16 @@ Otro código en C:">
 </span></span><span style="display:flex;"><span>afvn sumatoria var_28h
 </span></span></code></pre></div><h3 id="como-sé-que-en--0x2048-hay-un-5">Como sé que en  <code>*0x2048</code> hay un 5?</h3>
 
-</div>
-
-
-      </div>
-    </section>
-  </section><script 
-src="/quiz/quizdown.js">
-</script>
-<script 
-src="/quiz/quizdownKatex.js">
-</script>
-<script 
-src="/quiz/quizdownHighlight.js">
-</script>
-<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
-<footer class="footer">
-  <div class="content has-text-centered">
-    
-    
-    <p>
-      
-      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
-        <span>
-          RSS
-        </span>
-      </a>
-      
-      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
-
-      
-      
-    </p>
-    
   </div>
+</article>
 
-
-
-
-
-
-<script type="text/javascript"
-  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
-  </script>
-<script type="text/x-mathjax-config">
-  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
-</script>
-
+  </main>
+  <footer class="site-footer">
+  <a href="/acerca/">acerca</a> · <a href="/servicios/">servicios</a> ·
+  <a href="/index.xml">rss</a> · 
+  <a href="https://github.com/imlauera/">github</a>
 </footer>
 
-
+  
 </body>
 </html>

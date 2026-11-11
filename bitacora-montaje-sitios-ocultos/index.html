@@ -1,177 +1,29 @@
 <!DOCTYPE html>
 <html lang="es">
-
-
-
-
-
 <head>
-  <meta property="og:url" content="https://imlauera.github.io/bitacora-montaje-sitios-ocultos/">
-	<meta property="og:site_name" content="Imlauer">
-	<meta property="og:title" content="Bitácora: montaje de imlauer.github.io en Tor, I2P y Freenet">
-	<meta property="og:description" content="📋 Bitácora: montaje de imlauer.github.io en Tor, I2P y Freenet Fecha: 2026-09-16 · Sistema: Arch Linux · Servidor: $HOME/imlauer.github.io (sitio estático) Resultado final: el sitio publicado en Tor, I2P y Freenet (Hyphanet), más el enlace a los mirrors agregado al index.
-Este archivo es el registro de todo lo que se hizo. El “cómo” paso a paso está en tutorial-sitios-ocultos.md.
-1) Resumen Red URL pública ¿Tu PC tiene que estar encendida? Tor (onion v3) http://5n2dh4gafm6qskpd6wm4us2m7zsxbwj4yicmmyowy7n7i34d4jkq5uid.onion/ Sí I2P (eepsite) http://lj5uiypfgrbuelzguwlb7smx6lqmxrzyd2o6rbu5sdyjahsznyxq.b32.i2p/ Sí Freenet (freesite) USK@GUETDi8oxvuY5VWnnpAIUa-FPKooO0bj-OBM0BgwYGw,CIhMEUnz1-SeZqd0UT0JpgleOzQ7y0Rv5r0rrUx-lAU,AQACAAE/imlauer/0/ No (vive en la red) 2) Servidor web estático (base común para Tor e I2P) Se creó /etc/systemd/system/imlauer-static.service sirviendo ~/imlauer.github.io en 127.0.0.1:8100. No se usa el puerto 8080: está ocupado por qbittorrent. Comandos: sudo systemctl daemon-reload sudo systemctl enable --now imlauer-static.service curl -s -o /dev/null -w &#39;%{http_code}\n&#39; http://127.0.0.1:8100/ # → 200 3) Tor (onion service v3) tor ya venía instalado. Se agregó al final de /etc/tor/torrc: HiddenServiceDir /var/lib/tor/imlauer_site/ HiddenServicePort 80 127.0.0.1:8100 HiddenServiceVersion 3 Se preparó el directorio (sin esto Tor no arranca): sudo install -d -o tor -g tor /var/lib/tor/imlauer_site sudo chmod 700 /var/lib/tor/imlauer_site Se arrancó y leyó el hostname: sudo systemctl reload tor # aplica el torrc nuevo sudo cat /var/lib/tor/imlauer_site/hostname → 5n2dh4gafm6qskpd6wm4us2m7zsxbwj4yicmmyowy7n7i34d4jkq5uid.onion Verificación: curl --socks5-hostname 127.0.0.1:9050 -s -o /dev/null -w &#39;%{http_code}\n&#39; \ http://5n2dh4gafm6qskpd6wm4us2m7zsxbwj4yicmmyowy7n7i34d4jkq5uid.onion/ # → 200 Se habilitó el servicio para el boot: sudo systemctl enable tor. Problema encontrado: tras un fallo previo Tor tiraba Job for tor.service failed (...) because a configured service was not started. Se resolvió con sudo systemctl reset-failed tor &amp;&amp; sudo systemctl start tor.">
-	<meta property="og:locale" content="es_es">
-	<meta property="og:type" content="article">
-		<meta property="article:published_time" content="2026-09-16T22:03:49-03:00">
-		<meta property="article:modified_time" content="2026-09-16T22:03:49-03:00">
-		<meta property="article:tag" content="Tor">
-
-  
-	<meta itemprop="name" content="Bitácora: montaje de imlauer.github.io en Tor, I2P y Freenet">
-	<meta itemprop="description" content="📋 Bitácora: montaje de imlauer.github.io en Tor, I2P y Freenet Fecha: 2026-09-16 · Sistema: Arch Linux · Servidor: $HOME/imlauer.github.io (sitio estático) Resultado final: el sitio publicado en Tor, I2P y Freenet (Hyphanet), más el enlace a los mirrors agregado al index.
-Este archivo es el registro de todo lo que se hizo. El “cómo” paso a paso está en tutorial-sitios-ocultos.md.
-1) Resumen Red URL pública ¿Tu PC tiene que estar encendida? Tor (onion v3) http://5n2dh4gafm6qskpd6wm4us2m7zsxbwj4yicmmyowy7n7i34d4jkq5uid.onion/ Sí I2P (eepsite) http://lj5uiypfgrbuelzguwlb7smx6lqmxrzyd2o6rbu5sdyjahsznyxq.b32.i2p/ Sí Freenet (freesite) USK@GUETDi8oxvuY5VWnnpAIUa-FPKooO0bj-OBM0BgwYGw,CIhMEUnz1-SeZqd0UT0JpgleOzQ7y0Rv5r0rrUx-lAU,AQACAAE/imlauer/0/ No (vive en la red) 2) Servidor web estático (base común para Tor e I2P) Se creó /etc/systemd/system/imlauer-static.service sirviendo ~/imlauer.github.io en 127.0.0.1:8100. No se usa el puerto 8080: está ocupado por qbittorrent. Comandos: sudo systemctl daemon-reload sudo systemctl enable --now imlauer-static.service curl -s -o /dev/null -w &#39;%{http_code}\n&#39; http://127.0.0.1:8100/ # → 200 3) Tor (onion service v3) tor ya venía instalado. Se agregó al final de /etc/tor/torrc: HiddenServiceDir /var/lib/tor/imlauer_site/ HiddenServicePort 80 127.0.0.1:8100 HiddenServiceVersion 3 Se preparó el directorio (sin esto Tor no arranca): sudo install -d -o tor -g tor /var/lib/tor/imlauer_site sudo chmod 700 /var/lib/tor/imlauer_site Se arrancó y leyó el hostname: sudo systemctl reload tor # aplica el torrc nuevo sudo cat /var/lib/tor/imlauer_site/hostname → 5n2dh4gafm6qskpd6wm4us2m7zsxbwj4yicmmyowy7n7i34d4jkq5uid.onion Verificación: curl --socks5-hostname 127.0.0.1:9050 -s -o /dev/null -w &#39;%{http_code}\n&#39; \ http://5n2dh4gafm6qskpd6wm4us2m7zsxbwj4yicmmyowy7n7i34d4jkq5uid.onion/ # → 200 Se habilitó el servicio para el boot: sudo systemctl enable tor. Problema encontrado: tras un fallo previo Tor tiraba Job for tor.service failed (...) because a configured service was not started. Se resolvió con sudo systemctl reset-failed tor &amp;&amp; sudo systemctl start tor.">
-	<meta itemprop="datePublished" content="2026-09-16T22:03:49-03:00">
-	<meta itemprop="dateModified" content="2026-09-16T22:03:49-03:00">
-	<meta itemprop="wordCount" content="1084">
-	<meta itemprop="keywords" content="Tor">
-  
-	<meta name="twitter:card" content="summary">
-	<meta name="twitter:title" content="Bitácora: montaje de imlauer.github.io en Tor, I2P y Freenet">
-	<meta name="twitter:description" content="📋 Bitácora: montaje de imlauer.github.io en Tor, I2P y Freenet Fecha: 2026-09-16 · Sistema: Arch Linux · Servidor: $HOME/imlauer.github.io (sitio estático) Resultado final: el sitio publicado en Tor, I2P y Freenet (Hyphanet), más el enlace a los mirrors agregado al index.
-Este archivo es el registro de todo lo que se hizo. El “cómo” paso a paso está en tutorial-sitios-ocultos.md.
-1) Resumen Red URL pública ¿Tu PC tiene que estar encendida? Tor (onion v3) http://5n2dh4gafm6qskpd6wm4us2m7zsxbwj4yicmmyowy7n7i34d4jkq5uid.onion/ Sí I2P (eepsite) http://lj5uiypfgrbuelzguwlb7smx6lqmxrzyd2o6rbu5sdyjahsznyxq.b32.i2p/ Sí Freenet (freesite) USK@GUETDi8oxvuY5VWnnpAIUa-FPKooO0bj-OBM0BgwYGw,CIhMEUnz1-SeZqd0UT0JpgleOzQ7y0Rv5r0rrUx-lAU,AQACAAE/imlauer/0/ No (vive en la red) 2) Servidor web estático (base común para Tor e I2P) Se creó /etc/systemd/system/imlauer-static.service sirviendo ~/imlauer.github.io en 127.0.0.1:8100. No se usa el puerto 8080: está ocupado por qbittorrent. Comandos: sudo systemctl daemon-reload sudo systemctl enable --now imlauer-static.service curl -s -o /dev/null -w &#39;%{http_code}\n&#39; http://127.0.0.1:8100/ # → 200 3) Tor (onion service v3) tor ya venía instalado. Se agregó al final de /etc/tor/torrc: HiddenServiceDir /var/lib/tor/imlauer_site/ HiddenServicePort 80 127.0.0.1:8100 HiddenServiceVersion 3 Se preparó el directorio (sin esto Tor no arranca): sudo install -d -o tor -g tor /var/lib/tor/imlauer_site sudo chmod 700 /var/lib/tor/imlauer_site Se arrancó y leyó el hostname: sudo systemctl reload tor # aplica el torrc nuevo sudo cat /var/lib/tor/imlauer_site/hostname → 5n2dh4gafm6qskpd6wm4us2m7zsxbwj4yicmmyowy7n7i34d4jkq5uid.onion Verificación: curl --socks5-hostname 127.0.0.1:9050 -s -o /dev/null -w &#39;%{http_code}\n&#39; \ http://5n2dh4gafm6qskpd6wm4us2m7zsxbwj4yicmmyowy7n7i34d4jkq5uid.onion/ # → 200 Se habilitó el servicio para el boot: sudo systemctl enable tor. Problema encontrado: tras un fallo previo Tor tiraba Job for tor.service failed (...) because a configured service was not started. Se resolvió con sudo systemctl reset-failed tor &amp;&amp; sudo systemctl start tor.">
-
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>
-    
-    Bitácora: montaje de imlauer.github.io en Tor, I2P y Freenet
-    
-  </title>
-  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <title>Bitácora: montaje de imlauer.github.io en Tor, I2P y Freenet · Imlauer</title>
+  <meta name="description" content="imlauerandres [at] gmail.com">
   <link rel="canonical" href="https://imlauera.github.io/bitacora-montaje-sitios-ocultos/">
-  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
-  <meta http-equiv="X-UA-Compatible" content="chrome=1">
-  <meta name="HandheldFriendly" content="True">
-  <meta name="MobileOptimized" content="320">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="referrer" content="no-referrer">
-  <meta name="author" content="Imlauer.">
-  <meta name="description" content="📋 Bitácora: montaje de imlauer.github.io en Tor, I2P y Freenet
-Fecha: 2026-09-16 · Sistema: Arch Linux · Servidor: $HOME/imlauer.github.io (sitio estático)
-Resultado final: el sitio publicado en Tor, I2P y Freenet (Hyphanet),
-más el enlace a los mirrors agregado al index.
-
-Este archivo es el registro de todo lo que se hizo. El &ldquo;cómo&rdquo; paso a paso
-está en tutorial-sitios-ocultos.md.
-
-
-1) Resumen
-
-	
-			
-					Red
-					URL pública
-					¿Tu PC tiene que estar encendida?
-			
-	
-	
-			
-					Tor (onion v3)
-					http://5n2dh4gafm6qskpd6wm4us2m7zsxbwj4yicmmyowy7n7i34d4jkq5uid.onion/
-					Sí
-			
-			
-					I2P (eepsite)
-					http://lj5uiypfgrbuelzguwlb7smx6lqmxrzyd2o6rbu5sdyjahsznyxq.b32.i2p/
-					Sí
-			
-			
-					Freenet (freesite)
-					USK@GUETDi8oxvuY5VWnnpAIUa-FPKooO0bj-OBM0BgwYGw,CIhMEUnz1-SeZqd0UT0JpgleOzQ7y0Rv5r0rrUx-lAU,AQACAAE/imlauer/0/
-					No (vive en la red)
-			
-	
-
-
-2) Servidor web estático (base común para Tor e I2P)
-
-Se creó /etc/systemd/system/imlauer-static.service sirviendo
-~/imlauer.github.io en 127.0.0.1:8100.
-No se usa el puerto 8080: está ocupado por qbittorrent.
-Comandos:
-sudo systemctl daemon-reload
-sudo systemctl enable --now imlauer-static.service
-curl -s -o /dev/null -w &#39;%{http_code}\n&#39; http://127.0.0.1:8100/   # → 200
-
-
-
-3) Tor (onion service v3)
-
-tor ya venía instalado.
-Se agregó al final de /etc/tor/torrc:
-HiddenServiceDir /var/lib/tor/imlauer_site/
-HiddenServicePort 80 127.0.0.1:8100
-HiddenServiceVersion 3
-
-Se preparó el directorio (sin esto Tor no arranca):
-sudo install -d -o tor -g tor /var/lib/tor/imlauer_site
-sudo chmod 700 /var/lib/tor/imlauer_site
-
-Se arrancó y leyó el hostname:
-sudo systemctl reload tor     # aplica el torrc nuevo
-sudo cat /var/lib/tor/imlauer_site/hostname
-→ 5n2dh4gafm6qskpd6wm4us2m7zsxbwj4yicmmyowy7n7i34d4jkq5uid.onion
-Verificación:
-curl --socks5-hostname 127.0.0.1:9050 -s -o /dev/null -w &#39;%{http_code}\n&#39; \
-  http://5n2dh4gafm6qskpd6wm4us2m7zsxbwj4yicmmyowy7n7i34d4jkq5uid.onion/   # → 200
-
-Se habilitó el servicio para el boot: sudo systemctl enable tor.
-
-Problema encontrado: tras un fallo previo Tor tiraba
-Job for tor.service failed (...) because a configured service was not started.
-Se resolvió con sudo systemctl reset-failed tor &amp;&amp; sudo systemctl start tor.">
+  <link rel="alternate" type="application/rss+xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <link rel="stylesheet" href="/css/style.css">
 </head>
-<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
-  <div class="navbar-brand">
-    <a class="navbar-item" href="https://imlauera.github.io/">
-      <figure class="image">
-        <img alt="" class="is-rounded" src="/img/memememe.jpg">
-      </figure>
-    </a>
-    <a class="navbar-item" href="https://imlauera.github.io/">
-      Imlauer
-    </a>
-    <a class="navbar-item" href="/acerca/">
-      Acerca de Mi
-    </a>
-  </div>
-  
-  
-</nav>
+<body>
+  <header class="site-header">
+  <a class="site-title" href="/">Imlauer</a>
+</header>
 
-  <section>
-    <section class='hero is-small is-link is-fullwidth'>
-      <div class="hero-body">
-<div class="container">
-  <h1 class="title">
-    Bitácora: montaje de imlauer.github.io en Tor, I2P y Freenet
-  </h1>
-  <h2 class="subtitle">
-    <time datetime='2026-09-16T22:03:49-03:00'>
-      September 16, 2026
-    </time>
+  <main>
     
-    <br>
-    
-    
-    
-    <a class="tag is-info" href="https://imlauera.github.io/tags/tor/">Tor</a>
-    
-    
-    
-  </h2>
-</div>
-
-      </div>
-    </section>
-    <section class="section">
-      <div class="container">
-<div class="content is-medium">
-  <h1 id="-bitácora-montaje-de-imlauergithubio-en-tor-i2p-y-freenet">📋 Bitácora: montaje de <code>imlauer.github.io</code> en Tor, I2P y Freenet</h1>
+<article class="post">
+  <h1>Bitácora: montaje de imlauer.github.io en Tor, I2P y Freenet</h1>
+  <p class="meta">
+    <time datetime="2026-09-16">2026-09-16</time>
+    <span class="tags"> · tor</span>
+  </p>
+  <div class="content">
+    <h1 id="-bitácora-montaje-de-imlauergithubio-en-tor-i2p-y-freenet">📋 Bitácora: montaje de <code>imlauer.github.io</code> en Tor, I2P y Freenet</h1>
 <p>Fecha: 2026-09-16 · Sistema: Arch Linux · Servidor: <code>$HOME/imlauer.github.io</code> (sitio estático)
 Resultado final: el sitio publicado en <strong>Tor</strong>, <strong>I2P</strong> y <strong>Freenet (Hyphanet)</strong>,
 más el enlace a los mirrors agregado al index.</p>
@@ -444,55 +296,16 @@ los archivos nuevos del tutorial y esta bitácora.</li>
 <hr>
 <p><em>Registro verificado con valores reales del nodo del usuario (2026-09-16).</em></p>
 
-</div>
-
-
-      </div>
-    </section>
-  </section><script 
-src="/quiz/quizdown.js">
-</script>
-<script 
-src="/quiz/quizdownKatex.js">
-</script>
-<script 
-src="/quiz/quizdownHighlight.js">
-</script>
-<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
-<footer class="footer">
-  <div class="content has-text-centered">
-    
-    
-    <p>
-      
-      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
-        <span>
-          RSS
-        </span>
-      </a>
-      
-      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
-
-      
-      
-    </p>
-    
   </div>
+</article>
 
-
-
-
-
-
-<script type="text/javascript"
-  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
-  </script>
-<script type="text/x-mathjax-config">
-  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
-</script>
-
+  </main>
+  <footer class="site-footer">
+  <a href="/acerca/">acerca</a> · <a href="/servicios/">servicios</a> ·
+  <a href="/index.xml">rss</a> · 
+  <a href="https://github.com/imlauera/">github</a>
 </footer>
 
-
+  
 </body>
 </html>

@@ -1,222 +1,29 @@
 <!DOCTYPE html>
 <html lang="es">
-
-
-
-
-
 <head>
-  <meta property="og:url" content="https://imlauera.github.io/peertube_search/">
-	<meta property="og:site_name" content="Imlauer">
-	<meta property="og:title" content="Peertube search">
-	<meta property="og:description" content="python -m venv peertube source peertube/bin/activate pip install aiohttp python peertube_search.py “you are the dead internet”
-#!/usr/bin/env python3 &#34;&#34;&#34; PeerTube Universal Search Searches ALL known PeerTube instances in parallel, not just SepiaSearch-indexed ones. Usage: python peertube_search.py &#34;your search query&#34; [--max-instances N] [--timeout N] &#34;&#34;&#34; import asyncio import aiohttp import argparse import json import sys from datetime import datetime INSTANCES_API = &#34;https://instances.joinpeertube.org/api/v1/instances?count=1000&amp;start=0&#34; async def fetch_instances(session): &#34;&#34;&#34;Fetch all known PeerTube instances.&#34;&#34;&#34; print(&#34;Fetching instance list from instances.joinpeertube.org ...&#34;, flush=True) try: async with session.get(INSTANCES_API, timeout=aiohttp.ClientTimeout(total=15)) as resp: data = await resp.json() instances = [i[&#34;host&#34;] for i in data.get(&#34;data&#34;, [])] print(f&#34;Found {len(instances)} instances.\n&#34;, flush=True) return instances except Exception as e: print(f&#34;Failed to fetch instance list: {e}&#34;, file=sys.stderr) return [] async def search_instance(session, host, query, timeout): &#34;&#34;&#34;Search a single PeerTube instance.&#34;&#34;&#34; url = f&#34;https://{host}/api/v1/search/videos&#34; params = {&#34;search&#34;: query, &#34;count&#34;: 10, &#34;sort&#34;: &#34;-match&#34;} try: async with session.get(url, params=params, timeout=aiohttp.ClientTimeout(total=timeout)) as resp: if resp.status == 200: data = await resp.json() videos = data.get(&#34;data&#34;, []) if videos: return host, videos except Exception: pass return host, [] def format_video(video, host): name = video.get(&#34;name&#34;, &#34;Untitled&#34;) uuid = video.get(&#34;uuid&#34;, &#34;&#34;) duration = video.get(&#34;duration&#34;, 0) mins, secs = divmod(duration, 60) channel = video.get(&#34;channel&#34;, {}).get(&#34;displayName&#34;, &#34;Unknown&#34;) published = video.get(&#34;publishedAt&#34;, &#34;&#34;)[:10] if video.get(&#34;publishedAt&#34;) else &#34;&#34; views = video.get(&#34;views&#34;, 0) url = f&#34;https://{host}/videos/watch/{uuid}&#34; return ( f&#34; Title : {name}\n&#34; f&#34; Channel : {channel} | Duration: {mins}m{secs:02d}s&#34; f&#34; | Views: {views} | Date: {published}\n&#34; f&#34; URL : {url}\n&#34; ) async def main(): parser = argparse.ArgumentParser(description=&#34;Search all PeerTube instances&#34;) parser.add_argument(&#34;query&#34;, help=&#34;Search query&#34;) parser.add_argument(&#34;--max-instances&#34;, type=int, default=500, help=&#34;Max instances to query (default: 500)&#34;) parser.add_argument(&#34;--timeout&#34;, type=int, default=8, help=&#34;Per-instance timeout in seconds (default: 8)&#34;) parser.add_argument(&#34;--json&#34;, action=&#34;store_true&#34;, help=&#34;Output raw JSON instead of formatted text&#34;) args = parser.parse_args() connector = aiohttp.TCPConnector(limit=100, ssl=False) headers = {&#34;User-Agent&#34;: &#34;PeerTubeUniversalSearch/1.0&#34;} async with aiohttp.ClientSession(connector=connector, headers=headers) as session: instances = await fetch_instances(session) if not instances: print(&#34;No instances found. Exiting.&#34;) return instances = instances[:args.max_instances] print(f&#34;Searching {len(instances)} instances for: \&#34;{args.query}\&#34;&#34;) print(&#34;(This may take a few seconds...)\n&#34;, flush=True) tasks = [search_instance(session, host, args.query, args.timeout) for host in instances] results = [] done = 0 for coro in asyncio.as_completed(tasks): host, videos = await coro done &#43;= 1 if videos: results.append((host, videos)) print(f&#34;[{done}/{len(instances)}] ✓ {host} — {len(videos)} result(s)&#34;, flush=True) print(f&#34;\n{&#39;=&#39;*60}&#34;) print(f&#34;Search complete. {len(results)} instance(s) returned results.&#34;) print(f&#34;{&#39;=&#39;*60}\n&#34;) if args.json: all_videos = [] for host, videos in results: for v in videos: v[&#34;_instance&#34;] = host all_videos.append(v) print(json.dumps(all_videos, indent=2)) else: total = 0 for host, videos in sorted(results, key=lambda x: -len(x[1])): print(f&#34;── {host} ({len(videos)} result(s)) ──&#34;) for v in videos: print(format_video(v, host)) total &#43;= 1 print(f&#34;Total videos found: {total}&#34;) if __name__ == &#34;__main__&#34;: asyncio.run(main())">
-	<meta property="og:locale" content="es_es">
-	<meta property="og:type" content="article">
-		<meta property="article:published_time" content="2026-05-28T21:45:56-03:00">
-		<meta property="article:modified_time" content="2026-05-28T21:45:56-03:00">
-		<meta property="article:tag" content="Peertube">
-
-  
-	<meta itemprop="name" content="Peertube search">
-	<meta itemprop="description" content="python -m venv peertube source peertube/bin/activate pip install aiohttp python peertube_search.py “you are the dead internet”
-#!/usr/bin/env python3 &#34;&#34;&#34; PeerTube Universal Search Searches ALL known PeerTube instances in parallel, not just SepiaSearch-indexed ones. Usage: python peertube_search.py &#34;your search query&#34; [--max-instances N] [--timeout N] &#34;&#34;&#34; import asyncio import aiohttp import argparse import json import sys from datetime import datetime INSTANCES_API = &#34;https://instances.joinpeertube.org/api/v1/instances?count=1000&amp;start=0&#34; async def fetch_instances(session): &#34;&#34;&#34;Fetch all known PeerTube instances.&#34;&#34;&#34; print(&#34;Fetching instance list from instances.joinpeertube.org ...&#34;, flush=True) try: async with session.get(INSTANCES_API, timeout=aiohttp.ClientTimeout(total=15)) as resp: data = await resp.json() instances = [i[&#34;host&#34;] for i in data.get(&#34;data&#34;, [])] print(f&#34;Found {len(instances)} instances.\n&#34;, flush=True) return instances except Exception as e: print(f&#34;Failed to fetch instance list: {e}&#34;, file=sys.stderr) return [] async def search_instance(session, host, query, timeout): &#34;&#34;&#34;Search a single PeerTube instance.&#34;&#34;&#34; url = f&#34;https://{host}/api/v1/search/videos&#34; params = {&#34;search&#34;: query, &#34;count&#34;: 10, &#34;sort&#34;: &#34;-match&#34;} try: async with session.get(url, params=params, timeout=aiohttp.ClientTimeout(total=timeout)) as resp: if resp.status == 200: data = await resp.json() videos = data.get(&#34;data&#34;, []) if videos: return host, videos except Exception: pass return host, [] def format_video(video, host): name = video.get(&#34;name&#34;, &#34;Untitled&#34;) uuid = video.get(&#34;uuid&#34;, &#34;&#34;) duration = video.get(&#34;duration&#34;, 0) mins, secs = divmod(duration, 60) channel = video.get(&#34;channel&#34;, {}).get(&#34;displayName&#34;, &#34;Unknown&#34;) published = video.get(&#34;publishedAt&#34;, &#34;&#34;)[:10] if video.get(&#34;publishedAt&#34;) else &#34;&#34; views = video.get(&#34;views&#34;, 0) url = f&#34;https://{host}/videos/watch/{uuid}&#34; return ( f&#34; Title : {name}\n&#34; f&#34; Channel : {channel} | Duration: {mins}m{secs:02d}s&#34; f&#34; | Views: {views} | Date: {published}\n&#34; f&#34; URL : {url}\n&#34; ) async def main(): parser = argparse.ArgumentParser(description=&#34;Search all PeerTube instances&#34;) parser.add_argument(&#34;query&#34;, help=&#34;Search query&#34;) parser.add_argument(&#34;--max-instances&#34;, type=int, default=500, help=&#34;Max instances to query (default: 500)&#34;) parser.add_argument(&#34;--timeout&#34;, type=int, default=8, help=&#34;Per-instance timeout in seconds (default: 8)&#34;) parser.add_argument(&#34;--json&#34;, action=&#34;store_true&#34;, help=&#34;Output raw JSON instead of formatted text&#34;) args = parser.parse_args() connector = aiohttp.TCPConnector(limit=100, ssl=False) headers = {&#34;User-Agent&#34;: &#34;PeerTubeUniversalSearch/1.0&#34;} async with aiohttp.ClientSession(connector=connector, headers=headers) as session: instances = await fetch_instances(session) if not instances: print(&#34;No instances found. Exiting.&#34;) return instances = instances[:args.max_instances] print(f&#34;Searching {len(instances)} instances for: \&#34;{args.query}\&#34;&#34;) print(&#34;(This may take a few seconds...)\n&#34;, flush=True) tasks = [search_instance(session, host, args.query, args.timeout) for host in instances] results = [] done = 0 for coro in asyncio.as_completed(tasks): host, videos = await coro done &#43;= 1 if videos: results.append((host, videos)) print(f&#34;[{done}/{len(instances)}] ✓ {host} — {len(videos)} result(s)&#34;, flush=True) print(f&#34;\n{&#39;=&#39;*60}&#34;) print(f&#34;Search complete. {len(results)} instance(s) returned results.&#34;) print(f&#34;{&#39;=&#39;*60}\n&#34;) if args.json: all_videos = [] for host, videos in results: for v in videos: v[&#34;_instance&#34;] = host all_videos.append(v) print(json.dumps(all_videos, indent=2)) else: total = 0 for host, videos in sorted(results, key=lambda x: -len(x[1])): print(f&#34;── {host} ({len(videos)} result(s)) ──&#34;) for v in videos: print(format_video(v, host)) total &#43;= 1 print(f&#34;Total videos found: {total}&#34;) if __name__ == &#34;__main__&#34;: asyncio.run(main())">
-	<meta itemprop="datePublished" content="2026-05-28T21:45:56-03:00">
-	<meta itemprop="dateModified" content="2026-05-28T21:45:56-03:00">
-	<meta itemprop="wordCount" content="417">
-	<meta itemprop="keywords" content="Peertube">
-  
-	<meta name="twitter:card" content="summary">
-	<meta name="twitter:title" content="Peertube search">
-	<meta name="twitter:description" content="python -m venv peertube source peertube/bin/activate pip install aiohttp python peertube_search.py “you are the dead internet”
-#!/usr/bin/env python3 &#34;&#34;&#34; PeerTube Universal Search Searches ALL known PeerTube instances in parallel, not just SepiaSearch-indexed ones. Usage: python peertube_search.py &#34;your search query&#34; [--max-instances N] [--timeout N] &#34;&#34;&#34; import asyncio import aiohttp import argparse import json import sys from datetime import datetime INSTANCES_API = &#34;https://instances.joinpeertube.org/api/v1/instances?count=1000&amp;start=0&#34; async def fetch_instances(session): &#34;&#34;&#34;Fetch all known PeerTube instances.&#34;&#34;&#34; print(&#34;Fetching instance list from instances.joinpeertube.org ...&#34;, flush=True) try: async with session.get(INSTANCES_API, timeout=aiohttp.ClientTimeout(total=15)) as resp: data = await resp.json() instances = [i[&#34;host&#34;] for i in data.get(&#34;data&#34;, [])] print(f&#34;Found {len(instances)} instances.\n&#34;, flush=True) return instances except Exception as e: print(f&#34;Failed to fetch instance list: {e}&#34;, file=sys.stderr) return [] async def search_instance(session, host, query, timeout): &#34;&#34;&#34;Search a single PeerTube instance.&#34;&#34;&#34; url = f&#34;https://{host}/api/v1/search/videos&#34; params = {&#34;search&#34;: query, &#34;count&#34;: 10, &#34;sort&#34;: &#34;-match&#34;} try: async with session.get(url, params=params, timeout=aiohttp.ClientTimeout(total=timeout)) as resp: if resp.status == 200: data = await resp.json() videos = data.get(&#34;data&#34;, []) if videos: return host, videos except Exception: pass return host, [] def format_video(video, host): name = video.get(&#34;name&#34;, &#34;Untitled&#34;) uuid = video.get(&#34;uuid&#34;, &#34;&#34;) duration = video.get(&#34;duration&#34;, 0) mins, secs = divmod(duration, 60) channel = video.get(&#34;channel&#34;, {}).get(&#34;displayName&#34;, &#34;Unknown&#34;) published = video.get(&#34;publishedAt&#34;, &#34;&#34;)[:10] if video.get(&#34;publishedAt&#34;) else &#34;&#34; views = video.get(&#34;views&#34;, 0) url = f&#34;https://{host}/videos/watch/{uuid}&#34; return ( f&#34; Title : {name}\n&#34; f&#34; Channel : {channel} | Duration: {mins}m{secs:02d}s&#34; f&#34; | Views: {views} | Date: {published}\n&#34; f&#34; URL : {url}\n&#34; ) async def main(): parser = argparse.ArgumentParser(description=&#34;Search all PeerTube instances&#34;) parser.add_argument(&#34;query&#34;, help=&#34;Search query&#34;) parser.add_argument(&#34;--max-instances&#34;, type=int, default=500, help=&#34;Max instances to query (default: 500)&#34;) parser.add_argument(&#34;--timeout&#34;, type=int, default=8, help=&#34;Per-instance timeout in seconds (default: 8)&#34;) parser.add_argument(&#34;--json&#34;, action=&#34;store_true&#34;, help=&#34;Output raw JSON instead of formatted text&#34;) args = parser.parse_args() connector = aiohttp.TCPConnector(limit=100, ssl=False) headers = {&#34;User-Agent&#34;: &#34;PeerTubeUniversalSearch/1.0&#34;} async with aiohttp.ClientSession(connector=connector, headers=headers) as session: instances = await fetch_instances(session) if not instances: print(&#34;No instances found. Exiting.&#34;) return instances = instances[:args.max_instances] print(f&#34;Searching {len(instances)} instances for: \&#34;{args.query}\&#34;&#34;) print(&#34;(This may take a few seconds...)\n&#34;, flush=True) tasks = [search_instance(session, host, args.query, args.timeout) for host in instances] results = [] done = 0 for coro in asyncio.as_completed(tasks): host, videos = await coro done &#43;= 1 if videos: results.append((host, videos)) print(f&#34;[{done}/{len(instances)}] ✓ {host} — {len(videos)} result(s)&#34;, flush=True) print(f&#34;\n{&#39;=&#39;*60}&#34;) print(f&#34;Search complete. {len(results)} instance(s) returned results.&#34;) print(f&#34;{&#39;=&#39;*60}\n&#34;) if args.json: all_videos = [] for host, videos in results: for v in videos: v[&#34;_instance&#34;] = host all_videos.append(v) print(json.dumps(all_videos, indent=2)) else: total = 0 for host, videos in sorted(results, key=lambda x: -len(x[1])): print(f&#34;── {host} ({len(videos)} result(s)) ──&#34;) for v in videos: print(format_video(v, host)) total &#43;= 1 print(f&#34;Total videos found: {total}&#34;) if __name__ == &#34;__main__&#34;: asyncio.run(main())">
-
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>
-    
-    Peertube search
-    
-  </title>
-  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <title>Peertube search · Imlauer</title>
+  <meta name="description" content="imlauerandres [at] gmail.com">
   <link rel="canonical" href="https://imlauera.github.io/peertube_search/">
-  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
-  <meta http-equiv="X-UA-Compatible" content="chrome=1">
-  <meta name="HandheldFriendly" content="True">
-  <meta name="MobileOptimized" content="320">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="referrer" content="no-referrer">
-  <meta name="author" content="Imlauer.">
-  <meta name="description" content="python -m venv peertube
-source peertube/bin/activate
-pip install aiohttp
-python peertube_search.py &ldquo;you are the dead internet&rdquo;
-#!/usr/bin/env python3
-&#34;&#34;&#34;
-PeerTube Universal Search
-Searches ALL known PeerTube instances in parallel, not just SepiaSearch-indexed ones.
-Usage: python peertube_search.py &#34;your search query&#34; [--max-instances N] [--timeout N]
-&#34;&#34;&#34;
-
-import asyncio
-import aiohttp
-import argparse
-import json
-import sys
-from datetime import datetime
-
-INSTANCES_API = &#34;https://instances.joinpeertube.org/api/v1/instances?count=1000&amp;start=0&#34;
-
-async def fetch_instances(session):
-    &#34;&#34;&#34;Fetch all known PeerTube instances.&#34;&#34;&#34;
-    print(&#34;Fetching instance list from instances.joinpeertube.org ...&#34;, flush=True)
-    try:
-        async with session.get(INSTANCES_API, timeout=aiohttp.ClientTimeout(total=15)) as resp:
-            data = await resp.json()
-            instances = [i[&#34;host&#34;] for i in data.get(&#34;data&#34;, [])]
-            print(f&#34;Found {len(instances)} instances.\n&#34;, flush=True)
-            return instances
-    except Exception as e:
-        print(f&#34;Failed to fetch instance list: {e}&#34;, file=sys.stderr)
-        return []
-
-async def search_instance(session, host, query, timeout):
-    &#34;&#34;&#34;Search a single PeerTube instance.&#34;&#34;&#34;
-    url = f&#34;https://{host}/api/v1/search/videos&#34;
-    params = {&#34;search&#34;: query, &#34;count&#34;: 10, &#34;sort&#34;: &#34;-match&#34;}
-    try:
-        async with session.get(url, params=params, timeout=aiohttp.ClientTimeout(total=timeout)) as resp:
-            if resp.status == 200:
-                data = await resp.json()
-                videos = data.get(&#34;data&#34;, [])
-                if videos:
-                    return host, videos
-    except Exception:
-        pass
-    return host, []
-
-def format_video(video, host):
-    name = video.get(&#34;name&#34;, &#34;Untitled&#34;)
-    uuid = video.get(&#34;uuid&#34;, &#34;&#34;)
-    duration = video.get(&#34;duration&#34;, 0)
-    mins, secs = divmod(duration, 60)
-    channel = video.get(&#34;channel&#34;, {}).get(&#34;displayName&#34;, &#34;Unknown&#34;)
-    published = video.get(&#34;publishedAt&#34;, &#34;&#34;)[:10] if video.get(&#34;publishedAt&#34;) else &#34;&#34;
-    views = video.get(&#34;views&#34;, 0)
-    url = f&#34;https://{host}/videos/watch/{uuid}&#34;
-    return (
-        f&#34;  Title   : {name}\n&#34;
-        f&#34;  Channel : {channel}  |  Duration: {mins}m{secs:02d}s&#34;
-        f&#34;  |  Views: {views}  |  Date: {published}\n&#34;
-        f&#34;  URL     : {url}\n&#34;
-    )
-
-async def main():
-    parser = argparse.ArgumentParser(description=&#34;Search all PeerTube instances&#34;)
-    parser.add_argument(&#34;query&#34;, help=&#34;Search query&#34;)
-    parser.add_argument(&#34;--max-instances&#34;, type=int, default=500,
-                        help=&#34;Max instances to query (default: 500)&#34;)
-    parser.add_argument(&#34;--timeout&#34;, type=int, default=8,
-                        help=&#34;Per-instance timeout in seconds (default: 8)&#34;)
-    parser.add_argument(&#34;--json&#34;, action=&#34;store_true&#34;,
-                        help=&#34;Output raw JSON instead of formatted text&#34;)
-    args = parser.parse_args()
-
-    connector = aiohttp.TCPConnector(limit=100, ssl=False)
-    headers = {&#34;User-Agent&#34;: &#34;PeerTubeUniversalSearch/1.0&#34;}
-
-    async with aiohttp.ClientSession(connector=connector, headers=headers) as session:
-        instances = await fetch_instances(session)
-        if not instances:
-            print(&#34;No instances found. Exiting.&#34;)
-            return
-
-        instances = instances[:args.max_instances]
-        print(f&#34;Searching {len(instances)} instances for: \&#34;{args.query}\&#34;&#34;)
-        print(&#34;(This may take a few seconds...)\n&#34;, flush=True)
-
-        tasks = [search_instance(session, host, args.query, args.timeout) for host in instances]
-
-        results = []
-        done = 0
-        for coro in asyncio.as_completed(tasks):
-            host, videos = await coro
-            done &#43;= 1
-            if videos:
-                results.append((host, videos))
-                print(f&#34;[{done}/{len(instances)}] ✓ {host} — {len(videos)} result(s)&#34;, flush=True)
-
-        print(f&#34;\n{&#39;=&#39;*60}&#34;)
-        print(f&#34;Search complete. {len(results)} instance(s) returned results.&#34;)
-        print(f&#34;{&#39;=&#39;*60}\n&#34;)
-
-        if args.json:
-            all_videos = []
-            for host, videos in results:
-                for v in videos:
-                    v[&#34;_instance&#34;] = host
-                    all_videos.append(v)
-            print(json.dumps(all_videos, indent=2))
-        else:
-            total = 0
-            for host, videos in sorted(results, key=lambda x: -len(x[1])):
-                print(f&#34;── {host} ({len(videos)} result(s)) ──&#34;)
-                for v in videos:
-                    print(format_video(v, host))
-                    total &#43;= 1
-            print(f&#34;Total videos found: {total}&#34;)
-
-if __name__ == &#34;__main__&#34;:
-    asyncio.run(main())
-">
+  <link rel="alternate" type="application/rss+xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <link rel="stylesheet" href="/css/style.css">
 </head>
-<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
-  <div class="navbar-brand">
-    <a class="navbar-item" href="https://imlauera.github.io/">
-      <figure class="image">
-        <img alt="" class="is-rounded" src="/img/memememe.jpg">
-      </figure>
-    </a>
-    <a class="navbar-item" href="https://imlauera.github.io/">
-      Imlauer
-    </a>
-    <a class="navbar-item" href="/acerca/">
-      Acerca de Mi
-    </a>
-  </div>
-  
-  
-</nav>
+<body>
+  <header class="site-header">
+  <a class="site-title" href="/">Imlauer</a>
+</header>
 
-  <section>
-    <section class='hero is-small is-link is-fullwidth'>
-      <div class="hero-body">
-<div class="container">
-  <h1 class="title">
-    Peertube search
-  </h1>
-  <h2 class="subtitle">
-    <time datetime='2026-05-28T21:45:56-03:00'>
-      May 28, 2026
-    </time>
+  <main>
     
-    <br>
-    
-    
-    
-    <a class="tag is-info" href="https://imlauera.github.io/tags/peertube/">Peertube</a>
-    
-    
-    
-  </h2>
-</div>
-
-      </div>
-    </section>
-    <section class="section">
-      <div class="container">
-<div class="content is-medium">
-  <p>python -m venv peertube
+<article class="post">
+  <h1>Peertube search</h1>
+  <p class="meta">
+    <time datetime="2026-05-28">2026-05-28</time>
+    <span class="tags"> · peertube</span>
+  </p>
+  <div class="content">
+    <p>python -m venv peertube
 source peertube/bin/activate
 pip install aiohttp
 python peertube_search.py &ldquo;you are the dead internet&rdquo;</p>
@@ -338,55 +145,16 @@ python peertube_search.py &ldquo;you are the dead internet&rdquo;</p>
 </span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> __name__ <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;__main__&#34;</span>:
 </span></span><span style="display:flex;"><span>    asyncio<span style="color:#f92672">.</span>run(main())
 </span></span></code></pre></div>
-</div>
-
-
-      </div>
-    </section>
-  </section><script 
-src="/quiz/quizdown.js">
-</script>
-<script 
-src="/quiz/quizdownKatex.js">
-</script>
-<script 
-src="/quiz/quizdownHighlight.js">
-</script>
-<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
-<footer class="footer">
-  <div class="content has-text-centered">
-    
-    
-    <p>
-      
-      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
-        <span>
-          RSS
-        </span>
-      </a>
-      
-      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
-
-      
-      
-    </p>
-    
   </div>
+</article>
 
-
-
-
-
-
-<script type="text/javascript"
-  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
-  </script>
-<script type="text/x-mathjax-config">
-  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
-</script>
-
+  </main>
+  <footer class="site-footer">
+  <a href="/acerca/">acerca</a> · <a href="/servicios/">servicios</a> ·
+  <a href="/index.xml">rss</a> · 
+  <a href="https://github.com/imlauera/">github</a>
 </footer>
 
-
+  
 </body>
 </html>

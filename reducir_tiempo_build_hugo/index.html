@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cómo bajé el build de Hugo de 50 s a 24 s · Imlauer</title>
+  <meta name="description" content="imlauerandres [at] gmail.com">
+  <link rel="canonical" href="https://imlauera.github.io/reducir_tiempo_build_hugo/">
+  <link rel="alternate" type="application/rss+xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+  <a class="site-title" href="/">Imlauer</a>
+</header>
+
+  <main>
+    
+<article class="post">
+  <h1>Cómo bajé el build de Hugo de 50 s a 24 s</h1>
+  <p class="meta">
+    <time datetime="2026-11-11">2026-11-11</time>
+    <span class="tags"> · hugo, blog, performance</span>
+  </p>
+  <div class="content">
+    <p>Mi blog tiene 1194 archivos Markdown, 20 MB de contenido y 597 tags. <code>hugo</code>
+tardaba ~50 s en esta PC. Con tres cambios bajó a ~24 s (52% menos).</p>
+<h2 id="medir-antes-de-tocar">Medir antes de tocar</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>time hugo --quiet --renderToMemory
+</span></span><span style="display:flex;"><span>hugo --renderToMemory --templateMetrics
+</span></span></code></pre></div><p><code>--renderToMemory</code> compila sin escribir <code>public/</code>. <code>--templateMetrics</code> muestra
+qué template consume el tiempo.</p>
+<p>El perfil daba:</p>
+<ul>
+<li><code>single.html</code>: 61 s acumulados (1087 páginas).</li>
+<li><code>rss.xml</code>: 25 s acumulados, con un feed de <strong>13 s</strong>.</li>
+<li><code>list.html</code>: 10 s (597 páginas de tag).</li>
+</ul>
+<h2 id="1-desactivar-páginas-de-tag">1. Desactivar páginas de tag</h2>
+<p>Los tags se usaban solo como etiquetas. Generar 597 páginas <code>/tags/...</code> y sus
+feeds costaba ~35 s. En <code>config.toml</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-toml" data-lang="toml"><span style="display:flex;"><span><span style="color:#a6e22e">disableKinds</span> = [<span style="color:#e6db74">&#34;taxonomy&#34;</span>, <span style="color:#e6db74">&#34;term&#34;</span>]
+</span></span></code></pre></div><p>Y en el template del post, los tags quedan como texto:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-go-html-template" data-lang="go-html-template"><span style="display:flex;"><span><span style="color:#75715e">{{</span> <span style="color:#66d9ef">with</span> <span style="color:#a6e22e">.Params.tags</span> <span style="color:#75715e">}}</span>&lt;<span style="color:#f92672">span</span> <span style="color:#a6e22e">class</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;tags&#34;</span>&gt; · <span style="color:#75715e">{{</span> <span style="color:#a6e22e">delimit</span> <span style="color:#a6e22e">.</span> <span style="color:#e6db74">&#34;, &#34;</span> <span style="color:#75715e">}}</span>&lt;/<span style="color:#f92672">span</span>&gt;<span style="color:#75715e">{{</span> <span style="color:#66d9ef">end</span> <span style="color:#75715e">}}</span>
+</span></span></code></pre></div><h2 id="2-rss-liviano">2. RSS liviano</h2>
+<p>El RSS por defecto recorre <strong>todos</strong> los posts y calcula <code>.Summary</code> de cada uno.
+Con 1093 páginas eso eran ~11 s. Reemplacé <code>layouts/_default/rss.xml</code> por uno
+que lista solo los últimos 20, sin contenido:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-xml" data-lang="xml"><span style="display:flex;"><span>{{ range first 20 .Pages }}
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;item&gt;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&lt;title&gt;</span>{{ .Title }}<span style="color:#f92672">&lt;/title&gt;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&lt;link&gt;</span>{{ .Permalink }}<span style="color:#f92672">&lt;/link&gt;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&lt;pubDate&gt;</span>{{ .Date.Format &#34;Mon, 02 Jan 2006 15:04:05 -0700&#34; }}<span style="color:#f92672">&lt;/pubDate&gt;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&lt;guid&gt;</span>{{ .Permalink }}<span style="color:#f92672">&lt;/guid&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&lt;/item&gt;</span>
+</span></span><span style="display:flex;"><span>{{ end }}
+</span></span></code></pre></div><h2 id="3-theme-minimalista">3. Theme minimalista</h2>
+<p>Saqué Bulma y el navbar con imagen. Ahora hay un <code>baseof.html</code> de una columna,
+un <code>index.html</code> con lista y paginación, y un CSS de ~2 KB. Además bajé
+<code>pagination.pagerSize</code> de 250 a 50.</p>
+<h2 id="resultado">Resultado</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>antes:   49.5 s
+</span></span><span style="display:flex;"><span>después: 23.7 s   (-52%)
+</span></span></code></pre></div><p>El resaltado de código en los bloques con lenguaje (bash, python, etc.) sigue
+funcionando con Chroma/Monokai.</p>
+<h2 id="si-querés-exprimirlo-más">Si querés exprimirlo más</h2>
+<p>Quedan 4 posts gigantes (2.4 MB, 2.3 MB, 1.1 MB, 0.9 MB) que dominan el
+<code>single.html</code>. Si no los necesitás como páginas, movelos fuera de <code>content/</code>
+o marcalos con:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-yaml" data-lang="yaml"><span style="display:flex;"><span><span style="color:#f92672">_build</span>:
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">render</span>: <span style="color:#ae81ff">never</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">list</span>: <span style="color:#ae81ff">never</span>
+</span></span></code></pre></div><p>Para volver al RSS completo, borrá <code>layouts/_default/rss.xml</code>.</p>
+
+  </div>
+</article>
+
+  </main>
+  <footer class="site-footer">
+  <a href="/acerca/">acerca</a> · <a href="/servicios/">servicios</a> ·
+  <a href="/index.xml">rss</a> · 
+  <a href="https://github.com/imlauera/">github</a>
+</footer>
+
+  
+</body>
+</html>

@@ -1,116 +1,29 @@
 <!DOCTYPE html>
 <html lang="es">
-
-
-
-
-
 <head>
-  <meta property="og:url" content="https://imlauera.github.io/solucion_impresion_linux_a_windows/">
-	<meta property="og:site_name" content="Imlauer">
-	<meta property="og:title" content="Imprimir desde ArchLinux a Windows 10">
-	<meta property="og:description" content="Solución: Imprimir desde ArchLinux a impresoras compartidas de Windows 10 PC Windows: 192.168.0.203 (hostname LIVING, workgroup WORKGROUP, usuario living\aligra) Impresoras: Brother HL-L1222 Printer (USB002) y HP PSC 1400 series (USB001) Origen: ArchLinux (cliente SMB/CUPS) Resultado: ✅ Ambas impresoras imprimen desde Linux.
-TL;DR — Las claves que lo hicieron funcionar Ambas impresoras son “host-based” (GDI): NO aceptan texto plano. Hay que renderizar en Linux con el driver correcto antes de enviar. Texto crudo → 0 páginas, sin ruido. La HP daba un falso “cartucho de tinta vacío”: lo disparaba el soporte bidireccional (BIDI) de Windows, que consultaba el estado de la impresora y detenía el job RAW. Solución: desactivar BIDI en la impresora HP. Se necesita una cuenta autenticada para imprimir (el anónimo solo puede listar shares, no enviar trabajos). Cambios ejecutados EN WINDOWS 1. Impresoras compartidas Ya estaban compartidas. Verificado el share y puerto:">
-	<meta property="og:locale" content="es_es">
-	<meta property="og:type" content="article">
-		<meta property="article:published_time" content="2026-09-27T10:07:39-03:00">
-		<meta property="article:modified_time" content="2026-09-27T10:07:39-03:00">
-		<meta property="article:tag" content="Linux">
-
-  
-	<meta itemprop="name" content="Imprimir desde ArchLinux a Windows 10">
-	<meta itemprop="description" content="Solución: Imprimir desde ArchLinux a impresoras compartidas de Windows 10 PC Windows: 192.168.0.203 (hostname LIVING, workgroup WORKGROUP, usuario living\aligra) Impresoras: Brother HL-L1222 Printer (USB002) y HP PSC 1400 series (USB001) Origen: ArchLinux (cliente SMB/CUPS) Resultado: ✅ Ambas impresoras imprimen desde Linux.
-TL;DR — Las claves que lo hicieron funcionar Ambas impresoras son “host-based” (GDI): NO aceptan texto plano. Hay que renderizar en Linux con el driver correcto antes de enviar. Texto crudo → 0 páginas, sin ruido. La HP daba un falso “cartucho de tinta vacío”: lo disparaba el soporte bidireccional (BIDI) de Windows, que consultaba el estado de la impresora y detenía el job RAW. Solución: desactivar BIDI en la impresora HP. Se necesita una cuenta autenticada para imprimir (el anónimo solo puede listar shares, no enviar trabajos). Cambios ejecutados EN WINDOWS 1. Impresoras compartidas Ya estaban compartidas. Verificado el share y puerto:">
-	<meta itemprop="datePublished" content="2026-09-27T10:07:39-03:00">
-	<meta itemprop="dateModified" content="2026-09-27T10:07:39-03:00">
-	<meta itemprop="wordCount" content="998">
-	<meta itemprop="keywords" content="Linux">
-  
-	<meta name="twitter:card" content="summary">
-	<meta name="twitter:title" content="Imprimir desde ArchLinux a Windows 10">
-	<meta name="twitter:description" content="Solución: Imprimir desde ArchLinux a impresoras compartidas de Windows 10 PC Windows: 192.168.0.203 (hostname LIVING, workgroup WORKGROUP, usuario living\aligra) Impresoras: Brother HL-L1222 Printer (USB002) y HP PSC 1400 series (USB001) Origen: ArchLinux (cliente SMB/CUPS) Resultado: ✅ Ambas impresoras imprimen desde Linux.
-TL;DR — Las claves que lo hicieron funcionar Ambas impresoras son “host-based” (GDI): NO aceptan texto plano. Hay que renderizar en Linux con el driver correcto antes de enviar. Texto crudo → 0 páginas, sin ruido. La HP daba un falso “cartucho de tinta vacío”: lo disparaba el soporte bidireccional (BIDI) de Windows, que consultaba el estado de la impresora y detenía el job RAW. Solución: desactivar BIDI en la impresora HP. Se necesita una cuenta autenticada para imprimir (el anónimo solo puede listar shares, no enviar trabajos). Cambios ejecutados EN WINDOWS 1. Impresoras compartidas Ya estaban compartidas. Verificado el share y puerto:">
-
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>
-    
-    Imprimir desde ArchLinux a Windows 10
-    
-  </title>
-  <link rel="stylesheet" href='https://imlauera.github.io/css/site.min.css'>
+  <title>Imprimir desde ArchLinux a Windows 10 · Imlauer</title>
+  <meta name="description" content="imlauerandres [at] gmail.com">
   <link rel="canonical" href="https://imlauera.github.io/solucion_impresion_linux_a_windows/">
-  <link rel="alternate" type="application/rss&#43;xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
-  <meta http-equiv="X-UA-Compatible" content="chrome=1">
-  <meta name="HandheldFriendly" content="True">
-  <meta name="MobileOptimized" content="320">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="referrer" content="no-referrer">
-  <meta name="author" content="Imlauer.">
-  <meta name="description" content="Solución: Imprimir desde ArchLinux a impresoras compartidas de Windows 10
-PC Windows: 192.168.0.203 (hostname LIVING, workgroup WORKGROUP, usuario living\aligra)
-Impresoras: Brother HL-L1222 Printer (USB002) y HP PSC 1400 series (USB001)
-Origen: ArchLinux (cliente SMB/CUPS)
-Resultado: ✅ Ambas impresoras imprimen desde Linux.
-
-TL;DR — Las claves que lo hicieron funcionar
-
-Ambas impresoras son &ldquo;host-based&rdquo; (GDI): NO aceptan texto plano. Hay que renderizar en Linux con el driver correcto antes de enviar. Texto crudo → 0 páginas, sin ruido.
-La HP daba un falso &ldquo;cartucho de tinta vacío&rdquo;: lo disparaba el soporte bidireccional (BIDI) de Windows, que consultaba el estado de la impresora y detenía el job RAW. Solución: desactivar BIDI en la impresora HP.
-Se necesita una cuenta autenticada para imprimir (el anónimo solo puede listar shares, no enviar trabajos).
-
-
-Cambios ejecutados EN WINDOWS
-1. Impresoras compartidas
-Ya estaban compartidas. Verificado el share y puerto:">
+  <link rel="alternate" type="application/rss+xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <link rel="stylesheet" href="/css/style.css">
 </head>
-<body><nav class="navbar is-transparent " role="navigation" aria-label="main navigation">
-  <div class="navbar-brand">
-    <a class="navbar-item" href="https://imlauera.github.io/">
-      <figure class="image">
-        <img alt="" class="is-rounded" src="/img/memememe.jpg">
-      </figure>
-    </a>
-    <a class="navbar-item" href="https://imlauera.github.io/">
-      Imlauer
-    </a>
-    <a class="navbar-item" href="/acerca/">
-      Acerca de Mi
-    </a>
-  </div>
-  
-  
-</nav>
+<body>
+  <header class="site-header">
+  <a class="site-title" href="/">Imlauer</a>
+</header>
 
-  <section>
-    <section class='hero is-small is-link is-fullwidth'>
-      <div class="hero-body">
-<div class="container">
-  <h1 class="title">
-    Imprimir desde ArchLinux a Windows 10
-  </h1>
-  <h2 class="subtitle">
-    <time datetime='2026-09-27T10:07:39-03:00'>
-      September 27, 2026
-    </time>
+  <main>
     
-    <br>
-    
-    
-    
-    <a class="tag is-info" href="https://imlauera.github.io/tags/linux/">Linux</a>
-    
-    
-    
-  </h2>
-</div>
-
-      </div>
-    </section>
-    <section class="section">
-      <div class="container">
-<div class="content is-medium">
-  <h1 id="solución-imprimir-desde-archlinux-a-impresoras-compartidas-de-windows-10">Solución: Imprimir desde ArchLinux a impresoras compartidas de Windows 10</h1>
+<article class="post">
+  <h1>Imprimir desde ArchLinux a Windows 10</h1>
+  <p class="meta">
+    <time datetime="2026-09-27">2026-09-27</time>
+    <span class="tags"> · linux</span>
+  </p>
+  <div class="content">
+    <h1 id="solución-imprimir-desde-archlinux-a-impresoras-compartidas-de-windows-10">Solución: Imprimir desde ArchLinux a impresoras compartidas de Windows 10</h1>
 <p><strong>PC Windows:</strong> <code>192.168.0.203</code> (hostname <code>LIVING</code>, workgroup <code>WORKGROUP</code>, usuario <code>living\aligra</code>)
 <strong>Impresoras:</strong> <code>Brother HL-L1222 Printer</code> (USB002) y <code>HP PSC 1400 series</code> (USB001)
 <strong>Origen:</strong> ArchLinux (cliente SMB/CUPS)
@@ -298,55 +211,16 @@ byte a byte</strong> desde backup, spooler reiniciado; verificado con <code>arct
 blanco: en la PC de Windows, <code>net user Invitado *</code> y dejar vacía dos veces.</li>
 </ul>
 
-</div>
-
-
-      </div>
-    </section>
-  </section><script 
-src="/quiz/quizdown.js">
-</script>
-<script 
-src="/quiz/quizdownKatex.js">
-</script>
-<script 
-src="/quiz/quizdownHighlight.js">
-</script>
-<script>quizdown.register(quizdownHighlight).register(quizdownKatex).init()</script> 
-<footer class="footer">
-  <div class="content has-text-centered">
-    
-    
-    <p>
-      
-      <a class="" href="https://imlauera.github.io/index.xml" target="_blank">
-        <span>
-          RSS
-        </span>
-      </a>
-      
-      | <a href="https://imlauera.github.io" target="_blank">Andres Imlauer.</a> 
-
-      
-      
-    </p>
-    
   </div>
+</article>
 
-
-
-
-
-
-<script type="text/javascript"
-  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
-  </script>
-<script type="text/x-mathjax-config">
-  MathJax.Hub.Config({ tex2jax: {inlineMath: [["$","$"],["\\(","\\)"]]} })
-</script>
-
+  </main>
+  <footer class="site-footer">
+  <a href="/acerca/">acerca</a> · <a href="/servicios/">servicios</a> ·
+  <a href="/index.xml">rss</a> · 
+  <a href="https://github.com/imlauera/">github</a>
 </footer>
 
-
+  
 </body>
 </html>
