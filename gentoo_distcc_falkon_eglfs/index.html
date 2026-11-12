@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gentoo en una netbook: binhost, EGLFS y distcc para compilar Falkon · Imlauer</title>
+  <meta name="description" content="imlauerandres [at] gmail.com">
+  <link rel="canonical" href="https://imlauera.github.io/gentoo_distcc_falkon_eglfs/">
+  <link rel="alternate" type="application/rss+xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+  <a class="site-title" href="/">Imlauer</a>
+</header>
+
+  <main>
+    
+<article class="post">
+  <h1>Gentoo en una netbook: binhost, EGLFS y distcc para compilar Falkon</h1>
+  <p class="meta">
+    <time datetime="2026-11-12">2026-11-12</time>
+    <span class="tags"> · <a href="/tags/gentoo/">gentoo</a>, <a href="/tags/distcc/">distcc</a>, <a href="/tags/falkon/">falkon</a>, <a href="/tags/eglfs/">eglfs</a>, <a href="/tags/linux/">linux</a></span>
+  </p>
+  <div class="content">
+    <p>La idea era simple: instalar Gentoo en una netbook vieja, usar la mayor
+cantidad de binarios posible y compilar <strong>Falkon</strong> con <strong>EGLFS</strong> para que
+ande sin X11 ni Wayland. El problema es que la netbook tiene un Pentium
+N3540 (4 núcleos Silvermont), 7.6 GB de RAM y un disco lento: compilar
+QtWebEngine ahí es una tarde entera.</p>
+<p>La solución fue usar el binhost oficial para casi todo y mandar la
+compilación pesada a otra máquina de la LAN con <strong>distcc</strong>.</p>
+<h2 id="el-hardware">El hardware</h2>
+<table>
+	<thead>
+			<tr>
+					<th>Máquina</th>
+					<th>CPU</th>
+					<th>RAM</th>
+					<th>Rol</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>Netbook</td>
+					<td>Pentium N3540, 4 núcleos</td>
+					<td>7.6 GB</td>
+					<td>Gentoo, OpenRC + elogind</td>
+			</tr>
+			<tr>
+					<td>Helper</td>
+					<td>6 núcleos</td>
+					<td>16 GB</td>
+					<td>Arch Linux, distccd</td>
+			</tr>
+	</tbody>
+</table>
+<p>Las dos en <code>192.168.0.0/24</code>. La netbook es <code>192.168.0.33</code> y el helper
+<code>192.168.0.143</code>.</p>
+<h2 id="1-base-gentoo-con-binhost">1. Base: Gentoo con binhost</h2>
+<p>Instalé un stage3 amd64 con perfil OpenRC y <code>elogind</code>. Para no compilar
+todo desde cero configuré el binhost oficial en
+<code>/etc/portage/binrepos.conf/gentoo.conf</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-ini" data-lang="ini"><span style="display:flex;"><span><span style="color:#66d9ef">[gentoo]</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">priority</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">9999</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">sync-uri</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">https://distfiles.gentoo.org/releases/amd64/binpackages/23.0/x86-64/</span>
+</span></span></code></pre></div><p>Y en <code>/etc/portage/make.conf</code> lo importante quedó así:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>COMMON_FLAGS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;-march=silvermont -O2 -pipe&#34;</span>
+</span></span><span style="display:flex;"><span>CFLAGS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>COMMON_FLAGS<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>CXXFLAGS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>COMMON_FLAGS<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>MAKEOPTS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;-j10 -l4&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>FEATURES<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>FEATURES<span style="color:#e6db74">}</span><span style="color:#e6db74"> getbinpkg binpkg-request-signature&#34;</span>
+</span></span><span style="display:flex;"><span>EMERGE_DEFAULT_OPTS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;--getbinpkg --autounmask-backtrack=y --keep-going=y&#34;</span>
+</span></span></code></pre></div><p><code>-march=silvermont</code> es seguro para el N3540. <strong>No</strong> uso
+<code>-march=native</code> porque después distcc compila en otra máquina y las
+instrucciones tienen que coincidir.</p>
+<p>Con esto, <code>emerge -v falkon</code> baja la mayoría de las dependencias como
+<code>.gpkg.tar</code> en vez de compilarlas.</p>
+<h2 id="2-eglfs-la-parte-que-no-está-en-el-binhost">2. EGLFS: la parte que no está en el binhost</h2>
+<p>El binhost trae <code>dev-qt/qtbase</code> compilado <strong>sin</strong> el USE flag <code>eglfs</code>.
+Se puede comprobar rápido: si no existe
+<code>/usr/lib64/qt6/plugins/platforms/libqeglfs.so</code>, Falkon no va a poder
+arrancar en una TTY sin servidor gráfico.</p>
+<p>Lo agregué en <code>/etc/portage/package.use/qt</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>dev-qt/qtbase eglfs
+</span></span></code></pre></div><p>Y reconstruí QtBase desde fuente:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>emerge -av --changed-use dev-qt/qtbase
+</span></span></code></pre></div><p>Eso obliga a compilar QtBase localmente (o con distcc), pero es una sola
+vez. Después verificamos que el plugin exista:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ls /usr/lib64/qt6/plugins/platforms/libqeglfs.so
+</span></span></code></pre></div><p>Para probar Falkon desde una TTY, con el usuario en el grupo <code>video</code> y
+con acceso a <code>/dev/dri</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>QT_QPA_PLATFORM<span style="color:#f92672">=</span>eglfs <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>QT_QPA_EGLFS_INTEGRATION<span style="color:#f92672">=</span>eglfs_kms <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>QTWEBENGINE_DISABLE_SANDBOX<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>falkon
+</span></span></code></pre></div><p><code>QTWEBENGINE_DISABLE_SANDBOX=1</code> es un parche para probar; si podés,
+dejá el sandbox activado.</p>
+<h2 id="3-distcc-el-helper">3. distcc: el helper</h2>
+<p>En el helper (Arch Linux) instalé <code>distcc</code> y lo dejé escuchando solo en
+la LAN. En <code>/etc/conf.d/distccd</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>DISTCC_ARGS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;--allow 192.168.0.0/24 --jobs 6 --nice 5&#34;</span>
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>systemctl enable --now distccd
+</span></span></code></pre></div><p>Abrí el puerto <code>3632/tcp</code> <strong>solo</strong> para <code>192.168.0.0/24</code>.</p>
+<blockquote>
+<p>distccd ejecuta comandos que le manda el cliente. No lo expongas a
+Internet ni lo dejes con <code>--allow 0.0.0.0/0</code>. La red tiene que ser de
+confianza.</p>
+</blockquote>
+<h2 id="4-distcc-el-cliente-gentoo">4. distcc: el cliente Gentoo</h2>
+<p>En la netbook:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>emerge -av sys-devel/distcc
+</span></span></code></pre></div><p><code>/etc/distcc/hosts</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>192.168.0.143/6
+</span></span><span style="display:flex;"><span>localhost/4
+</span></span></code></pre></div><p>El <code>/6</code> son los 6 jobs del helper y <code>localhost/4</code> los 4 núcleos de la
+netbook. Uso <strong>TCP</strong>, no el modo SSH de distcc. ¿Por qué? Porque con
+<code>FEATURES=userpriv</code> Portage compila como el usuario <code>portage</code>, y el modo
+SSH necesitaría una clave SSH para ese usuario. TCP es más simple y
+distccd ya filtra por <code>--allow</code>.</p>
+<p>En <code>/etc/portage/make.conf</code> agregué:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>MAKEOPTS<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;-j10 -l4&#34;</span>
+</span></span><span style="display:flex;"><span>FEATURES<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>FEATURES<span style="color:#e6db74">}</span><span style="color:#e6db74"> distcc&#34;</span>
+</span></span><span style="display:flex;"><span>DISTCC_DIR<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/var/tmp/portage/.distcc&#34;</span>
+</span></span></code></pre></div><p>Y creé el directorio de estado con el dueño correcto:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mkdir -p /var/tmp/portage/.distcc
+</span></span><span style="display:flex;"><span>chown -R portage:portage /var/tmp/portage/.distcc
+</span></span></code></pre></div><p><code>-j10</code> = 6 jobs remotos + 4 locales. <code>-l4</code> limita la carga local a 4
+para que la netbook no se arrastre.</p>
+<p><strong>Importante:</strong> las versiones de GCC y binutils del cliente y del helper
+deberían coincidir. En mi caso el test funcionó con
+<code>gcc 16.2.1_p20260926</code> en Gentoo y <code>gcc 16.2.1 20260810</code> en Arch, pero
+si aparecen errores raros, igualá las versiones o compilá esa parte
+localmente.</p>
+<h2 id="5-verificar-que-los-trabajos-lleguen">5. Verificar que los trabajos lleguen</h2>
+<p>Primero, ver qué hosts ve el cliente:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>distcc --show-hosts
+</span></span></code></pre></div><p>Después, una compilación de prueba con salida verbosa:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>printf <span style="color:#e6db74">&#39;#include &lt;stdio.h&gt;\nint main(void){puts(&#34;ok&#34;);return 0;}\n&#39;</span> &gt; /tmp/t.c
+</span></span><span style="display:flex;"><span>DISTCC_VERBOSE<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span> distcc gcc -c /tmp/t.c -o /tmp/t.o
+</span></span></code></pre></div><p>Si todo anda, aparece algo así:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>compile /tmp/t.c on 192.168.0.143/6 completed ok
+</span></span></code></pre></div><p>En el helper se puede confirmar de tres formas:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>journalctl -u distccd -n <span style="color:#ae81ff">5</span>
+</span></span><span style="display:flex;"><span>ss -tn | grep <span style="color:#e6db74">&#39;:3632&#39;</span>
+</span></span><span style="display:flex;"><span>ps -eo pid,comm,args | grep <span style="color:#e6db74">&#39;[c]c1plus&#39;</span>
+</span></span></code></pre></div><p>Un log típico del helper:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>distccd[476]: (dcc_job_summary) client: 192.168.0.33:39884 COMPILE_OK \
+</span></span><span style="display:flex;"><span>  ... x86_64-pc-linux-gnu-g++ .../function_get_path_info.cc
+</span></span></code></pre></div><p>Y desde la netbook, mientras compila:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>DISTCC_DIR<span style="color:#f92672">=</span>/var/tmp/portage/.distcc distccmon-text <span style="color:#ae81ff">2</span>
+</span></span></code></pre></div><h2 id="6-compilar-falkon">6. Compilar Falkon</h2>
+<p>Con todo configurado:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>emerge -v falkon
+</span></span></code></pre></div><p>En mi caso <code>dev-qt/qtwebengine</code> se compiló desde fuente: el binhost lo
+trae con <code>bindist</code>, mi perfil usa <code>-bindist</code>, y además QtBase ya lo
+había tenido que reconstruir por <code>eglfs</code>. QtWebEngine es la parte
+pesada, así que ahí es donde se nota distcc.</p>
+<p>Durante el build se ve el wrapper de distcc en acción:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>/usr/lib/distcc/bin/x86_64-pc-linux-gnu-g++ ...
+</span></span></code></pre></div><p>y en el helper aparecen los <code>cc1plus</code> remotos. Los trabajos llegaron
+bien: <code>COMPILE_OK</code> y conexiones establecidas al puerto <code>3632</code>.</p>
+<h2 id="notas-y-problemas-comunes">Notas y problemas comunes</h2>
+<ul>
+<li><strong><code>binpkg-request-signature</code></strong>: si empezás a generar tus propios
+binarios con <code>FEATURES=buildpkg</code>, o los firmás o sacás ese feature.</li>
+<li><strong>Unity builds</strong>: QtWebEngine usa archivos de traducción enormes; en
+esos casos distcc ayuda menos porque hay pocos archivos para repartir.</li>
+<li><strong>Linking</strong>: el enlazado final se hace en la netbook; distcc solo
+acelera la compilación.</li>
+<li><strong>Si distcc falla</strong>: probá <code>FEATURES=&quot;-distcc&quot;</code> para aislar si el
+problema es del cluster o del paquete.</li>
+<li><strong>Firewall</strong>: el helper solo debe aceptar <code>3632/tcp</code> desde la LAN.</li>
+</ul>
+<p>La netbook no se va a convertir en un servidor de compilación, pero con
+binhost + distcc + un poco de paciencia, Falkon con EGLFS se puede
+compilar sin dejar la máquina colgada una tarde entera.</p>
+
+  </div>
+</article>
+
+  </main>
+  <footer class="site-footer">
+  <a href="/acerca/">acerca</a> · <a href="/servicios/">servicios</a> ·
+  <a href="/index.xml">rss</a> · 
+  <a href="https://github.com/imlauera/">github</a>
+</footer>
+
+  
+</body>
+</html>
