@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Estenografia · Imlauer</title>
+  <title>Estenografia con Plover en Arch Linux · Imlauer</title>
   <meta name="description" content="imlauerandres [at] gmail.com">
   <link rel="canonical" href="https://imlauera.github.io/estenografia/">
   <link rel="alternate" type="application/rss+xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
@@ -17,144 +17,127 @@
   <main>
     
 <article class="post">
-  <h1>Estenografia</h1>
+  <h1>Estenografia con Plover en Arch Linux</h1>
   <p class="meta">
-    <time datetime="2026-02-02">2026-02-02</time>
+    <time datetime="2026-11-11">2026-11-11</time>
     <span class="tags"> · <a href="/tags/typing/">typing</a></span>
   </p>
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+  
+  
+  
+  
+  
+    
+  
+  
+  
+  
   <div class="content">
-    <p>Short answer: <strong>yes, absolutely</strong> — and Arch is actually a <em>great</em> choice for this.
-Long answer: you can do <strong>real stenography on a normal keyboard</strong>, mostly from the terminal, with one small graphical piece (X/Wayland) to capture chords.</p>
-<p>Let’s break it down cleanly.</p>
-<p><strong>Plover</strong> no instales yay -S plover porque compila,
-instala el appimage y vas a tener que instalar fuse2
-tambien para que funcione el appimage.</p>
-<hr>
-<h2 id="1-the-core-tool-plover-opensteno">1️⃣ The core tool: <strong>Plover (OpenSteno)</strong></h2>
-<p>Plover is the <strong>real stenography engine</strong> used for court-style steno.
-It works with:</p>
+    <h2 id="qué-es-la-estenografía">Qué es la estenografía</h2>
+<p>No es &ldquo;escribir rápido con los diez dedos&rdquo; (eso es mecanografía). La
+estenografía es escribir pulsando <strong>acordes</strong>: varias teclas <strong>al mismo
+tiempo</strong>, y un traductor convierte cada acorde en una palabra, sílaba o
+frase.</p>
+<p>Es lo que usan los taquígrafos de tribunales y el subtitulado en vivo. Un
+buen estenógrafo pasa de <strong>200 WPM</strong>, contra ~80-120 WPM de tope del
+QWERTY. La curva de aprendizaje es dura al principio (mucho músculo y
+memoria), pero después escala muchísimo.</p>
+<p>El motor libre y estándar es <strong>Plover</strong> (Open Steno Project). Captura los
+acordes y reinyecta el texto como si fuera un teclado normal, así que
+cualquier programa lo recibe igual.</p>
+<h2 id="se-puede-en-linux-y-desde-la-tty">¿Se puede en Linux? ¿Y desde la TTY?</h2>
+<p>En Linux sí. Desde la <strong>TTY pura (Ctrl+Alt+F1) NO</strong>. Plover necesita un
+servidor gráfico para <em>capturar</em> e <em>inyectar</em> las pulsaciones:</p>
 <ul>
-<li>real steno machines ✅</li>
-<li><strong>normal QWERTY keyboards</strong> ✅</li>
+<li><strong>X11</strong>: usa XInput para capturar y XTest para emitir.</li>
+<li><strong>Wayland</strong>: usa <code>evdev</code> para capturar y <code>uinput</code> para emitir.</li>
 </ul>
-<p>It’s open source and runs on Linux (including Arch).</p>
-<blockquote>
-<p>⚠️ Important truth:
-<strong>Pure TTY (Ctrl+Alt+F1) cannot do stenography</strong>, because:</p>
-<ul>
-<li>steno requires <strong>simultaneous key presses (chords)</strong></li>
-<li>Linux TTY input is sequential, not chord-aware</li>
-</ul>
-</blockquote>
-<p>So:</p>
-<ul>
-<li><strong>Terminal-based workflow? YES</strong></li>
-<li><strong>Text-only console (no X/Wayland)? NO</strong></li>
-</ul>
-<p>You need <strong>X11 or Wayland</strong>, but you can still <em>live in the terminal</em>.</p>
-<hr>
-<h2 id="2-install-plover-on-arch-linux">2️⃣ Install Plover on Arch Linux</h2>
-<h3 id="option-a--aur-recommended">Option A — AUR (recommended)</h3>
+<p>Con <code>plover -g none</code> corre &ldquo;headless&rdquo; (sin ventana), pero <strong>igual necesita
+X11 corriendo por debajo</strong>. En consola virtual con framebuffer no anda.</p>
+<p>La única forma de hacer steno sin servidor gráfico es meter la traducción
+en el firmware del teclado (<strong>QMK con <code>STENO_ENABLE</code></strong>), que manda el texto
+ya resuelto.</p>
+<h2 id="instalación-en-arch-linux">Instalación en Arch Linux</h2>
+<p>Verificado en Arch: el paquete AUR compila y anda bien.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>yay -S plover
-</span></span></code></pre></div><p>or</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>paru -S plover
-</span></span></code></pre></div><h3 id="option-b--pip-works-everywhere">Option B — pip (works everywhere)</h3>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pip install --user plover
-</span></span></code></pre></div><p>Run it:</p>
+</span></span></code></pre></div><p>Eso instala Plover 5.4.2 con sus dependencias (pyside6, python-xlib,
+python-evdev, python-pyserial, etc). Ejecutás:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>plover
-</span></span></code></pre></div><p>This launches a small GUI window (just the engine).</p>
-<hr>
-<h2 id="3-use-plover-with-a-normal-keyboard">3️⃣ Use Plover with a <strong>normal keyboard</strong></h2>
-<p>In Plover settings:</p>
-<pre tabindex="0"><code>Machine → Keyboard
-</code></pre><p>This enables <strong>QWERTY steno mode</strong>.</p>
-<h3 id="default-keyboard-steno-layout-important">Default keyboard steno layout (important)</h3>
-<pre tabindex="0"><code>S T K P W H   F P L T D
-A O E U
-</code></pre><p>These are <em>phonetic</em>, not letters.</p>
-<p>You press <strong>multiple keys at once</strong> to produce words.</p>
-<p>Example:</p>
+</span></span></code></pre></div><p>Alternativas:</p>
 <ul>
-<li><code>TKPW</code> → &ldquo;g&rdquo;</li>
-<li><code>KAT</code> → &ldquo;cat&rdquo;</li>
-<li><code>PWAEUBG</code> → &ldquo;basic&rdquo;</li>
+<li><strong>AppImage</strong> (método oficial de upstream): bajás el <code>.AppImage</code>,
+<code>chmod +x</code> y listo. Necesita <code>fuse2</code>.</li>
+<li><code>plover-git</code> del AUR es la versión vieja (PyQt5) — no la uses.</li>
 </ul>
-<p>This is <strong>exactly how court reporters type</strong>, just slower at first.</p>
-<hr>
-<h2 id="4-terminal-only-workflow-the-good-part">4️⃣ “Terminal-only” workflow (the good part)</h2>
-<p>Once Plover is running, it <strong>types into whatever has focus</strong>.</p>
-<p>That means you can use:</p>
+<h2 id="uso-con-teclado-normal">Uso con teclado normal</h2>
+<p>En Plover: <code>Configure → Machine → Keyboard</code>. Ahí ya podés escribir steno
+con el teclado común.</p>
+<p>El layout de steno es <strong>fonético</strong>, no alfabético. La idea:</p>
+<pre tabindex="0"><code>#  #  #  #  #  #  #  #  #  #      &lt;- barra de números (fila superior)
+S  T  P  H  *  F  P  L  T  D
+S  K  W  R  *  R  B  G  S  Z
+   A  O     E  U
+</code></pre><p>No hace falta memorizarlo de una: en Plover abrí
+<code>Tools → Layout Display</code> y te muestra en vivo qué tecla del QWERTY
+corresponde a cada tecla de steno.</p>
+<p>Algunos acordes de ejemplo:</p>
 <ul>
-<li><code>alacritty</code></li>
-<li><code>kitty</code></li>
-<li><code>foot</code></li>
-<li><code>wezterm</code></li>
-<li><code>xterm</code></li>
+<li><code>KAT</code> → cat</li>
+<li><code>TKPW</code> → g</li>
+<li><code>PW</code> → b</li>
+<li><code>TK</code> → d</li>
+<li><code>-T</code> → the</li>
 </ul>
-<p>Example:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nvim notes.txt
-</span></span></code></pre></div><p>Then:</p>
+<h2 id="necesitás-un-teclado-n-key-rollover-nkro">Necesitás un teclado N-key rollover (NKRO)</h2>
+<p>Para hacer acordes de verdad el teclado tiene que <strong>reportar todas las
+teclas que están pulsadas al mismo tiempo</strong>.</p>
 <ul>
-<li>keep Plover running in background</li>
-<li>type steno chords</li>
-<li>text appears in <strong>Neovim</strong></li>
+<li><strong>NKRO</strong> (N-Key Rollover): reporta cualquier cantidad de teclas a la vez.</li>
+<li>La mayoría de teclados de membrana son <strong>6KRO</strong> (máx 6) o tienen
+<em>ghosting</em>: pierden teclas cuando pulsás muchas juntas.</li>
+<li>Casi todos los <strong>mecánicos / gaming</strong> modernos tienen NKRO. Los
+específicos de steno (The Uni, Asterisk, Polyglot) van en columnas, no
+escalonados, y se conectan por serial (<code>Gemini PR</code> / <code>TX Bolt</code>) o <code>Plover HID</code>.</li>
 </ul>
-<p>💡 From your perspective, it feels like <em>terminal stenography</em>.</p>
-<hr>
-<h2 id="5-learning-steno-from-the-terminal">5️⃣ Learning steno <strong>from the terminal</strong></h2>
-<p>Here’s how to stay terminal-native:</p>
-<h3 id="-lessons">📘 Lessons</h3>
-<p>Use <strong>plain-text lessons</strong>:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>git clone https://github.com/openstenoproject/plover-tutorial
-</span></span><span style="display:flex;"><span>less plover-tutorial/lessons.md
-</span></span></code></pre></div><p>Or write your own drills in Markdown and open them in <code>nvim</code>.</p>
-<hr>
-<h3 id="-practice-method-recommended">🧪 Practice method (recommended)</h3>
-<p>Split terminal:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>tmux
-</span></span></code></pre></div><p>Pane 1:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nvim lesson.txt
-</span></span></code></pre></div><p>Pane 2:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nvim practice.txt
-</span></span></code></pre></div><ul>
-<li>Read lesson</li>
-<li>Steno-type into practice buffer</li>
-<li>No mouse</li>
-<li>No distractions</li>
-</ul>
-<hr>
-<h2 id="6-minimalist-arch-setup-my-recommendation">6️⃣ Minimalist Arch setup (my recommendation)</h2>
+<h3 id="no-tenés-nkro-todavía">¿No tenés NKRO todavía?</h3>
+<p>No es bloqueante, hay dos parches en Plover:</p>
 <ul>
-<li>Window manager: <code>sway</code> or <code>i3</code></li>
-<li>Terminal: <code>foot</code> or <code>kitty</code></li>
-<li>Editor: <code>nvim</code></li>
-<li>Background app: <code>plover</code></li>
+<li><strong>Arpeggiate</strong>: pulsás las teclas del acorde en grupos (o de a una) y
+terminás con la <strong>barra espaciadora</strong>. Plover no procesa hasta el espacio.</li>
+<li><strong>Rolling</strong>: mantené siempre al menos una tecla pulsada y andá sumando las
+demás; Plover recién recibe el acorde cuando soltás todas.</li>
 </ul>
-<p>This is about as <strong>anti-enshittified</strong> as typing gets.</p>
-<hr>
-<h2 id="7-reality-check-important">7️⃣ Reality check (important)</h2>
-<p>Learning steno is:</p>
+<p>Se activan en <code>Configure → Machine</code>. Sirven para aprender, pero para pasar
+de 120 WPM conviene NKRO real.</p>
+<h3 id="cómo-probar-tu-teclado">Cómo probar tu teclado</h3>
+<p>Apretá muchas teclas a la vez y mirá si todas se registran (un tester online
+de teclado, o <code>sudo evtest</code> / <code>showkey</code> en Linux). Si se &ldquo;cortan&rdquo;, no es
+NKRO.</p>
+<h3 id="si-tu-teclado-es-compatible-con-qmk">Si tu teclado es compatible con QMK</h3>
+<p>Se puede hacer steno a nivel firmware: <code>STENO_ENABLE = yes</code> y protocolos
+<code>Gemini PR</code> / <code>TX Bolt</code>, o <code>Plover HID</code>. En ese modo Plover no captura tu
+teclado, así que podés alternar entre tipear normal y steno sin
+activar/desactivar nada.</p>
+<p>Para teclados seriales agregá tu usuario al grupo <code>dialout</code>/<code>uucp</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>stat -c <span style="color:#e6db74">&#34;%G&#34;</span> /dev/ttyACM*
+</span></span><span style="display:flex;"><span>sudo usermod -aG dialout $USER
+</span></span></code></pre></div><h2 id="para-aprender">Para aprender</h2>
 <ul>
-<li>🧠 cognitive</li>
-<li>🖐️ muscle-memory heavy</li>
-<li>📉 frustrating at first</li>
+<li><strong>Learn Plover!</strong> (el libro/teoría de referencia).</li>
+<li>El tutorial oficial <code>plover-tutorial</code>.</li>
+<li>Practicar con <code>Tools → Paper Tape</code> y <code>Layout Display</code> abiertos, y escribir
+en un <code>nvim</code> o <code>tmux</code> al lado.</li>
 </ul>
-<p>But:</p>
-<ul>
-<li>After basics → <strong>200+ WPM is real</strong></li>
-<li>QWERTY typing caps out ~80–120 WPM</li>
-<li>Steno scales <em>much</em> higher</li>
-</ul>
-<hr>
-<h2 id="8-want-a-next-step">8️⃣ Want a next step?</h2>
-<p>I can:</p>
-<ul>
-<li>🗺️ give you a <strong>30-day steno learning plan</strong></li>
-<li>🧩 explain <strong>phonetic theory vs dictionary theory</strong></li>
-<li>⌨️ design a <strong>QWERTY steno layout optimized for laptops</strong></li>
-<li>🧪 help you avoid RSI while chord typing</li>
-</ul>
-<p>Just say which one.</p>
 
   </div>
 </article>

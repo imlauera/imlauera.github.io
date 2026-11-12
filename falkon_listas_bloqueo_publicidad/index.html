@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bloquear publicidad en Falkon: todas las listas que uso · Imlauer</title>
+  <meta name="description" content="imlauerandres [at] gmail.com">
+  <link rel="canonical" href="https://imlauera.github.io/falkon_listas_bloqueo_publicidad/">
+  <link rel="alternate" type="application/rss+xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+  <a class="site-title" href="/">Imlauer</a>
+</header>
+
+  <main>
+    
+<article class="post">
+  <h1>Bloquear publicidad en Falkon: todas las listas que uso</h1>
+  <p class="meta">
+    <time datetime="2026-11-12">2026-11-12</time>
+    <span class="tags"> · <a href="/tags/falkon/">falkon</a>, <a href="/tags/ads/">ads</a>, <a href="/tags/adblock/">adblock</a></span>
+  </p>
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+  
+  
+    
+      
+    
+  
+  
+  
+  
+    
+  
+  
+  
+  <div class="audio-player">
+    <p class="audio-label">Escuchar este artículo</p>
+    <audio controls preload="metadata" src="https://archive.org/download/imlauer-blog-audio-falkon-listas-bloqueo-publicidad-ff24d171/falkon-listas-bloqueo-publicidad-41f813fa20.mp3"></audio>
+    <p class="audio-meta"><a href="https://archive.org/download/imlauer-blog-audio-falkon-listas-bloqueo-publicidad-ff24d171/falkon-listas-bloqueo-publicidad-41f813fa20.mp3">Descargar MP3</a> · <a href="https://archive.org/details/imlauer-blog-audio-falkon-listas-bloqueo-publicidad-ff24d171">Ver en Internet Archive</a></p>
+  </div>
+  
+  
+  <div class="content">
+    <p>Falkon (basado en QtWebEngine/Chromium) trae un bloqueador de publicidad
+<strong>integrado</strong>, sin extensiones. El problema es que por defecto solo activa dos
+listas (EasyList y NoCoin), y con eso muchos sitios siguen mostrando anuncios.
+Acá dejo el conjunto completo de listas que tengo cargadas, cómo se instalan y
+cuáles son las limitaciones reales del motor.</p>
+<h2 id="por-qué-el-adblock-de-falkon-y-no-ublock-origin">Por qué el AdBlock de Falkon y no uBlock Origin</h2>
+<p>Falkon no soporta WebExtensions, así que no podés instalar uBlock Origin. Lo que
+sí tiene es una implementación propia compatible con la sintaxis de <strong>Adblock
+Plus</strong> (<code>AdBlockRule</code>), con soporte de:</p>
+<ul>
+<li>bloqueo por red (<code>||dominio^</code>, <code>$third-party</code>, <code>$script</code>, <code>$image</code>, etc.)</li>
+<li>ocultamiento cosmético clásico (<code>##.selector</code>, <code>dominio##.selector</code>)</li>
+<li>excepciones (<code>@@</code>) y listas de dominios por <code>$domain=</code></li>
+</ul>
+<p>No soporta las extensiones modernas de uBlock (scriptlets <code>##+js(...)</code>,
+<code>$redirect</code>, filtros cosméticos procedurales). Por eso las listas pensadas para
+uBlock funcionan <strong>parcialmente</strong>: se aplica todo lo que es red y cosmético
+clásico, y se ignora lo específico de uBO.</p>
+<h2 id="dónde-guarda-las-listas-y-cómo-las-carga">Dónde guarda las listas y cómo las carga</h2>
+<p>Todo vive en el perfil activo:</p>
+<pre tabindex="0"><code>~/.config/falkon/profiles/default/adblock/
+</code></pre><p>Al arrancar, Falkon <strong>lee automáticamente todos los <code>*.txt</code></strong> de esa carpeta y
+crea una suscripción por archivo (excepto <code>customlist.txt</code>, que son las &ldquo;Custom
+Rules&rdquo; editables). Cada archivo tiene que empezar exactamente así:</p>
+<pre tabindex="0"><code>Title: Nombre de la lista
+Url: https://url-de-la-lista.txt
+[Adblock Plus 2.0]
+...reglas...
+</code></pre><p>La <strong>línea 3 debe empezar con <code>[Adblock</code></strong>, si no Falkon considera el archivo
+inválido y trata de re-descargarlo. La segunda línea (<code>Url:</code>) es la que usa para
+actualizar la lista cada tanto.</p>
+<h2 id="las-13-listas--reglas-custom">Las 13 listas + reglas custom</h2>
+<table>
+	<thead>
+			<tr>
+					<th>#</th>
+					<th>Lista</th>
+					<th>Para qué sirve</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>1</td>
+					<td>EasyList</td>
+					<td>Publicidad general (la base de todo)</td>
+			</tr>
+			<tr>
+					<td>2</td>
+					<td>EasyPrivacy</td>
+					<td>Rastreadores y telemetría</td>
+			</tr>
+			<tr>
+					<td>3</td>
+					<td>uBlock filters</td>
+					<td>Filtros base de uBlock Origin</td>
+			</tr>
+			<tr>
+					<td>4</td>
+					<td>uBlock filters (Privacy)</td>
+					<td>Privacidad extra de uBlock</td>
+			</tr>
+			<tr>
+					<td>5</td>
+					<td>NoCoin List</td>
+					<td>Mineros de criptomonedas en el navegador</td>
+			</tr>
+			<tr>
+					<td>6</td>
+					<td>Peter Lowe&rsquo;s list</td>
+					<td>Servidores de publicidad y tracking</td>
+			</tr>
+			<tr>
+					<td>7</td>
+					<td>EasyList Spanish</td>
+					<td>Anuncios de sitios en español</td>
+			</tr>
+			<tr>
+					<td>8</td>
+					<td>Adblock Warning Removal List</td>
+					<td>Anti-adblock (quita los &ldquo;desactivá tu bloqueador&rdquo;)</td>
+			</tr>
+			<tr>
+					<td>9</td>
+					<td>Fanboy&rsquo;s Annoyance List</td>
+					<td>Molestias: popups, banners, suscripciones</td>
+			</tr>
+			<tr>
+					<td>10</td>
+					<td>Fanboy&rsquo;s Social Blocking List</td>
+					<td>Botones/iframes de redes sociales</td>
+			</tr>
+			<tr>
+					<td>11</td>
+					<td>EasyList Cookie List</td>
+					<td>Avisos de cookies</td>
+			</tr>
+			<tr>
+					<td>12</td>
+					<td>uBlock filters – Badware risks</td>
+					<td>Dominios maliciosos / malware</td>
+			</tr>
+			<tr>
+					<td>13</td>
+					<td>uBlock filters – Resource abuse</td>
+					<td>Abuso de recursos (minado, spam)</td>
+			</tr>
+			<tr>
+					<td>—</td>
+					<td>Custom Rules</td>
+					<td>Tus reglas propias y whitelist</td>
+			</tr>
+	</tbody>
+</table>
+<h3 id="urls-de-cada-lista">URLs de cada lista</h3>
+<pre tabindex="0"><code>EasyList
+https://easylist-downloads.adblockplus.org/easylist.txt
+
+EasyPrivacy
+https://easylist-downloads.adblockplus.org/easyprivacy.txt
+
+uBlock filters
+https://raw.githubusercontent.com/uBlockOrigin/uAssets/master/filters/filters.txt
+
+uBlock filters (Privacy)
+https://raw.githubusercontent.com/uBlockOrigin/uAssets/master/filters/privacy.txt
+
+NoCoin List
+https://raw.githubusercontent.com/hoshsadiq/adblock-nocoin-list/master/nocoin.txt
+
+Peter Lowe&#39;s Ad and tracking server list
+https://pgl.yoyo.org/adservers/serverlist.php?hostformat=adblockplus&amp;showintro=0&amp;mimetype=plaintext
+
+EasyList Spanish
+https://easylist-downloads.adblockplus.org/easylistspanish.txt
+
+Adblock Warning Removal List
+https://easylist-downloads.adblockplus.org/antiadblockfilters.txt
+
+Fanboy&#39;s Annoyance List
+https://easylist-downloads.adblockplus.org/fanboy-annoyance.txt
+
+Fanboy&#39;s Social Blocking List
+https://easylist-downloads.adblockplus.org/fanboy-social.txt
+
+EasyList Cookie List
+https://secure.fanboy.co.nz/fanboy-cookiemonster.txt
+
+uBlock filters – Badware risks
+https://raw.githubusercontent.com/uBlockOrigin/uAssets/master/filters/badware.txt
+
+uBlock filters – Resource abuse
+https://raw.githubusercontent.com/uBlockOrigin/uAssets/master/filters/resource-abuse.txt
+</code></pre><p>En total son unos <strong>7.6 MB</strong> de reglas. El arranque de Falkon puede tardar un
+par de segundos más; a cambio el bloqueo es muchísimo mejor.</p>
+<h2 id="cómo-agregar-una-lista">Cómo agregar una lista</h2>
+<h3 id="opción-1-por-la-interfaz">Opción 1: por la interfaz</h3>
+<p><code>Configuración → AdBlock → Add Subscription</code> y pegás el nombre y la URL. Falkon
+crea el <code>.txt</code>, lo descarga y lo deja activo (esto sí funciona en caliente, sin
+reiniciar).</p>
+<h3 id="opción-2-a-mano-varias-de-una-vez">Opción 2: a mano (varias de una vez)</h3>
+<p>Como Falkon lee todos los <code>.txt</code>, podés descargarlas vos y escribirles la
+cabecera. Este script hace exactamente eso: descarga, verifica que empiece con
+<code>[Adblock</code> (si no, le inserta la cabecera) y guarda el archivo:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/usr/bin/env bash
+</span></span></span><span style="display:flex;"><span>set -u
+</span></span><span style="display:flex;"><span>DIR<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$HOME<span style="color:#e6db74">/.config/falkon/profiles/default/adblock&#34;</span>
+</span></span><span style="display:flex;"><span>mkdir -p <span style="color:#e6db74">&#34;</span>$DIR<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>add_list<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>    local file<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span> title<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$2<span style="color:#e6db74">&#34;</span> url<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$3<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    local tmp; tmp<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>mktemp<span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    curl -sSL --fail --max-time <span style="color:#ae81ff">90</span> -o <span style="color:#e6db74">&#34;</span>$tmp<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;</span>$url<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">||</span> <span style="color:#f92672">{</span> echo <span style="color:#e6db74">&#34;FALLÓ: </span>$file<span style="color:#e6db74">&#34;</span>; <span style="color:#66d9ef">return</span> 1; <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>        printf <span style="color:#e6db74">&#39;Title: %s\n&#39;</span> <span style="color:#e6db74">&#34;</span>$title<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>        printf <span style="color:#e6db74">&#39;Url: %s\n&#39;</span> <span style="color:#e6db74">&#34;</span>$url<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>        head -1 <span style="color:#e6db74">&#34;</span>$tmp<span style="color:#e6db74">&#34;</span> | grep -q <span style="color:#e6db74">&#39;^\[Adblock&#39;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            <span style="color:#f92672">&amp;&amp;</span> cat <span style="color:#e6db74">&#34;</span>$tmp<span style="color:#e6db74">&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>            <span style="color:#f92672">||</span> <span style="color:#f92672">{</span> printf <span style="color:#e6db74">&#39;[Adblock Plus 2.0]\n&#39;</span>; cat <span style="color:#e6db74">&#34;</span>$tmp<span style="color:#e6db74">&#34;</span>; <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">}</span> &gt; <span style="color:#e6db74">&#34;</span>$DIR<span style="color:#e6db74">/</span>$file<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">[</span> -n <span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>tail -c1 <span style="color:#e6db74">&#34;</span>$DIR<span style="color:#e6db74">/</span>$file<span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]</span> <span style="color:#f92672">&amp;&amp;</span> printf <span style="color:#e6db74">&#39;\n&#39;</span> &gt;&gt; <span style="color:#e6db74">&#34;</span>$DIR<span style="color:#e6db74">/</span>$file<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    rm -f <span style="color:#e6db74">&#34;</span>$tmp<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;OK: </span>$file<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>add_list <span style="color:#e6db74">&#34;peterlowe.txt&#34;</span> <span style="color:#e6db74">&#34;Peter Lowe&#39;s Ad and tracking server list&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;https://pgl.yoyo.org/adservers/serverlist.php?hostformat=adblockplus&amp;showintro=0&amp;mimetype=plaintext&#34;</span>
+</span></span><span style="display:flex;"><span>add_list <span style="color:#e6db74">&#34;easylistspanish.txt&#34;</span> <span style="color:#e6db74">&#34;EasyList Spanish&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;https://easylist-downloads.adblockplus.org/easylistspanish.txt&#34;</span>
+</span></span><span style="display:flex;"><span>add_list <span style="color:#e6db74">&#34;antiadblockfilters.txt&#34;</span> <span style="color:#e6db74">&#34;Adblock Warning Removal List&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;https://easylist-downloads.adblockplus.org/antiadblockfilters.txt&#34;</span>
+</span></span><span style="display:flex;"><span>add_list <span style="color:#e6db74">&#34;fanboy-annoyance.txt&#34;</span> <span style="color:#e6db74">&#34;Fanboy&#39;s Annoyance List&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;https://easylist-downloads.adblockplus.org/fanboy-annoyance.txt&#34;</span>
+</span></span><span style="display:flex;"><span>add_list <span style="color:#e6db74">&#34;fanboy-social.txt&#34;</span> <span style="color:#e6db74">&#34;Fanboy&#39;s Social Blocking List&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;https://easylist-downloads.adblockplus.org/fanboy-social.txt&#34;</span>
+</span></span><span style="display:flex;"><span>add_list <span style="color:#e6db74">&#34;easylist-cookie.txt&#34;</span> <span style="color:#e6db74">&#34;EasyList Cookie List&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;https://secure.fanboy.co.nz/fanboy-cookiemonster.txt&#34;</span>
+</span></span><span style="display:flex;"><span>add_list <span style="color:#e6db74">&#34;ublock-badware.txt&#34;</span> <span style="color:#e6db74">&#34;uBlock filters - Badware risks&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;https://raw.githubusercontent.com/uBlockOrigin/uAssets/master/filters/badware.txt&#34;</span>
+</span></span><span style="display:flex;"><span>add_list <span style="color:#e6db74">&#34;ublock-resource-abuse.txt&#34;</span> <span style="color:#e6db74">&#34;uBlock filters - Resource abuse&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;https://raw.githubusercontent.com/uBlockOrigin/uAssets/master/filters/resource-abuse.txt&#34;</span>
+</span></span></code></pre></div><p>Guardalo como <code>add_adblock_lists.sh</code>, <code>chmod +x</code> y ejecutalo. Después
+<strong>reiniciá Falkon</strong> para que las cargue.</p>
+<h2 id="reiniciar-es-obligatorio">Reiniciar es obligatorio</h2>
+<p>Esto es la parte que más confunde: <strong>Falkon solo lee las listas al arrancar</strong>.
+Si agregás archivos <code>.txt</code> con Falkon abierto, no se aplican hasta que lo
+cierres y lo vuelvas a abrir. La opción 1 (interfaz) sí es en caliente porque
+Falkon mismo registra la suscripción.</p>
+<p>Para verificar que quedaron bien, después de reiniciar:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cd ~/.config/falkon/profiles/default/adblock
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> f in *.txt; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>    printf <span style="color:#e6db74">&#39;%-28s %s\n&#39;</span> <span style="color:#e6db74">&#34;</span>$f<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">$(</span>sed -n <span style="color:#e6db74">&#39;3p&#39;</span> <span style="color:#e6db74">&#34;</span>$f<span style="color:#e6db74">&#34;</span><span style="color:#66d9ef">)</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">done</span>
+</span></span></code></pre></div><p>Todas las líneas 3 tienen que empezar con <code>[Adblock</code>. Y en la interfaz,
+<code>Configuración → AdBlock</code> debería listar las 13 suscripciones + Custom Rules.</p>
+<h2 id="actualización-automática">Actualización automática</h2>
+<p>Falkon actualiza las suscripciones cuando pasaron <strong>más de 5 días</strong> desde el
+último chequeo (<code>lastUpdate</code> en <code>settings.ini</code>), o cuando apretás
+<code>Update Subscriptions</code> en el diálogo de AdBlock. Ojo: las listas de uBlock
+(Badware/Resource abuse) no empiezan con <code>[Adblock</code>, así que Falkon <strong>no puede
+auto-actualizarlas</strong> (el chequeo de descarga exige que el archivo empiece con
+<code>[Adblock</code>). Cargan bien, pero para actualizarlas hay que volver a correr el
+script.</p>
+<h2 id="limitaciones-que-tenés-que-conocer">Limitaciones que tenés que conocer</h2>
+<ul>
+<li><strong>Anuncios de primera parte (first-party)</strong>: si el sitio sirve los anuncios
+desde su propio dominio, ninguna lista de bloqueo los va a tocar. Esto es
+común en sitios de streaming o de noticias. Ahí la solución es a nivel DNS
+(Pi-hole / AdGuard Home) o directamente no hay atajo.</li>
+<li><strong>Sintaxis uBlock</strong>: las listas de uBlock se aplican solo en la parte
+compatible con Adblock Plus.</li>
+<li><strong>Anti-adblock</strong>: algunos sitios detectan el bloqueo y no cargan el contenido.
+Para eso está justamente <em>Adblock Warning Removal List</em>.</li>
+</ul>
+<h2 id="cómo-comprobar-que-bloquea">Cómo comprobar que bloquea</h2>
+<p>Con Falkon reabierto, entrá a:</p>
+<ul>
+<li><a href="https://d3ward.github.io/toolz/adblock.html">https://d3ward.github.io/toolz/adblock.html</a></li>
+<li><a href="https://adblock-tester.com/">https://adblock-tester.com/</a></li>
+</ul>
+<p>Si el puntaje es alto, las listas están activas. Si sigue bajo, revisá que
+<code>Configuración → AdBlock</code> tenga el bloqueo habilitado y que el sitio no esté en
+la whitelist.</p>
+<h2 id="reglas-propias-y-whitelist">Reglas propias y whitelist</h2>
+<p>En <code>customlist.txt</code> (Custom Rules) podés agregar lo que quieras. Ejemplos:</p>
+<pre tabindex="0"><code>! Desbloquear un sitio entero
+@@||misitio.com^$document
+
+! Ocultar un div puntual
+misitio.com##.banner-publicidad
+
+! Bloquear un dominio a mano
+||ads.ejemplo.com^
+</code></pre><p>Con este conjunto, Falkon pasa de bloquear &ldquo;algo&rdquo; a bloquear en serio. La clave
+es entender que el motor es Adblock Plus clásico, que hay que reiniciar para
+cargar listas nuevas, y que los anuncios servidos desde el mismo dominio no los
+para nadie con listas.</p>
+
+  </div>
+</article>
+
+  </main>
+  <footer class="site-footer">
+  <a href="/acerca/">acerca</a> · <a href="/servicios/">servicios</a> ·
+  <a href="/index.xml">rss</a> · 
+  <a href="https://github.com/imlauera/">github</a>
+</footer>
+
+  
+</body>
+</html>
