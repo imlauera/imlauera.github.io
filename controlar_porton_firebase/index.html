@@ -36,9 +36,27 @@
   
   
   
+    
+      
+        
+          
+        
+      
+    
+  
+  
+  
   
     
   
+  
+  
+  
+  <div class="audio-player">
+    <p class="audio-label">Escuchar este artículo</p>
+    <audio controls preload="metadata" src="https://archive.org/download/imlauer-blog-audio-controlar-porton-firebase-b4fbbd8d/controlar-porton-firebase-9cb34ce29c.mp3"></audio>
+    <p class="audio-meta"><a href="https://archive.org/download/imlauer-blog-audio-controlar-porton-firebase-b4fbbd8d/controlar-porton-firebase-9cb34ce29c.mp3">Descargar MP3</a> · <a href="https://archive.org/details/imlauer-blog-audio-controlar-porton-firebase-b4fbbd8d">Ver en Internet Archive</a></p>
+  </div>
   
   
   
@@ -169,7 +187,25 @@
 </span></span><span style="display:flex;"><span>// start the Ethernet connection and the server:
 </span></span><span style="display:flex;"><span>Ethernet.begin<span style="color:#f92672">(</span>mac, ip, gateway, gateway, subnet<span style="color:#f92672">)</span>;
 </span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
-</span></span></code></pre></div>
+</span></span></code></pre></div><h3 id="todo-para-hacer-estaría-bueno-agregar-sensores">TODO (Para hacer): Estaría bueno agregar sensores.</h3>
+<p>Para que la app sepa la posición real del portón, el cambio mínimo es agregar 2 finales de carrera y una
+placa con entradas libres:</p>
+<ul>
+<li>Final de carrera de ABIERTO y final de carrera de CERRADO, montados en los extremos del recorrido.
+Usalos normalmente cerrados (NC) por seguridad.</li>
+<li>Conectar cada uno a un GPIO del ESP8266/ESP32 con pull-up de 10 kΩ y, si el cable es largo, un
+optoacoplador o reed switch. No llevar 220 V a los GPIO.</li>
+<li>Si el hardware actual solo tiene el relé de LED32, necesitás una placa controladora con al menos 2
+entradas libres (o un módulo de expansión de entradas).</li>
+<li>En el firmware: publicar en Firebase ABIERTO, CERRADO o MOVIENDO; el botón MARCHA solo debe habilitarse
+si no está abierto, y al activarse un final de carrera el motor debe parar automáticamente.</li>
+<li>Para seguridad, sumaría fotocélula NC en el cierre y, opcionalmente, sensor de corriente para detectar
+obstáculo o motor trabado.</li>
+</ul>
+<p>Si el portón ya tiene una central de motor comercial, lo más simple es conectar los finales de carrera a
+esa central y leer su salida de estado con un contacto seco/optoacoplador, sin modificar el circuito de
+fuerza.</p>
+
   </div>
 </article>
 
