@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cómo le extraje la localKey a mi aspiradora Tuya: reversing de una app Android con root, Frida y MMKV · Imlauer</title>
+  <meta name="description" content="imlauerandres [at] gmail.com">
+  <link rel="canonical" href="https://imlauera.github.io/como-extraje-la-localkey-de-mi-aspiradora-tuya/">
+  <link rel="alternate" type="application/rss+xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+  <a class="site-title" href="/">Imlauer</a>
+</header>
+
+  <main>
+    
+<article class="post">
+  <h1>Cómo le extraje la localKey a mi aspiradora Tuya: reversing de una app Android con root, Frida y MMKV</h1>
+  <p class="meta">
+    <time datetime="2026-11-14">2026-11-14</time>
+    <span class="tags"> · <a href="/tags/android/">android</a>, <a href="/tags/reversing/">reversing</a>, <a href="/tags/frida/">frida</a>, <a href="/tags/tuya/">tuya</a>, <a href="/tags/iot/">iot</a></span>
+  </p>
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+  
+  
+  
+  
+    
+      
+        
+          
+        
+      
+    
+  
+  
+  
+  
+    
+  
+  
+  
+  
+  <div class="audio-player">
+    <p class="audio-label">Escuchar este artículo</p>
+    <audio controls preload="metadata" src="https://archive.org/download/imlauer-blog-audio-como-extraje-la-localkey-de-mi-aspiradora-tuya-f6d85d05/como-extraje-la-localkey-de-mi-aspiradora-tuya-50453b729a.mp3"></audio>
+    <p class="audio-meta"><a href="https://archive.org/download/imlauer-blog-audio-como-extraje-la-localkey-de-mi-aspiradora-tuya-f6d85d05/como-extraje-la-localkey-de-mi-aspiradora-tuya-50453b729a.mp3">Descargar MP3</a> · <a href="https://archive.org/details/imlauer-blog-audio-como-extraje-la-localkey-de-mi-aspiradora-tuya-f6d85d05">Ver en Internet Archive</a></p>
+  </div>
+  
+  
+  
+  <div class="content">
+    <blockquote>
+<p><em>&ldquo;El robot no tiene API, la app está ofuscada y los datos están cifrados&rdquo;</em> — todo eso era
+cierto, y aun así terminé con la clave en la mano en una tarde. Esto es el paso a paso
+completo: lo que funcionó, lo que falló y <strong>por qué</strong> falló.</p>
+</blockquote>
+<p><strong>Aviso:</strong> todo esto lo hice sobre <strong>mi</strong> robot, <strong>mi</strong> teléfono y <strong>mi</strong> cuenta. No es una
+guía para tocar el dispositivo de otra persona. Las claves, IDs, IPs y MACs de este post
+están reemplazadas por placeholders.</p>
+<hr>
+<h2 id="índice">Índice</h2>
+<ol>
+<li><a href="#el-objetivo">El objetivo</a></li>
+<li><a href="#tldr">TL;DR</a></li>
+<li><a href="#reconocimiento-es-un-tuya-disfrazado">Reconocimiento: es un Tuya disfrazado</a></li>
+<li><a href="#conectar-el-tel%C3%A9fono-root-por-adb">Conectar el teléfono (root) por ADB</a></li>
+<li><a href="#intento-1-los-datos-en-reposo">Intento 1: los datos en reposo</a></li>
+<li><a href="#intento-2-hurgar-en-la-memoria">Intento 2: hurgar en la memoria</a></li>
+<li><a href="#la-app-detecta-root-magisk-denylist">La app detecta root: Magisk DenyList</a></li>
+<li><a href="#frida-la-parte-que-casi-no-sale">Frida: la parte que casi no sale</a></li>
+<li><a href="#reconocimiento-de-clases">Reconocimiento de clases</a></li>
+<li><a href="#el-hook-que-da-la-clave">El hook que da la clave</a></li>
+<li><a href="#asociar-la-clave-al-dispositivo-correcto">Asociar la clave al dispositivo correcto</a></li>
+<li><a href="#bonus-el-schema-de-dps">Bonus: el schema de DPs</a></li>
+<li><a href="#control-local-tinytuya">Control local: tinytuya</a></li>
+<li><a href="#lo-que-no-us%C3%A9-y-por-qu%C3%A9">Lo que no usé (y por qué)</a></li>
+<li><a href="#tabla-de-errores-y-causas">Tabla de errores y causas</a></li>
+<li><a href="#seguridad-y-limpieza">Seguridad y limpieza</a></li>
+<li><a href="#conclusiones">Conclusiones</a></li>
+<li><a href="#glosario">Glosario</a></li>
+</ol>
+<hr>
+<h2 id="el-objetivo">El objetivo</h2>
+<p>Tengo un robot aspiradora barato, de esos que se manejan con una app. La app funciona, pero:</p>
+<ul>
+<li>depende de la nube de Tuya (si se cae el servidor, no anda nada);</li>
+<li>manda telemetría a un servidor que no controlo;</li>
+<li>te obliga a pasar por el teléfono para programar una limpieza;</li>
+<li>y la app en cuestión es un <em>white-label</em>: no hay documentación, ni API pública, ni CLI.</li>
+</ul>
+<p>Lo que quería era simple: <strong>hablarle al robot por la red local, sin nube</strong>. Para eso hace
+falta un dato que la app nunca te muestra: la <strong><code>local_key</code></strong>, una clave de 16 caracteres que
+el equipo usa para cifrar el protocolo local (TCP 6668).</p>
+<p>Sin la <code>local_key</code>, lo único que se puede hacer es <em>descubrir</em> el equipo
+(<code>deviceScan</code> te da el <code>gwId</code> y la versión del protocolo), pero cualquier comando o consulta
+de estado vuelve cifrado con AES y no hay forma de leerlo.</p>
+<hr>
+<h2 id="tldr">TL;DR</h2>
+<table>
+	<thead>
+			<tr>
+					<th>Fase</th>
+					<th>Resultado</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>Reconocimiento de red</td>
+					<td>El robot es Tuya: <code>gwId</code>, <code>productKey</code> y protocolo <strong>3.3</strong> por UDP 6666/6667</td>
+			</tr>
+			<tr>
+					<td>Datos en reposo (MMKV, SQLite, logs)</td>
+					<td><strong>Falló</strong>: todo cifrado, claves derivadas dentro de la app</td>
+			</tr>
+			<tr>
+					<td>Heap dump (<code>am dumpheap</code>)</td>
+					<td><strong>Falló</strong>: <code>SecurityException: Process not debuggable</code></td>
+			</tr>
+			<tr>
+					<td>Buscar strings en <code>/proc/&lt;pid&gt;/mem</code></td>
+					<td><strong>Falló</strong>: ART guarda UTF-16LE y el dato no estaba residente</td>
+			</tr>
+			<tr>
+					<td>Root detection de la app</td>
+					<td><strong>Burlada</strong> con Magisk DenyList (<code>com.ls.smartlife</code>)</td>
+			</tr>
+			<tr>
+					<td>Frida <code>attach</code></td>
+					<td><strong>Falló</strong>: <code>unable to open library</code></td>
+			</tr>
+			<tr>
+					<td>Frida <code>spawn</code> + <code>attach(pid)</code></td>
+					<td><strong>Funcionó</strong>: hook a <code>MMKV.decodeString</code></td>
+			</tr>
+			<tr>
+					<td>Resultado</td>
+					<td><code>localKey</code> en claro + <code>deviceId</code> + schema completo de 18 DPs</td>
+			</tr>
+	</tbody>
+</table>
+<p>El código central son ~30 líneas de JavaScript que enganchan el método
+<code>decodeString</code> del MMKV de la app. El resto del post es cómo llegué ahí.</p>
+<hr>
+<h2 id="reconocimiento-es-un-tuya-disfrazado">Reconocimiento: es un Tuya disfrazado</h2>
+<p>La app se llama distinto según el fabricante, pero adentro es el SDK de Tuya
+(<code>com.thingclips.smart</code>, antes <code>com.tuya.smart</code>). Una forma rápida de confirmarlo sin
+descompilar nada: escanear la red local con <a href="https://github.com/jasonacox/tinytuya"><code>tinytuya</code></a>,
+que manda un broadcast UDP en los puertos 6666/6667.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">import</span> tinytuya
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> ip, info <span style="color:#f92672">in</span> tinytuya<span style="color:#f92672">.</span>deviceScan(<span style="color:#66d9ef">False</span>, <span style="color:#ae81ff">18</span>)<span style="color:#f92672">.</span>items():
+</span></span><span style="display:flex;"><span>    print(ip, info<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;gwId&#34;</span>), info<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;productKey&#34;</span>), info<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;version&#34;</span>), info<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;encrypt&#34;</span>))
+</span></span></code></pre></div><p>Salida (redactada):</p>
+<pre tabindex="0"><code>192.0.2.88  &lt;DEVICE_ID&gt;  &lt;PRODUCT_KEY&gt;  3.3  True
+</code></pre><p>Eso ya me dijo tres cosas:</p>
+<ol>
+<li>Es Tuya y está en mi LAN.</li>
+<li>El <code>gwId</code> que anuncia por broadcast <strong>tiene que coincidir</strong> con el <code>devId</code> que la app
+guarda. Es mi chequeo cruzado para no confundirme de equipo.</li>
+<li>Protocolo <strong>3.3</strong> con <code>encrypt: True</code> → AES-128-ECB con <code>md5(local_key)</code> como clave.
+Sin <code>local_key</code> no hay nada que hacer.</li>
+</ol>
+<p>También confirmé el paquete de la app:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>adb shell pm path com.ls.smartlife
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># package:/data/app/com.ls.smartlife-1/base.apk</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># package:/data/app/com.ls.smartlife-1/split_config.armeabi_v7a.apk</span>
+</span></span></code></pre></div><p>Dato importante: el APK tiene split <code>armeabi_v7a</code>, o sea la app corre en <strong>32 bits</strong>.
+Eso va a importar cuando elija el binario de Frida.</p>
+<hr>
+<h2 id="conectar-el-teléfono-root-por-adb">Conectar el teléfono (root) por ADB</h2>
+<p>Requisitos: el teléfono con <strong>root (Magisk)</strong>, depuración USB activada y el celular en la
+misma red que la PC. En mi caso un Moto G4 con Android 7.0.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>adb connect 192.0.2.50:5555
+</span></span><span style="display:flex;"><span>adb devices -l
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># 192.0.2.50:5555  device product:athene model:Moto_G__4_ device:athene</span>
+</span></span></code></pre></div><p>Comprobaciones rápidas:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>adb shell <span style="color:#e6db74">&#39;su -c &#34;id&#34;&#39;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># uid=0(root) gid=0(root) context=u:r:magisk:s0</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>adb shell <span style="color:#e6db74">&#39;su -c &#34;uname -m&#34;&#39;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># armv7l        &lt;-- 32 bits, clave para elegir frida-server</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>adb shell <span style="color:#e6db74">&#39;su -c &#34;svc power stayon true&#34;&#39;</span>   <span style="color:#75715e"># que no se apague la pantalla</span>
+</span></span></code></pre></div><p>Todo lo que sigue lo hice por <code>adb shell</code> + <code>su -c</code>. Un detalle que parece una boludez y
+te hace perder una hora: <strong>el quoting de <code>su -c</code> con comandos compuestos se rompe</strong>. Si
+necesitás varias líneas, escribí un <code>.sh</code> en <code>/data/local/tmp</code> y ejecutalo:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>adb push script.sh /data/local/tmp/script.sh
+</span></span><span style="display:flex;"><span>adb shell <span style="color:#e6db74">&#39;su -c &#34;sh /data/local/tmp/script.sh&#34;&#39;</span>
+</span></span></code></pre></div><hr>
+<h2 id="intento-1-los-datos-en-reposo">Intento 1: los datos en reposo</h2>
+<p>Lo primero que uno piensa: <em>agarro los archivos de la app y busco la clave</em>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>adb shell <span style="color:#e6db74">&#39;su -c &#34;ls -R /data/data/com.ls.smartlife&#34;&#39;</span>
+</span></span></code></pre></div><p>Lo que hay adentro:</p>
+<table>
+	<thead>
+			<tr>
+					<th>Archivo</th>
+					<th>Qué es</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td><code>files/thingmmkv</code></td>
+					<td>MMKV (el key-value store nativo que reemplazó a SharedPreferences)</td>
+			</tr>
+			<tr>
+					<td><code>shared_prefs/global_preference.xml</code></td>
+					<td>preferencias, con valores cifrados</td>
+			</tr>
+			<tr>
+					<td><code>databases/thingsmart_stat_encrypted.db</code></td>
+					<td>SQLite &ldquo;encrypted&rdquo; (el nombre ya adelanta)</td>
+			</tr>
+			<tr>
+					<td><code>files/log/**.xlog</code></td>
+					<td>logs de Tencent <strong>Mars xlog</strong>: comprimidos y cifrados</td>
+			</tr>
+	</tbody>
+</table>
+<p>Busqué la clave ahí, obviamente:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>adb shell <span style="color:#e6db74">&#39;su -c &#34;grep -a -i localkey /data/data/com.ls.smartlife/files/thingmmkv&#34;&#39;</span>
+</span></span></code></pre></div><p>Nada. Los valores de MMKV están cifrados con una clave que la app deriva de
+<code>app_global_base_key</code> / <code>preferences_global_key</code>, y los logs de Mars usan su propio esquema
+de cifrado + compresión. <strong>En reposo no hay nada legible.</strong> Confirmado también con
+<code>strings</code> sobre el MMKV: puro ruido.</p>
+<blockquote>
+<p>Moraleja: si el dato está cifrado con una clave derivada dentro del proceso, no lo vas a
+sacar copiando archivos. Hay que preguntarle a la app, ya descifrado, en memoria.</p>
+</blockquote>
+<hr>
+<h2 id="intento-2-hurgar-en-la-memoria">Intento 2: hurgar en la memoria</h2>
+<h3 id="el-heap-de-java">El heap de Java</h3>
+<p>Android tiene un comando para volcar el heap de un proceso:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>adb shell <span style="color:#e6db74">&#39;su -c &#34;am dumpheap com.ls.smartlife /data/local/tmp/heap.hprof&#34;&#39;</span>
+</span></span></code></pre></div><p>Error:</p>
+<pre tabindex="0"><code>java.lang.SecurityException: Process not debuggable
+</code></pre><p><code>am dumpheap</code> solo funciona con apps <code>debuggable=true</code>. Repackear el APK para volverla
+debuggable rompe la firma, y la app verifica firma en varios lados (adiós login). Descartado.</p>
+<h3 id="la-memoria-nativa">La memoria nativa</h3>
+<p>Plan B: leer <code>/proc/&lt;pid&gt;/mem</code> y buscar la clave. Suena fácil hasta que te acordás de un
+detalle de ART: <strong>los <code>String</code> de Java viven en UTF-16LE</strong>. Si buscás <code>localKey</code> en ASCII
+no encontrás nada, porque en memoria está <code>l\0o\0c\0a\0l\0K\0e\0y\0</code>.</p>
+<p>Volqué las regiones <code>rw</code> anónimas y busqué el patrón UTF-16. Encontré <code>localKey</code>… pero solo
+en plantillas internas del framework de mini-apps, no el valor real. El dato no estaba
+residente en ese momento (o el bean todavía no se había cargado, o el GC lo había movido).</p>
+<blockquote>
+<p>Moraleja: buscar en memoria es tirar un tarro al océano. Sirve para <em>entender</em> qué hay,
+pero no es determinista: dependés de que el objeto esté vivo y en la región que leíste.</p>
+</blockquote>
+<hr>
+<h2 id="la-app-detecta-root-magisk-denylist">La app detecta root: Magisk DenyList</h2>
+<p>Con el teléfono rooteado, la app no arrancaba o se cerraba al login. Busqué los chequeos en
+el DEX:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>unzip -o base.apk <span style="color:#e6db74">&#39;classes*.dex&#39;</span> -d dex/
+</span></span><span style="display:flex;"><span>strings dex/classes*.dex | grep -E <span style="color:#e6db74">&#39;/su$|test-keys|frida|Xposed&#39;</span>
+</span></span></code></pre></div><p>Aparecían, entre otros:</p>
+<pre tabindex="0"><code>/sbin/su
+/system/bin/su
+/system/xbin/su
+test-keys
+frida-agent
+frida.server
+XposedBridge.jar
+</code></pre><p>En este caso el que disparaba era <strong><code>/sbin/su</code></strong> (típico de Magisk en Android 7).</p>
+<p>La solución no es desrootear: es <strong>Magisk DenyList</strong>, que hace que Magisk se &ldquo;esconda&rdquo; para
+los procesos de esa app (desmonta los paths y oculta <code>su</code> solo ahí).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>adb shell <span style="color:#e6db74">&#39;su -c &#34;magisk --denylist add com.ls.smartlife&#34;&#39;</span>
+</span></span><span style="display:flex;"><span>adb shell <span style="color:#e6db74">&#39;su -c &#34;magisk --denylist enable&#34;&#39;</span>
+</span></span><span style="display:flex;"><span>adb shell <span style="color:#e6db74">&#39;su -c &#34;magisk --denylist ls | grep smartlife&#34;&#39;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># com.ls.smartlife|com.ls.smartlife</span>
+</span></span></code></pre></div><p>En mi Magisk (30.7) no hizo falta reiniciar: cerré la app, la abrí, y el login y la home
+funcionaron. <strong>La app queda con root, pero sin verlo.</strong></p>
+<blockquote>
+<p>Ojo: DenyList es preventivo. Si la app ya arrancó sin estar en la lista, matala
+(<code>am force-stop</code>) y abrila de nuevo. No alcanza con agregarla.</p>
+</blockquote>
+<hr>
+<h2 id="frida-la-parte-que-casi-no-sale">Frida: la parte que casi no sale</h2>
+<p>Con root y DenyList listo, el plan era enganchar el SDK con Frida. Acá se juntaron <strong>cuatro
+problemas distintos</strong> que parecían uno solo.</p>
+<h3 id="1-la-arquitectura">1) La arquitectura</h3>
+<p>El teléfono reporta <code>armv7l</code>. Si bajás <code>frida-server</code> arm64, no arranca (o arranca y crashea
+al inyectar). Tiene que ser <strong>arm</strong>.</p>
+<h3 id="2-la-versión-tiene-que-coincidir-exacta">2) La versión tiene que coincidir EXACTA</h3>
+<p>Cliente y servidor con versiones distintas = el clásico:</p>
+<pre tabindex="0"><code>frida.TransportError: connection closed
+</code></pre><p>Instalé el cliente con la misma versión del server:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>python3 -m venv frvenv
+</span></span><span style="display:flex;"><span>./frvenv/bin/pip install <span style="color:#e6db74">&#39;frida==&lt;VERSION&gt;&#39;</span>   <span style="color:#75715e"># = la del frida-server</span>
+</span></span><span style="display:flex;"><span>./frvenv/bin/python -c <span style="color:#e6db74">&#39;import frida; print(frida.__version__)&#39;</span>
+</span></span></code></pre></div><h3 id="3-el-server-escuchando-solo-en-loopback">3) El server, escuchando solo en loopback</h3>
+<p><code>frida-server</code> abre un puerto que permite ejecutar código. <strong>No</strong> lo expongas en <code>0.0.0.0</code> en
+la WiFi. Escuchá en loopback y pasá por <code>adb forward</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>adb shell <span style="color:#e6db74">&#39;su -c &#34;nohup /data/local/tmp/fsrv -l 127.0.0.1:27042 &gt;/dev/null 2&gt;&amp;1 &amp;&#34;&#39;</span>
+</span></span><span style="display:flex;"><span>adb forward tcp:27042 tcp:27042
+</span></span></code></pre></div><p>Y verificalo desde Python:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">import</span> frida
+</span></span><span style="display:flex;"><span>dev <span style="color:#f92672">=</span> frida<span style="color:#f92672">.</span>get_device_manager()<span style="color:#f92672">.</span>add_remote_device(<span style="color:#e6db74">&#34;127.0.0.1:27042&#34;</span>)
+</span></span><span style="display:flex;"><span>print(len(dev<span style="color:#f92672">.</span>enumerate_processes()))   <span style="color:#75715e"># p.ej. 106</span>
+</span></span></code></pre></div><p>Si te da <code>Address already in use</code>, ya había un server corriendo (o quedó el forward).</p>
+<h3 id="4-attach-falla-spawn-funciona">4) <code>attach</code> falla, <code>spawn</code> funciona</h3>
+<p>Este fue el que me volvió loco:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>dev<span style="color:#f92672">.</span>attach(pid)
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># frida.InvalidArgumentError: unable to open library: No such file or directory</span>
+</span></span></code></pre></div><p>El mismo error con cualquier proceso ya en ejecución. Pero <code>dev.spawn(&quot;com.ls.smartlife&quot;)</code>
+andaba perfecto. La inyección en un proceso <strong>existente</strong> fallaba al cargar el agente;
+al hacer <code>spawn</code> el agente se carga en el <code>fork</code> y no hay problema.</p>
+<p>Y además, para este caso <strong>spawn es mejor</strong>: querés el hook instalado <em>antes</em> de que la app
+lea el MMKV. El flujo correcto:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>pid <span style="color:#f92672">=</span> dev<span style="color:#f92672">.</span>spawn(pkg)      <span style="color:#75715e"># arranca suspendida</span>
+</span></span><span style="display:flex;"><span>s <span style="color:#f92672">=</span> dev<span style="color:#f92672">.</span>attach(pid)       <span style="color:#75715e"># attach al PID recién creado: esto sí funciona</span>
+</span></span><span style="display:flex;"><span>sc <span style="color:#f92672">=</span> s<span style="color:#f92672">.</span>create_script(js)
+</span></span><span style="display:flex;"><span>sc<span style="color:#f92672">.</span>load()
+</span></span><span style="display:flex;"><span>dev<span style="color:#f92672">.</span>resume(pid)           <span style="color:#75715e"># recién acá la app empieza a correr</span>
+</span></span></code></pre></div><blockquote>
+<p>Detalle: si tenés <code>pkill -f fsrv</code> en el mismo <code>su -c</code> que arranca el server, el patrón
+matchea la línea de comandos del propio shell y se autodestruye (<code>Terminated</code>). Separá los
+comandos o usá <code>pkill -x</code>.</p>
+</blockquote>
+<hr>
+<h2 id="reconocimiento-de-clases">Reconocimiento de clases</h2>
+<p>No se puede hookear a ciegas: el SDK viene ofuscado y los nombres cambian. Primero listé las
+clases ya cargadas que me interesaban:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#a6e22e">Java</span>.<span style="color:#a6e22e">perform</span>(<span style="color:#66d9ef">function</span>(){
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">res</span> <span style="color:#f92672">=</span> {<span style="color:#a6e22e">gson</span><span style="color:#f92672">:</span>[], <span style="color:#a6e22e">mmkv</span><span style="color:#f92672">:</span>[], <span style="color:#a6e22e">devbean</span><span style="color:#f92672">:</span>[]};
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">Java</span>.<span style="color:#a6e22e">enumerateLoadedClasses</span>({
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">onMatch</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">n</span>){
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">if</span> (<span style="color:#e6db74">/gson/i</span>.<span style="color:#a6e22e">test</span>(<span style="color:#a6e22e">n</span>) <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">n</span>.<span style="color:#a6e22e">split</span>(<span style="color:#e6db74">&#39;.&#39;</span>).<span style="color:#a6e22e">pop</span>().<span style="color:#a6e22e">match</span>(<span style="color:#e6db74">/^Gson/i</span>)) <span style="color:#a6e22e">res</span>.<span style="color:#a6e22e">gson</span>.<span style="color:#a6e22e">push</span>(<span style="color:#a6e22e">n</span>);
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">if</span> (<span style="color:#e6db74">/mmkv/i</span>.<span style="color:#a6e22e">test</span>(<span style="color:#a6e22e">n</span>)) <span style="color:#a6e22e">res</span>.<span style="color:#a6e22e">mmkv</span>.<span style="color:#a6e22e">push</span>(<span style="color:#a6e22e">n</span>);
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">if</span> (<span style="color:#e6db74">/DeviceBean$/</span>.<span style="color:#a6e22e">test</span>(<span style="color:#a6e22e">n</span>)) <span style="color:#a6e22e">res</span>.<span style="color:#a6e22e">devbean</span>.<span style="color:#a6e22e">push</span>(<span style="color:#a6e22e">n</span>);
+</span></span><span style="display:flex;"><span>    },
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">onComplete</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">function</span>(){ <span style="color:#a6e22e">send</span>(<span style="color:#a6e22e">res</span>); }
+</span></span><span style="display:flex;"><span>  });
+</span></span><span style="display:flex;"><span>});
+</span></span></code></pre></div><p>Hallazgos:</p>
+<table>
+	<thead>
+			<tr>
+					<th>Lo que asumí</th>
+					<th>Lo que era en realidad</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td><code>com.google.gson.Gson</code></td>
+					<td><strong>No existe</strong>: Gson está <em>shadeado</em> con otro paquete</td>
+			</tr>
+			<tr>
+					<td><code>com.tencent.mmkv.MMKV</code></td>
+					<td><code>com.thingclips.smart.mmkv.MMKV</code></td>
+			</tr>
+			<tr>
+					<td><code>DeviceBean</code></td>
+					<td>Se carga tarde (y además no hacía falta)</td>
+			</tr>
+	</tbody>
+</table>
+<p>El primer intento con Gson explotó con <code>TypeError: cannot read property 'overload' of undefined</code>, y el de MMKV con <code>ClassNotFoundException</code>. Ahí aprendí: <strong>primero enumerar, después
+hookear</strong>.</p>
+<hr>
+<h2 id="el-hook-que-da-la-clave">El hook que da la clave</h2>
+<p>La idea: la app guarda el estado de los dispositivos en MMKV. En disco está cifrado, pero
+<code>decodeString()</code> devuelve el JSON <strong>en claro</strong>. Engancho <code>decodeString</code> (y <code>encodeString</code>,
+para capturar también lo que escribe), filtro los strings que contienen <code>localKey</code> y listo.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">report</span>(<span style="color:#a6e22e">src</span>, <span style="color:#a6e22e">s</span>){
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#66d9ef">typeof</span> <span style="color:#a6e22e">s</span> <span style="color:#f92672">!==</span> <span style="color:#e6db74">&#34;string&#34;</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">length</span> <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">20</span>) <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">indexOf</span>(<span style="color:#e6db74">&#34;localKey&#34;</span>) <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">0</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">indexOf</span>(<span style="color:#e6db74">&#34;local_key&#34;</span>) <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">0</span>) <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">m</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">match</span>(<span style="color:#e6db74">/&#34;?local_?[kK]ey&#34;?\s*[:=]\s*&#34;?([A-Za-z0-9+\/=]{8,40})/g</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">send</span>({<span style="color:#a6e22e">src</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">src</span>, <span style="color:#a6e22e">match</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">m</span>});
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">Java</span>.<span style="color:#a6e22e">perform</span>(<span style="color:#66d9ef">function</span>(){
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">send</span>(<span style="color:#e6db74">&#34;ready&#34;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">M</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">Java</span>.<span style="color:#a6e22e">use</span>(<span style="color:#e6db74">&#34;com.thingclips.smart.mmkv.MMKV&#34;</span>);
+</span></span><span style="display:flex;"><span>  [<span style="color:#e6db74">&#34;decodeString&#34;</span>,<span style="color:#e6db74">&#34;encodeString&#34;</span>].<span style="color:#a6e22e">forEach</span>(<span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">mn</span>){
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">M</span>[<span style="color:#a6e22e">mn</span>].<span style="color:#a6e22e">overloads</span>.<span style="color:#a6e22e">forEach</span>(<span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">ov</span>){
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">ov</span>.<span style="color:#a6e22e">implementation</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span>(){
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">r</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">ov</span>.<span style="color:#a6e22e">apply</span>(<span style="color:#66d9ef">this</span>, <span style="color:#a6e22e">arguments</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">try</span> {
+</span></span><span style="display:flex;"><span>          [].<span style="color:#a6e22e">slice</span>.<span style="color:#a6e22e">call</span>(<span style="color:#a6e22e">arguments</span>).<span style="color:#a6e22e">forEach</span>(<span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">x</span>,<span style="color:#a6e22e">i</span>){
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">s</span> <span style="color:#f92672">=</span> String(<span style="color:#a6e22e">x</span>); <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">s</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">length</span> <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">20</span>) <span style="color:#a6e22e">report</span>(<span style="color:#e6db74">&#34;MMKV.&#34;</span><span style="color:#f92672">+</span><span style="color:#a6e22e">mn</span><span style="color:#f92672">+</span><span style="color:#e6db74">&#34; arg&#34;</span><span style="color:#f92672">+</span><span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">s</span>);
+</span></span><span style="display:flex;"><span>          });
+</span></span><span style="display:flex;"><span>          <span style="color:#a6e22e">report</span>(<span style="color:#e6db74">&#34;MMKV.&#34;</span><span style="color:#f92672">+</span><span style="color:#a6e22e">mn</span><span style="color:#f92672">+</span><span style="color:#e6db74">&#34; ret&#34;</span>, String(<span style="color:#a6e22e">r</span>));
+</span></span><span style="display:flex;"><span>        } <span style="color:#66d9ef">catch</span>(<span style="color:#a6e22e">e</span>){}
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">r</span>;
+</span></span><span style="display:flex;"><span>      };
+</span></span><span style="display:flex;"><span>    });
+</span></span><span style="display:flex;"><span>  });
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// Además del store nativo, el manager de la app
+</span></span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">MG</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">Java</span>.<span style="color:#a6e22e">use</span>(<span style="color:#e6db74">&#34;com.thingclips.smart.android.base.mmkv.manager.MMKVManager&#34;</span>);
+</span></span><span style="display:flex;"><span>  [<span style="color:#e6db74">&#34;getString&#34;</span>,<span style="color:#e6db74">&#34;putString&#34;</span>].<span style="color:#a6e22e">forEach</span>(<span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">mn</span>){
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">MG</span>[<span style="color:#a6e22e">mn</span>].<span style="color:#a6e22e">overloads</span>.<span style="color:#a6e22e">forEach</span>(<span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">ov</span>){
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">ov</span>.<span style="color:#a6e22e">implementation</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span>(){
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">r</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">ov</span>.<span style="color:#a6e22e">apply</span>(<span style="color:#66d9ef">this</span>, <span style="color:#a6e22e">arguments</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">try</span> {
+</span></span><span style="display:flex;"><span>          [].<span style="color:#a6e22e">slice</span>.<span style="color:#a6e22e">call</span>(<span style="color:#a6e22e">arguments</span>).<span style="color:#a6e22e">forEach</span>(<span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">x</span>,<span style="color:#a6e22e">i</span>){
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">s</span> <span style="color:#f92672">=</span> String(<span style="color:#a6e22e">x</span>); <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">s</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">length</span> <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">20</span>) <span style="color:#a6e22e">report</span>(<span style="color:#e6db74">&#34;MMKVManager.&#34;</span><span style="color:#f92672">+</span><span style="color:#a6e22e">mn</span><span style="color:#f92672">+</span><span style="color:#e6db74">&#34; arg&#34;</span><span style="color:#f92672">+</span><span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">s</span>);
+</span></span><span style="display:flex;"><span>          });
+</span></span><span style="display:flex;"><span>          <span style="color:#a6e22e">report</span>(<span style="color:#e6db74">&#34;MMKVManager.&#34;</span><span style="color:#f92672">+</span><span style="color:#a6e22e">mn</span><span style="color:#f92672">+</span><span style="color:#e6db74">&#34; ret&#34;</span>, String(<span style="color:#a6e22e">r</span>));
+</span></span><span style="display:flex;"><span>        } <span style="color:#66d9ef">catch</span>(<span style="color:#a6e22e">e</span>){}
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">r</span>;
+</span></span><span style="display:flex;"><span>      };
+</span></span><span style="display:flex;"><span>    });
+</span></span><span style="display:flex;"><span>  });
+</span></span><span style="display:flex;"><span>});
+</span></span></code></pre></div><p>El lanzador (spawn + espera):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">import</span> frida<span style="color:#f92672">,</span> time<span style="color:#f92672">,</span> json
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>dev <span style="color:#f92672">=</span> frida<span style="color:#f92672">.</span>get_device_manager()<span style="color:#f92672">.</span>add_remote_device(<span style="color:#e6db74">&#34;127.0.0.1:27042&#34;</span>)
+</span></span><span style="display:flex;"><span>pkg <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;com.ls.smartlife&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">try</span>: dev<span style="color:#f92672">.</span>kill(pkg)          <span style="color:#75715e"># matar la instancia vieja</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">except</span> <span style="color:#a6e22e">Exception</span>: <span style="color:#66d9ef">pass</span>
+</span></span><span style="display:flex;"><span>time<span style="color:#f92672">.</span>sleep(<span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>pid <span style="color:#f92672">=</span> dev<span style="color:#f92672">.</span>spawn(pkg)        <span style="color:#75715e"># arranca suspendida</span>
+</span></span><span style="display:flex;"><span>s   <span style="color:#f92672">=</span> dev<span style="color:#f92672">.</span>attach(pid)
+</span></span><span style="display:flex;"><span>sc  <span style="color:#f92672">=</span> s<span style="color:#f92672">.</span>create_script(open(<span style="color:#e6db74">&#34;hook.js&#34;</span>)<span style="color:#f92672">.</span>read())
+</span></span><span style="display:flex;"><span>sc<span style="color:#f92672">.</span>on(<span style="color:#e6db74">&#34;message&#34;</span>, <span style="color:#66d9ef">lambda</span> m, d: print(<span style="color:#e6db74">&#34;MSG:&#34;</span>, json<span style="color:#f92672">.</span>dumps(m<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;payload&#34;</span>))[:<span style="color:#ae81ff">1200</span>])
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">if</span> m[<span style="color:#e6db74">&#34;type&#34;</span>] <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;send&#34;</span> <span style="color:#66d9ef">else</span> print(<span style="color:#e6db74">&#34;ERR:&#34;</span>, m<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;description&#34;</span>)))
+</span></span><span style="display:flex;"><span>sc<span style="color:#f92672">.</span>load()
+</span></span><span style="display:flex;"><span>dev<span style="color:#f92672">.</span>resume(pid)             <span style="color:#75715e"># ahora sí, la app corre con el hook puesto</span>
+</span></span><span style="display:flex;"><span>time<span style="color:#f92672">.</span>sleep(<span style="color:#ae81ff">60</span>)              <span style="color:#75715e"># tiempo para que cargue la home y lea el store</span>
+</span></span><span style="display:flex;"><span>s<span style="color:#f92672">.</span>detach()
+</span></span></code></pre></div><p>Salida (redactada):</p>
+<pre tabindex="0"><code>MSG: &#34;ready&#34;
+MSG: &#34;hooked MMKV&#34;
+MSG: {&#34;src&#34;: &#34;MMKV.decodeString ret&#34;, &#34;match&#34;: [&#34;\&#34;localKey\&#34;:\&#34;&lt;LOCAL_KEY&gt;&#34;]}
+MSG: {&#34;src&#34;: &#34;MMKVManager.putString arg1&#34;, &#34;match&#34;: [&#34;\&#34;localKey\&#34;:\&#34;&lt;LOCAL_KEY&gt;&#34;]}
+</code></pre><p>En la vida real aparecieron <strong>varias</strong> claves (equipos BLE, otros dispositivos, cuentas).
+Por eso el paso siguiente es asociar cada clave a su <code>devId</code>.</p>
+<hr>
+<h2 id="asociar-la-clave-al-dispositivo-correcto">Asociar la clave al dispositivo correcto</h2>
+<p>Capturando el JSON completo (no solo el match) se ve todo junto:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;devId&#34;</span>: <span style="color:#e6db74">&#34;&lt;DEVICE_ID&gt;&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;name&#34;</span>: <span style="color:#e6db74">&#34;&lt;NOMBRE_DEL_ROBOT&gt;&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;productId&#34;</span>: <span style="color:#e6db74">&#34;&lt;PRODUCT_KEY&gt;&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;category&#34;</span>: <span style="color:#e6db74">&#34;sd&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;localKey&#34;</span>: <span style="color:#e6db74">&#34;&lt;LOCAL_KEY&gt;&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;mac&#34;</span>: <span style="color:#e6db74">&#34;&lt;MAC&gt;&#34;</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Y después el chequeo cruzado con el broadcast de la LAN: el <code>gwId</code> que anuncia el robot por
+UDP <strong>tiene que ser igual</strong> al <code>devId</code> de la nube. Si coincide, es ese equipo y no el del
+vecino.</p>
+<pre tabindex="0"><code>nube:  devId = &lt;DEVICE_ID&gt;
+LAN:   gwId  = &lt;DEVICE_ID&gt;     ✅
+</code></pre><p>Con eso terminó la parte difícil. La <code>local_key</code> es de 16 caracteres y funciona como
+contraseña del protocolo local.</p>
+<hr>
+<h2 id="bonus-el-schema-de-dps">Bonus: el schema de DPs</h2>
+<p>Un problema aparte: los IDs de los <em>data points</em> (DPs) no son estándar entre modelos. Si
+asumís que &ldquo;el DP 6 es la batería&rdquo; te podés comer un garrón. La app tiene el schema real
+cacheado en el MMKV, dentro de <code>schemaInfo.dpCodeSchemaMap</code>. Se puede extraer con el mismo
+truco:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">seen</span> <span style="color:#f92672">=</span> {};
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">Java</span>.<span style="color:#a6e22e">perform</span>(<span style="color:#66d9ef">function</span>(){
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">M</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">Java</span>.<span style="color:#a6e22e">use</span>(<span style="color:#e6db74">&#34;com.thingclips.smart.mmkv.MMKV&#34;</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">M</span>.<span style="color:#a6e22e">decodeString</span>.<span style="color:#a6e22e">overloads</span>.<span style="color:#a6e22e">forEach</span>(<span style="color:#66d9ef">function</span>(<span style="color:#a6e22e">ov</span>){
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">ov</span>.<span style="color:#a6e22e">implementation</span> <span style="color:#f92672">=</span> <span style="color:#66d9ef">function</span>(){
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">r</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">ov</span>.<span style="color:#a6e22e">apply</span>(<span style="color:#66d9ef">this</span>, <span style="color:#a6e22e">arguments</span>);
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">try</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">s</span> <span style="color:#f92672">=</span> String(<span style="color:#a6e22e">r</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">s</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">indexOf</span>(<span style="color:#e6db74">&#39;dpCodeSchemaMap&#39;</span>) <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">!</span><span style="color:#a6e22e">seen</span>[<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">length</span>]) {
+</span></span><span style="display:flex;"><span>          <span style="color:#a6e22e">seen</span>[<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">length</span>] <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span>          <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">o</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">JSON</span>.<span style="color:#a6e22e">parse</span>(<span style="color:#a6e22e">s</span>);
+</span></span><span style="display:flex;"><span>          <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">map</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">o</span>[<span style="color:#ae81ff">0</span>].<span style="color:#a6e22e">schemaInfo</span>.<span style="color:#a6e22e">dpCodeSchemaMap</span>, <span style="color:#a6e22e">out</span> <span style="color:#f92672">=</span> [];
+</span></span><span style="display:flex;"><span>          <span style="color:#66d9ef">for</span> (<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">k</span> <span style="color:#66d9ef">in</span> <span style="color:#a6e22e">map</span>) {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">p</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">JSON</span>.<span style="color:#a6e22e">parse</span>(<span style="color:#a6e22e">map</span>[<span style="color:#a6e22e">k</span>].<span style="color:#a6e22e">property</span>);
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">out</span>.<span style="color:#a6e22e">push</span>([<span style="color:#a6e22e">map</span>[<span style="color:#a6e22e">k</span>].<span style="color:#a6e22e">id</span>, <span style="color:#a6e22e">map</span>[<span style="color:#a6e22e">k</span>].<span style="color:#a6e22e">code</span>, <span style="color:#a6e22e">map</span>[<span style="color:#a6e22e">k</span>].<span style="color:#a6e22e">mode</span>, <span style="color:#a6e22e">p</span>.<span style="color:#a6e22e">type</span>].<span style="color:#a6e22e">join</span>(<span style="color:#e6db74">&#34;|&#34;</span>));
+</span></span><span style="display:flex;"><span>          }
+</span></span><span style="display:flex;"><span>          <span style="color:#a6e22e">send</span>({<span style="color:#a6e22e">product</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">o</span>[<span style="color:#ae81ff">0</span>].<span style="color:#a6e22e">id</span>, <span style="color:#a6e22e">dp</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">out</span>});
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>      } <span style="color:#66d9ef">catch</span>(<span style="color:#a6e22e">e</span>){}
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">r</span>;
+</span></span><span style="display:flex;"><span>    };
+</span></span><span style="display:flex;"><span>  });
+</span></span><span style="display:flex;"><span>});
+</span></span></code></pre></div><p>Resultado típico de un robot categoría <code>sd</code>:</p>
+<table>
+	<thead>
+			<tr>
+					<th>ID</th>
+					<th>Código</th>
+					<th>Tipo</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>1</td>
+					<td><code>switch</code></td>
+					<td>bool</td>
+			</tr>
+			<tr>
+					<td>2</td>
+					<td><code>switch_go</code></td>
+					<td>bool</td>
+			</tr>
+			<tr>
+					<td>3</td>
+					<td><code>mode</code></td>
+					<td>enum (<code>standby</code>, <code>random</code>, <code>wall_follow</code>, <code>spiral</code>, …)</td>
+			</tr>
+			<tr>
+					<td>4</td>
+					<td><code>direction_control</code></td>
+					<td>enum (<code>forward</code>, <code>backward</code>, <code>turn_left</code>, <code>turn_right</code>, <code>stop</code>)</td>
+			</tr>
+			<tr>
+					<td>5</td>
+					<td><code>status</code></td>
+					<td>enum (<code>charging</code>, <code>charge_done</code>, <code>fault</code>, …)</td>
+			</tr>
+			<tr>
+					<td>6</td>
+					<td><code>residual_electricity</code></td>
+					<td>valor 0-100</td>
+			</tr>
+			<tr>
+					<td>7</td>
+					<td><code>edge_brush</code></td>
+					<td>valor 0-100</td>
+			</tr>
+			<tr>
+					<td>8</td>
+					<td><code>roll_brush</code></td>
+					<td>valor 0-100</td>
+			</tr>
+			<tr>
+					<td>9</td>
+					<td><code>filter</code></td>
+					<td>valor 0-100</td>
+			</tr>
+			<tr>
+					<td>10-12</td>
+					<td><code>reset_*</code></td>
+					<td>bool</td>
+			</tr>
+			<tr>
+					<td>13</td>
+					<td><code>seek</code></td>
+					<td>bool (hacerlo sonar)</td>
+			</tr>
+			<tr>
+					<td>14</td>
+					<td><code>suction</code></td>
+					<td>enum (<code>small</code>, <code>normal</code>, <code>strong</code>)</td>
+			</tr>
+			<tr>
+					<td>17</td>
+					<td><code>clean_time</code></td>
+					<td>valor (min)</td>
+			</tr>
+			<tr>
+					<td>18</td>
+					<td><code>fault</code></td>
+					<td>bitmap</td>
+			</tr>
+	</tbody>
+</table>
+<p>Y el bitmap de fallas es oro puro: es el <strong>único sensor</strong> que expone el equipo.</p>
+<pre tabindex="0"><code>bit 0  FAULT_CLIFF      sensor de precipicio
+bit 1  FAULT_IMP        impacto (bumper)
+bit 2  FAULT_WHL        rueda
+bit 3  FAULT_BRUSH      cepillo
+bit 4  FAULT_FAN        ventilador
+bit 5  FAULT_ROLLBRUSH  cepillo central
+bit 6  FAULT_LOWPOWER   batería baja
+...
+</code></pre><p>Nada de lidar, ni cámara, ni encoders, ni IMU. Ese detalle es el que después define qué se
+puede y qué no se puede hacer con el robot.</p>
+<hr>
+<h2 id="control-local-tinytuya">Control local: tinytuya</h2>
+<p>Con <code>device_id</code>, IP, <code>local_key</code> y versión 3.3, el control local es literalmente esto:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">import</span> tinytuya
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>d <span style="color:#f92672">=</span> tinytuya<span style="color:#f92672">.</span>Device(
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;&lt;DEVICE_ID&gt;&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;192.0.2.88&#34;</span>,       <span style="color:#75715e"># IP del robot en la LAN</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;&lt;LOCAL_KEY&gt;&#34;</span>,
+</span></span><span style="display:flex;"><span>    version<span style="color:#f92672">=</span><span style="color:#ae81ff">3.3</span>,
+</span></span><span style="display:flex;"><span>    persist<span style="color:#f92672">=</span><span style="color:#66d9ef">True</span>,
+</span></span><span style="display:flex;"><span>)
+</span></span><span style="display:flex;"><span>print(d<span style="color:#f92672">.</span>status())
+</span></span></code></pre></div><p>Salida real (DPs crudos):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>{<span style="color:#f92672">&#34;dps&#34;</span>: {<span style="color:#f92672">&#34;1&#34;</span>: <span style="color:#66d9ef">true</span>, <span style="color:#f92672">&#34;2&#34;</span>: <span style="color:#66d9ef">false</span>, <span style="color:#f92672">&#34;3&#34;</span>: <span style="color:#e6db74">&#34;standby&#34;</span>, <span style="color:#f92672">&#34;4&#34;</span>: <span style="color:#e6db74">&#34;stop&#34;</span>, <span style="color:#f92672">&#34;5&#34;</span>: <span style="color:#e6db74">&#34;charge_done&#34;</span>,
+</span></span><span style="display:flex;"><span>         <span style="color:#f92672">&#34;6&#34;</span>: <span style="color:#ae81ff">100</span>, <span style="color:#f92672">&#34;7&#34;</span>: <span style="color:#ae81ff">100</span>, <span style="color:#f92672">&#34;8&#34;</span>: <span style="color:#ae81ff">50</span>, <span style="color:#f92672">&#34;9&#34;</span>: <span style="color:#ae81ff">100</span>, <span style="color:#f92672">&#34;10&#34;</span>: <span style="color:#66d9ef">true</span>, <span style="color:#f92672">&#34;11&#34;</span>: <span style="color:#66d9ef">false</span>,
+</span></span><span style="display:flex;"><span>         <span style="color:#f92672">&#34;12&#34;</span>: <span style="color:#66d9ef">true</span>, <span style="color:#f92672">&#34;13&#34;</span>: <span style="color:#66d9ef">false</span>, <span style="color:#f92672">&#34;14&#34;</span>: <span style="color:#e6db74">&#34;normal&#34;</span>, <span style="color:#f92672">&#34;17&#34;</span>: <span style="color:#ae81ff">0</span>, <span style="color:#f92672">&#34;18&#34;</span>: <span style="color:#ae81ff">0</span>}}
+</span></span></code></pre></div><p>De ahí sale todo: batería (<code>6</code>), estado de carga (<code>5</code>), succión (<code>14</code>), vida de cepillos
+(<code>7</code>, <code>8</code>) y filtro (<code>9</code>). Los comandos son <code>set_value(dp, valor)</code>.</p>
+<p>Con eso armé un CLI + interfaz web (control, monitoreo, programación) que no depende de la
+nube para nada.</p>
+<blockquote>
+<p><strong>Ojo con la <code>local_key</code></strong>: es la contraseña del robot. Quien la tenga y esté en tu LAN lo
+controla. No la subas a git. En mi repo está en <code>config.json</code>, ignorado, con permisos 600.</p>
+</blockquote>
+<hr>
+<h2 id="lo-que-no-usé-y-por-qué">Lo que no usé (y por qué)</h2>
+<table>
+	<thead>
+			<tr>
+					<th>Alternativa</th>
+					<th>Por qué no</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td><strong>API oficial de Tuya</strong> (<code>tinytuya.Cloud</code>)</td>
+					<td>Funciona, pero hay que crear proyecto de desarrollador, sacar Access ID/Secret y vincular la cuenta escaneando un QR. Más pasos manuales y depende de que la app white-label soporte el flujo.</td>
+			</tr>
+			<tr>
+					<td><strong>MITM</strong> (proxy + CA de sistema)</td>
+					<td>Hay que instalar la CA como certificado de sistema (módulo Magisk), reiniciar, configurar proxy y pelear con el certificate pinning del SDK.</td>
+			</tr>
+			<tr>
+					<td><strong><code>tuya-cloudcutter</code></strong></td>
+					<td>Requiere resetear el robot a modo pairing y suplantar la nube: el equipo queda desvinculado de la app.</td>
+			</tr>
+			<tr>
+					<td><strong>Repackear el APK</strong></td>
+					<td>Rompe la firma; la app verifica firma en varios lados.</td>
+			</tr>
+			<tr>
+					<td><strong>Frida + MMKV</strong> ✅</td>
+					<td>Cero interacción manual, no desvincula nada, no toca la nube, tarda minutos.</td>
+			</tr>
+	</tbody>
+</table>
+<hr>
+<h2 id="tabla-de-errores-y-causas">Tabla de errores y causas</h2>
+<p>Todo lo que salió mal, con la explicación (para que no te pase):</p>
+<table>
+	<thead>
+			<tr>
+					<th>Síntoma</th>
+					<th>Causa / solución</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td><code>SecurityException: Process not debuggable</code> en <code>am dumpheap</code></td>
+					<td>El proceso no es debuggable. No hay forma sin repackear (y romper la firma).</td>
+			</tr>
+			<tr>
+					<td>Buscar <code>localKey</code> en <code>/proc/&lt;pid&gt;/mem</code> no encuentra nada</td>
+					<td>ART guarda los strings en <strong>UTF-16LE</strong>; además el objeto puede no estar vivo.</td>
+			</tr>
+			<tr>
+					<td>La app se cierra al abrir con root</td>
+					<td>Root detection. Magisk <strong>DenyList</strong> para el paquete, cerrar y reabrir.</td>
+			</tr>
+			<tr>
+					<td><code>magisk --sqlite</code> se rompe por quoting en <code>su -c</code></td>
+					<td>Empujá un <code>.sh</code> a <code>/data/local/tmp</code> y ejecutalo.</td>
+			</tr>
+			<tr>
+					<td><code>frida.TransportError: connection closed</code></td>
+					<td>Versión cliente ≠ server, arquitectura equivocada, o server caído.</td>
+			</tr>
+			<tr>
+					<td><code>frida.InvalidArgumentError: unable to open library</code> en <code>attach</code></td>
+					<td>Inyección en proceso existente falla en este equipo. Usar <strong>spawn</strong> + <code>attach(pid)</code>.</td>
+			</tr>
+			<tr>
+					<td><code>Error binding to address ... Address already in use</code></td>
+					<td>Ya había un server escuchando (o quedó el forward).</td>
+			</tr>
+			<tr>
+					<td><code>pkill -f fsrv</code> imprime <code>Terminated</code> y mata todo</td>
+					<td>El patrón coincide con la línea de comandos del propio shell.</td>
+			</tr>
+			<tr>
+					<td><code>ClassNotFoundException: com.tencent.mmkv.MMKV</code></td>
+					<td>El SDK usa <code>com.thingclips.smart.mmkv.MMKV</code>.</td>
+			</tr>
+			<tr>
+					<td><code>TypeError: cannot read property 'overload' of undefined</code> (Gson)</td>
+					<td>Gson está shadeado: no existe <code>com.google.gson.Gson</code>. Ir por MMKV.</td>
+			</tr>
+			<tr>
+					<td>El JSON del hook viene truncado</td>
+					<td><code>substring(0, 6000)</code>; si el schema es más grande, parseá en el dispositivo y mandá solo lo necesario.</td>
+			</tr>
+			<tr>
+					<td><code>Network Error: Device Unreachable</code> al probar el control</td>
+					<td>La PC está en otra subred que el robot. El control local exige estar en la misma LAN.</td>
+			</tr>
+	</tbody>
+</table>
+<hr>
+<h2 id="seguridad-y-limpieza">Seguridad y limpieza</h2>
+<p>Después de jugar, <strong>apagá el inyector</strong>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>adb shell <span style="color:#e6db74">&#39;su -c &#34;pkill -x fsrv&#34;&#39;</span>
+</span></span><span style="display:flex;"><span>adb forward --remove tcp:27042
+</span></span><span style="display:flex;"><span>adb shell <span style="color:#e6db74">&#39;su -c &#34;ps | grep fsrv | grep -v grep | wc -l&#34;&#39;</span>   <span style="color:#75715e"># -&gt; 0</span>
+</span></span></code></pre></div><p>Y del lado del robot:</p>
+<ul>
+<li><code>local_key</code> = contraseña. Fuera de git, permisos 600, no la pegues en un chat.</li>
+<li>Si la cambiás de red, cambia la IP: volvé a escanear.</li>
+<li>DenyList sirve para que <em>esta</em> app no vea root, pero sigue habiendo root: no es una
+defensa, es una compatibilidad.</li>
+</ul>
+<hr>
+<h2 id="conclusiones">Conclusiones</h2>
+<ol>
+<li><strong>Si el dato está cifrado en reposo, no lo busques en reposo.</strong> Buscalo donde está en
+claro: dentro del proceso, en la función que lo descifra.</li>
+<li><strong>Lo más simple suele ser lo que funciona.</strong> Después de volcar memoria, pelear con MITM y
+leer papers del SDK, la solución fueron 30 líneas de JavaScript sobre <code>decodeString</code>.</li>
+<li><strong>Enumerá antes de hookear.</strong> El SDK ofusca y renombra todo; asumir nombres de clase es
+perder tiempo.</li>
+<li><strong><code>spawn</code> &gt; <code>attach</code></strong> cuando querés ver el arranque de una app. Y en este caso puntual,
+era la única forma.</li>
+<li><strong>Root + DenyList + Frida</strong> es una combinación ridículamente poderosa para auditar
+cualquier app Android, incluida la tuya.</li>
+</ol>
+<p>El robot ahora se controla por LAN, sin nube. Y de yapa, con la <code>local_key</code> y el bitmap de
+fallas, se puede estimar la odometría y dibujar un mapa aproximado de cobertura (spoiler: sin
+lidar ni encoders, es un mapa con deriva, pero sirve para ver dónde anduvo).</p>
+<hr>
+<h2 id="glosario">Glosario</h2>
+<table>
+	<thead>
+			<tr>
+					<th>Término</th>
+					<th>Qué es</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td><strong>DP</strong> (<code>data point</code>)</td>
+					<td>Cada campo de estado/comando del dispositivo en Tuya (ej: batería, modo, succión).</td>
+			</tr>
+			<tr>
+					<td><strong><code>local_key</code></strong></td>
+					<td>Clave de 16 caracteres para el protocolo local (TCP 6668); funciona como contraseña.</td>
+			</tr>
+			<tr>
+					<td><strong><code>gwId</code> / <code>devId</code></strong></td>
+					<td>Identificador único del dispositivo.</td>
+			</tr>
+			<tr>
+					<td><strong>MMKV</strong></td>
+					<td>Key-value store nativo (C++) usado por apps chinas; reemplaza SharedPreferences.</td>
+			</tr>
+			<tr>
+					<td><strong>ART</strong></td>
+					<td>Runtime de Android; guarda los <code>String</code> de Java en UTF-16LE.</td>
+			</tr>
+			<tr>
+					<td><strong>Magisk DenyList</strong></td>
+					<td>Lista de paquetes para los que Magisk oculta root (paths y binarios).</td>
+			</tr>
+			<tr>
+					<td><strong>Frida</strong></td>
+					<td>Framework de instrumentación dinámica: inyecta JS en un proceso y hookea funciones.</td>
+			</tr>
+			<tr>
+					<td><strong><code>spawn</code> vs <code>attach</code></strong></td>
+					<td><code>spawn</code> arranca el proceso suspendido con el agente ya cargado; <code>attach</code> se cuelga de uno que ya corre.</td>
+			</tr>
+			<tr>
+					<td><strong>hprof</strong></td>
+					<td>Formato del heap dump de Java.</td>
+			</tr>
+			<tr>
+					<td><strong><code>xlog</code></strong></td>
+					<td>Logger de Tencent Mars: comprimido y cifrado.</td>
+			</tr>
+	</tbody>
+</table>
+<hr>
+<h2 id="referencias">Referencias</h2>
+<ul>
+<li><a href="https://github.com/jasonacox/tinytuya"><code>tinytuya</code></a> — cliente Python para el protocolo local de Tuya.</li>
+<li><a href="https://frida.re/docs/"><code>frida</code></a> — documentación de la API de JavaScript y del CLI.</li>
+<li><a href="https://github.com/topjohnwu/Magisk">Magisk</a> — DenyList y módulos.</li>
+<li><a href="https://github.com/Tencent/MMKV">MMKV</a> — cómo funciona el store y su cifrado.</li>
+<li><a href="https://github.com/kueblc/tuya-cloudcutter"><code>tuya-cloudcutter</code></a> — la alternativa que no usé (interesante igual).</li>
+</ul>
+
+  </div>
+</article>
+
+  </main>
+  <footer class="site-footer">
+  <a href="/acerca/">acerca</a> · <a href="/servicios/">servicios</a> ·
+  <a href="/index.xml">rss</a> · 
+  <a href="https://github.com/imlauera/">github</a>
+</footer>
+
+  
+</body>
+</html>
