@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Cómo le extraje la localKey a mi aspiradora Tuya: reversing de una app Android con root, Frida y MMKV · Imlauer</title>
+  <title>Cómo extraje la localKey a mi aspiradora Tuya: reversing de una app Android con root, Frida y MMKV · Imlauer</title>
   <meta name="description" content="imlauerandres [at] gmail.com">
   <link rel="canonical" href="https://imlauera.github.io/como-extraje-la-localkey-de-mi-aspiradora-tuya/">
   <link rel="alternate" type="application/rss+xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
@@ -17,7 +17,7 @@
   <main>
     
 <article class="post">
-  <h1>Cómo le extraje la localKey a mi aspiradora Tuya: reversing de una app Android con root, Frida y MMKV</h1>
+  <h1>Cómo extraje la localKey a mi aspiradora Tuya: reversing de una app Android con root, Frida y MMKV</h1>
   <p class="meta">
     <time datetime="2026-11-14">2026-11-14</time>
     <span class="tags"> · <a href="/tags/android/">android</a>, <a href="/tags/reversing/">reversing</a>, <a href="/tags/frida/">frida</a>, <a href="/tags/tuya/">tuya</a>, <a href="/tags/iot/">iot</a></span>
@@ -54,8 +54,8 @@
   
   <div class="audio-player">
     <p class="audio-label">Escuchar este artículo</p>
-    <audio controls preload="metadata" src="https://archive.org/download/imlauer-blog-audio-como-extraje-la-localkey-de-mi-aspiradora-tuya-f6d85d05/como-extraje-la-localkey-de-mi-aspiradora-tuya-0124d8bf8e.mp3"></audio>
-    <p class="audio-meta"><a href="https://archive.org/download/imlauer-blog-audio-como-extraje-la-localkey-de-mi-aspiradora-tuya-f6d85d05/como-extraje-la-localkey-de-mi-aspiradora-tuya-0124d8bf8e.mp3">Descargar MP3</a> · <a href="https://archive.org/details/imlauer-blog-audio-como-extraje-la-localkey-de-mi-aspiradora-tuya-f6d85d05">Ver en Internet Archive</a></p>
+    <audio controls preload="metadata" src="https://archive.org/download/imlauer-blog-audio-como-extraje-la-localkey-de-mi-aspiradora-tuya-f6d85d05/como-extraje-la-localkey-de-mi-aspiradora-tuya-8d7cae9df8.mp3"></audio>
+    <p class="audio-meta"><a href="https://archive.org/download/imlauer-blog-audio-como-extraje-la-localkey-de-mi-aspiradora-tuya-f6d85d05/como-extraje-la-localkey-de-mi-aspiradora-tuya-8d7cae9df8.mp3">Descargar MP3</a> · <a href="https://archive.org/details/imlauer-blog-audio-como-extraje-la-localkey-de-mi-aspiradora-tuya-f6d85d05">Ver en Internet Archive</a></p>
   </div>
   
   
@@ -573,7 +573,8 @@ truco:</p>
 			</tr>
 	</tbody>
 </table>
-<p>Y el bitmap de fallas es oro puro: es el <strong>único sensor</strong> que expone el equipo.</p>
+<p>Y el bitmap de fallas <em>debería</em> ser oro puro: es el tipo de sensor que el equipo expone.
+En este modelo, en la práctica, quedó siempre en cero (lo cuento más abajo).</p>
 <pre tabindex="0"><code>bit 0  FAULT_CLIFF      sensor de precipicio
 bit 1  FAULT_IMP        impacto (bumper)
 bit 2  FAULT_WHL        rueda
@@ -611,11 +612,11 @@ controla. No la subas a git. En mi repo está en <code>config.json</code>, ignor
 </blockquote>
 <hr>
 <h2 id="mapear-la-casa-sin-slam">Mapear la casa sin SLAM</h2>
-<p>Con el control local resuelto quedaba la pregunta obvia: ¿y un mapa? El robot no tiene
-lidar, ni cámara, ni encoders, ni IMU, y su firmware no guarda nada. Pero hay un detalle:
-<strong>si los comandos los mando yo, sé cuánto se movió</strong>. Integrando tiempo × velocidad de
-<code>direction_control</code> sale una pose aproximada, y el bitmap de fallas aporta los obstáculos.
-Eso es <em>odometría de comando</em>: el robot pone los motores, la PC lleva la cuenta.</p>
+<p>El robot no tiene lidar, ni cámara, ni encoders, ni IMU, y su firmware no guarda nada. Pero
+hay un detalle: <strong>si los comandos los mando yo, sé cuánto se movió</strong>. Integrando tiempo ×
+velocidad de <code>direction_control</code> sale una pose aproximada, y los obstáculos salen de la
+única señal de contacto que da el equipo: la parada del robot al chocar. Eso es <em>odometría
+de comando</em>: el robot pone los motores, la PC lleva la cuenta.</p>
 <table>
 	<thead>
 			<tr>
@@ -634,7 +635,7 @@ Eso es <em>odometría de comando</em>: el robot pone los motores, la PC lleva la
 			</tr>
 			<tr>
 					<td>Cobertura</td>
-					<td>Disco del radio del robot (17 cm → franja de 34 cm) sobre la traza</td>
+					<td>Disco de 17 cm (franja de 34 cm) más la mopa corrida 25 cm atrás</td>
 			</tr>
 	</tbody>
 </table>
@@ -651,28 +652,286 @@ el mapa para que la franja barrida se dibuje donde realmente pasó:</p>
 </span></span></code></pre></div><blockquote>
 <p>La mía cuelga de un hilo y sobresale unos 25 cm, así que no queda rígida: el hilo le
 permite bailar y a veces se traba en el cepillo o en las ruedas. No hay sensor de mopa
-trabada; si la ves arrastrando de costado, acortá el hilo. En el mapa se declara con
-<code>--mopa 0.25 --mopa-ancho 0.30</code> y la franja se dibuja corrida hacia atrás.</p>
+trabada; si la ves arrastrando de costado, acortá el hilo.</p>
 </blockquote>
 <h3 id="que-maneje-sola">Que maneje sola</h3>
 <p>Manejar una casa entera con WASD es un embole de horas, así que la PC conduce: avanza
 hasta chocar, marca el obstáculo, gira 90°, se corre 35 cm y vuelve por una línea paralela.
-Cuando se traba prueba seis ángulos, retrocede y reintenta; si no sale en dos rondas, frena
-y guarda. Corta por tiempo o con batería por debajo del 15 %.</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>./run.sh explorar --nuevo --minutos <span style="color:#ae81ff">15</span>
-</span></span></code></pre></div><p>Antes de arrancar hace una prueba de medio segundo y te pregunta si se movió: así no llena
+Corta por tiempo o con batería por debajo del 15 %, y cada 5 segundos imprime distancia,
+área y choques para que puedas mirarlo avanzar desde el log.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>./run.sh explorar --nuevo --minutos <span style="color:#ae81ff">10</span> --mapa living.json
+</span></span></code></pre></div><p>Hay tres estrategias (<code>--estrategia</code>): <code>serpiente</code> (la de arriba, pasadas paralelas; la que
+mejor cubre un ambiente cerrado), <code>rebote</code> (tramos largos de 4 a 6 m y giro al chocar, para
+ambientes abiertos donde no conviene volver por la misma lane) y <code>frontera</code> (va siempre
+hacia lo no barrido; con odometría sola se va en línea recta, la dejo documentada como
+experimento fallido).</p>
+<p>Antes de arrancar hace una prueba de medio segundo y te pregunta si se movió: así no llena
 el mapa con movimiento inventado si el robot no obedece. Porque ese es el punto más
 engañoso de la odometría: no mide el mundo, mide <strong>lo que le mandaste</strong>. Si el robot está
 trabado contra una pared y le mandás avanzar, el mapa avanza igual.</p>
+<h3 id="las-tres-cosas-que-solo-aparecen-con-el-robot-en-el-piso">Las tres cosas que solo aparecen con el robot en el piso</h3>
+<p>La primera corrida real sirvió para descubrir que la teoría tenía tres agujeros.</p>
+<p><strong>La <code>local_key</code> cambia si volvés a vincular el robot.</strong> Después de pasarlo a la red
+nueva, <code>./run.sh status</code> empezó a devolver <code>Unexpected Payload from Device</code> (Err 904),
+aunque el <code>scan</code> seguía mostrando el mismo <code>device_id</code> y la misma IP. La app lo había
+re-vinculado y con eso rotó la clave; se vuelve a extraer con Frida y listo. Moraleja: si
+el 904 aparece de golpe, no es la red, es la clave.</p>
+<p><strong>El firmware corta el avance si no recibe la orden.</strong> Un solo <code>direction_control: forward</code> mueve el robot un segundo y medio y lo frena (seguridad). La PC, mientras tanto,
+integraba los 4 m completos de la pasada: el mapa crecía y el robot ni se movía. Se
+arregla reenviando la orden cada 0,6 s mientras dura el movimiento.</p>
+<p><strong>El DP de falla no reporta nada.</strong> El bitmap <code>fault</code> (DP 18) quedó en 0 toda la sesión,
+incluso levantando el robot en el aire con la mano. Pero el firmware sí hace algo cuando
+choca: <strong>se frena solo</strong> (<code>power_go=false</code>, <code>status=standby</code>). Esa parada es el sensor de
+choque que hay: si la PC está mandando <code>forward</code> y el robot pasa a <code>standby</code>, se cuenta
+impacto, se marca el obstáculo al frente y se gira. El robot no dice &ldquo;choqué&rdquo;, dice &ldquo;me
+detuve&rdquo;, y con eso alcanza.</p>
+<h3 id="primera-sesión-293-metros-y-una-silla">Primera sesión: 293 metros y una silla</h3>
+<p>25 minutos, <strong>293 m</strong> recorridos, <strong>42 m²</strong> cubiertos y <strong>199 choques</strong>. Pero once de esos
+choques fueron en el mismo metro cuadrado: se quedó abajo de una silla y el patrón
+serpiente no distingue &ldquo;pared&rdquo; de &ldquo;pata de silla&rdquo;.</p>
+<p>Se arregló con memoria de choques: si los últimos cinco impactos cayeron en menos de 0,8 m,
+el explorador asume que quedó atrapado, <strong>retrocede 1,2 m</strong> y prueba ángulos hasta salir.
+En una sesión de 20 minutos el escape se disparó 17 veces y el robot siguió solo.</p>
+<h3 id="por-qué-una-sesión-larga-no-termina-nunca">Por qué una sesión larga no termina nunca</h3>
+<p>Cuatro sesiones encima del mismo mapa sumaron <strong>1160 m</strong> y <strong>187 m²</strong>, pero el mapa terminó
+midiendo <strong>22 × 31 m</strong> y la pose quedó a 19 m del origen. La casa no mide eso: es deriva.</p>
+<p>Cada giro arrastra dos o tres grados de error, y con 500 giros el dibujo se dobla. Peor:
+probé una estrategia &ldquo;frontera&rdquo; (ir siempre hacia lo no barrido) y fue un desastre, porque
+para el robot <em>siempre</em> hay algo sin barrer más adelante — es su propia deriva. En 18
+minutos se fue en línea recta y el mapa terminó midiendo <strong>25 × 64 m</strong>.</p>
+<p>Conclusión incómoda: <strong>sin una referencia externa, la casa entera no se puede terminar de
+una sentada</strong>. No es cuestión de tiempo: es que la posición se va y lo que falta nunca deja
+de estar adelante.</p>
+<h3 id="lo-que-sí-funciona-un-ambiente-por-sesión">Lo que sí funciona: un ambiente por sesión</h3>
+<p>Cada ambiente se mapea con una sesión corta (8 a 10 minutos) y mapa nuevo, así la deriva no
+llega a deformar nada. Después se pegan todos en el mismo plano con <code>--origen x,y,grados</code>,
+que mueve la pose a ese punto sin borrar lo ya mapeado:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># living desde el origen</span>
+</span></span><span style="display:flex;"><span>./run.sh explorar --nuevo --minutos <span style="color:#ae81ff">8</span> --mapa casa.json --origen 0,0,0
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># cocina (5,2 m al este del origen)</span>
+</span></span><span style="display:flex;"><span>./run.sh explorar --minutos <span style="color:#ae81ff">8</span> --mapa casa.json --origen 5.2,0,0
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># dormitorio (4 m al norte)</span>
+</span></span><span style="display:flex;"><span>./run.sh explorar --minutos <span style="color:#ae81ff">8</span> --mapa casa.json --origen 0,4.0,90
+</span></span><span style="display:flex;"><span>./run.sh mapa --mapa casa.json
+</span></span></code></pre></div><p>Los <code>x,y</code> los sacás con una cinta y un croquis rápido del plano: el origen es la esquina de
+la primera habitación, equis para un lado, ye para el otro. Si no querés medir, <code>unir_mapas.py</code>
+alinea dos sesiones por correlación de lo barrido (prueba rotaciones de 90° y todas las
+traslaciones) y las une en un solo plano:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>python3 unir_mapas.py living.json entrada.json casa.json
+</span></span><span style="display:flex;"><span>./run.sh mapa --mapa casa.json
+</span></span></code></pre></div><p>En mi caso unió el living y la entrada con 82 % de solape, rotación de 180° y 10,8 m de
+desplazamiento; el plano quedó en 118,9 m². Es una unión aproximada: si las dos zonas
+apenas se tocan, conviene la cinta. Medido en el living, 8 minutos dieron <strong>97 m</strong> y
+<strong>22,6 m²</strong>; otros 10 minutos encima, <strong>58 m²</strong> (es un ambiente abierto con sillones,
+mesas y sillas, así que el robot vive chocando).</p>
+<h3 id="chuleta-de-comandos">Chuleta de comandos</h3>
+<p>Todo lo que hay en <code>run.sh</code>, agrupado. El <code>--config</code> es global (por defecto <code>config.json</code>).</p>
+<p><strong>Descubrir y leer</strong></p>
+<table>
+	<thead>
+			<tr>
+					<th>Comando</th>
+					<th>Qué hace</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td><code>./run.sh scan</code></td>
+					<td>Busca el robot en la LAN (IP, <code>device_id</code>, versión)</td>
+			</tr>
+			<tr>
+					<td><code>./run.sh spec</code></td>
+					<td>Autodetecta el schema de DP desde la nube</td>
+			</tr>
+			<tr>
+					<td><code>./run.sh raw</code></td>
+					<td>Vuelca todos los DP crudos</td>
+			</tr>
+			<tr>
+					<td><code>./run.sh status</code></td>
+					<td>Batería, estado y modo, legible</td>
+			</tr>
+			<tr>
+					<td><code>./run.sh status --json</code></td>
+					<td>Lo mismo, para scripts</td>
+			</tr>
+			<tr>
+					<td><code>./run.sh watch</code></td>
+					<td>Monitoreo continuo (default cada 3 s; <code>--interval</code>)</td>
+			</tr>
+	</tbody>
+</table>
+<p><strong>Control</strong></p>
+<table>
+	<thead>
+			<tr>
+					<th>Comando</th>
+					<th>Qué hace</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td><code>./run.sh start --mode smart --suction strong</code></td>
+					<td>Arranca a limpiar</td>
+			</tr>
+			<tr>
+					<td><code>./run.sh pause</code> / <code>./run.sh stop</code></td>
+					<td>Pausa / standby</td>
+			</tr>
+			<tr>
+					<td><code>./run.sh dock</code></td>
+					<td>Vuelve a la base (el firmware busca el haz IR; el mapa no participa)</td>
+			</tr>
+			<tr>
+					<td><code>./run.sh base --nuevo --mapa casa.json</code></td>
+					<td>Graba la base en el mapa (correr con el robot sobre el cargador)</td>
+			</tr>
+			<tr>
+					<td><code>./run.sh volver --mapa casa.json</code></td>
+					<td>Vuelve por odometría hasta la base si está a menos de 3,5 m</td>
+			</tr>
+			<tr>
+					<td><code>./run.sh locate</code></td>
+					<td>Hace sonar el robot</td>
+			</tr>
+			<tr>
+					<td><code>./run.sh mode &lt;modo&gt;</code></td>
+					<td>Cambia el modo de limpieza</td>
+			</tr>
+			<tr>
+					<td><code>./run.sh suction &lt;nivel&gt;</code></td>
+					<td>Cambia la succión</td>
+			</tr>
+			<tr>
+					<td><code>./run.sh direction forward</code></td>
+					<td>Un segundo de movimiento (<code>backward</code>, <code>turn_left</code>, <code>turn_right</code>, <code>stop</code>)</td>
+			</tr>
+	</tbody>
+</table>
+<p><strong>Calibrar</strong></p>
+<table>
+	<thead>
+			<tr>
+					<th>Comando</th>
+					<th>Qué hace</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td><code>./run.sh calibrar dist</code></td>
+					<td>Avanza 10 s; medís con cinta</td>
+			</tr>
+			<tr>
+					<td><code>./run.sh calibrar giro</code></td>
+					<td>Gira 10 s; contás grados</td>
+			</tr>
+			<tr>
+					<td><code>./run.sh calibrar</code></td>
+					<td>Las dos mediciones seguidas</td>
+			</tr>
+			<tr>
+					<td><code>./run.sh calibrar set --speed 0.28 --turn 107 --cell 0.05 --radio 0.17 --mopa 0.25 --mopa-ancho 0.30</code></td>
+					<td>Guarda la calibración</td>
+			</tr>
+	</tbody>
+</table>
+<p><strong>Mapear</strong></p>
+<table>
+	<thead>
+			<tr>
+					<th>Comando</th>
+					<th>Qué hace</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td><code>./run.sh explorar --nuevo --minutos 8 --mapa living.json</code></td>
+					<td>Serpiente, mapa nuevo (un ambiente)</td>
+			</tr>
+			<tr>
+					<td><code>./run.sh explorar --minutos 8 --mapa casa.json --origen 5.2,0,0</code></td>
+					<td>Sigue el mismo mapa con la pose en ese punto (pegar ambientes)</td>
+			</tr>
+			<tr>
+					<td><code>./run.sh explorar --estrategia rebote --paso-max 6</code></td>
+					<td>Tramos largos y giro al chocar: cruza ambientes abiertos</td>
+			</tr>
+			<tr>
+					<td><code>./run.sh explorar --estrategia frontera</code></td>
+					<td>Va hacia lo no barrido (con odometría sola se va en línea recta; queda como experimento)</td>
+			</tr>
+			<tr>
+					<td><code>./run.sh explorar --paso-lateral 0.35 --giro 90 --paso-max 4</code></td>
+					<td>Ajustes de la serpiente</td>
+			</tr>
+			<tr>
+					<td><code>./run.sh explorar --sin-prueba</code></td>
+					<td>Sin la prueba de movimiento inicial</td>
+			</tr>
+			<tr>
+					<td><code>./run.sh explorar --simular --nuevo --minutos 5</code></td>
+					<td>Casa virtual de 5×4 m</td>
+			</tr>
+			<tr>
+					<td><code>./run.sh explorar --simular --ancho 8 --alto 6</code></td>
+					<td>Casa virtual más grande</td>
+			</tr>
+			<tr>
+					<td><code>./run.sh manejar</code> / <code>--nuevo</code></td>
+					<td>WASD con mapa en vivo, sobre el mapa guardado o limpio</td>
+			</tr>
+	</tbody>
+</table>
+<p><strong>Mapa</strong></p>
+<table>
+	<thead>
+			<tr>
+					<th>Comando</th>
+					<th>Qué hace</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td><code>./run.sh mapa</code></td>
+					<td>Dibujo ASCII + resumen + últimos eventos</td>
+			</tr>
+			<tr>
+					<td><code>./run.sh mapa --json</code></td>
+					<td>Todo el mapa (pose, traza, celdas, eventos)</td>
+			</tr>
+			<tr>
+					<td><code>./run.sh mapa --mapa casa.json</code></td>
+					<td>Otro archivo de mapa</td>
+			</tr>
+			<tr>
+					<td><code>./run.sh mapa --reset</code></td>
+					<td>Borra el mapa</td>
+			</tr>
+	</tbody>
+</table>
+<p><strong>Web</strong></p>
+<table>
+	<thead>
+			<tr>
+					<th>Comando</th>
+					<th>Qué hace</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td><code>./run.sh web --port 8787</code></td>
+					<td>Interfaz web con el mapa en vivo</td>
+			</tr>
+	</tbody>
+</table>
+<p>Para cortar una exploración a mano: <code>pkill -f &quot;aspiradora.py explorar&quot;</code> (guarda el mapa
+igual) y después <code>./run.sh stop</code>.</p>
 <h3 id="probarlo-sin-robot">Probarlo sin robot</h3>
-<p>La parte divertida: un modo simulación con una casa virtual de 5×4 m y tres muebles, para
-afinar los parámetros sin levantar un dedo.</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>./run.sh explorar --simular --minutos <span style="color:#ae81ff">20</span> --mapa /tmp/prueba.json --nuevo
-</span></span><span style="display:flex;"><span>./run.sh mapa --mapa /tmp/prueba.json
-</span></span></code></pre></div><p>En 20 minutos simulados recorrió ~210 m, chocó 177 veces y el mapa terminó cubriendo
-~20 m² de una casa simulada de 5×4 m con tres muebles. Todo eso es simulación, con el mismo
-modelo de velocidad de los dos lados: en la vida real el error es mayor, porque el piso
-cambia, la mopa arrastra y el robot patina.</p>
+<p><code>--simular</code> levanta una casa virtual de 5×4 m con tres muebles y el mismo modelo de
+velocidad del robot, así que podés probar la lógica sin sacarlo de la base:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>./run.sh explorar --simular --nuevo --minutos <span style="color:#ae81ff">5</span>
+</span></span></code></pre></div><p>En 20 minutos simulados recorrió ~210 m, chocó 177 veces y cubrió ~20 m². En la vida real
+el error es mayor: el piso cambia, la mopa arrastra y el robot patina.</p>
 <h3 id="lo-que-sale-y-lo-que-no">Lo que sale y lo que no</h3>
 <table>
 	<thead>
@@ -684,15 +943,15 @@ cambia, la mopa arrastra y el robot patina.</p>
 	<tbody>
 			<tr>
 					<td>Deriva</td>
-					<td>Acumulativa: cada giro suma 3-8° de error y las paredes del mapa se van doblando</td>
+					<td>Acumulativa: 1160 m dejaron el mapa en 22 × 31 m. Cada giro suma 2-3°</td>
 			</tr>
 			<tr>
 					<td>Alcance</td>
-					<td>10-20 min por sesión; más tiempo, más torcido</td>
+					<td>8-10 min por ambiente; más tiempo, más torcido</td>
 			</tr>
 			<tr>
 					<td>Precisión</td>
-					<td>Sirve para ver el recorrido, la cobertura y dónde hay muebles; <strong>no</strong> para volver a un punto</td>
+					<td>Sirve para ver recorrido, cobertura y muebles; <strong>no</strong> para volver a un punto</td>
 			</tr>
 			<tr>
 					<td>Modo <code>random</code> de la app</td>
@@ -700,22 +959,35 @@ cambia, la mopa arrastra y el robot patina.</p>
 			</tr>
 			<tr>
 					<td>Choques</td>
-					<td>Se detectan por la parada del robot al chocar; alguna pausa del firmware puede contarse como choque</td>
+					<td>Se detectan por la parada del robot; alguna pausa del firmware puede contarse como choque</td>
 			</tr>
 			<tr>
 					<td><code>fault</code> (DP 18)</td>
-					<td>En este modelo queda en 0: no sirve para detectar impactos (probado levantando el robot)</td>
+					<td>En este modelo queda en 0: no sirve para detectar impactos</td>
 			</tr>
 			<tr>
 					<td>Mopa</td>
-					<td>La franja barrida se corre hacia atrás según <code>mopa_m</code>; con la mopa colgada de un hilo, el borde real baila unos centímetros</td>
+					<td>La franja se corre 25 cm atrás; colgada de un hilo, el borde real baila unos centímetros</td>
+			</tr>
+			<tr>
+					<td>Casa entera de una vez</td>
+					<td>No. Sin encoders ni referencia externa, la pose se va antes de terminar</td>
+			</tr>
+			<tr>
+					<td>Volver usando el mapa</td>
+					<td>No a más de ~3 m: la pose deriva. <code>dock</code> usa el haz IR del cargador, no el plano</td>
+			</tr>
+			<tr>
+					<td>Mover el robot</td>
+					<td>Se puede: arrancá mapa nuevo (<code>--nuevo</code>) o decile dónde quedó (<code>--origen</code>) y uní con <code>unir_mapas.py</code></td>
 			</tr>
 	</tbody>
 </table>
 <p>Si algún día hace falta un plano de verdad hay dos caminos: una webcam con un marcador
 ArUco arriba del robot (<code>solvePnP</code> en la PC, sin deriva) o cambiarle el cerebro por una
 Raspberry Pi con un RPLIDAR. Las dos implican hardware nuevo; la odometría de comando
-funciona hoy, sin tocar el robot.</p>
+funciona hoy, sin tocar el robot, y con el método por ambiente alcanza para tener la casa
+entera en un plano aproximado.</p>
 <hr>
 <h2 id="lo-que-no-usé-y-por-qué">Lo que no usé (y por qué)</h2>
 <table>
