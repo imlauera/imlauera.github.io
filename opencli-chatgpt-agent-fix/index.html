@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Arreglo de opencli chatgpt agent en Arch Linux · Imlauer</title>
+  <meta name="description" content="imlauerandres [at] gmail.com">
+  <link rel="canonical" href="https://imlauera.github.io/opencli-chatgpt-agent-fix/">
+  <link rel="alternate" type="application/rss+xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+  <a class="site-title" href="/">Imlauer</a>
+</header>
+
+  <main>
+    
+<article class="post">
+  <h1>Arreglo de opencli chatgpt agent en Arch Linux</h1>
+  <p class="meta">
+    <time datetime="2026-11-13">2026-11-13</time>
+    <span class="tags"> · <a href="/tags/opencli/">opencli</a></span>
+  </p>
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+  
+  
+  
+  
+    
+      
+        
+          
+        
+      
+    
+  
+  
+  
+  
+    
+  
+  
+  
+  
+  <div class="audio-player">
+    <p class="audio-label">Escuchar este artículo</p>
+    <audio controls preload="metadata" src="https://archive.org/download/imlauer-blog-audio-opencli-chatgpt-agent-fix-80d9651c/opencli-chatgpt-agent-fix-59cc9b9252.mp3"></audio>
+    <p class="audio-meta"><a href="https://archive.org/download/imlauer-blog-audio-opencli-chatgpt-agent-fix-80d9651c/opencli-chatgpt-agent-fix-59cc9b9252.mp3">Descargar MP3</a> · <a href="https://archive.org/details/imlauer-blog-audio-opencli-chatgpt-agent-fix-80d9651c">Ver en Internet Archive</a></p>
+  </div>
+  
+  
+  
+  <div class="content">
+    <p>Opencode me arregló el agente <code>opencli chatgpt agent</code></p>
+<p>CLI: <code>opencli 2.0.3</code><br>
+Extensión de Chromium: <code>1.0.26</code> → <code>1.0.27</code></p>
+<h2 id="síntoma">Síntoma</h2>
+<p>El comando:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>opencli chatgpt agent --new true <span style="color:#e6db74">&#34;Cual es el programa que mas ram usa en mi archlinux?&#34;</span>
+</span></span></code></pre></div><p>fallaba con:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>{<span style="color:#f92672">&#34;ok&#34;</span>:<span style="color:#66d9ef">false</span>,<span style="color:#f92672">&#34;error&#34;</span>:{<span style="color:#f92672">&#34;code&#34;</span>:<span style="color:#e6db74">&#34;COMMAND_EXEC&#34;</span>,<span style="color:#f92672">&#34;message&#34;</span>:<span style="color:#e6db74">&#34;no conversation url&#34;</span>,<span style="color:#f92672">&#34;exitCode&#34;</span>:<span style="color:#ae81ff">1</span>}}
+</span></span></code></pre></div><p>Pero <code>opencli chatgpt ask --new true &quot;...&quot;</code> sí funcionaba.</p>
+<p>También aparecía este warning de Chromium, que es inofensivo:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>ContextResult::kFatalFailure: WebGL1 blocklisted
+</span></span></code></pre></div><h2 id="diagnóstico">Diagnóstico</h2>
+<p><code>agent</code> no es un comando del opencli oficial: es un adaptador custom que estaba en:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>~/.opencli/clis/chatgpt/agent.js
+</span></span></code></pre></div><p>Ese adaptador tenía varios problemas:</p>
+<ol>
+<li>
+<p><strong>Esperaba la URL de la conversación antes de enviar el primer mensaje.</strong>
+Un chat nuevo no tiene URL <code>/c/&lt;id&gt;</code> hasta que se envía algo. Por eso nunca
+encontraba la conversación y tiraba <code>no conversation url</code>.</p>
+</li>
+<li>
+<p><strong>Usaba el <code>waitForChatGPTResponse</code> oficial, que identifica la respuesta
+comparando el texto exacto del prompt.</strong> Con prompts largos, XML/HTML y el DOM
+virtualizado de ChatGPT, esa comparación fallaba y el agente quedaba esperando
+hasta el timeout.</p>
+</li>
+<li>
+<p><strong><code>--timeout</code> se usaba como límite por turno y como límite global del comando.</strong>
+En tareas de varios turnos, opencli cortaba el comando a los 180s aunque el
+agente siguiera trabajando.</p>
+</li>
+<li>
+<p><strong>La respuesta final se truncaba a 140 caracteres.</strong>
+Por eso parecía que el agente &ldquo;no ejecutaba&rdquo; cuando en realidad sí había
+respondido; el texto completo no llegaba a la salida.</p>
+</li>
+<li>
+<p><strong>El prompt permitía respuestas del tipo &ldquo;voy a contar&hellip;&rdquo; sin ejecutar la
+herramienta.</strong> Eso cortaba el bucle antes de terminar la tarea.</p>
+</li>
+</ol>
+<h2 id="cambios-aplicados">Cambios aplicados</h2>
+<p>Archivo modificado:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>~/.opencli/clis/chatgpt/agent.js
+</span></span></code></pre></div><p>Backup:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>~/.opencli/clis/chatgpt/agent.js.bak.20261113141311
+</span></span></code></pre></div><p>Cambios principales:</p>
+<ul>
+<li>Enviar el primer mensaje y <strong>después</strong> esperar la URL de la conversación.</li>
+<li>Reemplazar la espera oficial por <code>waitForAgentResponse</code>, que:
+<ul>
+<li>espera a que ChatGPT deje de generar;</li>
+<li>busca la última respuesta del asistente;</li>
+<li>ignora respuestas ya vistas;</li>
+<li>no depende del conteo de mensajes visibles ni del texto exacto del prompt.</li>
+</ul>
+</li>
+<li>Separar los timeouts:
+<ul>
+<li><code>--timeout</code>: límite global del comando (default <code>7200</code> segundos).</li>
+<li><code>--turn-timeout</code>: límite por respuesta del asistente (default <code>600</code> segundos).</li>
+</ul>
+</li>
+<li>Devolver la respuesta final completa, sin truncar a 140 caracteres.</li>
+<li>Mejorar el prompt del agente:
+<ul>
+<li>exige bloques XML dentro de un code fence;</li>
+<li>prohíbe prometer acciones sin emitir el <code>tool_call</code>;</li>
+<li>recomienda <code>bash</code> para contar, sumar, filtrar o procesar salidas.</li>
+</ul>
+</li>
+</ul>
+<h2 id="extensión-de-chromium">Extensión de Chromium</h2>
+<p>Se actualizó la extensión de opencli:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>1.0.26 → 1.0.27
+</span></span></code></pre></div><p>Procedimiento:</p>
+<ol>
+<li>Descargar el release:</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cd ~/Downloads
+</span></span><span style="display:flex;"><span>curl -fL -o opencli-extension-v1.0.27.zip <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  https://github.com/jackwener/OpenCLI/releases/download/v2.0.3/opencli-extension-v1.0.27.zip
+</span></span></code></pre></div><ol start="2">
+<li>Backup de la versión anterior:</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cp -a ~/Downloads/opencli-extension ~/Downloads/opencli-extension-backup-v1.0.26
+</span></span></code></pre></div><ol start="3">
+<li>Reemplazar el contenido de la extensión unpacked:</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cd ~/Downloads
+</span></span><span style="display:flex;"><span>mkdir opencli-extension.new
+</span></span><span style="display:flex;"><span>unzip -q opencli-extension-v1.0.27.zip -d opencli-extension.new
+</span></span><span style="display:flex;"><span>mv opencli-extension opencli-extension.oldtmp
+</span></span><span style="display:flex;"><span>mv opencli-extension.new opencli-extension
+</span></span></code></pre></div><ol start="4">
+<li>Reiniciar el Chromium de Xvfb que usa opencli:</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pkill -f <span style="color:#e6db74">&#39;xvfb-run --auto-servernum chromium&#39;</span>
+</span></span><span style="display:flex;"><span>pkill -f <span style="color:#e6db74">&#39;chromium --remote-debugging-port=9222&#39;</span>
+</span></span><span style="display:flex;"><span>sleep <span style="color:#ae81ff">3</span>
+</span></span><span style="display:flex;"><span>cd ~
+</span></span><span style="display:flex;"><span>setsid nohup xvfb-run --auto-servernum chromium <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --remote-debugging-port<span style="color:#f92672">=</span><span style="color:#ae81ff">9222</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --disable-extensions-except<span style="color:#f92672">=</span>/home/esotericwarfare/Downloads/opencli-extension <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --load-extension<span style="color:#f92672">=</span>/home/esotericwarfare/Downloads/opencli-extension <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --remote-allow-origins<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;*&#39;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  &gt;/tmp/opencli-chromium.log 2&gt;&amp;<span style="color:#ae81ff">1</span> &lt; /dev/null &amp;
+</span></span></code></pre></div><ol start="5">
+<li>Reiniciar el daemon y verificar:</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>opencli daemon restart
+</span></span><span style="display:flex;"><span>opencli doctor
+</span></span></code></pre></div><p>Resultado esperado:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;extensionVersion&#34;</span>: <span style="color:#e6db74">&#34;1.0.27&#34;</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;extensionOutdated&#34;</span>: <span style="color:#66d9ef">false</span>,
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">&#34;issues&#34;</span>: []
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h2 id="uso">Uso</h2>
+<p>Uso básico:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cd /home/esotericwarfare
+</span></span><span style="display:flex;"><span>opencli chatgpt agent --new true <span style="color:#e6db74">&#34;Lista las carpetas y decime cuántas hay&#34;</span>
+</span></span></code></pre></div><p>Salida legible:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>opencli chatgpt agent --new true <span style="color:#e6db74">&#34;...&#34;</span> -f plain
+</span></span></code></pre></div><p>Salida para scripts:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>opencli chatgpt agent --new true <span style="color:#e6db74">&#34;...&#34;</span> -f json
+</span></span></code></pre></div><p>Opciones útiles:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>--new true           inicia una conversación nueva
+</span></span><span style="display:flex;"><span>--conversation &lt;id&gt;  continúa una conversación existente
+</span></span><span style="display:flex;"><span>--max-turns &lt;n&gt;      máximo de turnos de herramientas (default 30)
+</span></span><span style="display:flex;"><span>--turn-timeout &lt;s&gt;   timeout por respuesta del asistente (default 600)
+</span></span><span style="display:flex;"><span>--timeout &lt;s&gt;        timeout global del comando (default 7200)
+</span></span></code></pre></div><p>Herramientas locales disponibles para el agente:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>list_dir(path)
+</span></span><span style="display:flex;"><span>read_file(path)
+</span></span><span style="display:flex;"><span>write_file(path, content)
+</span></span><span style="display:flex;"><span>edit_file(path, old_string, new_string)
+</span></span><span style="display:flex;"><span>bash(command)
+</span></span><span style="display:flex;"><span>grep(pattern, path?)
+</span></span></code></pre></div><p>No hace falta usar hermes, pi ni opencode: <code>opencli chatgpt agent</code> funciona solo y
+ejecuta las herramientas en el directorio actual.</p>
+<h2 id="verificación">Verificación</h2>
+<p>Se probó en el host:</p>
+<ul>
+<li>Pregunta de RAM: respondió usando <code>bash</code>.</li>
+<li>Conteo de carpetas en <code>/home/esotericwarfare</code>: ejecutó <code>bash</code> y devolvió el total.</li>
+<li>Tarea de código: creó <code>hello.c</code>, lo compiló con <code>gcc</code>, lo ejecutó y devolvió
+<code>hola mundo</code>.</li>
+</ul>
+<h2 id="archivos-relevantes">Archivos relevantes</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>~/.opencli/clis/chatgpt/agent.js
+</span></span><span style="display:flex;"><span>~/.opencli/clis/chatgpt/agent.js.bak.20261113141311
+</span></span><span style="display:flex;"><span>~/.opencli/clis/chatgpt/utils.js
+</span></span><span style="display:flex;"><span>~/Downloads/opencli-extension/                         (1.0.27)
+</span></span><span style="display:flex;"><span>~/Downloads/opencli-extension-backup-v1.0.26/          (backup)
+</span></span><span style="display:flex;"><span>~/Downloads/opencli-extension-v1.0.27.zip
+</span></span></code></pre></div>
+  </div>
+</article>
+
+  </main>
+  <footer class="site-footer">
+  <a href="/acerca/">acerca</a> · <a href="/servicios/">servicios</a> ·
+  <a href="/index.xml">rss</a> · 
+  <a href="https://github.com/imlauera/">github</a>
+</footer>
+
+  
+</body>
+</html>

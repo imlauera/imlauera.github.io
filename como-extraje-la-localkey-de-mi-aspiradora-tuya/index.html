@@ -54,8 +54,8 @@
   
   <div class="audio-player">
     <p class="audio-label">Escuchar este artículo</p>
-    <audio controls preload="metadata" src="https://archive.org/download/imlauer-blog-audio-como-extraje-la-localkey-de-mi-aspiradora-tuya-f6d85d05/como-extraje-la-localkey-de-mi-aspiradora-tuya-50453b729a.mp3"></audio>
-    <p class="audio-meta"><a href="https://archive.org/download/imlauer-blog-audio-como-extraje-la-localkey-de-mi-aspiradora-tuya-f6d85d05/como-extraje-la-localkey-de-mi-aspiradora-tuya-50453b729a.mp3">Descargar MP3</a> · <a href="https://archive.org/details/imlauer-blog-audio-como-extraje-la-localkey-de-mi-aspiradora-tuya-f6d85d05">Ver en Internet Archive</a></p>
+    <audio controls preload="metadata" src="https://archive.org/download/imlauer-blog-audio-como-extraje-la-localkey-de-mi-aspiradora-tuya-f6d85d05/como-extraje-la-localkey-de-mi-aspiradora-tuya-0124d8bf8e.mp3"></audio>
+    <p class="audio-meta"><a href="https://archive.org/download/imlauer-blog-audio-como-extraje-la-localkey-de-mi-aspiradora-tuya-f6d85d05/como-extraje-la-localkey-de-mi-aspiradora-tuya-0124d8bf8e.mp3">Descargar MP3</a> · <a href="https://archive.org/details/imlauer-blog-audio-como-extraje-la-localkey-de-mi-aspiradora-tuya-f6d85d05">Ver en Internet Archive</a></p>
   </div>
   
   
@@ -85,6 +85,7 @@ están reemplazadas por placeholders.</p>
 <li><a href="#asociar-la-clave-al-dispositivo-correcto">Asociar la clave al dispositivo correcto</a></li>
 <li><a href="#bonus-el-schema-de-dps">Bonus: el schema de DPs</a></li>
 <li><a href="#control-local-tinytuya">Control local: tinytuya</a></li>
+<li><a href="#mapear-la-casa-sin-slam">Mapear la casa sin SLAM</a></li>
 <li><a href="#lo-que-no-us%C3%A9-y-por-qu%C3%A9">Lo que no usé (y por qué)</a></li>
 <li><a href="#tabla-de-errores-y-causas">Tabla de errores y causas</a></li>
 <li><a href="#seguridad-y-limpieza">Seguridad y limpieza</a></li>
@@ -609,6 +610,113 @@ nube para nada.</p>
 controla. No la subas a git. En mi repo está en <code>config.json</code>, ignorado, con permisos 600.</p>
 </blockquote>
 <hr>
+<h2 id="mapear-la-casa-sin-slam">Mapear la casa sin SLAM</h2>
+<p>Con el control local resuelto quedaba la pregunta obvia: ¿y un mapa? El robot no tiene
+lidar, ni cámara, ni encoders, ni IMU, y su firmware no guarda nada. Pero hay un detalle:
+<strong>si los comandos los mando yo, sé cuánto se movió</strong>. Integrando tiempo × velocidad de
+<code>direction_control</code> sale una pose aproximada, y el bitmap de fallas aporta los obstáculos.
+Eso es <em>odometría de comando</em>: el robot pone los motores, la PC lleva la cuenta.</p>
+<table>
+	<thead>
+			<tr>
+					<th>Qué</th>
+					<th>De dónde sale</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>Pose (<code>x</code>, <code>y</code>, <code>θ</code>)</td>
+					<td>Integrar los comandos (<code>forward</code>, <code>backward</code>, <code>turn_left</code>, <code>turn_right</code>)</td>
+			</tr>
+			<tr>
+					<td>Obstáculos</td>
+					<td>La parada del propio robot al chocar (<code>power_go=false</code>)</td>
+			</tr>
+			<tr>
+					<td>Cobertura</td>
+					<td>Disco del radio del robot (17 cm → franja de 34 cm) sobre la traza</td>
+			</tr>
+	</tbody>
+</table>
+<h3 id="calibrar-con-la-mopa-puesta">Calibrar (con la mopa puesta)</h3>
+<p>La velocidad cambia con el piso y con lo que arrastres. Dos mediciones y listo:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>./run.sh calibrar dist     <span style="color:#75715e"># avanza 10 s; medís con cinta cuánto avanzó</span>
+</span></span><span style="display:flex;"><span>./run.sh calibrar giro     <span style="color:#75715e"># gira 10 s; contás los grados</span>
+</span></span></code></pre></div><p>En mi caso quedó en <strong>0,28 m/s</strong> y <strong>107 °/s</strong> sobre cerámica. El detalle importante: yo
+siempre uso la mopa colgada atrás con un hilo, así que calibré <strong>con la mopa puesta</strong>. El
+arrastre baja la velocidad y cambia cómo patina en los giros; si calibrás sin mopa, el mapa
+sale estirado. Y como la mopa limpia <em>detrás</em> del robot y no debajo, hay que declararla en
+el mapa para que la franja barrida se dibuje donde realmente pasó:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>./run.sh calibrar set --mopa 0.25 --mopa-ancho 0.30
+</span></span></code></pre></div><blockquote>
+<p>La mía cuelga de un hilo y sobresale unos 25 cm, así que no queda rígida: el hilo le
+permite bailar y a veces se traba en el cepillo o en las ruedas. No hay sensor de mopa
+trabada; si la ves arrastrando de costado, acortá el hilo. En el mapa se declara con
+<code>--mopa 0.25 --mopa-ancho 0.30</code> y la franja se dibuja corrida hacia atrás.</p>
+</blockquote>
+<h3 id="que-maneje-sola">Que maneje sola</h3>
+<p>Manejar una casa entera con WASD es un embole de horas, así que la PC conduce: avanza
+hasta chocar, marca el obstáculo, gira 90°, se corre 35 cm y vuelve por una línea paralela.
+Cuando se traba prueba seis ángulos, retrocede y reintenta; si no sale en dos rondas, frena
+y guarda. Corta por tiempo o con batería por debajo del 15 %.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>./run.sh explorar --nuevo --minutos <span style="color:#ae81ff">15</span>
+</span></span></code></pre></div><p>Antes de arrancar hace una prueba de medio segundo y te pregunta si se movió: así no llena
+el mapa con movimiento inventado si el robot no obedece. Porque ese es el punto más
+engañoso de la odometría: no mide el mundo, mide <strong>lo que le mandaste</strong>. Si el robot está
+trabado contra una pared y le mandás avanzar, el mapa avanza igual.</p>
+<h3 id="probarlo-sin-robot">Probarlo sin robot</h3>
+<p>La parte divertida: un modo simulación con una casa virtual de 5×4 m y tres muebles, para
+afinar los parámetros sin levantar un dedo.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>./run.sh explorar --simular --minutos <span style="color:#ae81ff">20</span> --mapa /tmp/prueba.json --nuevo
+</span></span><span style="display:flex;"><span>./run.sh mapa --mapa /tmp/prueba.json
+</span></span></code></pre></div><p>En 20 minutos simulados recorrió ~210 m, chocó 177 veces y el mapa terminó cubriendo
+~20 m² de una casa simulada de 5×4 m con tres muebles. Todo eso es simulación, con el mismo
+modelo de velocidad de los dos lados: en la vida real el error es mayor, porque el piso
+cambia, la mopa arrastra y el robot patina.</p>
+<h3 id="lo-que-sale-y-lo-que-no">Lo que sale y lo que no</h3>
+<table>
+	<thead>
+			<tr>
+					<th>Aspecto</th>
+					<th>Realidad</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>Deriva</td>
+					<td>Acumulativa: cada giro suma 3-8° de error y las paredes del mapa se van doblando</td>
+			</tr>
+			<tr>
+					<td>Alcance</td>
+					<td>10-20 min por sesión; más tiempo, más torcido</td>
+			</tr>
+			<tr>
+					<td>Precisión</td>
+					<td>Sirve para ver el recorrido, la cobertura y dónde hay muebles; <strong>no</strong> para volver a un punto</td>
+			</tr>
+			<tr>
+					<td>Modo <code>random</code> de la app</td>
+					<td>No es mapeable: ahí decide el robot y no sé dónde está</td>
+			</tr>
+			<tr>
+					<td>Choques</td>
+					<td>Se detectan por la parada del robot al chocar; alguna pausa del firmware puede contarse como choque</td>
+			</tr>
+			<tr>
+					<td><code>fault</code> (DP 18)</td>
+					<td>En este modelo queda en 0: no sirve para detectar impactos (probado levantando el robot)</td>
+			</tr>
+			<tr>
+					<td>Mopa</td>
+					<td>La franja barrida se corre hacia atrás según <code>mopa_m</code>; con la mopa colgada de un hilo, el borde real baila unos centímetros</td>
+			</tr>
+	</tbody>
+</table>
+<p>Si algún día hace falta un plano de verdad hay dos caminos: una webcam con un marcador
+ArUco arriba del robot (<code>solvePnP</code> en la PC, sin deriva) o cambiarle el cerebro por una
+Raspberry Pi con un RPLIDAR. Las dos implican hardware nuevo; la odometría de comando
+funciona hoy, sin tocar el robot.</p>
+<hr>
 <h2 id="lo-que-no-usé-y-por-qué">Lo que no usé (y por qué)</h2>
 <table>
 	<thead>
@@ -728,9 +836,10 @@ era la única forma.</li>
 <li><strong>Root + DenyList + Frida</strong> es una combinación ridículamente poderosa para auditar
 cualquier app Android, incluida la tuya.</li>
 </ol>
-<p>El robot ahora se controla por LAN, sin nube. Y de yapa, con la <code>local_key</code> y el bitmap de
-fallas, se puede estimar la odometría y dibujar un mapa aproximado de cobertura (spoiler: sin
-lidar ni encoders, es un mapa con deriva, pero sirve para ver dónde anduvo).</p>
+<p>El robot ahora se controla por LAN, sin nube. Y de yapa, con la <code>local_key</code>,
+<code>direction_control</code> y la parada del robot al chocar se puede estimar la odometría y dibujar
+un mapa aproximado (spoiler: sin lidar ni encoders es un mapa con deriva, pero sirve para ver dónde
+anduvo). Está todo en <a href="#mapear-la-casa-sin-slam">Mapear la casa sin SLAM</a>.</p>
 <hr>
 <h2 id="glosario">Glosario</h2>
 <table>
