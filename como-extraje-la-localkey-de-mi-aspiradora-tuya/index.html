@@ -54,8 +54,8 @@
   
   <div class="audio-player">
     <p class="audio-label">Escuchar este artículo</p>
-    <audio controls preload="metadata" src="https://archive.org/download/imlauer-blog-audio-como-extraje-la-localkey-de-mi-aspiradora-tuya-f6d85d05/como-extraje-la-localkey-de-mi-aspiradora-tuya-8d7cae9df8.mp3"></audio>
-    <p class="audio-meta"><a href="https://archive.org/download/imlauer-blog-audio-como-extraje-la-localkey-de-mi-aspiradora-tuya-f6d85d05/como-extraje-la-localkey-de-mi-aspiradora-tuya-8d7cae9df8.mp3">Descargar MP3</a> · <a href="https://archive.org/details/imlauer-blog-audio-como-extraje-la-localkey-de-mi-aspiradora-tuya-f6d85d05">Ver en Internet Archive</a></p>
+    <audio controls preload="metadata" src="https://archive.org/download/imlauer-blog-audio-como-extraje-la-localkey-de-mi-aspiradora-tuya-f6d85d05/como-extraje-la-localkey-de-mi-aspiradora-tuya-56798ed8a9.mp3"></audio>
+    <p class="audio-meta"><a href="https://archive.org/download/imlauer-blog-audio-como-extraje-la-localkey-de-mi-aspiradora-tuya-f6d85d05/como-extraje-la-localkey-de-mi-aspiradora-tuya-56798ed8a9.mp3">Descargar MP3</a> · <a href="https://archive.org/details/imlauer-blog-audio-como-extraje-la-localkey-de-mi-aspiradora-tuya-f6d85d05">Ver en Internet Archive</a></p>
   </div>
   
   
@@ -724,6 +724,31 @@ desplazamiento; el plano quedó en 118,9 m². Es una unión aproximada: si las d
 apenas se tocan, conviene la cinta. Medido en el living, 8 minutos dieron <strong>97 m</strong> y
 <strong>22,6 m²</strong>; otros 10 minutos encima, <strong>58 m²</strong> (es un ambiente abierto con sillones,
 mesas y sillas, así que el robot vive chocando).</p>
+<h3 id="arrancar-con-el-mapa-que-ya-tenés">Arrancar con el mapa que ya tenés</h3>
+<p><code>explorar</code> <strong>sin</strong> <code>--nuevo</code> no borra nada: carga el mapa, arranca desde la última pose
+guardada y le suma. Con <code>--nuevo</code> lo borra (no hay vuelta atrás).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>./run.sh mapa --mapa casa.json                      <span style="color:#75715e"># qué hay: resumen + dibujo</span>
+</span></span><span style="display:flex;"><span>./run.sh explorar --minutos <span style="color:#ae81ff">8</span> --mapa casa.json      <span style="color:#75715e"># sigue desde donde terminó</span>
+</span></span></code></pre></div><p>Si el robot no está en esa pose (lo levantaste, lo cargaste, lo mandaste a la base), le
+decís dónde quedó:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>./run.sh explorar --minutos <span style="color:#ae81ff">8</span> --mapa casa.json --origen 5.2,0,0
+</span></span></code></pre></div><p>Y si las sesiones arrancan siempre con el robot sobre el cargador, conviene que la base
+sea el origen del plano:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>./run.sh base --nuevo --mapa casa.json                  <span style="color:#75715e"># robot sobre la base: base = (0,0)</span>
+</span></span><span style="display:flex;"><span>./run.sh explorar --minutos <span style="color:#ae81ff">8</span> --mapa casa.json --origen 0,0,0
+</span></span><span style="display:flex;"><span>./run.sh volver --mapa casa.json                        <span style="color:#75715e"># vuelve si está a menos de 3,5 m</span>
+</span></span></code></pre></div><p>Tres cosas que ahorran frustración:</p>
+<ul>
+<li>En ambientes con muchos muebles, bajá el corrimiento entre pasadas:
+<code>--paso-lateral 0.25</code> (por defecto 0.35). Tarda más pero deja menos huecos.</li>
+<li>Un mapa de 119 m² para un departamento chico no es la casa: es deriva. Si el plano ya
+salió deformado, empezá un mapa nuevo anclado en la base en vez de seguir sumando.</li>
+<li>El mapa guarda <code>pose</code>, <code>libre</code>, <code>obstaculos</code> y <code>eventos</code>; cortar con <code>pkill</code> no pierde
+nada porque el explorador guarda al salir.</li>
+</ul>
+<p>Para el baño y los ambientes cerrados: la puerta tiene que estar <strong>abierta</strong> y sin escalón
+de más de 1,5 cm. El robot mide ~9 cm de alto y el sensor de precipicio frena en el
+umbral; si la puerta estaba cerrada no es que faltó mapear, es que no entró.</p>
 <h3 id="chuleta-de-comandos">Chuleta de comandos</h3>
 <p>Todo lo que hay en <code>run.sh</code>, agrupado. El <code>--config</code> es global (por defecto <code>config.json</code>).</p>
 <p><strong>Descubrir y leer</strong></p>
