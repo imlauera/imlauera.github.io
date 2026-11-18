@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wikipedia offline que te lee el artículo mientras lo leés (kiwix &#43; espeak &#43; mpv &#43; tmux) · Imlauer</title>
+  <meta name="description" content="imlauerandres [at] gmail.com">
+  <link rel="canonical" href="https://imlauera.github.io/wikipedia-audio-mpv/">
+  <link rel="alternate" type="application/rss+xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+  <a class="site-title" href="/">Imlauer</a>
+</header>
+
+  <main>
+    
+<article class="post">
+  <h1>Wikipedia offline que te lee el artículo mientras lo leés (kiwix &#43; espeak &#43; mpv &#43; tmux)</h1>
+  <p class="meta">
+    <time datetime="2026-11-18">2026-11-18</time>
+    <span class="tags"> · <a href="/tags/offline/">offline</a>, <a href="/tags/wikipedia/">wikipedia</a>, <a href="/tags/audio/">audio</a>, <a href="/tags/tmux/">tmux</a></span>
+  </p>
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+  
+  
+  
+  
+    
+      
+        
+          
+        
+      
+    
+  
+  
+  
+  
+    
+  
+  
+  
+  
+  <div class="audio-player">
+    <p class="audio-label">Escuchar este artículo</p>
+    <audio controls preload="metadata" src="https://archive.org/download/imlauer-blog-audio-wikipedia-audio-mpv-e8b32fb7/wikipedia-audio-mpv-4d4ebf205d.mp3"></audio>
+    <p class="audio-meta"><a href="https://archive.org/download/imlauer-blog-audio-wikipedia-audio-mpv-e8b32fb7/wikipedia-audio-mpv-4d4ebf205d.mp3">Descargar MP3</a> · <a href="https://archive.org/details/imlauer-blog-audio-wikipedia-audio-mpv-e8b32fb7">Ver en Internet Archive</a></p>
+  </div>
+  
+  
+  
+  <div class="content">
+    <p>Tenía las dos wikis descargadas en ZIM (<code>wikipedia_es_all_maxi</code> y
+<code>wikipedia_en_all_nopic</code>), un <code>wikiesp</code> y un <code>wikip</code> que abrían el artículo con
+<code>w3m</code>, y el paso manual de siempre: bajar el texto, generar un <code>.wav</code> con
+<code>espeak</code> y reproducirlo con <code>mpv</code> porque <code>espeak</code> no se puede pausar y <code>mpv</code> sí.</p>
+<p>La idea fue juntar todo en el mismo comando: escribís <code>wikiesp &quot;Alan Turing&quot;</code> y
+paso lo siguiente:</p>
+<ol>
+<li>Arranca <code>kiwix-serve</code> con el ZIM correspondiente (si no está sirviendo ese,
+mata el anterior y levanta el otro).</li>
+<li>Busca el artículo con <code>kiwix-search</code> y arma la URL con el título encodeado.</li>
+<li>Baja el HTML y extrae <strong>solo los párrafos del cuerpo</strong> (sin infobox, sin
+referencias, sin menú).</li>
+<li>Genera el <code>.wav</code> y lo guarda en caché.</li>
+<li>Abre <code>mpv</code> <strong>en pausa</strong> con un socket IPC y abre <code>w3m</code> con el artículo.</li>
+<li><code>F12</code> hace play/pausa sin salir de <code>w3m</code>.</li>
+</ol>
+<h2 id="las-dos-voces">Las dos voces</h2>
+<p>Acá hay un detalle: para el español uso <code>espeak-ng -v es</code> y para el inglés
+<code>espeak</code> (voz por defecto, inglesa). No es lo mismo el motor ni la voz:</p>
+<table>
+	<thead>
+			<tr>
+					<th>comando</th>
+					<th>wiki</th>
+					<th>motor</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td><code>wikiesp &quot;tema&quot;</code></td>
+					<td>español, <code>all_maxi</code></td>
+					<td><code>espeak-ng -v es</code></td>
+			</tr>
+			<tr>
+					<td><code>wikip &quot;tema&quot;</code></td>
+					<td>inglés, <code>all_nopic</code></td>
+					<td><code>espeak</code></td>
+			</tr>
+	</tbody>
+</table>
+<h2 id="extraer-el-texto-limpio">Extraer el texto limpio</h2>
+<p><code>w3m -dump</code> tira todo el texto de la página, incluido el infobox y las
+notas al pie, y eso se escucha horrible. Con <code>HTMLParser</code> de la stdlib
+(no hay que instalar <code>bs4</code> ni nada) alcanza con quedarse con los <code>&lt;p&gt;</code> que
+están dentro de <code>#mw-content-text</code>, y saltar <code>script</code>, <code>style</code>, <code>sup</code>,
+<code>table</code> y <code>figure</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#75715e">#!/usr/bin/env python3</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> re
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> sys
+</span></span><span style="display:flex;"><span><span style="color:#f92672">from</span> html.parser <span style="color:#f92672">import</span> HTMLParser
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Prose</span>(HTMLParser):
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">__init__</span>(self):
+</span></span><span style="display:flex;"><span>        super()<span style="color:#f92672">.</span><span style="color:#a6e22e">__init__</span>(convert_charrefs<span style="color:#f92672">=</span><span style="color:#66d9ef">True</span>)
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>divstack <span style="color:#f92672">=</span> []
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>in_content <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>in_p <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>skip <span style="color:#f92672">=</span> {}
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>buf <span style="color:#f92672">=</span> []
+</span></span><span style="display:flex;"><span>        self<span style="color:#f92672">.</span>out <span style="color:#f92672">=</span> []
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">handle_starttag</span>(self, tag, attrs):
+</span></span><span style="display:flex;"><span>        attrs <span style="color:#f92672">=</span> dict(attrs)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> tag <span style="color:#f92672">in</span> (<span style="color:#e6db74">&#34;script&#34;</span>, <span style="color:#e6db74">&#34;style&#34;</span>, <span style="color:#e6db74">&#34;sup&#34;</span>, <span style="color:#e6db74">&#34;table&#34;</span>, <span style="color:#e6db74">&#34;figure&#34;</span>):
+</span></span><span style="display:flex;"><span>            self<span style="color:#f92672">.</span>skip[tag] <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>skip<span style="color:#f92672">.</span>get(tag, <span style="color:#ae81ff">0</span>) <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> tag <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;div&#34;</span>:
+</span></span><span style="display:flex;"><span>            cls <span style="color:#f92672">=</span> attrs<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;class&#34;</span>) <span style="color:#f92672">or</span> <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>            is_content <span style="color:#f92672">=</span> attrs<span style="color:#f92672">.</span>get(<span style="color:#e6db74">&#34;id&#34;</span>) <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;mw-content-text&#34;</span> <span style="color:#f92672">or</span> <span style="color:#e6db74">&#34;mw-parser-output&#34;</span> <span style="color:#f92672">in</span> cls
+</span></span><span style="display:flex;"><span>            self<span style="color:#f92672">.</span>divstack<span style="color:#f92672">.</span>append(is_content)
+</span></span><span style="display:flex;"><span>            self<span style="color:#f92672">.</span>in_content <span style="color:#f92672">+=</span> is_content
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> tag <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;p&#34;</span> <span style="color:#f92672">and</span> self<span style="color:#f92672">.</span>in_content <span style="color:#f92672">and</span> <span style="color:#f92672">not</span> any(self<span style="color:#f92672">.</span>skip<span style="color:#f92672">.</span>values()):
+</span></span><span style="display:flex;"><span>            self<span style="color:#f92672">.</span>in_p <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>            self<span style="color:#f92672">.</span>buf <span style="color:#f92672">=</span> [<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">handle_endtag</span>(self, tag):
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> tag <span style="color:#f92672">in</span> self<span style="color:#f92672">.</span>skip <span style="color:#f92672">and</span> self<span style="color:#f92672">.</span>skip[tag]:
+</span></span><span style="display:flex;"><span>            self<span style="color:#f92672">.</span>skip[tag] <span style="color:#f92672">-=</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> tag <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;div&#34;</span> <span style="color:#f92672">and</span> self<span style="color:#f92672">.</span>divstack <span style="color:#f92672">and</span> self<span style="color:#f92672">.</span>divstack<span style="color:#f92672">.</span>pop():
+</span></span><span style="display:flex;"><span>            self<span style="color:#f92672">.</span>in_content <span style="color:#f92672">-=</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> tag <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;p&#34;</span> <span style="color:#f92672">and</span> self<span style="color:#f92672">.</span>in_p:
+</span></span><span style="display:flex;"><span>            self<span style="color:#f92672">.</span>out<span style="color:#f92672">.</span>append(<span style="color:#e6db74">&#34;&#34;</span><span style="color:#f92672">.</span>join(self<span style="color:#f92672">.</span>buf) <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>            self<span style="color:#f92672">.</span>in_p <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">handle_data</span>(self, data):
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> self<span style="color:#f92672">.</span>in_p <span style="color:#f92672">and</span> <span style="color:#f92672">not</span> any(self<span style="color:#f92672">.</span>skip<span style="color:#f92672">.</span>values()):
+</span></span><span style="display:flex;"><span>            self<span style="color:#f92672">.</span>buf<span style="color:#f92672">.</span>append(data)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">main</span>():
+</span></span><span style="display:flex;"><span>    parser <span style="color:#f92672">=</span> Prose()
+</span></span><span style="display:flex;"><span>    parser<span style="color:#f92672">.</span>feed(sys<span style="color:#f92672">.</span>stdin<span style="color:#f92672">.</span>read())
+</span></span><span style="display:flex;"><span>    text <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;&#34;</span><span style="color:#f92672">.</span>join(parser<span style="color:#f92672">.</span>out)
+</span></span><span style="display:flex;"><span>    text <span style="color:#f92672">=</span> re<span style="color:#f92672">.</span>sub(<span style="color:#e6db74">r</span><span style="color:#e6db74">&#34;\[\d+\]&#34;</span>, <span style="color:#e6db74">&#34;&#34;</span>, text)
+</span></span><span style="display:flex;"><span>    text <span style="color:#f92672">=</span> re<span style="color:#f92672">.</span>sub(<span style="color:#e6db74">r</span><span style="color:#e6db74">&#34;[ \t]+&#34;</span>, <span style="color:#e6db74">&#34; &#34;</span>, text)
+</span></span><span style="display:flex;"><span>    text <span style="color:#f92672">=</span> re<span style="color:#f92672">.</span>sub(<span style="color:#e6db74">r</span><span style="color:#e6db74">&#34;\n\s*\n+&#34;</span>, <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\n\n</span><span style="color:#e6db74">&#34;</span>, text)<span style="color:#f92672">.</span>strip()
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> text:
+</span></span><span style="display:flex;"><span>        print(text)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> __name__ <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;__main__&#34;</span>:
+</span></span><span style="display:flex;"><span>    main()
+</span></span></code></pre></div><p>Guardarlo como <code>~/.local/bin/wiki-prose</code> y <code>chmod +x</code>. El detalle del
+<code>divstack</code> es importante: los ZIM de wikipedia tienen un montón de <code>&lt;div&gt;</code>
+anidados y si solo llevás un contador loss los párrafos después del primero.</p>
+<h2 id="las-funciones-en-bashrc">Las funciones en .bashrc</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>_wiki_leer<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  local lang<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span> zim<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$2<span style="color:#e6db74">&#34;</span> archive<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$3<span style="color:#e6db74">&#34;</span> engine<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$4<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  shift <span style="color:#ae81ff">4</span>
+</span></span><span style="display:flex;"><span>  local query<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$*<span style="color:#e6db74">&#34;</span> base<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;http://localhost&#34;</span>
+</span></span><span style="display:flex;"><span>  local first slug enc url dir key txt wav sock
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> -z <span style="color:#e6db74">&#34;</span>$query<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Uso: wikiesp &lt;tema&gt; | wikip &lt;tema&gt;&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> ! curl -s <span style="color:#e6db74">&#34;</span>$base<span style="color:#e6db74">/catalog/v2/entries&#34;</span> 2&gt;/dev/null | grep -qF <span style="color:#e6db74">&#34;/content/</span>$archive<span style="color:#e6db74">&#34;</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    sudo pkill -f kiwix-serve 2&gt;/dev/null
+</span></span><span style="display:flex;"><span>    sudo kiwix-serve <span style="color:#e6db74">&#34;</span>$zim<span style="color:#e6db74">&#34;</span> &gt;/dev/null 2&gt;&amp;<span style="color:#ae81ff">1</span> &amp;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> _ in <span style="color:#f92672">{</span>1..15<span style="color:#f92672">}</span>; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>      curl -s <span style="color:#e6db74">&#34;</span>$base<span style="color:#e6db74">/catalog/v2/entries&#34;</span> 2&gt;/dev/null | grep -qF <span style="color:#e6db74">&#34;/content/</span>$archive<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">&amp;&amp;</span> break
+</span></span><span style="display:flex;"><span>      sleep <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  first<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>kiwix-search <span style="color:#e6db74">&#34;</span>$zim<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;</span>$query<span style="color:#e6db74">&#34;</span> 2&gt;/dev/null | head -1<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> -z <span style="color:#e6db74">&#34;</span>$first<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Sin resultados para: </span>$query<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  slug<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>first// /_<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  enc<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>printf <span style="color:#e6db74">&#39;%s&#39;</span> <span style="color:#e6db74">&#34;</span>$slug<span style="color:#e6db74">&#34;</span> | jq -sRr @uri<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>  url<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$base<span style="color:#e6db74">/content/</span>$archive<span style="color:#e6db74">/</span>$enc<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  dir<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$HOME<span style="color:#e6db74">/.cache/wiki-audio/</span>$lang<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  mkdir -p <span style="color:#e6db74">&#34;</span>$dir<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  key<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>slug//[^[:alnum:]_-]/_<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  key<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>key:0:72<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  txt<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$dir<span style="color:#e6db74">/</span>$key<span style="color:#e6db74">.txt&#34;</span>
+</span></span><span style="display:flex;"><span>  wav<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$dir<span style="color:#e6db74">/</span>$key<span style="color:#e6db74">.wav&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> ! -s <span style="color:#e6db74">&#34;</span>$txt<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Extrayendo texto: </span>$first<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    curl -sL <span style="color:#e6db74">&#34;</span>$url<span style="color:#e6db74">&#34;</span> | wiki-prose &gt; <span style="color:#e6db74">&#34;</span>$txt<span style="color:#e6db74">.tmp&#34;</span> <span style="color:#f92672">||</span> <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> ! -s <span style="color:#e6db74">&#34;</span>$txt<span style="color:#e6db74">.tmp&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>      echo <span style="color:#e6db74">&#34;No se pudo extraer el texto de: </span>$url<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>    mv <span style="color:#e6db74">&#34;</span>$txt<span style="color:#e6db74">.tmp&#34;</span> <span style="color:#e6db74">&#34;</span>$txt<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> ! -s <span style="color:#e6db74">&#34;</span>$wav<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Generando audio (</span>$engine<span style="color:#e6db74">)... puede tardar un momento&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;</span>$engine<span style="color:#e6db74">&#34;</span> in
+</span></span><span style="display:flex;"><span>      ng-es<span style="color:#f92672">)</span> espeak-ng -v es -f <span style="color:#e6db74">&#34;</span>$txt<span style="color:#e6db74">&#34;</span> -w <span style="color:#e6db74">&#34;</span>$wav<span style="color:#e6db74">.tmp&#34;</span> ;;
+</span></span><span style="display:flex;"><span>      espeak<span style="color:#f92672">)</span> espeak -f <span style="color:#e6db74">&#34;</span>$txt<span style="color:#e6db74">&#34;</span> -w <span style="color:#e6db74">&#34;</span>$wav<span style="color:#e6db74">.tmp&#34;</span> ;;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">esac</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> ! -s <span style="color:#e6db74">&#34;</span>$wav<span style="color:#e6db74">.tmp&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>      echo <span style="color:#e6db74">&#34;Error generando el audio.&#34;</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>    mv <span style="color:#e6db74">&#34;</span>$wav<span style="color:#e6db74">.tmp&#34;</span> <span style="color:#e6db74">&#34;</span>$wav<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  sock<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/tmp/wiki-mpv-</span>$USER<span style="color:#e6db74">.sock&#34;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> -S <span style="color:#e6db74">&#34;</span>$sock<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    printf <span style="color:#e6db74">&#39;%s\n&#39;</span> <span style="color:#e6db74">&#39;{&#34;command&#34;:[&#34;quit&#34;]}&#39;</span> | ncat -U <span style="color:#e6db74">&#34;</span>$sock<span style="color:#e6db74">&#34;</span> 2&gt;/dev/null
+</span></span><span style="display:flex;"><span>    rm -f <span style="color:#e6db74">&#34;</span>$sock<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  mpv --input-ipc-server<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$sock<span style="color:#e6db74">&#34;</span> --input-terminal<span style="color:#f92672">=</span>no --no-video --pause <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;</span>$wav<span style="color:#e6db74">&#34;</span> &lt;/dev/null &gt;/dev/null 2&gt;&amp;<span style="color:#ae81ff">1</span> &amp;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">for</span> _ in <span style="color:#f92672">{</span>1..20<span style="color:#f92672">}</span>; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">[[</span> -S <span style="color:#e6db74">&#34;</span>$sock<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">&amp;&amp;</span> break
+</span></span><span style="display:flex;"><span>    sleep 0.2
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  printf <span style="color:#e6db74">&#39;\n  %s\n  Audio: %s\n  F12 = play/pausa   wiki-audio-ctl stop = detener\n\n&#39;</span> <span style="color:#e6db74">&#34;</span>$first<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;</span>$wav<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  w3m <span style="color:#e6db74">&#34;</span>$url<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>wikiesp<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  _wiki_leer es <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;/home/esotericwarfare/Downloads/kiwix/wikipedia_es_all_maxi_2026-10.zim&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;wikipedia_es_all_maxi_2026-10&#34;</span> ng-es <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>wikip<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  _wiki_leer en <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;/home/esotericwarfare/Downloads/kiwix/wikipedia_en_all_nopic_2026-06.zim&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;wikipedia_en_all_nopic_2026-06&#34;</span> espeak <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>alias wiki-audio<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;wiki-audio-ctl&#39;</span>
+</span></span><span style="display:flex;"><span>alias wikistop<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;wiki-audio-ctl stop&#39;</span>
+</span></span></code></pre></div><p>El <code>--input-terminal=no</code> es clave: si no, <code>mpv</code> en background te roba el
+stdin y <code>w3m</code> se queda sin teclado. El socket tarda un instante en crearse,
+por eso el <code>for</code> con <code>sleep 0.2</code> antes de devolver el control.</p>
+<h2 id="el-control-de-playpausa">El control de play/pausa</h2>
+<p><code>~/.local/bin/wiki-audio-ctl</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/usr/bin/env bash
+</span></span></span><span style="display:flex;"><span>sock<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/tmp/wiki-mpv-</span>$USER<span style="color:#e6db74">.sock&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>1<span style="color:#66d9ef">:-</span>toggle<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> in
+</span></span><span style="display:flex;"><span>  toggle<span style="color:#f92672">)</span> cmd<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;{&#34;command&#34;:[&#34;cycle&#34;,&#34;pause&#34;]}&#39;</span> ;;
+</span></span><span style="display:flex;"><span>  play<span style="color:#f92672">)</span>   cmd<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;{&#34;command&#34;:[&#34;set_property&#34;,&#34;pause&#34;,false]}&#39;</span> ;;
+</span></span><span style="display:flex;"><span>  pause<span style="color:#f92672">)</span>  cmd<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;{&#34;command&#34;:[&#34;set_property&#34;,&#34;pause&#34;,true]}&#39;</span> ;;
+</span></span><span style="display:flex;"><span>  stop|quit<span style="color:#f92672">)</span> cmd<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;{&#34;command&#34;:[&#34;quit&#34;]}&#39;</span> ;;
+</span></span><span style="display:flex;"><span>  *<span style="color:#f92672">)</span> echo <span style="color:#e6db74">&#34;Uso: wiki-audio-ctl [toggle|play|pause|stop]&#34;</span> &gt;&amp;2; exit <span style="color:#ae81ff">2</span> ;;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">esac</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> ! -S <span style="color:#e6db74">&#34;</span>$sock<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;No hay audio de wiki en reproducción.&#34;</span> &gt;&amp;<span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>  exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>printf <span style="color:#e6db74">&#39;%s\n&#39;</span> <span style="color:#e6db74">&#34;</span>$cmd<span style="color:#e6db74">&#34;</span> | ncat -U <span style="color:#e6db74">&#34;</span>$sock<span style="color:#e6db74">&#34;</span> 2&gt;/dev/null | jq -r <span style="color:#e6db74">&#39;.error // empty&#39;</span> 2&gt;/dev/null
+</span></span></code></pre></div><p>Y en <code>~/.tmux.conf</code> para no tener que abrir otra terminal:</p>
+<pre tabindex="0"><code>bind-key -n F12 run-shell &#34;/home/esotericwarfare/.local/bin/wiki-audio-ctl toggle&#34;
+</code></pre><p>Si no estás en tmux, <code>wiki-audio</code> hace lo mismo y <code>wikistop</code> corta el audio.</p>
+<h2 id="uso">Uso</h2>
+<pre tabindex="0"><code>wikiesp &#34;alan turing&#34;
+wikip &#34;alan turing&#34;
+wiki-audio          # play/pausa
+wikistop            # detener
+</code></pre><p>Arranca en pausa: le das <code>F12</code> cuando ya estás cómodo leyendo. El texto y el
+wav quedan en <code>~/.cache/wiki-audio/{es,en}/</code>, así que la segunda vez que abras
+el mismo artículo entra directo. Dependencias: <code>kiwix-tools</code>, <code>w3m</code>, <code>jq</code>,
+<code>ncat</code>, <code>espeak</code>/<code>espeak-ng</code> y <code>mpv</code>.</p>
+
+  </div>
+</article>
+
+  </main>
+  <footer class="site-footer">
+  <a href="/acerca/">acerca</a> · <a href="/servicios/">servicios</a> ·
+  <a href="/index.xml">rss</a> · 
+  <a href="https://github.com/imlauera/">github</a>
+</footer>
+
+  
+</body>
+</html>
