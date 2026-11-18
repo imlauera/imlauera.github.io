@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chawan: navegador web para la TTY · Imlauer</title>
+  <meta name="description" content="imlauerandres [at] gmail.com">
+  <link rel="canonical" href="https://imlauera.github.io/post/chawan_en_la_tty/">
+  <link rel="alternate" type="application/rss+xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+  <a class="site-title" href="/">Imlauer</a>
+</header>
+
+  <main>
+    
+<article class="post">
+  <h1>Chawan: navegador web para la TTY</h1>
+  <p class="meta">
+    <time datetime="2026-11-16">2026-11-16</time>
+    <span class="tags"> · <a href="/tags/archlinux/">archlinux</a>, <a href="/tags/chawan/">chawan</a>, <a href="/tags/terminal/">terminal</a></span>
+  </p>
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+  
+  
+  
+  
+    
+      
+        
+          
+        
+      
+    
+  
+  
+  
+  
+    
+  
+  
+  
+  
+  <div class="audio-player">
+    <p class="audio-label">Escuchar este artículo</p>
+    <audio controls preload="metadata" src="https://archive.org/download/imlauer-blog-audio-post-chawan-en-la-tty-4e551b16/post-chawan-en-la-tty-87b08cccc9.mp3"></audio>
+    <p class="audio-meta"><a href="https://archive.org/download/imlauer-blog-audio-post-chawan-en-la-tty-4e551b16/post-chawan-en-la-tty-87b08cccc9.mp3">Descargar MP3</a> · <a href="https://archive.org/details/imlauer-blog-audio-post-chawan-en-la-tty-4e551b16">Ver en Internet Archive</a></p>
+  </div>
+  
+  
+  
+  <div class="content">
+    <p>Chawan es un navegador de texto interactivo para la terminal. Se puede usar
+desde una TTY, como <code>w3m</code> o <code>lynx</code>, sin abrir un entorno gráfico. También
+incluye CSS y un motor JavaScript basado en QuickJS.</p>
+<h2 id="instalar-y-abrir-páginas">Instalar y abrir páginas</h2>
+<p>En Arch Linux, instalalo desde los repositorios oficiales:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo pacman -S chawan
+</span></span></code></pre></div><p>Abrí una página con <code>cha</code> y su dirección:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cha https://example.com/
+</span></span></code></pre></div><h2 id="activar-javascript-para-un-sitio">Activar JavaScript para un sitio</h2>
+<p>JavaScript está desactivado por defecto. Para habilitarlo solo en The Atlantic,
+agregá estas reglas a la configuración de Chawan, por ejemplo en
+<code>~/.chawan/config.toml</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-toml" data-lang="toml"><span style="display:flex;"><span>[<span style="color:#a6e22e">siteconf</span>.<span style="color:#a6e22e">theatlantic</span>]
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">url</span> = <span style="color:#e6db74">&#39;^https?://www\.theatlantic\.com/&#39;</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">scripting</span> = <span style="color:#66d9ef">true</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>[<span style="color:#a6e22e">siteconf</span>.<span style="color:#a6e22e">nitter</span>]
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">url</span> = <span style="color:#e6db74">&#39;^https?://nitter\.net/&#39;</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">scripting</span> = <span style="color:#66d9ef">true</span>
+</span></span></code></pre></div><p>La configuración por sitio evita ejecutar scripts innecesariamente en todos
+los sitios. Chawan también puede usar <code>~/.config/chawan/config.toml</code>; editá el
+archivo de configuración que ya estés usando y conservá el resto de sus
+opciones.</p>
+<h2 id="desactivar-css">Desactivar CSS</h2>
+<p>Para desactivar las hojas de estilo en todos los sitios, agregá <code>styling = false</code>
+a la sección <code>[buffer]</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-toml" data-lang="toml"><span style="display:flex;"><span>[<span style="color:#a6e22e">buffer</span>]
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">styling</span> = <span style="color:#66d9ef">false</span>
+</span></span></code></pre></div><p>Si ya existe una sección <code>[buffer]</code>, agregá solo la opción dentro de esa
+sección; no la declares una segunda vez.</p>
+<h2 id="activar-imágenes">Activar imágenes</h2>
+<p>Para permitir que Chawan cargue imágenes, usá <code>images = true</code> en <code>[buffer]</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-toml" data-lang="toml"><span style="display:flex;"><span>[<span style="color:#a6e22e">buffer</span>]
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">images</span> = <span style="color:#66d9ef">true</span>
+</span></span></code></pre></div><p>La terminal también debe soportar el protocolo de imágenes Sixel o Kitty.
+Chawan intenta detectarlo automáticamente; si no lo detecta, podés configurar
+<code>image-mode</code> como <code>&quot;sixel&quot;</code> o <code>&quot;kitty&quot;</code> en <code>[display]</code>, siempre que tu terminal
+admita ese protocolo.</p>
+<h2 id="límites">Límites</h2>
+<p>El motor JavaScript de Chawan no implementa todas las funciones de un navegador
+gráfico moderno, así que algunos sitios pueden no funcionar. Activar JavaScript
+no elimina bloqueos de acceso ni requisitos de inicio de sesión del sitio.
+Para más detalles, consultá la
+<a href="https://chawan.net/doc/cha/config.html#buffer">documentación de Chawan</a>.</p>
+
+  </div>
+</article>
+
+  </main>
+  <footer class="site-footer">
+  <a href="/acerca/">acerca</a> · <a href="/servicios/">servicios</a> ·
+  <a href="/index.xml">rss</a> · 
+  <a href="https://github.com/imlauera/">github</a>
+</footer>
+
+  
+</body>
+</html>
