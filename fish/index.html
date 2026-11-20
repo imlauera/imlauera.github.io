@@ -54,8 +54,8 @@
   
   <div class="audio-player">
     <p class="audio-label">Escuchar este artículo</p>
-    <audio controls preload="metadata" src="https://archive.org/download/imlauer-blog-audio-fish-7add027d/fish-5fb60837c5.mp3"></audio>
-    <p class="audio-meta"><a href="https://archive.org/download/imlauer-blog-audio-fish-7add027d/fish-5fb60837c5.mp3">Descargar MP3</a> · <a href="https://archive.org/details/imlauer-blog-audio-fish-7add027d">Ver en Internet Archive</a></p>
+    <audio controls preload="metadata" src="https://archive.org/download/imlauer-blog-audio-fish-7add027d/fish-604aae61fe.mp3"></audio>
+    <p class="audio-meta"><a href="https://archive.org/download/imlauer-blog-audio-fish-7add027d/fish-604aae61fe.mp3">Descargar MP3</a> · <a href="https://archive.org/details/imlauer-blog-audio-fish-7add027d">Ver en Internet Archive</a></p>
   </div>
   
   
@@ -946,7 +946,173 @@ end</p>
 </span></span><span style="display:flex;"><span>  wait
 </span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;Listo: </span>$dir<span style="color:#e6db74"> (</span><span style="color:#66d9ef">$(</span>find <span style="color:#e6db74">&#34;</span>$dir<span style="color:#e6db74">&#34;</span> -type f | wc -l<span style="color:#66d9ef">)</span><span style="color:#e6db74"> imagenes)&#34;</span>
 </span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
-</span></span></code></pre></div>
+</span></span></code></pre></div><hr>
+<h2 id="wikipedia-offline-con-audio-en-la-tty-wikip-y-wikiesp">Wikipedia offline con audio en la TTY: <code>wikip</code> y <code>wikiesp</code></h2>
+<p>Ahora <code>wikip</code> (inglés) y <code>wikiesp</code> (español) buscan el artículo en un ZIM con
+<code>kiwix-serve</code>, extraen el texto con <code>wiki-prose</code>, generan un WAV con <code>espeak</code> o
+<code>espeak-ng</code>, lo reproducen con <code>mpv</code> en segundo plano y abren la página en <code>w3m</code>.</p>
+<p>En <code>~/.bashrc</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>_wiki_leer<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  local lang<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span> zim<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$2<span style="color:#e6db74">&#34;</span> archive<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$3<span style="color:#e6db74">&#34;</span> engine<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$4<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  shift <span style="color:#ae81ff">4</span>
+</span></span><span style="display:flex;"><span>  local query<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$*<span style="color:#e6db74">&#34;</span> base<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;http://localhost&#34;</span>
+</span></span><span style="display:flex;"><span>  local first slug enc url dir key txt wav sock
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> -z <span style="color:#e6db74">&#34;</span>$query<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Uso: wikiesp &lt;tema&gt; | wikip &lt;tema&gt;&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> ! curl -s <span style="color:#e6db74">&#34;</span>$base<span style="color:#e6db74">/catalog/v2/entries&#34;</span> 2&gt;/dev/null | grep -qF <span style="color:#e6db74">&#34;/content/</span>$archive<span style="color:#e6db74">&#34;</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    sudo pkill -f kiwix-serve 2&gt;/dev/null
+</span></span><span style="display:flex;"><span>    sudo kiwix-serve <span style="color:#e6db74">&#34;</span>$zim<span style="color:#e6db74">&#34;</span> &gt;/dev/null 2&gt;&amp;<span style="color:#ae81ff">1</span> &amp;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> _ in <span style="color:#f92672">{</span>1..15<span style="color:#f92672">}</span>; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>      curl -s <span style="color:#e6db74">&#34;</span>$base<span style="color:#e6db74">/catalog/v2/entries&#34;</span> 2&gt;/dev/null | grep -qF <span style="color:#e6db74">&#34;/content/</span>$archive<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">&amp;&amp;</span> break
+</span></span><span style="display:flex;"><span>      sleep <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  first<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>kiwix-search <span style="color:#e6db74">&#34;</span>$zim<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;</span>$query<span style="color:#e6db74">&#34;</span> 2&gt;/dev/null | head -1<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> -z <span style="color:#e6db74">&#34;</span>$first<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Sin resultados para: </span>$query<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  slug<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>first// /_<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  enc<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>printf <span style="color:#e6db74">&#39;%s&#39;</span> <span style="color:#e6db74">&#34;</span>$slug<span style="color:#e6db74">&#34;</span> | jq -sRr @uri<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>  url<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$base<span style="color:#e6db74">/content/</span>$archive<span style="color:#e6db74">/</span>$enc<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  dir<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$HOME<span style="color:#e6db74">/.cache/wiki-audio/</span>$lang<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  mkdir -p <span style="color:#e6db74">&#34;</span>$dir<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  key<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>slug//[^[:alnum:]_-]/_<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  key<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>key:0:72<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  txt<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$dir<span style="color:#e6db74">/</span>$key<span style="color:#e6db74">.txt&#34;</span>
+</span></span><span style="display:flex;"><span>  wav<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$dir<span style="color:#e6db74">/</span>$key<span style="color:#e6db74">.wav&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> ! -s <span style="color:#e6db74">&#34;</span>$txt<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Extrayendo texto: </span>$first<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    curl -sL <span style="color:#e6db74">&#34;</span>$url<span style="color:#e6db74">&#34;</span> | wiki-prose &gt; <span style="color:#e6db74">&#34;</span>$txt<span style="color:#e6db74">.tmp&#34;</span> <span style="color:#f92672">||</span> <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> ! -s <span style="color:#e6db74">&#34;</span>$txt<span style="color:#e6db74">.tmp&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>      echo <span style="color:#e6db74">&#34;No se pudo extraer el texto de: </span>$url<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>    mv <span style="color:#e6db74">&#34;</span>$txt<span style="color:#e6db74">.tmp&#34;</span> <span style="color:#e6db74">&#34;</span>$txt<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> ! -s <span style="color:#e6db74">&#34;</span>$wav<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    echo <span style="color:#e6db74">&#34;Generando audio (</span>$engine<span style="color:#e6db74">)... puede tardar un momento&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;</span>$engine<span style="color:#e6db74">&#34;</span> in
+</span></span><span style="display:flex;"><span>      ng-es<span style="color:#f92672">)</span> espeak-ng -v es -f <span style="color:#e6db74">&#34;</span>$txt<span style="color:#e6db74">&#34;</span> -w <span style="color:#e6db74">&#34;</span>$wav<span style="color:#e6db74">.tmp&#34;</span> ;;
+</span></span><span style="display:flex;"><span>      espeak<span style="color:#f92672">)</span> espeak -f <span style="color:#e6db74">&#34;</span>$txt<span style="color:#e6db74">&#34;</span> -w <span style="color:#e6db74">&#34;</span>$wav<span style="color:#e6db74">.tmp&#34;</span> ;;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">esac</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> ! -s <span style="color:#e6db74">&#34;</span>$wav<span style="color:#e6db74">.tmp&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>      echo <span style="color:#e6db74">&#34;Error generando el audio.&#34;</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>    mv <span style="color:#e6db74">&#34;</span>$wav<span style="color:#e6db74">.tmp&#34;</span> <span style="color:#e6db74">&#34;</span>$wav<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  sock<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/tmp/wiki-mpv-</span>$USER<span style="color:#e6db74">.sock&#34;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> -S <span style="color:#e6db74">&#34;</span>$sock<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>    printf <span style="color:#e6db74">&#39;%s\n&#39;</span> <span style="color:#e6db74">&#39;{&#34;command&#34;:[&#34;quit&#34;]}&#39;</span> | ncat -U <span style="color:#e6db74">&#34;</span>$sock<span style="color:#e6db74">&#34;</span> 2&gt;/dev/null
+</span></span><span style="display:flex;"><span>    rm -f <span style="color:#e6db74">&#34;</span>$sock<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  mpv --input-ipc-server<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$sock<span style="color:#e6db74">&#34;</span> --input-terminal<span style="color:#f92672">=</span>no --no-video --pause <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;</span>$wav<span style="color:#e6db74">&#34;</span> &lt;/dev/null &gt;/dev/null 2&gt;&amp;<span style="color:#ae81ff">1</span> &amp;
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">for</span> _ in <span style="color:#f92672">{</span>1..20<span style="color:#f92672">}</span>; <span style="color:#66d9ef">do</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">[[</span> -S <span style="color:#e6db74">&#34;</span>$sock<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span> <span style="color:#f92672">&amp;&amp;</span> break
+</span></span><span style="display:flex;"><span>    sleep 0.2
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">done</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  printf <span style="color:#e6db74">&#39;\n  %s\n  Audio: %s\n  F12 = play/pausa   F11/F10 o prefix+←/→ = ±10s   F9/F8 o prefix+↑/↓ = velocidad   wiki-audio-ctl stop = detener\n\n&#39;</span> <span style="color:#e6db74">&#34;</span>$first<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#34;</span>$wav<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>  w3m <span style="color:#e6db74">&#34;</span>$url<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>wikiesp<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  _wiki_leer es <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;/home/esotericwarfare/Downloads/kiwix/wikipedia_es_all_maxi_2026-10.zim&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;wikipedia_es_all_maxi_2026-10&#34;</span> ng-es <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>wikip<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  _wiki_leer en <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;/home/esotericwarfare/Downloads/kiwix/wikipedia_en_all_nopic_2026-06.zim&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;wikipedia_en_all_nopic_2026-06&#34;</span> espeak <span style="color:#e6db74">&#34;</span>$@<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>alias wiki-audio<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;wiki-audio-ctl&#39;</span>
+</span></span><span style="display:flex;"><span>alias wikistop<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;wiki-audio-ctl stop&#39;</span>
+</span></span><span style="display:flex;"><span>alias wikiback<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;wiki-audio-ctl back&#39;</span>
+</span></span><span style="display:flex;"><span>alias wikifwd<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;wiki-audio-ctl fwd&#39;</span>
+</span></span><span style="display:flex;"><span>alias wikifast<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;wiki-audio-ctl faster&#39;</span>
+</span></span><span style="display:flex;"><span>alias wikislow<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;wiki-audio-ctl slower&#39;</span>
+</span></span><span style="display:flex;"><span>alias wikispeed<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;wiki-audio-ctl speed&#39;</span>
+</span></span><span style="display:flex;"><span>alias wikinormal<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;wiki-audio-ctl reset&#39;</span>
+</span></span></code></pre></div><p>El controlador se comunica con <code>mpv</code> por el socket IPC en
+<code>/tmp/wiki-mpv-$USER.sock</code>. Guardalo en <code>~/.local/bin/wiki-audio-ctl</code> y
+recordá <code>chmod +x</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e">#!/usr/bin/env bash
+</span></span></span><span style="display:flex;"><span>sock<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;/tmp/wiki-mpv-</span>$USER<span style="color:#e6db74">.sock&#34;</span>
+</span></span><span style="display:flex;"><span>arg<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>2<span style="color:#66d9ef">:-</span><span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>num<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;^[0-9]+([.][0-9]+)?$&#39;</span>
+</span></span><span style="display:flex;"><span>check_num<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">=</span>~ $num <span style="color:#f92672">]]</span> <span style="color:#f92672">||</span> <span style="color:#f92672">{</span> echo <span style="color:#e6db74">&#34;Valor inválido: </span>$1<span style="color:#e6db74">&#34;</span> &gt;&amp;2; exit 2; <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">case</span> <span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>1<span style="color:#66d9ef">:-</span>toggle<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span> in
+</span></span><span style="display:flex;"><span>  toggle<span style="color:#f92672">)</span> cmd<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;{&#34;command&#34;:[&#34;cycle&#34;,&#34;pause&#34;]}&#39;</span> ;;
+</span></span><span style="display:flex;"><span>  play<span style="color:#f92672">)</span>   cmd<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;{&#34;command&#34;:[&#34;set_property&#34;,&#34;pause&#34;,false]}&#39;</span> ;;
+</span></span><span style="display:flex;"><span>  pause<span style="color:#f92672">)</span>  cmd<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;{&#34;command&#34;:[&#34;set_property&#34;,&#34;pause&#34;,true]}&#39;</span> ;;
+</span></span><span style="display:flex;"><span>  stop|quit<span style="color:#f92672">)</span> cmd<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;{&#34;command&#34;:[&#34;quit&#34;]}&#39;</span> ;;
+</span></span><span style="display:flex;"><span>  back|rew<span style="color:#f92672">)</span> secs<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>arg<span style="color:#66d9ef">:-</span>10<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>; check_num <span style="color:#e6db74">&#34;</span>$secs<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    cmd<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;{\&#34;command\&#34;:[\&#34;seek\&#34;,-</span>$secs<span style="color:#e6db74">,\&#34;relative\&#34;]}&#34;</span> ;;
+</span></span><span style="display:flex;"><span>  fwd|forward<span style="color:#f92672">)</span> secs<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>arg<span style="color:#66d9ef">:-</span>10<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>; check_num <span style="color:#e6db74">&#34;</span>$secs<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    cmd<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;{\&#34;command\&#34;:[\&#34;seek\&#34;,</span>$secs<span style="color:#e6db74">,\&#34;relative\&#34;]}&#34;</span> ;;
+</span></span><span style="display:flex;"><span>  seek<span style="color:#f92672">)</span> secs<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>arg:?Uso: wiki-audio-ctl seek &lt;seg&gt; [absolute|relative]<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>; check_num <span style="color:#e6db74">&#34;</span>$secs<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    mode<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>3<span style="color:#66d9ef">:-</span>absolute<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">[[</span> <span style="color:#e6db74">&#34;</span>$mode<span style="color:#e6db74">&#34;</span> !<span style="color:#f92672">=</span> absolute <span style="color:#f92672">&amp;&amp;</span> <span style="color:#e6db74">&#34;</span>$mode<span style="color:#e6db74">&#34;</span> !<span style="color:#f92672">=</span> relative <span style="color:#f92672">]]</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#f92672">{</span> echo <span style="color:#e6db74">&#34;Modo inválido: </span>$mode<span style="color:#e6db74">&#34;</span> &gt;&amp;2; exit 2; <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    cmd<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;{\&#34;command\&#34;:[\&#34;seek\&#34;,</span>$secs<span style="color:#e6db74">,\&#34;</span>$mode<span style="color:#e6db74">\&#34;]}&#34;</span> ;;
+</span></span><span style="display:flex;"><span>  speed<span style="color:#f92672">)</span> rate<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>arg:?Uso: wiki-audio-ctl speed &lt;velocidad&gt;<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>; check_num <span style="color:#e6db74">&#34;</span>$rate<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    awk -v r<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$rate<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#39;BEGIN { exit !(r &gt;= 0.1 &amp;&amp; r &lt;= 10) }&#39;</span> <span style="color:#f92672">||</span> <span style="color:#f92672">{</span> echo <span style="color:#e6db74">&#34;Velocidad fuera de rango (0.1-10): </span>$rate<span style="color:#e6db74">&#34;</span> &gt;&amp;2; exit 2; <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    cmd<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;{\&#34;command\&#34;:[\&#34;set_property\&#34;,\&#34;speed\&#34;,</span>$rate<span style="color:#e6db74">]}&#34;</span> ;;
+</span></span><span style="display:flex;"><span>  faster<span style="color:#f92672">)</span> factor<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>arg<span style="color:#66d9ef">:-</span>1.25<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>; check_num <span style="color:#e6db74">&#34;</span>$factor<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    awk -v f<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$factor<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#39;BEGIN { exit !(f &gt;= 1 &amp;&amp; f &lt;= 10) }&#39;</span> <span style="color:#f92672">||</span> <span style="color:#f92672">{</span> echo <span style="color:#e6db74">&#34;Factor inválido: </span>$factor<span style="color:#e6db74">&#34;</span> &gt;&amp;2; exit 2; <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    cmd<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;{\&#34;command\&#34;:[\&#34;multiply\&#34;,\&#34;speed\&#34;,</span>$factor<span style="color:#e6db74">]}&#34;</span> ;;
+</span></span><span style="display:flex;"><span>  slower<span style="color:#f92672">)</span> factor<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">${</span>arg<span style="color:#66d9ef">:-</span>1.25<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>; check_num <span style="color:#e6db74">&#34;</span>$factor<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>    awk -v f<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$factor<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#39;BEGIN { exit !(f &gt;= 1 &amp;&amp; f &lt;= 10) }&#39;</span> <span style="color:#f92672">||</span> <span style="color:#f92672">{</span> echo <span style="color:#e6db74">&#34;Factor inválido: </span>$factor<span style="color:#e6db74">&#34;</span> &gt;&amp;2; exit 2; <span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>    inv<span style="color:#f92672">=</span><span style="color:#66d9ef">$(</span>awk -v f<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;</span>$factor<span style="color:#e6db74">&#34;</span> <span style="color:#e6db74">&#39;BEGIN { printf &#34;%.4f&#34;, 1 / f }&#39;</span><span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>    cmd<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;{\&#34;command\&#34;:[\&#34;multiply\&#34;,\&#34;speed\&#34;,</span>$inv<span style="color:#e6db74">]}&#34;</span> ;;
+</span></span><span style="display:flex;"><span>  normal|reset<span style="color:#f92672">)</span> cmd<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;{&#34;command&#34;:[&#34;set_property&#34;,&#34;speed&#34;,1]}&#39;</span> ;;
+</span></span><span style="display:flex;"><span>  *<span style="color:#f92672">)</span> echo <span style="color:#e6db74">&#34;Uso: wiki-audio-ctl [toggle|play|pause|stop|back [seg]|fwd [seg]|seek &lt;seg&gt; [absolute|relative]|speed &lt;0.1-10&gt;|faster [factor]|slower [factor]|reset]&#34;</span> &gt;&amp;2; exit <span style="color:#ae81ff">2</span> ;;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">esac</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#f92672">[[</span> ! -S <span style="color:#e6db74">&#34;</span>$sock<span style="color:#e6db74">&#34;</span> <span style="color:#f92672">]]</span>; <span style="color:#66d9ef">then</span>
+</span></span><span style="display:flex;"><span>  echo <span style="color:#e6db74">&#34;No hay audio de wiki en reproducción.&#34;</span> &gt;&amp;<span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>  exit <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">fi</span>
+</span></span><span style="display:flex;"><span>printf <span style="color:#e6db74">&#39;%s\n&#39;</span> <span style="color:#e6db74">&#34;</span>$cmd<span style="color:#e6db74">&#34;</span> | ncat -U <span style="color:#e6db74">&#34;</span>$sock<span style="color:#e6db74">&#34;</span> 2&gt;/dev/null | jq -r <span style="color:#e6db74">&#39;.error // empty&#39;</span> 2&gt;/dev/null
+</span></span></code></pre></div><p>Y en <code>~/.tmux.conf</code> los atajos (F13 no existe en tmux, por eso se usa F10):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>bind-key -n F12 run-shell <span style="color:#e6db74">&#34;/home/esotericwarfare/.local/bin/wiki-audio-ctl toggle&#34;</span>
+</span></span><span style="display:flex;"><span>bind-key -n F11 run-shell <span style="color:#e6db74">&#34;/home/esotericwarfare/.local/bin/wiki-audio-ctl back 10&#34;</span>
+</span></span><span style="display:flex;"><span>bind-key -n F10 run-shell <span style="color:#e6db74">&#34;/home/esotericwarfare/.local/bin/wiki-audio-ctl fwd 10&#34;</span>
+</span></span><span style="display:flex;"><span>bind-key -n F9 run-shell <span style="color:#e6db74">&#34;/home/esotericwarfare/.local/bin/wiki-audio-ctl faster&#34;</span>
+</span></span><span style="display:flex;"><span>bind-key -n F8 run-shell <span style="color:#e6db74">&#34;/home/esotericwarfare/.local/bin/wiki-audio-ctl slower&#34;</span>
+</span></span><span style="display:flex;"><span>bind-key Left run-shell <span style="color:#e6db74">&#34;/home/esotericwarfare/.local/bin/wiki-audio-ctl back 10&#34;</span>
+</span></span><span style="display:flex;"><span>bind-key Right run-shell <span style="color:#e6db74">&#34;/home/esotericwarfare/.local/bin/wiki-audio-ctl fwd 10&#34;</span>
+</span></span><span style="display:flex;"><span>bind-key Up run-shell <span style="color:#e6db74">&#34;/home/esotericwarfare/.local/bin/wiki-audio-ctl faster&#34;</span>
+</span></span><span style="display:flex;"><span>bind-key Down run-shell <span style="color:#e6db74">&#34;/home/esotericwarfare/.local/bin/wiki-audio-ctl slower&#34;</span>
+</span></span></code></pre></div><h3 id="atajos">Atajos</h3>
+<ul>
+<li><code>F12</code>: play/pausa.</li>
+<li><code>F11</code> o <code>prefix+←</code>: atrás 10 segundos (<code>wikiback 30</code> desde la shell).</li>
+<li><code>F10</code> o <code>prefix+→</code>: adelante 10 segundos (<code>wikifwd 30</code> desde la shell).</li>
+<li><code>F9</code> o <code>prefix+↑</code>: acelerar 1.25x (<code>wikifast 2</code> desde la shell).</li>
+<li><code>F8</code> o <code>prefix+↓</code>: bajar 1.25x (<code>wikislow 2</code> desde la shell).</li>
+<li><code>wikispeed 1.5</code>: fija la velocidad en 1.5x (rango 0.1-10).</li>
+<li><code>wikinormal</code>: vuelve a 1x.</li>
+<li><code>wiki-audio-ctl seek 60</code>: salta al segundo 60 del WAV.</li>
+<li><code>wikistop</code>: detiene la reproducción.</li>
+</ul>
+
   </div>
 </article>
 

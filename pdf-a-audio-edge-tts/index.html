@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Convertir un PDF en audiolibro con edge-tts (voz española, por capítulos y sin notas al pie) · Imlauer</title>
+  <meta name="description" content="imlauerandres [at] gmail.com">
+  <link rel="canonical" href="https://imlauera.github.io/pdf-a-audio-edge-tts/">
+  <link rel="alternate" type="application/rss+xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+  <a class="site-title" href="/">Imlauer</a>
+</header>
+
+  <main>
+    
+<article class="post">
+  <h1>Convertir un PDF en audiolibro con edge-tts (voz española, por capítulos y sin notas al pie)</h1>
+  <p class="meta">
+    <time datetime="2026-11-19">2026-11-19</time>
+    <span class="tags"> · <a href="/tags/audio/">audio</a>, <a href="/tags/tts/">tts</a>, <a href="/tags/pdf/">pdf</a>, <a href="/tags/python/">python</a>, <a href="/tags/cli/">cli</a></span>
+  </p>
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+  
+  
+  
+  
+    
+      
+        
+          
+        
+      
+    
+  
+  
+  
+  
+    
+  
+  
+  
+  
+  <div class="audio-player">
+    <p class="audio-label">Escuchar este artículo</p>
+    <audio controls preload="metadata" src="https://archive.org/download/imlauer-blog-audio-pdf-a-audio-edge-tts-e56df1c1/pdf-a-audio-edge-tts-d78f9d488b.mp3"></audio>
+    <p class="audio-meta"><a href="https://archive.org/download/imlauer-blog-audio-pdf-a-audio-edge-tts-e56df1c1/pdf-a-audio-edge-tts-d78f9d488b.mp3">Descargar MP3</a> · <a href="https://archive.org/details/imlauer-blog-audio-pdf-a-audio-edge-tts-e56df1c1">Ver en Internet Archive</a></p>
+  </div>
+  
+  
+  
+  <div class="content">
+    <p>Me pasaron un PDF de 114 páginas (<em>Lo que el Buddha enseñó</em>, de Walpola Rahula) para hacerle una versión en audio. Terminé con 13 MP3 —uno por sección— y un archivo único de 5 horas y 17 minutos con voz femenina española. Acá está todo el proceso, incluido el script.</p>
+<p>La gracia no fue tanto el TTS sino <strong>limpiar el texto antes</strong>: un PDF con notas al pie, números de página y marcadores tipo <code>Buddha2</code> se escucha horrible si se lo tirás directo al sintetizador.</p>
+<h2 id="qué-usé">Qué usé</h2>
+<table>
+	<thead>
+			<tr>
+					<th>herramienta</th>
+					<th>para qué</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td><code>pdftotext</code> (poppler)</td>
+					<td>sacar el texto del PDF</td>
+			</tr>
+			<tr>
+					<td>Python (stdlib)</td>
+					<td>limpiar notas al pie y separar capítulos</td>
+			</tr>
+			<tr>
+					<td><code>edge-tts</code></td>
+					<td>sintetizar con voz neuronal en español</td>
+			</tr>
+			<tr>
+					<td><code>ffmpeg</code></td>
+					<td>juntar los MP3 en un solo archivo</td>
+			</tr>
+	</tbody>
+</table>
+<p><code>espeak-ng</code> estaba instalado y funciona offline, pero suena robótico. <code>edge-tts</code> usa las voces neuronales de Microsoft por WebSocket: no necesita API key, pero <strong>necesita internet</strong>.</p>
+<h2 id="1-instalar">1. Instalar</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo pacman -S poppler ffmpeg python   <span style="color:#75715e"># o apt install poppler-utils ffmpeg python3</span>
+</span></span><span style="display:flex;"><span>python3 -m venv tts-venv
+</span></span><span style="display:flex;"><span>tts-venv/bin/pip install edge-tts
+</span></span><span style="display:flex;"><span>tts-venv/bin/edge-tts --list-voices | grep -i es-
+</span></span></code></pre></div><p>A mi me gustó <code>es-ES-ElviraNeural</code>. También están <code>es-ES-AlvaroNeural</code> (masculina) y las <code>es-MX-*</code>/<code>es-AR-*</code> si querés otro acento.</p>
+<h2 id="2-extraer-el-texto">2. Extraer el texto</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pdfinfo libro.pdf | grep -E <span style="color:#e6db74">&#34;Pages|Encrypted&#34;</span>
+</span></span><span style="display:flex;"><span>pdftotext libro.pdf libro_raw.txt
+</span></span></code></pre></div><p>Primero confirmé que el PDF tuviera <strong>capa de texto</strong> (<code>pdftotext -f 1 -l 3 libro.pdf - | wc -c</code> devolvió miles de caracteres). Si da casi nada, es un escaneo y hay que pasar <code>ocrmypdf</code> antes.</p>
+<h2 id="3-el-problema-de-las-notas-al-pie">3. El problema de las notas al pie</h2>
+<p>El texto crudo sale así, al final de cada página:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>... los derivados de estos elementos (upadaya-rupa)10. ...
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>10
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>. S. III (PTS), pág. 59
+</span></span><span style="display:flex;"><span>. Abhisamuc., pág. 4.
+</span></span><span style="display:flex;"><span>12
+</span></span><span style="display:flex;"><span>. S. III (PTS), pág 59.
+</span></span></code></pre></div><p>Si se lo mandás tal cual, la voz dice «diez, punto, es es III, páginas cincuenta y nueve&hellip;». Las reglas de limpieza que apliqué fueron:</p>
+<ol>
+<li>Dentro de cada página (separadas por <code>\f</code>), buscar un número suelto seguido de una línea que empieza con <code>. </code> y <strong>cortar ahí</strong> el resto de la página: ahí arrancan las notas.</li>
+<li>Borrar los números sueltos que quedan (números de página).</li>
+<li>Sacar los marcadores pegados a las palabras: <code>Buddha2</code> → <code>Buddha</code>, sin tocar números legítimos (<code>los 16 años</code>, <code>pág. 62</code>).</li>
+<li>Unir las líneas partidas con espacios, porque el TTS respira raro en cada salto de línea.</li>
+</ol>
+<p>Con eso desaparecen también los <code>(N. del T.)</code> y <code>(N. del E.)</code>.</p>
+<h2 id="4-separar-por-capítulos">4. Separar por capítulos</h2>
+<p>Busqué los encabezados (<code>Capítulo I</code>, <code>Capítulo II</code>, &hellip;) y armé un archivo por tramo. Dos detalles del libro original:</p>
+<ul>
+<li>El último capítulo está <strong>mal etiquetado en el PDF</strong>: dice <code>Capítulo VII</code> siendo el VIII. Contando los encabezados en orden (en vez de fiarse del rótulo) se arregla solo.</li>
+<li>Los números romanos se normalizan a palabras: «Capítulo I» se escucha mejor como «Capítulo uno. La actitud mental buddhista».</li>
+</ul>
+<p>También salté el <code>ÍNDICE</code> final: esa tabla de puntos y números de página en audio es insufrible.</p>
+<h2 id="5-el-script-completo">5. El script completo</h2>
+<p>Adaptá los <code>if line == ...</code> de <code>build_sections()</code> a los encabezados de tu libro.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#75715e">#!/usr/bin/env python3</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> argparse
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> asyncio
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> os
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> re
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> edge_tts
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>VOICE <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;es-ES-ElviraNeural&#34;</span>
+</span></span><span style="display:flex;"><span>ROMAN <span style="color:#f92672">=</span> {<span style="color:#ae81ff">1</span>: <span style="color:#e6db74">&#34;uno&#34;</span>, <span style="color:#ae81ff">2</span>: <span style="color:#e6db74">&#34;dos&#34;</span>, <span style="color:#ae81ff">3</span>: <span style="color:#e6db74">&#34;tres&#34;</span>, <span style="color:#ae81ff">4</span>: <span style="color:#e6db74">&#34;cuatro&#34;</span>, <span style="color:#ae81ff">5</span>: <span style="color:#e6db74">&#34;cinco&#34;</span>,
+</span></span><span style="display:flex;"><span>         <span style="color:#ae81ff">6</span>: <span style="color:#e6db74">&#34;seis&#34;</span>, <span style="color:#ae81ff">7</span>: <span style="color:#e6db74">&#34;siete&#34;</span>, <span style="color:#ae81ff">8</span>: <span style="color:#e6db74">&#34;ocho&#34;</span>}
+</span></span><span style="display:flex;"><span>TITLES <span style="color:#f92672">=</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#ae81ff">1</span>: <span style="color:#e6db74">&#34;La actitud mental buddhista&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ae81ff">2</span>: <span style="color:#e6db74">&#34;La primera Noble Verdad: Dukkha&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ae81ff">3</span>: <span style="color:#e6db74">&#34;La segunda Noble Verdad: Samudaya, el surgimiento de dukkha&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ae81ff">4</span>: <span style="color:#e6db74">&#34;La tercera Noble Verdad: Nirodha, la cesación de dukkha&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ae81ff">5</span>: <span style="color:#e6db74">&#34;La cuarta Noble Verdad: Magga, el Sendero&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ae81ff">6</span>: <span style="color:#e6db74">&#34;La doctrina de la inexistencia del alma: Anatta&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ae81ff">7</span>: <span style="color:#e6db74">&#34;Meditación o cultura mental: Bhavana&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ae81ff">8</span>: <span style="color:#e6db74">&#34;Lo que el Buddha enseñó y el mundo actual&#34;</span>,
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">clean_lines</span>(raw):
+</span></span><span style="display:flex;"><span>    result <span style="color:#f92672">=</span> []
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> page <span style="color:#f92672">in</span> raw<span style="color:#f92672">.</span>split(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\f</span><span style="color:#e6db74">&#34;</span>):
+</span></span><span style="display:flex;"><span>        lines <span style="color:#f92672">=</span> page<span style="color:#f92672">.</span>split(<span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>        cut <span style="color:#f92672">=</span> len(lines)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> i, line <span style="color:#f92672">in</span> enumerate(lines):
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> re<span style="color:#f92672">.</span>fullmatch(<span style="color:#e6db74">r</span><span style="color:#e6db74">&#34;\d{1,3}&#34;</span>, line<span style="color:#f92672">.</span>strip()):
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">continue</span>
+</span></span><span style="display:flex;"><span>            sig <span style="color:#f92672">=</span> [x<span style="color:#f92672">.</span>strip() <span style="color:#66d9ef">for</span> x <span style="color:#f92672">in</span> lines[i <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>:i <span style="color:#f92672">+</span> <span style="color:#ae81ff">5</span>] <span style="color:#66d9ef">if</span> x<span style="color:#f92672">.</span>strip()]
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> any(x<span style="color:#f92672">.</span>startswith(<span style="color:#e6db74">&#34;. &#34;</span>) <span style="color:#66d9ef">for</span> x <span style="color:#f92672">in</span> sig[:<span style="color:#ae81ff">3</span>]):
+</span></span><span style="display:flex;"><span>                cut <span style="color:#f92672">=</span> i
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">break</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> line <span style="color:#f92672">in</span> lines[:cut]:
+</span></span><span style="display:flex;"><span>            s <span style="color:#f92672">=</span> line<span style="color:#f92672">.</span>strip()
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> s <span style="color:#f92672">or</span> re<span style="color:#f92672">.</span>fullmatch(<span style="color:#e6db74">r</span><span style="color:#e6db74">&#34;\d{1,3}&#34;</span>, s) <span style="color:#f92672">or</span> s<span style="color:#f92672">.</span>startswith(<span style="color:#e6db74">&#34;. &#34;</span>):
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">continue</span>
+</span></span><span style="display:flex;"><span>            result<span style="color:#f92672">.</span>append(s)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> result
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">join_text</span>(lines):
+</span></span><span style="display:flex;"><span>    text <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34; &#34;</span><span style="color:#f92672">.</span>join(lines)
+</span></span><span style="display:flex;"><span>    text <span style="color:#f92672">=</span> re<span style="color:#f92672">.</span>sub(<span style="color:#e6db74">r</span><span style="color:#e6db74">&#34;(?&lt;=[A-Za-zÁÉÍÓÚÜÑáéíóúüñ)\]])\d{1,2}\b&#34;</span>, <span style="color:#e6db74">&#34;&#34;</span>, text)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> re<span style="color:#f92672">.</span>sub(<span style="color:#e6db74">r</span><span style="color:#e6db74">&#34;\s+&#34;</span>, <span style="color:#e6db74">&#34; &#34;</span>, text)<span style="color:#f92672">.</span>strip()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">build_sections</span>(lines):
+</span></span><span style="display:flex;"><span>    marks <span style="color:#f92672">=</span> [(<span style="color:#ae81ff">0</span>, <span style="color:#e6db74">&#34;01-Prologo&#34;</span>, <span style="color:#e6db74">&#34;Prólogo&#34;</span>)]
+</span></span><span style="display:flex;"><span>    nchap <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> i, line <span style="color:#f92672">in</span> enumerate(lines):
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> i <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>:
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">continue</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> line <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;PREFACIO&#34;</span>:
+</span></span><span style="display:flex;"><span>            marks<span style="color:#f92672">.</span>append((i, <span style="color:#e6db74">&#34;02-Prefacio&#34;</span>, <span style="color:#e6db74">&#34;Prefacio&#34;</span>))
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">elif</span> line <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;EL BUDDHA&#34;</span>:
+</span></span><span style="display:flex;"><span>            marks<span style="color:#f92672">.</span>append((i, <span style="color:#e6db74">&#34;03-El-Buddha&#34;</span>, <span style="color:#e6db74">&#34;El Buddha&#34;</span>))
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">elif</span> re<span style="color:#f92672">.</span>fullmatch(<span style="color:#e6db74">r</span><span style="color:#e6db74">&#34;Capítulo (I|II|III|IV|V|VI|VII)&#34;</span>, line):
+</span></span><span style="display:flex;"><span>            nchap <span style="color:#f92672">+=</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>            numeral <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;VIII&#34;</span> <span style="color:#66d9ef">if</span> nchap <span style="color:#f92672">==</span> <span style="color:#ae81ff">8</span> <span style="color:#66d9ef">else</span> ROMAN[nchap]
+</span></span><span style="display:flex;"><span>            marks<span style="color:#f92672">.</span>append((i, <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{</span>nchap <span style="color:#f92672">+</span> <span style="color:#ae81ff">3</span><span style="color:#e6db74">:</span><span style="color:#e6db74">02d</span><span style="color:#e6db74">}</span><span style="color:#e6db74">-Capitulo-</span><span style="color:#e6db74">{</span>numeral<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>,
+</span></span><span style="display:flex;"><span>                          <span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;Capítulo </span><span style="color:#e6db74">{</span>ROMAN[nchap]<span style="color:#e6db74">}</span><span style="color:#e6db74">. </span><span style="color:#e6db74">{</span>TITLES[nchap]<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>))
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">elif</span> line <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;BREVE ANTOLOGÍA DE TEXTOS&#34;</span>:
+</span></span><span style="display:flex;"><span>            marks<span style="color:#f92672">.</span>append((i, <span style="color:#e6db74">&#34;12-Breve-Antologia&#34;</span>, <span style="color:#e6db74">&#34;Breve antología de textos del canon Pali&#34;</span>))
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">elif</span> line <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;ABREVIATURAS&#34;</span>:
+</span></span><span style="display:flex;"><span>            marks<span style="color:#f92672">.</span>append((i, <span style="color:#e6db74">&#34;13-Anexos&#34;</span>, <span style="color:#e6db74">&#34;Anexos: abreviaturas, bibliografía selecta y glosario&#34;</span>))
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">elif</span> line <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;ÍNDICE&#34;</span>:
+</span></span><span style="display:flex;"><span>            marks<span style="color:#f92672">.</span>append((i, <span style="color:#66d9ef">None</span>, <span style="color:#66d9ef">None</span>))
+</span></span><span style="display:flex;"><span>    marks<span style="color:#f92672">.</span>sort()
+</span></span><span style="display:flex;"><span>    sections <span style="color:#f92672">=</span> []
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> n, (start, name, intro) <span style="color:#f92672">in</span> enumerate(marks):
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> name <span style="color:#f92672">is</span> <span style="color:#66d9ef">None</span>:
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">break</span>
+</span></span><span style="display:flex;"><span>        end <span style="color:#f92672">=</span> marks[n <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>][<span style="color:#ae81ff">0</span>] <span style="color:#66d9ef">if</span> n <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span> <span style="color:#f92672">&lt;</span> len(marks) <span style="color:#66d9ef">else</span> len(lines)
+</span></span><span style="display:flex;"><span>        body <span style="color:#f92672">=</span> join_text(lines[start:end])
+</span></span><span style="display:flex;"><span>        sections<span style="color:#f92672">.</span>append((name, intro <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;. &#34;</span> <span style="color:#f92672">+</span> body <span style="color:#66d9ef">if</span> body <span style="color:#66d9ef">else</span> intro))
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> sections
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">async</span> <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">synthesize</span>(text, path):
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> attempt <span style="color:#f92672">in</span> range(<span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">5</span>):
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">try</span>:
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">await</span> edge_tts<span style="color:#f92672">.</span>Communicate(text, VOICE)<span style="color:#f92672">.</span>save(path)
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> os<span style="color:#f92672">.</span>path<span style="color:#f92672">.</span>getsize(path) <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">1000</span>:
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">raise</span> <span style="color:#a6e22e">RuntimeError</span>(<span style="color:#e6db74">&#34;archivo vacío&#34;</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">except</span> <span style="color:#a6e22e">Exception</span> <span style="color:#66d9ef">as</span> exc:
+</span></span><span style="display:flex;"><span>            print(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;intento </span><span style="color:#e6db74">{</span>attempt<span style="color:#e6db74">}</span><span style="color:#e6db74"> falló: </span><span style="color:#e6db74">{</span>exc<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">await</span> asyncio<span style="color:#f92672">.</span>sleep(<span style="color:#ae81ff">2</span> <span style="color:#f92672">*</span> attempt)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">raise</span> <span style="color:#a6e22e">RuntimeError</span>(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;No se pudo sintetizar </span><span style="color:#e6db74">{</span>path<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">async</span> <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">run</span>(sections, out, workers):
+</span></span><span style="display:flex;"><span>    sem <span style="color:#f92672">=</span> asyncio<span style="color:#f92672">.</span>Semaphore(workers)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">async</span> <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">one</span>(i, name, text):
+</span></span><span style="display:flex;"><span>        path <span style="color:#f92672">=</span> os<span style="color:#f92672">.</span>path<span style="color:#f92672">.</span>join(out, name <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;.mp3&#34;</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> os<span style="color:#f92672">.</span>path<span style="color:#f92672">.</span>exists(path) <span style="color:#f92672">and</span> os<span style="color:#f92672">.</span>path<span style="color:#f92672">.</span>getsize(path) <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">1000</span>:
+</span></span><span style="display:flex;"><span>            print(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;[</span><span style="color:#e6db74">{</span>i<span style="color:#e6db74">}</span><span style="color:#e6db74">/</span><span style="color:#e6db74">{</span>len(sections)<span style="color:#e6db74">}</span><span style="color:#e6db74">] </span><span style="color:#e6db74">{</span>name<span style="color:#e6db74">}</span><span style="color:#e6db74">: ya existe&#34;</span>)
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">async</span> <span style="color:#66d9ef">with</span> sem:
+</span></span><span style="display:flex;"><span>            print(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;[</span><span style="color:#e6db74">{</span>i<span style="color:#e6db74">}</span><span style="color:#e6db74">/</span><span style="color:#e6db74">{</span>len(sections)<span style="color:#e6db74">}</span><span style="color:#e6db74">] </span><span style="color:#e6db74">{</span>name<span style="color:#e6db74">}</span><span style="color:#e6db74">: generando&#34;</span>, flush<span style="color:#f92672">=</span><span style="color:#66d9ef">True</span>)
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">await</span> synthesize(text, path)
+</span></span><span style="display:flex;"><span>            print(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;[</span><span style="color:#e6db74">{</span>i<span style="color:#e6db74">}</span><span style="color:#e6db74">/</span><span style="color:#e6db74">{</span>len(sections)<span style="color:#e6db74">}</span><span style="color:#e6db74">] </span><span style="color:#e6db74">{</span>name<span style="color:#e6db74">}</span><span style="color:#e6db74">: listo&#34;</span>, flush<span style="color:#f92672">=</span><span style="color:#66d9ef">True</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">await</span> asyncio<span style="color:#f92672">.</span>gather(<span style="color:#f92672">*</span>(one(i, n, t) <span style="color:#66d9ef">for</span> i, (n, t) <span style="color:#f92672">in</span> enumerate(sections, <span style="color:#ae81ff">1</span>)))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">main</span>():
+</span></span><span style="display:flex;"><span>    ap <span style="color:#f92672">=</span> argparse<span style="color:#f92672">.</span>ArgumentParser()
+</span></span><span style="display:flex;"><span>    ap<span style="color:#f92672">.</span>add_argument(<span style="color:#e6db74">&#34;--raw&#34;</span>, required<span style="color:#f92672">=</span><span style="color:#66d9ef">True</span>)
+</span></span><span style="display:flex;"><span>    ap<span style="color:#f92672">.</span>add_argument(<span style="color:#e6db74">&#34;--out&#34;</span>, required<span style="color:#f92672">=</span><span style="color:#66d9ef">True</span>)
+</span></span><span style="display:flex;"><span>    ap<span style="color:#f92672">.</span>add_argument(<span style="color:#e6db74">&#34;--workers&#34;</span>, type<span style="color:#f92672">=</span>int, default<span style="color:#f92672">=</span><span style="color:#ae81ff">6</span>)
+</span></span><span style="display:flex;"><span>    args <span style="color:#f92672">=</span> ap<span style="color:#f92672">.</span>parse_args()
+</span></span><span style="display:flex;"><span>    os<span style="color:#f92672">.</span>makedirs(args<span style="color:#f92672">.</span>out, exist_ok<span style="color:#f92672">=</span><span style="color:#66d9ef">True</span>)
+</span></span><span style="display:flex;"><span>    lines <span style="color:#f92672">=</span> clean_lines(open(args<span style="color:#f92672">.</span>raw, encoding<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;utf-8&#34;</span>)<span style="color:#f92672">.</span>read())
+</span></span><span style="display:flex;"><span>    sections <span style="color:#f92672">=</span> build_sections(lines)
+</span></span><span style="display:flex;"><span>    print(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;Secciones: </span><span style="color:#e6db74">{</span>len(sections)<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> i, (name, text) <span style="color:#f92672">in</span> enumerate(sections, <span style="color:#ae81ff">1</span>):
+</span></span><span style="display:flex;"><span>        print(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{</span>i<span style="color:#e6db74">:</span><span style="color:#e6db74">2</span><span style="color:#e6db74">}</span><span style="color:#e6db74">. </span><span style="color:#e6db74">{</span>name<span style="color:#e6db74">}</span><span style="color:#e6db74">: </span><span style="color:#e6db74">{</span>len(text)<span style="color:#e6db74">:</span><span style="color:#e6db74">,</span><span style="color:#e6db74">}</span><span style="color:#e6db74"> caracteres&#34;</span>)
+</span></span><span style="display:flex;"><span>    asyncio<span style="color:#f92672">.</span>run(run(sections, args<span style="color:#f92672">.</span>out, args<span style="color:#f92672">.</span>workers))
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> __name__ <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;__main__&#34;</span>:
+</span></span><span style="display:flex;"><span>    main()
+</span></span></code></pre></div><h2 id="6-generar-el-audio">6. Generar el audio</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>tts-venv/bin/python pdf_a_audio.py --raw libro_raw.txt --out audio/ --workers <span style="color:#ae81ff">6</span>
+</span></span></code></pre></div><p><code>Communicate</code> parte el texto en bloques de ~4096 bytes y los manda por una sola conexión por sección. Los reintentos importan: el servicio corta alguna conexión y sin el <code>for attempt</code> te perdés un capítulo entero.</p>
+<p>Lo que más ayudó fue <strong>paralelizar por secciones</strong>. El cuello no es la CPU sino la latencia de cada bloque:</p>
+<table>
+	<thead>
+			<tr>
+					<th>prueba</th>
+					<th>tiempo</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>Prólogo solo (4.027 chars → 3:53 de audio)</td>
+					<td>57 s</td>
+			</tr>
+			<tr>
+					<td>3 secciones en paralelo (vs. ~260 s en serie)</td>
+					<td>43 s</td>
+			</tr>
+			<tr>
+					<td>libro completo, 6 workers</td>
+					<td>8 min 56 s</td>
+			</tr>
+	</tbody>
+</table>
+<p>Si el servicio te limita, bajá <code>--workers</code> a 2 o 3.</p>
+<h2 id="7-verificar-y-juntar">7. Verificar y juntar</h2>
+<p>Chequeo rápido de duración y de que no haya silencio:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ffprobe -v error -show_entries format<span style="color:#f92672">=</span>duration -of csv<span style="color:#f92672">=</span>p<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span> audio/04-Capitulo-uno.mp3
+</span></span><span style="display:flex;"><span>ffmpeg -t <span style="color:#ae81ff">60</span> -i audio/04-Capitulo-uno.mp3 -af volumedetect -f null - 2&gt;&amp;<span style="color:#ae81ff">1</span> | grep volume
+</span></span></code></pre></div><p><code>mean_volume</code> alrededor de -22 dB y <code>max_volume</code> cerca de -4 dB = audio sano.</p>
+<p>Para el archivo único, lista los MP3 y concatenás sin recodificar:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>python3 - <span style="color:#e6db74">&lt;&lt;&#39;PY&#39;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">import glob, os
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">with open(&#39;concatenar.txt&#39;, &#39;w&#39;) as f:
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    for p in sorted(glob.glob(&#39;audio/*.mp3&#39;)):
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">        f.write(f&#34;file &#39;{os.path.abspath(p)}&#39;\n&#34;)
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">PY</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>ffmpeg -f concat -safe <span style="color:#ae81ff">0</span> -i concatenar.txt -c copy <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -metadata title<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;Lo que el Buddha enseñó&#34;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -metadata artist<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;Walpola Rahula&#34;</span> libro_completo.mp3
+</span></span></code></pre></div><p><code>-c copy</code> funciona porque todos los MP3 salen del mismo motor y voice, con el mismo bitrate (48 kbps, mono).</p>
+<h2 id="resultado">Resultado</h2>
+<table>
+	<thead>
+			<tr>
+					<th>sección</th>
+					<th>duración</th>
+					<th>tamaño</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>Prólogo</td>
+					<td>3:53</td>
+					<td>1.3 MB</td>
+			</tr>
+			<tr>
+					<td>Prefacio</td>
+					<td>5:13</td>
+					<td>1.8 MB</td>
+			</tr>
+			<tr>
+					<td>El Buddha</td>
+					<td>2:31</td>
+					<td>0.9 MB</td>
+			</tr>
+			<tr>
+					<td>Capítulo I</td>
+					<td>29:32</td>
+					<td>10.1 MB</td>
+			</tr>
+			<tr>
+					<td>Capítulo II</td>
+					<td>27:51</td>
+					<td>9.6 MB</td>
+			</tr>
+			<tr>
+					<td>Capítulo III</td>
+					<td>10:13</td>
+					<td>3.5 MB</td>
+			</tr>
+			<tr>
+					<td>Capítulo IV</td>
+					<td>19:58</td>
+					<td>6.9 MB</td>
+			</tr>
+			<tr>
+					<td>Capítulo V</td>
+					<td>13:00</td>
+					<td>4.5 MB</td>
+			</tr>
+			<tr>
+					<td>Capítulo VI</td>
+					<td>31:45</td>
+					<td>10.9 MB</td>
+			</tr>
+			<tr>
+					<td>Capítulo VII</td>
+					<td>20:53</td>
+					<td>7.2 MB</td>
+			</tr>
+			<tr>
+					<td>Capítulo VIII</td>
+					<td>30:33</td>
+					<td>10.5 MB</td>
+			</tr>
+			<tr>
+					<td>Breve antología</td>
+					<td>104:14</td>
+					<td>35.8 MB</td>
+			</tr>
+			<tr>
+					<td>Anexos</td>
+					<td>17:52</td>
+					<td>6.1 MB</td>
+			</tr>
+			<tr>
+					<td><strong>completo</strong></td>
+					<td><strong>5:17:27</strong></td>
+					<td><strong>109 MB</strong></td>
+			</tr>
+	</tbody>
+</table>
+<h2 id="problemas-probables">Problemas probables</h2>
+<ul>
+<li><strong>Sale poco texto del PDF</strong>: es escaneo; pasalo por <code>ocrmypdf</code> primero.</li>
+<li><strong>Sin internet</strong>: <code>edge-tts</code> no funciona. Ahí sí conviene <code>piper</code> (con el modelo <code>es_AR-daniela-high</code>) o <code>espeak-ng -v es</code>.</li>
+<li><strong>Se cuelan notas</strong>: buscá <code>(N. del T.)</code> en el texto limpio. Si aparece, la regla 1 no cortó en la página correcta y hay que ajustar el <code>sig[:3]</code>.</li>
+<li><strong>Capítulos duplicados o mal numerados</strong>: contá encabezados en orden, como en el ejemplo; no confíes en el número que dice el PDF.</li>
+</ul>
+
+  </div>
+</article>
+
+  </main>
+  <footer class="site-footer">
+  <a href="/acerca/">acerca</a> · <a href="/servicios/">servicios</a> ·
+  <a href="/index.xml">rss</a> · 
+  <a href="https://github.com/imlauera/">github</a>
+</footer>
+
+  
+</body>
+</html>
