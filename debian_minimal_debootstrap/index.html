@@ -54,8 +54,8 @@
   
   <div class="audio-player">
     <p class="audio-label">Escuchar este artículo</p>
-    <audio controls preload="metadata" src="https://archive.org/download/imlauer-blog-audio-debian-minimal-debootstrap-1abbfb82/debian-minimal-debootstrap-5e4f3d36ea.mp3"></audio>
-    <p class="audio-meta"><a href="https://archive.org/download/imlauer-blog-audio-debian-minimal-debootstrap-1abbfb82/debian-minimal-debootstrap-5e4f3d36ea.mp3">Descargar MP3</a> · <a href="https://archive.org/details/imlauer-blog-audio-debian-minimal-debootstrap-1abbfb82">Ver en Internet Archive</a></p>
+    <audio controls preload="metadata" src="https://archive.org/download/imlauer-blog-audio-debian-minimal-debootstrap-1abbfb82/debian-minimal-debootstrap-c9fb425aa8.mp3"></audio>
+    <p class="audio-meta"><a href="https://archive.org/download/imlauer-blog-audio-debian-minimal-debootstrap-1abbfb82/debian-minimal-debootstrap-c9fb425aa8.mp3">Descargar MP3</a> · <a href="https://archive.org/details/imlauer-blog-audio-debian-minimal-debootstrap-1abbfb82">Ver en Internet Archive</a></p>
   </div>
   
   
@@ -203,14 +203,18 @@ UUID=6b73aa72-e5b1-473f-9db5-dbcdfca28cbc  none        swap    sw               
 </span></span></span><span style="display:flex;"><span>    sudo <span style="color:#ae81ff">\
 </span></span></span><span style="display:flex;"><span>    vim <span style="color:#ae81ff">\
 </span></span></span><span style="display:flex;"><span>    man-db <span style="color:#ae81ff">\
-</span></span></span><span style="display:flex;"><span>    bash-completion
+</span></span></span><span style="display:flex;"><span>    bash-completion <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    firmware-linux <span style="color:#ae81ff">\ </span>
+</span></span><span style="display:flex;"><span>    efibootmgr <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>    os-prober 
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>systemctl enable NetworkManager
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span><span style="color:#75715e"># GRUB en /dev/sda1, con entrada propia y fallback removable</span>
 </span></span><span style="display:flex;"><span>grub-install --target<span style="color:#f92672">=</span>x86_64-efi --efi-directory<span style="color:#f92672">=</span>/boot/efi --bootloader-id<span style="color:#f92672">=</span>debian --recheck /dev/sda
 </span></span><span style="display:flex;"><span>grub-install --target<span style="color:#f92672">=</span>x86_64-efi --efi-directory<span style="color:#f92672">=</span>/boot/efi --removable --recheck /dev/sda
-</span></span><span style="display:flex;"><span>update-grub
+</span></span><span style="display:flex;"><span>sudo grub-install --target<span style="color:#f92672">=</span>x86_64-efi --efi-directory<span style="color:#f92672">=</span>/boot --removable   
+</span></span><span style="display:flex;"><span>update-grub <span style="color:#75715e"># # equivale a grub-mkconfig -o /boot/grub/grub.cfg</span>
 </span></span></code></pre></div><p>Quedó el kernel <code>6.12.117+deb13-amd64</code>, el initrd y tres entradas en <code>grub.cfg</code>: Debian, Debian recovery y UEFI Firmware Settings.</p>
 <h2 id="6-el-dns-hay-que-escribirlo-desde-fuera-del-chroot">6. El DNS hay que escribirlo desde fuera del chroot</h2>
 <p><code>arch-chroot</code> bind-mounta el <code>/etc/resolv.conf</code> del host dentro del chroot, así que escribir desde adentro pisa el archivo del host (y si usás Tailscale, su resolvedor lo vuelve a sobrescribir). Después de salir del chroot:</p>
@@ -293,6 +297,215 @@ BootOrder: 0002,0001,2001,2002,2003
 <li><a href="https://imlauera.github.io/post/instalacion_arch_basica/">Instalación de ArchLinux completa y cheatsheet de pacman</a></li>
 <li><a href="https://www.debian.org/releases/stable/amd64/apds03.html.en">Debian Installation Guide — Appendix: Installing Debian via debootstrap</a></li>
 </ul>
+<h1 id="esta-instalacion-es-similar-pero-no-la-probe">Esta instalacion es similar pero no la probe.</h1>
+<h3 id="debian-con-debootstrap-versión-actualizada">Debian con debootstrap, versión actualizada</h3>
+<p>Tomé tu guía de Arch y adapté todo lo que tiene equivalente en Debian. Asumo <strong>UEFI</strong>, disco <code>/dev/sda</code> y <strong>Debian 13 (trixie)</strong>.</p>
+<h2 id="1-desde-el-live-usb">1. Desde el live USB</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo -i
+</span></span><span style="display:flex;"><span>loadkeys es
+</span></span><span style="display:flex;"><span>timedatectl set-ntp true
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># WiFi (el live de Debian usa NetworkManager, no iwd)</span>
+</span></span><span style="display:flex;"><span>nmcli device wifi list
+</span></span><span style="display:flex;"><span>nmcli device wifi connect <span style="color:#e6db74">&#34;SSID&#34;</span> password <span style="color:#e6db74">&#34;clave&#34;</span>
+</span></span><span style="display:flex;"><span>ping -c3 deb.debian.org
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>apt update
+</span></span><span style="display:flex;"><span>apt install debootstrap arch-install-scripts gdisk
+</span></span></code></pre></div><h2 id="2-particiones-efi-300m--swap-4g--root">2. Particiones (EFI 300M + swap 4G + root)</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>fdisk -l
+</span></span><span style="display:flex;"><span>sfdisk /dev/sda <span style="color:#e6db74">&lt;&lt;EOF
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">label: gpt
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">,300M,U
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">,4G,S
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">,,L
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOF</span>
+</span></span></code></pre></div><p>Esto <strong>borra el disco</strong>. Si preferís hacerlo a mano, usá <code>cfdisk /dev/sda</code> o <code>fdisk /dev/sda</code>.</p>
+<h2 id="3-formatear-y-montar">3. Formatear y montar</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>mkfs.fat -F32 /dev/sda1
+</span></span><span style="display:flex;"><span>mkswap /dev/sda2
+</span></span><span style="display:flex;"><span>mkfs.ext4 /dev/sda3
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>mount /dev/sda3 /mnt
+</span></span><span style="display:flex;"><span>mkdir -p /mnt/boot/efi
+</span></span><span style="display:flex;"><span>mount /dev/sda1 /mnt/boot/efi
+</span></span><span style="display:flex;"><span>swapon /dev/sda2
+</span></span></code></pre></div><h2 id="4-sistema-base">4. Sistema base</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>debootstrap --arch amd64 --components<span style="color:#f92672">=</span>main,contrib,non-free-firmware <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --include<span style="color:#f92672">=</span>locales,console-setup,keyboard-configuration,network-manager,sudo,vim,bash-completion <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  trixie /mnt http://deb.debian.org/debian
+</span></span></code></pre></div><h2 id="5-fstab-y-chroot">5. fstab y chroot</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>genfstab -U /mnt &gt;&gt; /mnt/etc/fstab
+</span></span><span style="display:flex;"><span>cat /mnt/etc/fstab        <span style="color:#75715e"># verificá root, swap y EFI</span>
+</span></span><span style="display:flex;"><span>arch-chroot /mnt
+</span></span></code></pre></div><h2 id="6-configuración-dentro-del-chroot">6. Configuración dentro del chroot</h2>
+<p><strong>Repos, kernel y bootloader:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cat &gt; /etc/apt/sources.list <span style="color:#e6db74">&lt;&lt;EOF
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">deb http://deb.debian.org/debian trixie main contrib non-free-firmware
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">deb http://deb.debian.org/debian trixie-updates main contrib non-free-firmware
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">deb http://security.debian.org/debian-security trixie-security main contrib non-free-firmware
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOF</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>apt update
+</span></span><span style="display:flex;"><span>apt install linux-image-amd64 firmware-linux grub-efi-amd64 efibootmgr os-prober dosfstools
+</span></span></code></pre></div><p>En Debian dejá <code>efibootmgr</code> instalado: <code>grub-install</code> lo usa para registrar la entrada de arranque en la NVRAM.</p>
+<p><strong>Hora e idioma:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ln -sf /usr/share/zoneinfo/America/Argentina/Buenos_Aires /etc/localtime
+</span></span><span style="display:flex;"><span>hwclock --systohc
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>sed -i <span style="color:#e6db74">&#39;s/^# *en_US.UTF-8/en_US.UTF-8/&#39;</span> /etc/locale.gen
+</span></span><span style="display:flex;"><span>locale-gen
+</span></span><span style="display:flex;"><span>update-locale LANG<span style="color:#f92672">=</span>en_US.UTF-8
+</span></span></code></pre></div><p><strong>Teclado y fuente de consola</strong> (Debian no usa <code>vconsole.conf</code>):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cat &gt; /etc/default/keyboard <span style="color:#e6db74">&lt;&lt;EOF
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">XKBMODEL=&#34;pc105&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">XKBLAYOUT=&#34;es&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">XKBVARIANT=&#34;&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">XKBOPTIONS=&#34;&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOF</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>sed -i <span style="color:#e6db74">&#39;s/^FONTFACE=.*/FONTFACE=&#34;Terminus&#34;/; s/^FONTSIZE=.*/FONTSIZE=&#34;16x32&#34;/&#39;</span> /etc/default/console-setup
+</span></span></code></pre></div><p><strong>Hostname y hosts:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;debian&#34;</span> &gt; /etc/hostname
+</span></span><span style="display:flex;"><span>cat &gt; /etc/hosts <span style="color:#e6db74">&lt;&lt;EOF
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">127.0.0.1   localhost
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">127.0.1.1   debian.localdomain debian
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">::1         localhost ip6-localhost ip6-loopback
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">EOF</span>
+</span></span></code></pre></div><p><strong>Usuarios</strong> (el grupo <code>wheel</code> de Arch es <code>sudo</code> acá, y <code>uucp</code> es <code>dialout</code>):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>passwd
+</span></span><span style="display:flex;"><span>useradd -m -G sudo,audio,video,dialout -s /bin/bash tuusuario
+</span></span><span style="display:flex;"><span>passwd tuusuario
+</span></span></code></pre></div><h2 id="7-grub">7. GRUB</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>grub-install --target<span style="color:#f92672">=</span>x86_64-efi --efi-directory<span style="color:#f92672">=</span>/boot/efi --bootloader-id<span style="color:#f92672">=</span>Debian --recheck
+</span></span></code></pre></div><p>Si tu UEFI es de los que borran la entrada solos, agregá <code>--force-extra-removable</code> (o usá <code>--removable</code>) para instalar también en la ruta de respaldo.</p>
+<p>Para que <code>os-prober</code> detecte Windows u otras distros, editá <code>/etc/default/grub</code> y agregá <code>GRUB_DISABLE_OS_PROBER=false</code>. Montá las otras particiones y generá la config con:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>update-grub        <span style="color:#75715e"># equivale a grub-mkconfig -o /boot/grub/grub.cfg</span>
+</span></span></code></pre></div><h2 id="8-salir-y-reiniciar">8. Salir y reiniciar</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>exit
+</span></span><span style="display:flex;"><span>umount -R /mnt
+</span></span><span style="display:flex;"><span>reboot
+</span></span></code></pre></div><hr>
+<h2 id="después-del-primer-arranque">Después del primer arranque</h2>
+<p><strong>Red y DNS.</strong> Con <code>nmtui</code> te conectás al WiFi. Para las DNS no uses <code>chattr +i</code> sobre <code>resolv.conf</code>, hacelo por NetworkManager:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>nmcli connection show
+</span></span><span style="display:flex;"><span>sudo nmcli connection modify <span style="color:#e6db74">&#34;NOMBRE&#34;</span> ipv4.dns <span style="color:#e6db74">&#34;9.9.9.11 149.112.112.11&#34;</span> ipv4.ignore-auto-dns yes
+</span></span><span style="display:flex;"><span>sudo nmcli connection down <span style="color:#e6db74">&#34;NOMBRE&#34;</span> <span style="color:#f92672">&amp;&amp;</span> sudo nmcli connection up <span style="color:#e6db74">&#34;NOMBRE&#34;</span>
+</span></span></code></pre></div><p><strong>Paquetes de tu lista, traducidos a Debian:</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo apt install openssh-server fzf tmux fastfetch fish sway foot wl-clipboard grim <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  btop imv mpv yt-dlp imagemagick git rsync w3m links irssi neomutt isync msmtp pass <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  notmuch lynx tor torsocks zip unzip wget curl plocate apt-file tldr bluez fbi <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  pipewire pipewire-pulse pipewire-alsa wireplumber xdg-desktop-portal-wlr xwayland
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Opcionales: firefox-esr chromium thunderbird telegram-desktop libreoffice</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">#             obs-studio gimp kdenlive qbittorrent-nox virt-manager</span>
+</span></span></code></pre></div><p>Los archivos <code>/etc/mpv/mpv.conf</code> y <code>/etc/yt-dlp.conf</code> funcionan igual, solo copialos.</p>
+<p><strong>Lo que en Arch hacés a mano y en Debian ya viene (o casi):</strong></p>
+<table>
+	<thead>
+			<tr>
+					<th>Tema</th>
+					<th>En Debian</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>fsck al inicio</td>
+					<td>El initramfs ya lo hace. Verificá que root tenga <code>1</code> en el pass de <code>/etc/fstab</code>. Para forzarlo, agregá <code>fsck.mode=force fsck.repair=preen</code> a <code>GRUB_CMDLINE_LINUX_DEFAULT</code> y corré <code>update-grub</code>.</td>
+			</tr>
+			<tr>
+					<td>Microcódigo</td>
+					<td><code>sudo apt install intel-microcode</code> (o <code>amd64-microcode</code>)</td>
+			</tr>
+			<tr>
+					<td>TRIM para SSD</td>
+					<td><code>fstrim.timer</code> ya viene activo</td>
+			</tr>
+			<tr>
+					<td>Journal persistente</td>
+					<td>Normalmente ya lo es. Chequeá con <code>ls /var/log/journal</code>.</td>
+			</tr>
+			<tr>
+					<td><code>/tmp</code> en RAM</td>
+					<td>Trixie ya lo monta como tmpfs</td>
+			</tr>
+			<tr>
+					<td>AppArmor</td>
+					<td><code>sudo apt install apparmor apparmor-utils apparmor-profiles</code> y verificá con <code>sudo aa-status</code>. El kernel de Debian ya lo trae activado.</td>
+			</tr>
+			<tr>
+					<td>Firewall</td>
+					<td><code>sudo apt install ufw &amp;&amp; sudo ufw enable</code></td>
+			</tr>
+			<tr>
+					<td>zram</td>
+					<td><code>sudo apt install systemd-zram-generator</code> y la misma config de <code>/etc/systemd/zram-generator.conf</code> de tu guía. Es alternativa a la swap en disco.</td>
+			</tr>
+			<tr>
+					<td>Snapshots</td>
+					<td><code>sudo apt install timeshift</code> (o <code>snapper</code>)</td>
+			</tr>
+			<tr>
+					<td>Swappiness</td>
+					<td><code>echo 'vm.swappiness=10' | sudo tee /etc/sysctl.d/99-swappiness.conf</code></td>
+			</tr>
+			<tr>
+					<td>Mirrors</td>
+					<td>No hace falta <code>reflector</code>: <code>deb.debian.org</code> es un CDN</td>
+			</tr>
+	</tbody>
+</table>
+<p><strong>Cheatsheet pacman → apt:</strong></p>
+<table>
+	<thead>
+			<tr>
+					<th>pacman</th>
+					<th>apt</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td><code>pacman -Syu</code></td>
+					<td><code>apt update &amp;&amp; apt full-upgrade</code></td>
+			</tr>
+			<tr>
+					<td><code>pacman -S pkg</code></td>
+					<td><code>apt install pkg</code></td>
+			</tr>
+			<tr>
+					<td><code>pacman -Rns pkg</code></td>
+					<td><code>apt purge pkg &amp;&amp; apt autoremove</code></td>
+			</tr>
+			<tr>
+					<td><code>pacman -Ss texto</code></td>
+					<td><code>apt search texto</code></td>
+			</tr>
+			<tr>
+					<td><code>pacman -Si pkg</code></td>
+					<td><code>apt show pkg</code></td>
+			</tr>
+			<tr>
+					<td><code>pacman -Ql pkg</code></td>
+					<td><code>dpkg -L pkg</code></td>
+			</tr>
+			<tr>
+					<td><code>pacman -Qe</code></td>
+					<td><code>apt-mark showmanual</code></td>
+			</tr>
+			<tr>
+					<td><code>pacman -Qdt</code></td>
+					<td><code>apt autoremove --dry-run</code></td>
+			</tr>
+			<tr>
+					<td><code>pacman -Scc</code></td>
+					<td><code>apt clean</code></td>
+			</tr>
+			<tr>
+					<td><code>pkgfile</code></td>
+					<td><code>apt-file search archivo</code></td>
+			</tr>
+	</tbody>
+</table>
+<p>El <strong>AUR no existe</strong> en Debian. Para lo que sacabas de ahí (freetube, tor-browser, etc.) usá Flatpak, <code>.deb</code> oficiales, o compilá desde el repo.</p>
 
   </div>
 </article>
