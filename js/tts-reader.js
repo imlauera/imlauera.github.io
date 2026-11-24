@@ -11,35 +11,51 @@
   const status = root.querySelector('[data-tts-status]');
   if (!content || !playBtn || !pauseBtn || !stopBtn || !rateInput || !voiceSelect || !status) return;
 
-  const hasSpeech = ('speechSynthesis' in window) && ('SpeechSynthesisUtterance' in window);
+  const noBrowserSpeech = /QtWebEngine|Falkon/i.test(navigator.userAgent || '');
+  const hasSpeech = !noBrowserSpeech && ('speechSynthesis' in window) && ('SpeechSynthesisUtterance' in window);
   const synth = hasSpeech ? window.speechSynthesis : null;
+  const audioEl = document.createElement('audio');
+  audioEl.referrerPolicy = 'no-referrer';
+  audioEl.preload = 'auto';
+  root.appendChild(audioEl);
+
   let chunks = [];
   let index = 0;
   let active = false;
   let paused = false;
   let mode = hasSpeech ? 'speech' : 'online';
-  let audio = null;
   let playToken = 0;
 
   const normalize = (text) => text.replace(/\s+/g, ' ').trim();
   const splitText = (text) => {
     const clean = normalize(text);
     if (!clean) return [];
+    const max = mode === 'online' ? 180 : 220;
     const parts = clean.match(/[^.!?¡¿]+[.!?…]+|[^.!?¡¿]+$/g) || [clean];
     const out = [];
+    const push = (piece) => {
+      if (piece.length <= max) { out.push(piece); return; }
+      let cur = '';
+      for (const word of piece.split(' ')) {
+        if (!cur) cur = word;
+        else if ((cur + ' ' + word).length > max) { out.push(cur); cur = word; }
+        else cur += ' ' + word;
+      }
+      if (cur) out.push(cur);
+    };
     let buf = '';
-    const max = mode === 'online' ? 180 : 220;
     for (const part of parts) {
       const sentence = part.trim();
       if (!sentence) continue;
       if ((buf + ' ' + sentence).trim().length > max && buf) {
-        out.push(buf.trim());
+        push(buf.trim());
         buf = sentence;
       } else {
         buf = (buf ? buf + ' ' : '') + sentence;
       }
+      if (buf.length > max) { push(buf.trim()); buf = ''; }
     }
-    if (buf.trim()) out.push(buf.trim());
+    if (buf.trim()) push(buf.trim());
     return out;
   };
 
@@ -51,12 +67,10 @@
   };
 
   const stopAudio = () => {
-    if (audio) {
-      audio.onended = audio.onerror = null;
-      audio.pause();
-      audio.src = '';
-      audio = null;
-    }
+    audioEl.onended = audioEl.onerror = null;
+    audioEl.pause();
+    audioEl.removeAttribute('src');
+    audioEl.load();
   };
 
   const stop = (msg = 'Listo para leer.') => {
@@ -104,19 +118,39 @@
     return voices.find(v => (v.lang || '').toLowerCase().startsWith('es')) || null;
   };
 
+  const useOnline = (msg) => {
+    mode = 'online';
+    populateVoices();
+    chunks = splitText(content.innerText || content.textContent || '');
+    index = 0;
+    setStatus(msg);
+    speakOnlineNext();
+  };
+
   const speakOnlineNext = () => {
     if (!active || paused) return;
     if (index >= chunks.length) { stop('Lectura finalizada.'); return; }
     const token = playToken;
-    const text = chunks[index];
-    const url = 'https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=es&q=' + encodeURIComponent(text);
+    const url = 'https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=es&q=' + encodeURIComponent(chunks[index]);
     stopAudio();
-    audio = new Audio(url);
-    audio.playbackRate = parseFloat(rateInput.value) || 1;
-    audio.onended = () => { if (token !== playToken || !active) return; index += 1; speakOnlineNext(); };
-    audio.onerror = () => { if (token !== playToken) return; stop('Error en TTS online. Verificá conexión o usá el MP3.'); };
+    audioEl.src = url;
+    audioEl.playbackRate = parseFloat(rateInput.value) || 1;
+    audioEl.onended = () => { if (token !== playToken || !active) return; index += 1; speakOnlineNext(); };
+    let retries = 0;
+    audioEl.onerror = () => {
+      if (token !== playToken) return;
+      const current = chunks[index];
+      if (current && current.length > 80 && retries < 2) {
+        retries += 1;
+        const half = Math.ceil(current.length / 2);
+        chunks.splice(index, 1, current.slice(0, half).trim(), current.slice(half).trim());
+        speakOnlineNext();
+        return;
+      }
+      stop('No se pudo cargar el audio online. Verificá conexión o usá el MP3.');
+    };
     setStatus(`Leyendo ${index + 1}/${chunks.length} (online)…`);
-    audio.play().catch(() => { if (token !== playToken) return; stop('El navegador bloqueó el audio online. Tocá Leer de nuevo o usá el MP3.'); });
+    audioEl.play().catch(() => { if (token !== playToken) return; stop('El navegador bloqueó el audio. Tocá Leer de nuevo o usá el MP3.'); });
   };
 
   const speakSpeechNext = () => {
@@ -131,19 +165,11 @@
     utter.onend = () => { if (!active) return; index += 1; speakSpeechNext(); };
     utter.onerror = (e) => {
       if (e.error === 'canceled' || e.error === 'interrupted') return;
-      // Falkon/QtWebEngine often has speech API disabled; fallback to online TTS
-      if (!paused && active) {
-        mode = 'online';
-        populateVoices();
-        setStatus('Voz del navegador no disponible; usando TTS online…');
-        chunks = splitText(content.innerText || content.textContent || '');
-        speakOnlineNext();
-        return;
-      }
+      if (!paused && active) { useOnline('Voz del navegador no disponible; usando TTS online…'); return; }
       stop(`Error al leer (${e.error || 'desconocido'}). Probá el MP3.`);
     };
     try { synth.resume(); synth.speak(utter); }
-    catch (_) { mode = 'online'; populateVoices(); speakOnlineNext(); }
+    catch (_) { if (active) useOnline('Voz del navegador no disponible; usando TTS online…'); }
   };
 
   const speakNext = () => (mode === 'online' ? speakOnlineNext() : speakSpeechNext());
@@ -151,7 +177,7 @@
   playBtn.addEventListener('click', () => {
     if (active && paused) {
       paused = false;
-      if (mode === 'online' && audio) { audio.playbackRate = parseFloat(rateInput.value) || 1; audio.play().catch(() => stop('No se pudo reanudar.')); }
+      if (mode === 'online') { audioEl.playbackRate = parseFloat(rateInput.value) || 1; audioEl.play().catch(() => stop('No se pudo reanudar.')); }
       else if (synth) synth.resume();
       updateButtons();
       setStatus(`Leyendo ${Math.min(index + 1, chunks.length)}/${chunks.length}…`);
@@ -162,13 +188,14 @@
     if (!chunks.length) { setStatus('No hay texto para leer.'); return; }
     index = 0; active = true; paused = false;
     updateButtons();
-    speakNext();
+    if (mode === 'speech' && !synth.getVoices().length) useOnline('Usando TTS online…');
+    else speakNext();
   });
 
   pauseBtn.addEventListener('click', () => {
     if (!active || paused) return;
     paused = true;
-    if (mode === 'online' && audio) audio.pause();
+    if (mode === 'online') audioEl.pause();
     else if (synth) synth.pause();
     updateButtons();
     setStatus('Pausado.');
@@ -178,7 +205,7 @@
 
   rateInput.addEventListener('input', () => {
     rateValue.textContent = `${parseFloat(rateInput.value).toFixed(2)}x`;
-    if (mode === 'online' && audio) audio.playbackRate = parseFloat(rateInput.value) || 1;
+    if (audioEl.src) audioEl.playbackRate = parseFloat(rateInput.value) || 1;
   });
 
   voiceSelect.addEventListener('change', () => {
@@ -193,7 +220,7 @@
 
   populateVoices();
   if (synth && typeof synth.onvoiceschanged !== 'undefined') synth.onvoiceschanged = populateVoices;
-  if (!hasSpeech) setStatus('Usando TTS online (el navegador no expone Web Speech API).');
+  if (mode === 'online') setStatus('Usando TTS online (el navegador no expone voces).');
   rateValue.textContent = `${parseFloat(rateInput.value).toFixed(2)}x`;
   updateButtons();
   window.addEventListener('beforeunload', () => { if (synth) synth.cancel(); stopAudio(); });
