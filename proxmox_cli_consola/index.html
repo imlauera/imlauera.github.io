@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>Proxmox por consola: qm, pct, vzdump, pvesm y pvesh · Imlauer</title>
+  <meta name="description" content="imlauerandres [at] gmail.com">
+  <link rel="canonical" href="https://imlauera.github.io/proxmox_cli_consola/">
+  <link rel="alternate" type="application/rss+xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+  <a class="site-title" href="/">Imlauer</a>
+</header>
+
+  <main>
+    
+<article class="post">
+  <h1>Proxmox por consola: qm, pct, vzdump, pvesm y pvesh</h1>
+  <p class="meta">
+    <time datetime="2026-11-25">2026-11-25</time>
+    <span class="tags"> · <a href="/tags/proxmox/">proxmox</a>, <a href="/tags/linux/">linux</a>, <a href="/tags/virtualizacion/">virtualizacion</a>, <a href="/tags/cli/">cli</a></span>
+  </p>
+  
+  
+    
+    
+      
+        
+      
+    
+  
+  
+  
+  
+    
+      
+    
+  
+  
+  
+  
+    
+  
+  
+  
+  
+  
+  
+  <section class="tts-reader" data-tts-reader>
+  <p class="audio-label">Leer en voz alta (navegador)</p>
+  <div class="tts-controls">
+    <button type="button" data-tts-play>Leer</button>
+    <button type="button" data-tts-pause disabled>Pausar</button>
+    <button type="button" data-tts-stop disabled>Detener</button>
+    <label class="tts-rate">Velocidad
+      <input type="range" min="0.75" max="2" step="0.05" value="1" data-tts-rate>
+      <span data-tts-rate-value>1.00x</span>
+    </label>
+    <label class="tts-voice">Voz
+      <select data-tts-voice></select>
+    </label>
+  </div>
+  <p class="audio-meta" data-tts-status>Listo para leer.</p>
+  <p class="audio-meta">Usa la voz del navegador (Web Speech API). Para descargar MP3, usá el reproductor/descarga cuando esté disponible.</p>
+</section>
+
+  <div class="content">
+    <p>Guía práctica para administrar Proxmox VE desde SSH, sin depender de la interfaz web. Los ejemplos están pensados para un nodo simple; en este equipo el nodo se llama <code>home</code>.</p>
+<h2 id="estado-del-sistema">Estado del sistema</h2>
+<p>Comandos útiles para ver el hardware y la carga antes de tocar VMs:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>hostnamectl
+</span></span><span style="display:flex;"><span>pveversion -v
+</span></span><span style="display:flex;"><span>lscpu
+</span></span><span style="display:flex;"><span>free -h
+</span></span><span style="display:flex;"><span>swapon --show
+</span></span><span style="display:flex;"><span>lsblk -o NAME,SIZE,TYPE,FSTYPE,MOUNTPOINTS,MODEL
+</span></span><span style="display:flex;"><span>ip -br a
+</span></span><span style="display:flex;"><span>qm list
+</span></span><span style="display:flex;"><span>pct list
+</span></span><span style="display:flex;"><span>pvesm status
+</span></span></code></pre></div><p>En este equipo (Acer Aspire ES1-311, Pentium N3540, 4 cores, 7.6 GiB RAM, HDD 500 GB) el cuello de botella principal es RAM + disco mecánico. Si la RAM asignada a VMs supera la física y entra swap, el sistema se vuelve muy lento.</p>
+<h2 id="ajuste-de-ram-realizado">Ajuste de RAM realizado</h2>
+<p>Se bajó la asignación de memoria para evitar sobrecomprometer el host:</p>
+<table>
+	<thead>
+			<tr>
+					<th>VMID</th>
+					<th>Nombre</th>
+					<th style="text-align: right">Antes</th>
+					<th style="text-align: right">Después</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>100</td>
+					<td>debian-chromium</td>
+					<td style="text-align: right">4096 MiB</td>
+					<td style="text-align: right">2048 MiB</td>
+			</tr>
+			<tr>
+					<td>101</td>
+					<td>freebsd</td>
+					<td style="text-align: right">2048 MiB</td>
+					<td style="text-align: right">1024 MiB</td>
+			</tr>
+			<tr>
+					<td>102</td>
+					<td>macos-prebuilt</td>
+					<td style="text-align: right">6144 MiB</td>
+					<td style="text-align: right">4096 MiB</td>
+			</tr>
+	</tbody>
+</table>
+<p>Comandos usados:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>qm set <span style="color:#ae81ff">100</span> --memory <span style="color:#ae81ff">2048</span>
+</span></span><span style="display:flex;"><span>qm set <span style="color:#ae81ff">101</span> --memory <span style="color:#ae81ff">1024</span>
+</span></span><span style="display:flex;"><span>qm set <span style="color:#ae81ff">102</span> --memory <span style="color:#ae81ff">4096</span>
+</span></span><span style="display:flex;"><span>qm config <span style="color:#ae81ff">100</span> | grep memory
+</span></span></code></pre></div><blockquote>
+<p>Nota: cambiar el límite de RAM en Proxmox no es lo mismo que ajustar el uso dentro del guest. Si la VM estaba corriendo, conviene reiniciarla o verificar si el cambio aplica en caliente según el guest/configuración.</p>
+</blockquote>
+<h2 id="qm-máquinas-virtuales-qemukvm"><code>qm</code>: máquinas virtuales (QEMU/KVM)</h2>
+<p>Usalo para VMs: Linux, FreeBSD, Windows, macOS, etc. Cada VM tiene su propio kernel.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Listar y ver estado</span>
+</span></span><span style="display:flex;"><span>qm list
+</span></span><span style="display:flex;"><span>qm status <span style="color:#ae81ff">101</span>
+</span></span><span style="display:flex;"><span>qm config <span style="color:#ae81ff">101</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Ciclo de vida</span>
+</span></span><span style="display:flex;"><span>qm start <span style="color:#ae81ff">101</span>
+</span></span><span style="display:flex;"><span>qm shutdown <span style="color:#ae81ff">101</span> --timeout <span style="color:#ae81ff">60</span>   <span style="color:#75715e"># apagado limpio por ACPI</span>
+</span></span><span style="display:flex;"><span>qm stop <span style="color:#ae81ff">101</span>                    <span style="color:#75715e"># apagado forzado (como cortar energía)</span>
+</span></span><span style="display:flex;"><span>qm reboot <span style="color:#ae81ff">101</span>
+</span></span><span style="display:flex;"><span>qm reset <span style="color:#ae81ff">101</span>                   <span style="color:#75715e"># reset duro</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Consola/monitor</span>
+</span></span><span style="display:flex;"><span>qm terminal <span style="color:#ae81ff">101</span>                <span style="color:#75715e"># requiere consola serial configurada en el guest</span>
+</span></span><span style="display:flex;"><span>qm monitor <span style="color:#ae81ff">101</span>                 <span style="color:#75715e"># monitor QEMU; comandos: info status, quit</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Cambiar recursos</span>
+</span></span><span style="display:flex;"><span>qm set <span style="color:#ae81ff">101</span> --memory <span style="color:#ae81ff">1024</span>
+</span></span><span style="display:flex;"><span>qm set <span style="color:#ae81ff">101</span> --cores <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>qm set <span style="color:#ae81ff">101</span> --onboot <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>qm set <span style="color:#ae81ff">101</span> --name freebsd-lab
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Disco</span>
+</span></span><span style="display:flex;"><span>qm resize <span style="color:#ae81ff">101</span> scsi0 +5G        <span style="color:#75715e"># agranda disco; después ampliar FS dentro del guest</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Snapshots</span>
+</span></span><span style="display:flex;"><span>qm snapshot <span style="color:#ae81ff">101</span> pre-cambio --description <span style="color:#e6db74">&#34;antes de actualizar&#34;</span>
+</span></span><span style="display:flex;"><span>qm listsnapshot <span style="color:#ae81ff">101</span>
+</span></span><span style="display:flex;"><span>qm rollback <span style="color:#ae81ff">101</span> pre-cambio
+</span></span><span style="display:flex;"><span>qm delsnapshot <span style="color:#ae81ff">101</span> pre-cambio
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Clonar / borrar</span>
+</span></span><span style="display:flex;"><span>qm clone <span style="color:#ae81ff">101</span> <span style="color:#ae81ff">201</span> --name freebsd-clone --full
+</span></span><span style="display:flex;"><span>qm destroy <span style="color:#ae81ff">101</span> --purge         <span style="color:#75715e"># BORRA VM y discos asociados; peligroso</span>
+</span></span></code></pre></div><h3 id="ssh-a-una-vm-freebsd">SSH a una VM FreeBSD</h3>
+<p>FreeBSD no puede correr como LXC porque necesita su propio kernel. Se usa VM. Si la VM no tiene guest agent o consola serial, arrancala y obtené su IP desde la red o la consola web:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>qm start <span style="color:#ae81ff">101</span>
+</span></span><span style="display:flex;"><span>qm status <span style="color:#ae81ff">101</span>
+</span></span><span style="display:flex;"><span>ip neigh show dev vmbr0        <span style="color:#75715e"># MAC/IP vistas en el bridge</span>
+</span></span></code></pre></div><p>Dentro de FreeBSD, habilitar SSH:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>ifconfig                       <span style="color:#75715e"># ver IP</span>
+</span></span><span style="display:flex;"><span>sysrc sshd_enable<span style="color:#f92672">=</span>YES
+</span></span><span style="display:flex;"><span>service sshd start
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># opcional: permitir password o agregar clave en ~/.ssh/authorized_keys</span>
+</span></span></code></pre></div><p>Desde tu máquina:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ssh usuario@IP_DE_FREEBSD
+</span></span></code></pre></div><h2 id="pct-contenedores-lxc-solo-linux"><code>pct</code>: contenedores LXC (solo Linux)</h2>
+<p>LXC es liviano porque comparte el kernel del host Linux. Sirve para Debian, Ubuntu, Alpine, etc. <strong>No sirve para FreeBSD, Windows o macOS</strong>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Plantillas</span>
+</span></span><span style="display:flex;"><span>pveam update
+</span></span><span style="display:flex;"><span>pveam available --section system
+</span></span><span style="display:flex;"><span>pveam download local debian-12-standard_12.7-1_amd64.tar.zst
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Crear contenedor</span>
+</span></span><span style="display:flex;"><span>pct create <span style="color:#ae81ff">200</span> local:vztmpl/debian-12-standard_12.7-1_amd64.tar.zst <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --hostname ct-debian <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --memory <span style="color:#ae81ff">512</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --cores <span style="color:#ae81ff">1</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --rootfs local-lvm:8 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --net0 name<span style="color:#f92672">=</span>eth0,bridge<span style="color:#f92672">=</span>vmbr0,ip<span style="color:#f92672">=</span>dhcp <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --unprivileged <span style="color:#ae81ff">1</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --password
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Ciclo de vida</span>
+</span></span><span style="display:flex;"><span>pct list
+</span></span><span style="display:flex;"><span>pct start <span style="color:#ae81ff">200</span>
+</span></span><span style="display:flex;"><span>pct enter <span style="color:#ae81ff">200</span>                  <span style="color:#75715e"># shell root dentro del CT</span>
+</span></span><span style="display:flex;"><span>pct exec <span style="color:#ae81ff">200</span> -- apt update
+</span></span><span style="display:flex;"><span>pct shutdown <span style="color:#ae81ff">200</span>
+</span></span><span style="display:flex;"><span>pct stop <span style="color:#ae81ff">200</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Configuración</span>
+</span></span><span style="display:flex;"><span>pct config <span style="color:#ae81ff">200</span>
+</span></span><span style="display:flex;"><span>pct set <span style="color:#ae81ff">200</span> --memory <span style="color:#ae81ff">1024</span> --cores <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>pct resize <span style="color:#ae81ff">200</span> rootfs +2G
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Snapshots</span>
+</span></span><span style="display:flex;"><span>pct snapshot <span style="color:#ae81ff">200</span> pre-cambio --description <span style="color:#e6db74">&#34;antes de cambios&#34;</span>
+</span></span><span style="display:flex;"><span>pct listsnapshot <span style="color:#ae81ff">200</span>
+</span></span><span style="display:flex;"><span>pct rollback <span style="color:#ae81ff">200</span> pre-cambio
+</span></span><span style="display:flex;"><span>pct delsnapshot <span style="color:#ae81ff">200</span> pre-cambio
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Borrar</span>
+</span></span><span style="display:flex;"><span>pct destroy <span style="color:#ae81ff">200</span> --purge        <span style="color:#75715e"># BORRA contenedor; peligroso</span>
+</span></span></code></pre></div><h2 id="vzdump-backups"><code>vzdump</code>: backups</h2>
+<p>Hace backup de VMs y contenedores. El modo y compresión dependen del storage y del tipo.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Backup de una VM</span>
+</span></span><span style="display:flex;"><span>vzdump <span style="color:#ae81ff">101</span> --storage local --mode snapshot --compress zstd
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Backup de un contenedor</span>
+</span></span><span style="display:flex;"><span>vzdump <span style="color:#ae81ff">200</span> --storage local --mode stop --compress zstd
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Backup de todos</span>
+</span></span><span style="display:flex;"><span>vzdump --all <span style="color:#ae81ff">1</span> --storage local --mode snapshot --compress zstd
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Ver backups existentes</span>
+</span></span><span style="display:flex;"><span>ls -lh /var/lib/vz/dump/
+</span></span><span style="display:flex;"><span>pvesm list local | grep backup
+</span></span></code></pre></div><p>Restaurar:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Restaurar VM (a mismo VMID o uno nuevo)</span>
+</span></span><span style="display:flex;"><span>qmrestore /var/lib/vz/dump/vzdump-qemu-101-*.vma.zst <span style="color:#ae81ff">101</span> --force
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Restaurar contenedor</span>
+</span></span><span style="display:flex;"><span>pct restore <span style="color:#ae81ff">200</span> /var/lib/vz/dump/vzdump-lxc-200-*.tar.zst --storage local-lvm
+</span></span></code></pre></div><blockquote>
+<p><code>--force</code> sobreescribe. Revisá antes de usarlo.</p>
+</blockquote>
+<h2 id="pvesm-almacenamiento"><code>pvesm</code>: almacenamiento</h2>
+<p>Administra storages definidos en Proxmox: directorios, LVM, LVM-thin, NFS, etc.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pvesm status                   <span style="color:#75715e"># capacidad/uso</span>
+</span></span><span style="display:flex;"><span>pvesm list local               <span style="color:#75715e"># contenido</span>
+</span></span><span style="display:flex;"><span>pvesm list local-lvm
+</span></span><span style="display:flex;"><span>pvesm path local:iso/debian-13.iso
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Agregar directorio como storage (ejemplo)</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># pvesm add dir backupdir --path /mnt/backup --content backup,iso,vztmpl</span>
+</span></span></code></pre></div><h2 id="pvesh-api-por-cli"><code>pvesh</code>: API por CLI</h2>
+<p><code>pvesh</code> expone la API de Proxmox desde la terminal. Útil para scripts o para consultar recursos de forma estructurada.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>pvesh get /nodes
+</span></span><span style="display:flex;"><span>pvesh get /nodes/home/qemu
+</span></span><span style="display:flex;"><span>pvesh get /nodes/home/lxc
+</span></span><span style="display:flex;"><span>pvesh get /cluster/resources
+</span></span><span style="display:flex;"><span>pvesh get /nodes/home/storage
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Ejecutar acciones vía API</span>
+</span></span><span style="display:flex;"><span>pvesh create /nodes/home/qemu/101/status/start
+</span></span><span style="display:flex;"><span>pvesh create /nodes/home/qemu/101/status/shutdown
+</span></span><span style="display:flex;"><span>pvesh set /nodes/home/qemu/101/config --memory <span style="color:#ae81ff">1024</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Salida JSON para scripts</span>
+</span></span><span style="display:flex;"><span>pvesh get /cluster/resources --output-format json-pretty
+</span></span></code></pre></div><h2 id="lxc-vs-docker-vs-vm">LXC vs Docker vs VM</h2>
+<ul>
+<li><strong>LXC</strong> y <strong>Docker</strong> comparten el <strong>kernel del host Linux</strong>. Por eso son livianos: no arrancan otro kernel, consumen menos RAM y suelen iniciar más rápido.</li>
+<li><strong>LXC</strong> en Proxmox se usa como contenedor de <em>sistema</em>: se parece a una mini distro Linux (systemd, usuarios, SSH, paquetes). <strong>Docker</strong> suele usarse más para contenedores de <em>aplicación</em>.</li>
+<li><strong>VM</strong> (QEMU/KVM, lo que maneja <code>qm</code>) emula/virtualiza hardware y ejecuta su <strong>propio kernel</strong>. Es más pesado, pero necesario para sistemas que no usan el kernel del host.</li>
+<li><strong>Regla práctica</strong>: si podés compartir kernel Linux, LXC/Docker. Si necesitás otro kernel (FreeBSD, OpenBSD, Windows, macOS) o aislamiento más fuerte, VM.</li>
+</ul>
+<h2 id="openbsd-y-freebsd-vms-no-lxc">OpenBSD y FreeBSD: VMs, no LXC</h2>
+<p>FreeBSD y OpenBSD necesitan su propio kernel, así que en Proxmox van como VMs con <code>qm</code>.</p>
+<h3 id="vm-openbsd-creada-lista-para-instalar">VM OpenBSD (creada, lista para instalar)</h3>
+<p>Se descargó la ISO oficial y se creó la VM 103:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>cd /var/lib/vz/template/iso
+</span></span><span style="display:flex;"><span>wget -O openbsd-7.8-amd64-install.iso <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  https://cdn.openbsd.org/pub/OpenBSD/7.8/amd64/install78.iso
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>qm create <span style="color:#ae81ff">103</span> --name openbsd <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --memory <span style="color:#ae81ff">1024</span> --cores <span style="color:#ae81ff">2</span> --sockets <span style="color:#ae81ff">1</span> --cpu host <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --machine q35 --bios ovmf <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --efidisk0 local-lvm:0,efitype<span style="color:#f92672">=</span>4m,pre-enrolled-keys<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --scsihw virtio-scsi-pci --scsi0 local-lvm:12 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --net0 virtio,bridge<span style="color:#f92672">=</span>vmbr0 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --cdrom local:iso/openbsd-7.8-amd64-install.iso <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --boot <span style="color:#e6db74">&#39;order=scsi0;ide2&#39;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  --vga std --ostype other --onboot <span style="color:#ae81ff">0</span> --serial0 socket
+</span></span></code></pre></div><p>Instalación desde consola:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>qm start <span style="color:#ae81ff">103</span>
+</span></span><span style="display:flex;"><span>qm terminal <span style="color:#ae81ff">103</span>          <span style="color:#75715e"># consola serial; salir con Ctrl+O</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Si usás la UI web, abrir Console. El instalador de OpenBSD es interactivo.</span>
+</span></span></code></pre></div><p>Durante la instalación de OpenBSD, aceptá red por DHCP si está disponible y cuando pregunte:</p>
+<ul>
+<li><code>Start sshd(8) by default? [yes]</code> -&gt; <strong>yes</strong></li>
+<li>Crear usuario y permitir login según tu política; para acceso cómodo, agregar tu clave pública luego.</li>
+</ul>
+<p>Después de instalar, dentro de OpenBSD:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>ifconfig vio0             <span style="color:#75715e"># ver IP</span>
+</span></span><span style="display:flex;"><span>rcctl enable sshd
+</span></span><span style="display:flex;"><span>rcctl start sshd
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Agregar tu clave pública desde tu Linux:</span>
+</span></span><span style="display:flex;"><span>mkdir -p ~/.ssh <span style="color:#f92672">&amp;&amp;</span> chmod <span style="color:#ae81ff">700</span> ~/.ssh
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># pegar clave en ~/.ssh/authorized_keys</span>
+</span></span><span style="display:flex;"><span>chmod <span style="color:#ae81ff">600</span> ~/.ssh/authorized_keys
+</span></span></code></pre></div><p>Desde tu Linux:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ssh usuario@IP_OPENBSD
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># o con clave explícita</span>
+</span></span><span style="display:flex;"><span>ssh -i ~/.ssh/id_ed25519 usuario@IP_OPENBSD
+</span></span></code></pre></div><h3 id="vm-freebsd-ya-instalada-vm-101">VM FreeBSD (ya instalada, VM 101)</h3>
+<p>La VM 101 ya existe. Para darle acceso SSH desde tu Linux:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>qm start <span style="color:#ae81ff">101</span>
+</span></span><span style="display:flex;"><span>qm status <span style="color:#ae81ff">101</span>
+</span></span><span style="display:flex;"><span>qm terminal <span style="color:#ae81ff">101</span>           <span style="color:#75715e"># si tiene consola serial configurada</span>
+</span></span><span style="display:flex;"><span>ip neigh show dev vmbr0   <span style="color:#75715e"># ver IPs/MACs vistas por el bridge</span>
+</span></span></code></pre></div><p>Dentro de FreeBSD:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>ifconfig                  <span style="color:#75715e"># ver IP, normalmente vtnet0</span>
+</span></span><span style="display:flex;"><span>sysrc sshd_enable<span style="color:#f92672">=</span>YES
+</span></span><span style="display:flex;"><span>service sshd start
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Crear/usar usuario y agregar tu clave pública</span>
+</span></span><span style="display:flex;"><span>mkdir -p ~/.ssh <span style="color:#f92672">&amp;&amp;</span> chmod <span style="color:#ae81ff">700</span> ~/.ssh
+</span></span><span style="display:flex;"><span>ee ~/.ssh/authorized_keys   <span style="color:#75715e"># o vi; pegar tu clave pública</span>
+</span></span><span style="display:flex;"><span>chmod <span style="color:#ae81ff">600</span> ~/.ssh/authorized_keys
+</span></span></code></pre></div><p>Si querés habilitar login de root por SSH con clave (solo en lab, no recomendable expuesto):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#75715e"># /etc/ssh/sshd_config</span>
+</span></span><span style="display:flex;"><span>PermitRootLogin prohibit-password
+</span></span><span style="display:flex;"><span>PubkeyAuthentication yes
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># luego</span>
+</span></span><span style="display:flex;"><span>service sshd restart
+</span></span></code></pre></div><p>Desde tu Linux:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ssh usuario@IP_FREEBSD
+</span></span><span style="display:flex;"><span>ssh root@IP_FREEBSD       <span style="color:#75715e"># solo si lo habilitaste con clave</span>
+</span></span></code></pre></div><p>Para encontrar la IP sin consola, una opción es mirar leases/DHCP del router o usar:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>ip neigh show dev vmbr0
+</span></span><span style="display:flex;"><span>qm guest cmd <span style="color:#ae81ff">101</span> network-get-interfaces  <span style="color:#75715e"># solo si qemu-guest-agent está instalado y activo</span>
+</span></span></code></pre></div><h2 id="cuándo-vale-proxmox-frente-a-arch--libvirt">¿Cuándo vale Proxmox frente a Arch + libvirt?</h2>
+<p>Proxmox vale la pena si aprovechás lo que trae integrado:</p>
+<ul>
+<li><strong>LXC</strong> para servicios Linux livianos.</li>
+<li><strong>Snapshots/backups</strong> antes de cambios riesgosos.</li>
+<li><strong>Plantillas y clones</strong> para levantar entornos rápido.</li>
+<li><strong>Gestión remota</strong> por web/API, aunque por SSH también se maneja bien.</li>
+</ul>
+<p>Si solo vas a correr una o dos VMs de vez en cuando y ya te sentís cómodo armando todo en Arch con <code>libvirt</code>, <code>virt-manager</code>, scripts o contenedores, Proxmox puede ser una capa extra innecesaria. En hardware justo, la ventaja real no es &ldquo;más rendimiento&rdquo;, sino menos fricción para administrar servicios. La regla práctica: usar LXC cuando sea Linux liviano; usar VM cuando el guest necesite su propio kernel.</p>
+
+  </div>
+  <section class="comments" aria-label="Comentarios">
+  <h2>Comentarios</h2>
+  <script src="https://giscus.app/client.js"
+    data-repo="imlauera/giscus"
+    data-repo-id="R_kgDOV5a80w"
+    data-category="General"
+    data-category-id="DIC_kwDOV5a8084DL1K7"
+    data-mapping="pathname"
+    data-strict="0"
+    data-reactions-enabled="1"
+    data-emit-metadata="0"
+    data-input-position="bottom"
+    data-theme="preferred_color_scheme"
+    data-lang="es"
+    crossorigin="anonymous"
+    async>
+  </script>
+</section>
+</article>
+
+  </main>
+  <footer class="site-footer">
+  <a href="/acerca/">acerca</a> · <a href="/servicios/">servicios</a> ·
+  <a href="/index.xml">rss</a> · 
+  <a href="https://github.com/imlauera/">github</a>
+</footer>
+
+  
+  <script src="/js/tts-reader.js" defer></script>
+  
+  
+</body>
+</html>
