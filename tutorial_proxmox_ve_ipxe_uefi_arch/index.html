@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>Instalar Proxmox VE 9.2 por red con iPXE UEFI y Arch Linux · Imlauer</title>
+  <meta name="description" content="imlauerandres [at] gmail.com">
+  <link rel="canonical" href="https://imlauera.github.io/tutorial_proxmox_ve_ipxe_uefi_arch/">
+  <link rel="alternate" type="application/rss+xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+  <a class="site-title" href="/">Imlauer</a>
+</header>
+
+  <main>
+    
+<article class="post">
+  <h1>Instalar Proxmox VE 9.2 por red con iPXE UEFI y Arch Linux</h1>
+  <p class="meta">
+    <time datetime="2026-11-24">2026-11-24</time>
+    <span class="tags"> · <a href="/tags/proxmox/">proxmox</a>, <a href="/tags/ipxe/">ipxe</a>, <a href="/tags/arch/">arch</a>, <a href="/tags/uefi/">uefi</a></span>
+  </p>
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+  
+  
+  
+  
+    
+      
+        
+          
+        
+      
+    
+  
+  
+  
+  
+    
+  
+  
+  
+  
+  <div class="audio-player">
+    <p class="audio-label">Escuchar este artículo</p>
+    <audio controls preload="metadata" src="https://archive.org/download/imlauer-blog-audio-tutorial-proxmox-ve-ipxe-uefi-arch-e9396316/tutorial-proxmox-ve-ipxe-uefi-arch-4d8157d104.mp3"></audio>
+    <p class="audio-meta"><a href="https://archive.org/download/imlauer-blog-audio-tutorial-proxmox-ve-ipxe-uefi-arch-e9396316/tutorial-proxmox-ve-ipxe-uefi-arch-4d8157d104.mp3">Descargar MP3</a> · <a href="https://archive.org/details/imlauer-blog-audio-tutorial-proxmox-ve-ipxe-uefi-arch-e9396316">Ver en Internet Archive</a></p>
+  </div>
+  
+  
+  
+  <section class="tts-reader" data-tts-reader>
+  <p class="audio-label">Leer en voz alta (navegador)</p>
+  <div class="tts-controls">
+    <button type="button" data-tts-play>Leer</button>
+    <button type="button" data-tts-pause disabled>Pausar</button>
+    <button type="button" data-tts-stop disabled>Detener</button>
+    <label class="tts-rate">Velocidad
+      <input type="range" min="0.75" max="2" step="0.05" value="1" data-tts-rate>
+      <span data-tts-rate-value>1.00x</span>
+    </label>
+    <label class="tts-voice">Voz
+      <select data-tts-voice></select>
+    </label>
+  </div>
+  <p class="audio-meta" data-tts-status>Listo para leer.</p>
+  <p class="audio-meta">Usa la voz del navegador (Web Speech API). Para descargar MP3, usá el reproductor/descarga cuando esté disponible.</p>
+</section>
+
+  <div class="content">
+    <p>Adapté mi <a href="https://imlauera.github.io/tutorial_windows_ltsc_ipxe_arch/">guía de Windows por red con iPXE</a> a <strong>UEFI</strong> y a <strong>Proxmox VE</strong>. La guía original genera <code>bin/ipxe.usb</code>, que es BIOS Legacy; acá hay que compilar <code>bin-x86_64-efi/ipxe.efi</code> y ponerlo en una partición ESP FAT32 como <code>EFI/BOOT/BOOTX64.EFI</code>.</p>
+<p>Otro cambio importante: el servidor HTTP <strong>tiene que soportar peticiones <code>Range</code></strong>. Con <code>python3 -m http.server</code> iPXE no pudo cargar el ISO y mostró «no se puede cargar el ISO». Con nginx, que responde <code>206 Partial Content</code>, arrancó sin problemas.</p>
+<h2 id="1-datos-de-esta-instalación">1. Datos de esta instalación</h2>
+<p>Servidor Arch: <code>192.168.0.201</code> (interfaz <code>wlp1s0</code>, conectada a la misma LAN que la PC destino).</p>
+<p>ISO utilizada: <code>proxmox-ve_9.2-1.iso</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>http://download.proxmox.com/iso/proxmox-ve_9.2-1.iso
+</span></span><span style="display:flex;"><span>sha256: 4e88fe416df9b527624a175f24c9aa07c714d3332afb1ee3dbf3879573ef2c6c
+</span></span></code></pre></div><p>Rutas del servidor:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>/srv/pxe/proxmox-ve_9.2-1.iso
+</span></span><span style="display:flex;"><span>/srv/pxe/boot.ipxe
+</span></span><span style="display:flex;"><span>/etc/nginx/nginx.conf
+</span></span><span style="display:flex;"><span>/etc/dnsmasq-pxe.conf
+</span></span></code></pre></div><h2 id="2-descargar-y-verificar-el-iso">2. Descargar y verificar el ISO</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo mkdir -p /srv/pxe
+</span></span><span style="display:flex;"><span>sudo wget -c -O /srv/pxe/proxmox-ve_9.2-1.iso <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  http://download.proxmox.com/iso/proxmox-ve_9.2-1.iso
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#39;4e88fe416df9b527624a175f24c9aa07c714d3332afb1ee3dbf3879573ef2c6c  /srv/pxe/proxmox-ve_9.2-1.iso&#39;</span> | sha256sum -c -
+</span></span></code></pre></div><p>El ISO pesa unos 1,7 GB, así que conviene dejar espacio libre en <code>/</code>.</p>
+<h2 id="3-servidor-http-con-nginx">3. Servidor HTTP con nginx</h2>
+<p>Instalar nginx:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo pacman -S --needed nginx
+</span></span></code></pre></div><p>Configuración mínima en <code>/etc/nginx/nginx.conf</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-nginx" data-lang="nginx"><span style="display:flex;"><span><span style="color:#66d9ef">worker_processes</span> <span style="color:#ae81ff">1</span>;
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">events</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">worker_connections</span> <span style="color:#ae81ff">1024</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">http</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">include</span> <span style="color:#e6db74">/etc/nginx/mime.types</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">default_type</span> <span style="color:#e6db74">application/octet-stream</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">sendfile</span> <span style="color:#66d9ef">on</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">keepalive_timeout</span> <span style="color:#ae81ff">65</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">server</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">listen</span> <span style="color:#ae81ff">80</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">server_name</span> <span style="color:#e6db74">_</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">root</span> <span style="color:#e6db74">/srv/pxe</span>;
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">autoindex</span> <span style="color:#66d9ef">on</span>;
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Arrancar y verificar:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo systemctl enable --now nginx
+</span></span><span style="display:flex;"><span>curl -I http://127.0.0.1/boot.ipxe
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>curl -H <span style="color:#e6db74">&#39;Range: bytes=0-1023&#39;</span> -o /dev/null <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -w <span style="color:#e6db74">&#39;code=%{http_code} size=%{size_download}\n&#39;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  http://127.0.0.1/proxmox-ve_9.2-1.iso
+</span></span></code></pre></div><p>Tiene que devolver <code>code=206 size=1024</code>. Si devuelve <code>200</code> y el tamaño completo, iPXE no va a poder arrancar el ISO.</p>
+<h2 id="4-script-ipxe-del-servidor">4. Script iPXE del servidor</h2>
+<p><code>/srv/pxe/boot.ipxe</code>:</p>
+<pre tabindex="0"><code class="language-ipxe" data-lang="ipxe">#!ipxe
+:start
+menu Proxmox VE 9.2 - servidor 192.168.0.201
+item --default proxmox Instalar Proxmox VE 9.2 (ISO completa)
+item shell Ir a shell iPXE
+item exit Salir / siguiente dispositivo
+choose --default proxmox --timeout 15000 target &amp;&amp; goto ${target}
+
+:proxmox
+echo Arrancando instalador de Proxmox VE 9.2...
+sanboot http://192.168.0.201/proxmox-ve_9.2-1.iso || goto failed
+
+:shell
+shell
+goto start
+
+:exit
+exit
+
+:failed
+echo ERROR: no se pudo arrancar el ISO.
+sleep 10
+goto start
+</code></pre><p>Probar:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>curl -I http://127.0.0.1/boot.ipxe
+</span></span><span style="display:flex;"><span>curl -I http://127.0.0.1/proxmox-ve_9.2-1.iso
+</span></span></code></pre></div><h2 id="5-proxy-dhcp-opcional">5. Proxy DHCP opcional</h2>
+<p>Esto no asigna direcciones IP, solo anuncia el archivo de arranque para que un iPXE ya cargado pueda encadenar automáticamente. Lo hace dnsmasq en <code>/etc/dnsmasq-pxe.conf</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>interface=wlp1s0
+</span></span><span style="display:flex;"><span>bind-interfaces
+</span></span><span style="display:flex;"><span>port=0
+</span></span><span style="display:flex;"><span>dhcp-range=192.168.0.0,proxy
+</span></span><span style="display:flex;"><span>dhcp-boot=tag:ipxe,http://192.168.0.201/boot.ipxe
+</span></span><span style="display:flex;"><span>log-facility=/srv/pxe/dnsmasq.log
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo dnsmasq -C /etc/dnsmasq-pxe.conf
+</span></span></code></pre></div><p>Ajustá <code>interface</code> según tu máquina. Si el pendrive no encadena solo, siempre se puede escribir en el prompt de iPXE:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>dhcp
+</span></span><span style="display:flex;"><span>chain http://192.168.0.201/boot.ipxe
+</span></span></code></pre></div><h2 id="6-compilar-ipxe-uefi-con-script-integrado">6. Compilar iPXE UEFI con script integrado</h2>
+<p>El script embebido evita que iPXE termine en <code>Nothing to boot</code> después de obtener DHCP.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>git clone --depth<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span> https://github.com/ipxe/ipxe.git /tmp/ipxe
+</span></span><span style="display:flex;"><span>cd /tmp/ipxe/src
+</span></span></code></pre></div><p><code>/tmp/ipxe/src/boot.ipxe</code>:</p>
+<pre tabindex="0"><code class="language-ipxe" data-lang="ipxe">#!ipxe
+dhcp
+chain http://192.168.0.201/boot.ipxe
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>make bin-x86_64-efi/ipxe.efi EMBED<span style="color:#f92672">=</span>boot.ipxe -j<span style="color:#66d9ef">$(</span>nproc<span style="color:#66d9ef">)</span>
+</span></span><span style="display:flex;"><span>file bin-x86_64-efi/ipxe.efi
+</span></span></code></pre></div><p>El resultado tiene que ser un <code>PE32+ executable for EFI (application), x86-64</code>.</p>
+<h2 id="7-grabar-el-pendrive-en-modo-uefi">7. Grabar el pendrive en modo UEFI</h2>
+<p><strong>Esto borra por completo el dispositivo elegido.</strong> Identificá el pendrive con <code>lsblk</code>; no adivines el nombre. En este caso era <code>/dev/sdb</code>, modelo <code>DataTraveler 2.0</code>, de 1,9 GB.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>lsblk -o NAME,SIZE,MODEL,TRAN,MOUNTPOINTS,RM
+</span></span></code></pre></div><p>Solo si confirmaste el dispositivo:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo parted -s /dev/sdb mklabel gpt
+</span></span><span style="display:flex;"><span>sudo parted -s /dev/sdb mkpart ESP fat32 1MiB 100%
+</span></span><span style="display:flex;"><span>sudo parted -s /dev/sdb set <span style="color:#ae81ff">1</span> esp on
+</span></span><span style="display:flex;"><span>sudo mkfs.vfat -F32 -n IPXE_UEFI /dev/sdb1
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>sudo mkdir -p /mnt/ipxeusb/EFI/BOOT
+</span></span><span style="display:flex;"><span>sudo mount /dev/sdb1 /mnt/ipxeusb
+</span></span><span style="display:flex;"><span>sudo cp /tmp/ipxe/src/bin-x86_64-efi/ipxe.efi /mnt/ipxeusb/EFI/BOOT/BOOTX64.EFI
+</span></span><span style="display:flex;"><span>sudo cp /tmp/ipxe/src/bin-x86_64-efi/ipxe.efi /mnt/ipxeusb/ipxe.efi
+</span></span><span style="display:flex;"><span>sync
+</span></span><span style="display:flex;"><span>sudo umount /mnt/ipxeusb
+</span></span></code></pre></div><p>El archivo clave es <code>/EFI/BOOT/BOOTX64.EFI</code>: es la ruta de fallback que busca el firmware UEFI en una partición FAT32.</p>
+<h2 id="8-arrancar-la-pc-destino">8. Arrancar la PC destino</h2>
+<p>Conectar la PC destino por Ethernet a la misma LAN del servidor, entrar al menú de arranque UEFI y elegir el pendrive.</p>
+<p>Si el firmware tiene <strong>Secure Boot activado</strong>, hay que desactivarlo: el <code>ipxe.efi</code> compilado acá no está firmado.</p>
+<p>Si la PC es UEFI de <strong>32 bits</strong>, hace falta compilar también <code>bin-i386-efi/ipxe.efi</code> y copiarlo como <code>EFI/BOOT/BOOTIA32.EFI</code>.</p>
+<h2 id="9-el-error-no-se-puede-cargar-el-iso">9. El error «no se puede cargar el ISO»</h2>
+<p>Apareció este mensaje desde el menú de iPXE:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>ERROR: no se pudo arrancar el ISO.
+</span></span></code></pre></div><p>La causa fue el servidor HTTP: <code>python3 -m http.server</code> ignora la cabecera <code>Range</code>, así que iPXE no podía leer el ISO como dispositivo de bloque. El log mostraba muchos <code>GET /proxmox-ve_9.2-1.iso</code> y <code>BrokenPipeError</code>.</p>
+<p>La solución fue reemplazarlo por nginx y confirmar que responda <code>206 Partial Content</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>curl -H <span style="color:#e6db74">&#39;Range: bytes=0-1023&#39;</span> -o /dev/null <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  -w <span style="color:#e6db74">&#39;code=%{http_code} size=%{size_download}\n&#39;</span> <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span>  http://192.168.0.201/proxmox-ve_9.2-1.iso
+</span></span></code></pre></div><p>Después de eso, <code>sanboot http://192.168.0.201/proxmox-ve_9.2-1.iso</code> cargó el ISO y abrió el instalador de Proxmox VE 9.2.</p>
+<p>Los <code>BrokenPipeError</code> que siguen apareciendo en el log de nginx son normales: iPXE corta la conexión cuando entrega el arranque al instalador.</p>
+<h2 id="10-después-del-arranque">10. Después del arranque</h2>
+<p>Dentro del instalador de Proxmox:</p>
+<ol>
+<li>Aceptar la licencia y elegir el disco destino (se borra por completo; por defecto ZFS).</li>
+<li>Configurar zona horaria, teclado, contraseña de <code>root</code> y email.</li>
+<li>En red, poner IP fija (por ejemplo <code>192.168.0.202/24</code>, gateway <code>192.168.0.1</code>) o DHCP.</li>
+<li>Confirmar e instalar. Al reiniciar, sacar el pendrive y entrar a <code>https://&lt;esa-IP&gt;:8006</code>.</li>
+</ol>
+<h2 id="resultado">Resultado</h2>
+<p>El pendrive con iPXE UEFI arranca desde la PC destino, encadena con <code>http://192.168.0.201/boot.ipxe</code> y carga el ISO completo de Proxmox VE 9.2 servido por nginx en la misma LAN. El pendrive se usa solamente para arrancar iPXE; todo el instalador viene por red.</p>
+
+  </div>
+  <section class="comments" aria-label="Comentarios">
+  <h2>Comentarios</h2>
+  <script src="https://giscus.app/client.js"
+    data-repo="imlauera/giscus"
+    data-repo-id="R_kgDOV5a80w"
+    data-category="General"
+    data-category-id="DIC_kwDOV5a8084DL1K7"
+    data-mapping="pathname"
+    data-strict="0"
+    data-reactions-enabled="1"
+    data-emit-metadata="0"
+    data-input-position="bottom"
+    data-theme="preferred_color_scheme"
+    data-lang="es"
+    crossorigin="anonymous"
+    async>
+  </script>
+</section>
+</article>
+
+  </main>
+  <footer class="site-footer">
+  <a href="/acerca/">acerca</a> · <a href="/servicios/">servicios</a> ·
+  <a href="/index.xml">rss</a> · 
+  <a href="https://github.com/imlauera/">github</a>
+</footer>
+
+  
+  <script src="/js/tts-reader.js" defer></script>
+  
+  
+</body>
+</html>

@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>Demo: cómo un wrapper publicitario te roba la URL al compartir · Imlauer</title>
+  <meta name="description" content="imlauerandres [at] gmail.com">
+  <link rel="canonical" href="https://imlauera.github.io/url-masking-wrapper-demo/">
+  <link rel="alternate" type="application/rss+xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+  <a class="site-title" href="/">Imlauer</a>
+</header>
+
+  <main>
+    
+<article class="post">
+  <h1>Demo: cómo un wrapper publicitario te roba la URL al compartir</h1>
+  <p class="meta">
+    <time datetime="2026-11-25">2026-11-25</time>
+    <span class="tags"> · <a href="/tags/publicidad/">publicidad</a>, <a href="/tags/privacidad/">privacidad</a>, <a href="/tags/javascript/">javascript</a></span>
+  </p>
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+  
+  
+  
+  
+    
+      
+        
+          
+        
+      
+    
+  
+  
+  
+  
+    
+  
+  
+  
+  
+  <div class="audio-player">
+    <p class="audio-label">Escuchar este artículo</p>
+    <audio controls preload="metadata" src="https://archive.org/download/imlauer-blog-audio-url-masking-wrapper-demo-9331d613/url-masking-wrapper-demo-56fda90e7a.mp3"></audio>
+    <p class="audio-meta"><a href="https://archive.org/download/imlauer-blog-audio-url-masking-wrapper-demo-9331d613/url-masking-wrapper-demo-56fda90e7a.mp3">Descargar MP3</a> · <a href="https://archive.org/details/imlauer-blog-audio-url-masking-wrapper-demo-9331d613">Ver en Internet Archive</a></p>
+  </div>
+  
+  
+  
+  <section class="tts-reader" data-tts-reader>
+  <p class="audio-label">Leer en voz alta (navegador)</p>
+  <div class="tts-controls">
+    <button type="button" data-tts-play>Leer</button>
+    <button type="button" data-tts-pause disabled>Pausar</button>
+    <button type="button" data-tts-stop disabled>Detener</button>
+    <label class="tts-rate">Velocidad
+      <input type="range" min="0.75" max="2" step="0.05" value="1" data-tts-rate>
+      <span data-tts-rate-value>1.00x</span>
+    </label>
+    <label class="tts-voice">Voz
+      <select data-tts-voice></select>
+    </label>
+  </div>
+  <p class="audio-meta" data-tts-status>Listo para leer.</p>
+  <p class="audio-meta">Usa la voz del navegador (Web Speech API). Para descargar MP3, usá el reproductor/descarga cuando esté disponible.</p>
+</section>
+
+  <div class="content">
+    <h1 id="demo-cómo-un-wrapper-publicitario-te-roba-la-url-al-compartir">Demo: cómo un wrapper publicitario te roba la URL al compartir</h1>
+<p>Este post nace de un caso real. Mi mamá estaba leyendo <strong>La Nación</strong> en Chrome, tocó <strong>⋮ → Compartir</strong> y lo que mandó por WhatsApp no fue la URL de la nota, sino esta:</p>
+<pre tabindex="0"><code>https://safedamageykwg.com/6fe35ff71252480899bd6ca59cb69d4f?...
+</code></pre><p><strong>Aclaración importante (para no repetir el error):</strong> no fue que haya tocado un banner publicitario dentro de la nota. El navegador <strong>mostraba la página de La Nación</strong>, pero <strong>la barra de direcciones apuntaba a <code>safedamage...</code></strong>, no a <code>lanacion.com.ar</code>. Como el menú <strong>⋮ → Compartir</strong> del navegador toma la URL que está en la barra, compartió esa dirección y no la de la nota. Para ella estaba mandando la noticia; para el destinatario llegó un link de publicidad.</p>
+<p>El dominio es raro, no aparece en buscadores y fue registrado tres días antes. Al abrirlo desde otro lugar, redirige (<code>307</code>) a una tienda de ropa. Pero al pedirlo con el <code>Referer</code> de La Nación, el servidor devuelve <strong>HTTP 200 con la nota real</strong>:</p>
+<blockquote>
+<p><em>Gabriel Batistuta hospitalizado tras emboscada en Reconquista&hellip; — LA NACION</em></p>
+</blockquote>
+<hr>
+<h2 id="qué-es-esto-con-nombre">Qué es esto, con nombre</h2>
+<p>No es un virus, ni un gusano, ni un troyano. Tampoco es phishing clásico (no te pide claves). Es una combinación de tres cosas:</p>
+<table>
+	<thead>
+			<tr>
+					<th>Técnica</th>
+					<th>Qué hace</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td><strong>Cloaking por <code>Referer</code>/<code>User-Agent</code></strong></td>
+					<td>El servidor sirve un contenido distinto según quién visita y desde dónde.</td>
+			</tr>
+			<tr>
+					<td><strong>URL masking / wrapper</strong></td>
+					<td>El contenido se muestra dentro de un iframe o proxy, pero la barra sigue con la URL del anunciante.</td>
+			</tr>
+			<tr>
+					<td><strong>Secuestro del <em>share intent</em></strong></td>
+					<td>El botón &ldquo;Compartir&rdquo; del navegador usa <code>location.href</code>, o sea la URL de la barra, no la del iframe.</td>
+			</tr>
+	</tbody>
+</table>
+<p>En términos de seguridad es un <strong>dark pattern</strong>: no infecta, pero está diseñado para engañar sobre qué enlace se está compartiendo. En términos publicitarios es <strong>atribución agresiva</strong>: el anunciante se asegura de que la URL que circule sea la suya, con todos sus parámetros de seguimiento (<code>fbclid</code>, <code>ad_id</code>, <code>pixel</code>, <code>utm_*</code>).</p>
+<hr>
+<h2 id="cómo-funciona-la-cadena-real">Cómo funciona la cadena real</h2>
+<ol>
+<li>Un sitio (La Nación) vende espacios publicitarios a una red (Meta Audience Network, por ejemplo).</li>
+<li>El anunciante (la tienda de ropa) crea una campaña con parámetros de tracking.</li>
+<li>Entre el sitio y el anunciante se inserts un <strong>redirector</strong> de clics: <code>safedamageykwg.com</code>. No es la tienda ni el diario: es el contador de clics.</li>
+<li>El servidor del redirector mira la cabecera <code>Referer</code> y el <code>User-Agent</code>.</li>
+<li>Si detecta que viene de un navegador con referencia del diario, <strong>sirve la nota dentro de un iframe/proxy y deja su propio dominio en la barra</strong>.</li>
+<li>Si no hay referencia (un <code>curl</code>, un escáner, o alguien que abre el link después), responde <code>307</code> y manda a la tienda.</li>
+</ol>
+<p>En pseudo-código:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">referer</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">servirPaginaConNoticiaDentroDeIframe</span>();   <span style="color:#75715e">// HTTP 200, barra = dominio tracker
+</span></span></span><span style="display:flex;"><span>} <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">redirect307</span>(<span style="color:#e6db74">&#39;https://www.renovatuvestidor.com/producto/...&#39;</span>);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Esto último es lo que se llama <strong>cloaking</strong>: una página muestra una cosa a los usuarios &ldquo;reales&rdquo; y otra a bots, escáneres o visitantes sin contexto. Acá se usa para publicidad, pero la misma idea es la que usan muchas páginas maliciosas para esconderse de los analizadores.</p>
+<hr>
+<h2 id="por-qué-compartir-manda-la-url-equivocada">Por qué &ldquo;Compartir&rdquo; manda la URL equivocada</h2>
+<p>El navegador no sabe qué hay dentro del iframe. Para él:</p>
+<ul>
+<li>la pestaña tiene una URL: <code>location.href</code> → <code>https://safedamageykwg.com/...</code></li>
+<li>el contenido del iframe es otro documento, con otra URL, inaccesible desde arriba si es cross-origin.</li>
+</ul>
+<p>Cuando tocás <strong>⋮ → Compartir</strong>, Chrome usa la URL de la pestaña. Lo mismo pasa con la Web Share API:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">await</span> <span style="color:#a6e22e">navigator</span>.<span style="color:#a6e22e">share</span>({ <span style="color:#a6e22e">title</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;Noticia&#39;</span>, <span style="color:#a6e22e">url</span><span style="color:#f92672">:</span> <span style="color:#a6e22e">location</span>.<span style="color:#a6e22e">href</span> });
+</span></span></code></pre></div><p>Si el wrapper puso su propia URL en la barra, <code>location.href</code> es la del wrapper. El usuario ve la nota, pero comparte el tracker.</p>
+<hr>
+<h2 id="demo-1-solo-cliente-abrir-y-probar">Demo 1: solo cliente (abrir y probar)</h2>
+<p>Guardá esto como <code>demo.html</code> y abrilo en un navegador. Es autocontenido.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-html" data-lang="html"><span style="display:flex;"><span><span style="color:#75715e">&lt;!doctype html&gt;</span>
+</span></span><span style="display:flex;"><span>&lt;<span style="color:#f92672">html</span> <span style="color:#a6e22e">lang</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;es&#34;</span>&gt;
+</span></span><span style="display:flex;"><span>&lt;<span style="color:#f92672">head</span>&gt;
+</span></span><span style="display:flex;"><span>  &lt;<span style="color:#f92672">meta</span> <span style="color:#a6e22e">charset</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;utf-8&#34;</span>&gt;
+</span></span><span style="display:flex;"><span>  &lt;<span style="color:#f92672">title</span>&gt;Demo: wrapper con URL enmascarada&lt;/<span style="color:#f92672">title</span>&gt;
+</span></span><span style="display:flex;"><span>  &lt;<span style="color:#f92672">style</span>&gt;
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">body</span> { <span style="color:#66d9ef">font-family</span>: system-ui, <span style="color:#66d9ef">sans-serif</span>; <span style="color:#66d9ef">margin</span>: <span style="color:#ae81ff">0</span>; <span style="color:#66d9ef">background</span>: <span style="color:#ae81ff">#111</span>; <span style="color:#66d9ef">color</span>: <span style="color:#ae81ff">#eee</span>; }
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">header</span> { <span style="color:#66d9ef">padding</span>: <span style="color:#ae81ff">12</span><span style="color:#66d9ef">px</span> <span style="color:#ae81ff">16</span><span style="color:#66d9ef">px</span>; <span style="color:#66d9ef">background</span>: <span style="color:#ae81ff">#222</span>; <span style="color:#66d9ef">border-bottom</span>: <span style="color:#ae81ff">1</span><span style="color:#66d9ef">px</span> <span style="color:#66d9ef">solid</span> <span style="color:#ae81ff">#444</span>; }
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">code</span> { <span style="color:#66d9ef">color</span>: <span style="color:#ae81ff">#7fdbff</span>; }
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">iframe</span> { <span style="color:#66d9ef">width</span>: <span style="color:#ae81ff">100</span><span style="color:#66d9ef">%</span>; <span style="color:#66d9ef">height</span>: <span style="color:#ae81ff">70</span><span style="color:#66d9ef">vh</span>; <span style="color:#66d9ef">border</span>: <span style="color:#ae81ff">0</span>; <span style="color:#66d9ef">background</span>: <span style="color:#ae81ff">#fff</span>; <span style="color:#66d9ef">color</span>: <span style="color:#ae81ff">#111</span>; }
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">button</span> { <span style="color:#66d9ef">padding</span>: <span style="color:#ae81ff">10</span><span style="color:#66d9ef">px</span> <span style="color:#ae81ff">14</span><span style="color:#66d9ef">px</span>; <span style="color:#66d9ef">margin</span>: <span style="color:#ae81ff">8</span><span style="color:#66d9ef">px</span> <span style="color:#ae81ff">4</span><span style="color:#66d9ef">px</span>; <span style="color:#66d9ef">cursor</span>: <span style="color:#66d9ef">pointer</span>; }
+</span></span><span style="display:flex;"><span>    #log { <span style="color:#66d9ef">padding</span>: <span style="color:#ae81ff">16</span><span style="color:#66d9ef">px</span>; <span style="color:#66d9ef">font-family</span>: <span style="color:#66d9ef">monospace</span>; <span style="color:#66d9ef">white-space</span>: <span style="color:#66d9ef">pre-wrap</span>; }
+</span></span><span style="display:flex;"><span>  &lt;/<span style="color:#f92672">style</span>&gt;
+</span></span><span style="display:flex;"><span>&lt;/<span style="color:#f92672">head</span>&gt;
+</span></span><span style="display:flex;"><span>&lt;<span style="color:#f92672">body</span>&gt;
+</span></span><span style="display:flex;"><span>  &lt;<span style="color:#f92672">header</span>&gt;Barra: &lt;<span style="color:#f92672">code</span> <span style="color:#a6e22e">id</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;bar&#34;</span>&gt;&lt;/<span style="color:#f92672">code</span>&gt;&lt;/<span style="color:#f92672">header</span>&gt;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  &lt;<span style="color:#f92672">iframe</span> <span style="color:#a6e22e">id</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;frame&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">srcdoc</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      &lt;h1&gt;Gabriel Batistuta hospitalizado tras emboscada en Reconquista&lt;/h1&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      &lt;p&gt;Esta es la nota que el usuario cree que está leyendo.&lt;/p&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">      &lt;p&gt;El contenido viene del iframe, no de la URL de arriba.&lt;/p&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    &#34;</span>&gt;
+</span></span><span style="display:flex;"><span>  &lt;/<span style="color:#f92672">iframe</span>&gt;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  &lt;<span style="color:#f92672">button</span> <span style="color:#a6e22e">id</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;share&#34;</span>&gt;Compartir (navigator.share)&lt;/<span style="color:#f92672">button</span>&gt;
+</span></span><span style="display:flex;"><span>  &lt;<span style="color:#f92672">button</span> <span style="color:#a6e22e">id</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;copy&#34;</span>&gt;Copiar URL&lt;/<span style="color:#f92672">button</span>&gt;
+</span></span><span style="display:flex;"><span>  &lt;<span style="color:#f92672">button</span> <span style="color:#a6e22e">id</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;inspect&#34;</span>&gt;Ver las dos URLs&lt;/<span style="color:#f92672">button</span>&gt;
+</span></span><span style="display:flex;"><span>  &lt;<span style="color:#f92672">div</span> <span style="color:#a6e22e">id</span><span style="color:#f92672">=</span><span style="color:#e6db74">&#34;log&#34;</span>&gt;&lt;/<span style="color:#f92672">div</span>&gt;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  &lt;<span style="color:#f92672">script</span>&gt;
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">history</span>.<span style="color:#a6e22e">replaceState</span>({}, <span style="color:#e6db74">&#39;&#39;</span>, <span style="color:#e6db74">&#39;/ad-tracker-demo/noticiaBatistuta&#39;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">bar</span> <span style="color:#f92672">=</span> document.<span style="color:#a6e22e">getElementById</span>(<span style="color:#e6db74">&#39;bar&#39;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">frame</span> <span style="color:#f92672">=</span> document.<span style="color:#a6e22e">getElementById</span>(<span style="color:#e6db74">&#39;frame&#39;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">log</span> <span style="color:#f92672">=</span> document.<span style="color:#a6e22e">getElementById</span>(<span style="color:#e6db74">&#39;log&#39;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">urlDeLaBarra</span> <span style="color:#f92672">=</span> () =&gt; <span style="color:#a6e22e">location</span>.<span style="color:#a6e22e">href</span>;
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">urlDelContenido</span> <span style="color:#f92672">=</span> () =&gt; <span style="color:#a6e22e">frame</span>.<span style="color:#a6e22e">contentWindow</span>.<span style="color:#a6e22e">location</span>.<span style="color:#a6e22e">href</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">bar</span>.<span style="color:#a6e22e">textContent</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">urlDeLaBarra</span>();
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    document.<span style="color:#a6e22e">getElementById</span>(<span style="color:#e6db74">&#39;share&#39;</span>).<span style="color:#a6e22e">addEventListener</span>(<span style="color:#e6db74">&#39;click&#39;</span>, <span style="color:#66d9ef">async</span> () =&gt; {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">url</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">urlDeLaBarra</span>();
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">navigator</span>.<span style="color:#a6e22e">share</span>) <span style="color:#66d9ef">await</span> <span style="color:#a6e22e">navigator</span>.<span style="color:#a6e22e">share</span>({ <span style="color:#a6e22e">title</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;Noticia&#39;</span>, <span style="color:#a6e22e">url</span> });
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">else</span> <span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">textContent</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;Copié: &#39;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">url</span>, <span style="color:#a6e22e">navigator</span>.<span style="color:#a6e22e">clipboard</span>.<span style="color:#a6e22e">writeText</span>(<span style="color:#a6e22e">url</span>);
+</span></span><span style="display:flex;"><span>    });
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    document.<span style="color:#a6e22e">getElementById</span>(<span style="color:#e6db74">&#39;copy&#39;</span>).<span style="color:#a6e22e">addEventListener</span>(<span style="color:#e6db74">&#39;click&#39;</span>, () =&gt; {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">navigator</span>.<span style="color:#a6e22e">clipboard</span>.<span style="color:#a6e22e">writeText</span>(<span style="color:#a6e22e">urlDeLaBarra</span>());
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">textContent</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;Copiado: &#39;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">urlDeLaBarra</span>();
+</span></span><span style="display:flex;"><span>    });
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    document.<span style="color:#a6e22e">getElementById</span>(<span style="color:#e6db74">&#39;inspect&#39;</span>).<span style="color:#a6e22e">addEventListener</span>(<span style="color:#e6db74">&#39;click&#39;</span>, () =&gt; {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">textContent</span> <span style="color:#f92672">=</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#39;URL que ve el usuario y que se comparte:\n  &#39;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">urlDeLaBarra</span>() <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#39;\n\nURL del contenido real:\n  &#39;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">urlDelContenido</span>() <span style="color:#f92672">+</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#e6db74">&#39;\n\nEl menú ⋮ → Compartir usa la primera.&#39;</span>;
+</span></span><span style="display:flex;"><span>    });
+</span></span><span style="display:flex;"><span>  &lt;/<span style="color:#f92672">script</span>&gt;
+</span></span><span style="display:flex;"><span>&lt;/<span style="color:#f92672">body</span>&gt;
+</span></span><span style="display:flex;"><span>&lt;/<span style="color:#f92672">html</span>&gt;
+</span></span></code></pre></div><p>Con el botón <strong>&ldquo;Ver las dos URLs&rdquo;</strong> se ve el truco: lo compartido es <code>/ad-tracker-demo/noticiaBatistuta</code>; lo leído es el <code>srcdoc</code> del iframe.</p>
+<hr>
+<h2 id="demo-2-replicar-el-comportamiento-real-con-un-servidor-mínimo">Demo 2: replicar el comportamiento real con un servidor mínimo</h2>
+<p>Esto ya incluye el <strong>cloaking por <code>Referer</code></strong>, que es lo que hizo el wrapper de verdad. Es un servidor Node sin dependencias, para correr en local y entender el mecanismo. No lo expongas a Internet: es solo educativo.</p>
+<p>Guárdalo como <code>server.js</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">http</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">require</span>(<span style="color:#e6db74">&#39;http&#39;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">ARTICLE</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">`&lt;!doctype html&gt;&lt;html&gt;&lt;body&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  &lt;h1&gt;Gabriel Batistuta hospitalizado tras emboscada en Reconquista&lt;/h1&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  &lt;p&gt;Contenido de ejemplo: esto es lo que el usuario lee.&lt;/p&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&lt;/body&gt;&lt;/html&gt;`</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> <span style="color:#a6e22e">SHOP</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">`&lt;!doctype html&gt;&lt;html&gt;&lt;body&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  &lt;h1&gt;Renova tu vestidor — Camisa Zara&lt;/h1&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  &lt;p&gt;Esto es lo que ve quien abre el link sin Referer.&lt;/p&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&lt;/body&gt;&lt;/html&gt;`</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">function</span> <span style="color:#a6e22e">wrapper</span>() {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span> <span style="color:#e6db74">`&lt;!doctype html&gt;&lt;html&gt;&lt;body&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    &lt;p style=&#34;font-family:monospace&#34;&gt;BARRA: /tracker (no /article)&lt;/p&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">    &lt;iframe src=&#34;/article&#34; style=&#34;width:100%;height:70vh;border:0&#34;&gt;&lt;/iframe&gt;
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">  &lt;/body&gt;&lt;/html&gt;`</span>;
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">createServer</span>((<span style="color:#a6e22e">req</span>, <span style="color:#a6e22e">res</span>) =&gt; {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">const</span> <span style="color:#a6e22e">ref</span> <span style="color:#f92672">=</span> <span style="color:#a6e22e">req</span>.<span style="color:#a6e22e">headers</span>.<span style="color:#a6e22e">referer</span> <span style="color:#f92672">||</span> <span style="color:#e6db74">&#39;&#39;</span>;
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">req</span>.<span style="color:#a6e22e">url</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;/article&#39;</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">res</span>.<span style="color:#a6e22e">writeHead</span>(<span style="color:#ae81ff">200</span>, { <span style="color:#e6db74">&#39;content-type&#39;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;text/html&#39;</span> });
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">res</span>.<span style="color:#a6e22e">end</span>(<span style="color:#a6e22e">ARTICLE</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">req</span>.<span style="color:#a6e22e">url</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;/shop&#39;</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">res</span>.<span style="color:#a6e22e">writeHead</span>(<span style="color:#ae81ff">200</span>, { <span style="color:#e6db74">&#39;content-type&#39;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;text/html&#39;</span> });
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">res</span>.<span style="color:#a6e22e">end</span>(<span style="color:#a6e22e">SHOP</span>);
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">req</span>.<span style="color:#a6e22e">url</span> <span style="color:#f92672">===</span> <span style="color:#e6db74">&#39;/tracker&#39;</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Cloaking: con Referer sirve la nota; sin Referer redirige a la tienda.
+</span></span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">ref</span>) {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">res</span>.<span style="color:#a6e22e">writeHead</span>(<span style="color:#ae81ff">200</span>, { <span style="color:#e6db74">&#39;content-type&#39;</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;text/html&#39;</span> });
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">res</span>.<span style="color:#a6e22e">end</span>(<span style="color:#a6e22e">wrapper</span>());
+</span></span><span style="display:flex;"><span>    } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">res</span>.<span style="color:#a6e22e">writeHead</span>(<span style="color:#ae81ff">307</span>, { <span style="color:#a6e22e">location</span><span style="color:#f92672">:</span> <span style="color:#e6db74">&#39;/shop&#39;</span> });
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">res</span>.<span style="color:#a6e22e">end</span>();
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span>;
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">res</span>.<span style="color:#a6e22e">writeHead</span>(<span style="color:#ae81ff">404</span>);
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">res</span>.<span style="color:#a6e22e">end</span>(<span style="color:#e6db74">&#39;not found&#39;</span>);
+</span></span><span style="display:flex;"><span>}).<span style="color:#a6e22e">listen</span>(<span style="color:#ae81ff">8080</span>, () =&gt; <span style="color:#a6e22e">console</span>.<span style="color:#a6e22e">log</span>(<span style="color:#e6db74">&#39;Abrí http://localhost:8080/tracker&#39;</span>));
+</span></span></code></pre></div><h3 id="cómo-probarlo">Cómo probarlo</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>node server.js
+</span></span></code></pre></div><p><strong>Sin Referer</strong> (como si alguien abriera el link después):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>curl -i http://localhost:8080/tracker
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># HTTP/1.1 307 Temporary Redirect</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Location: /shop</span>
+</span></span></code></pre></div><p><strong>Con Referer</strong> (como cuando el anuncio viene de un diario):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>curl -i -e <span style="color:#e6db74">&#39;https://www.lanacion.com.ar/&#39;</span> http://localhost:8080/tracker
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># HTTP/1.1 200 OK</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># &lt;iframe src=&#34;/article&#34;&gt;...&lt;/iframe&gt;</span>
+</span></span></code></pre></div><p>Si abrís <code>http://localhost:8080/tracker</code> directamente en el navegador, no hay Referer y te manda a la tienda. Para ver la nota en el navegador, creá una página local con un link a <code>/tracker</code>: el navegador enviará su propia URL como Referer y el servidor servirá el wrapper.</p>
+<p>En el caso real, el servidor era más fino: devolvía la nota cuando el <code>Referer</code> era de La Nación o de Facebook, y la tienda cuando no había referencia. Cambiá <code>if (ref)</code> por <code>if (ref.includes('lanacion'))</code> para emularlo.</p>
+<hr>
+<h2 id="cómo-detectarlo-en-la-vida-real">Cómo detectarlo en la vida real</h2>
+<ul>
+<li>Mirá el <strong>dominio en el cuadro de compartir</strong> antes de enviar. Si no coincide con el sitio que estás leyendo, es un wrapper.</li>
+<li>En Chrome: <strong>clic derecho → Ver código fuente</strong>. Si ves un <code>&lt;iframe&gt;</code> con la nota, la barra está mintiendo.</li>
+<li><strong>F12 → pestaña Network</strong>: fijate si la URL principal es distinta del contenido.</li>
+<li>Probá el link con <code>curl</code> sin Referer: si redirige a una tienda/distinto sitio, hay cloaking.</li>
+<li>Usá un bloqueador de anuncios (uBlock Origin, AdGuard, NextDNS): muchos de estos wrappers ni cargan.</li>
+<li>Si el mensaje llegado dice &ldquo;Reenviado&rdquo; pero el dominio es rarísimo, verificá por otro canal.</li>
+</ul>
+<hr>
+<h2 id="resumen">Resumen</h2>
+<p>No era malware. Era:</p>
+<ol>
+<li>una campaña publicitaria con tracking;</li>
+<li>un redirector que hace <strong>cloaking</strong> según <code>Referer</code>;</li>
+<li>un <strong>iframe</strong> que muestra la nota mientras la barra queda en el dominio del anunciante;</li>
+<li>el botón <strong>Compartir</strong> del navegador entregando <code>location.href</code>.</li>
+</ol>
+<p>Mi mamá vio La Nación, compartió lo que creía que era La Nación, y WhatsApp mandó la URL del anunciante. Con <code>iframe</code> + <code>location.href</code> se entiende en 30 líneas; con un servidor y una cabecera <code>Referer</code> se replica completo.</p>
+
+  </div>
+  <section class="comments" aria-label="Comentarios">
+  <h2>Comentarios</h2>
+  <script src="https://giscus.app/client.js"
+    data-repo="imlauera/giscus"
+    data-repo-id="R_kgDOV5a80w"
+    data-category="General"
+    data-category-id="DIC_kwDOV5a8084DL1K7"
+    data-mapping="pathname"
+    data-strict="0"
+    data-reactions-enabled="1"
+    data-emit-metadata="0"
+    data-input-position="bottom"
+    data-theme="preferred_color_scheme"
+    data-lang="es"
+    crossorigin="anonymous"
+    async>
+  </script>
+</section>
+</article>
+
+  </main>
+  <footer class="site-footer">
+  <a href="/acerca/">acerca</a> · <a href="/servicios/">servicios</a> ·
+  <a href="/index.xml">rss</a> · 
+  <a href="https://github.com/imlauera/">github</a>
+</footer>
+
+  
+  <script src="/js/tts-reader.js" defer></script>
+  
+  
+</body>
+</html>
