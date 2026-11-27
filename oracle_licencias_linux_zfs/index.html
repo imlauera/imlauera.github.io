@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>Oracle, licencias y por qué Linux no trae ZFS · Imlauer</title>
+  <meta name="description" content="imlauerandres [at] gmail.com">
+  <link rel="canonical" href="https://imlauera.github.io/oracle_licencias_linux_zfs/">
+  <link rel="alternate" type="application/rss+xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+  <a class="site-title" href="/">Imlauer</a>
+</header>
+
+  <main>
+    
+<article class="post">
+  <h1>Oracle, licencias y por qué Linux no trae ZFS</h1>
+  <p class="meta">
+    <time datetime="2026-11-27">2026-11-27</time>
+    <span class="tags"> · <a href="/tags/oracle/">oracle</a></span>
+  </p>
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+  
+  
+  
+  
+    
+      
+        
+          
+        
+      
+    
+  
+  
+  
+  
+    
+  
+  
+  
+  
+  <div class="audio-player">
+    <p class="audio-label">Escuchar este artículo</p>
+    <audio controls preload="metadata" src="https://archive.org/download/imlauer-blog-audio-oracle-licencias-linux-zfs-9c39125e/oracle-licencias-linux-zfs-74d1c0bbcb.mp3"></audio>
+    <p class="audio-meta"><a href="https://archive.org/download/imlauer-blog-audio-oracle-licencias-linux-zfs-9c39125e/oracle-licencias-linux-zfs-74d1c0bbcb.mp3">Descargar MP3</a> · <a href="https://archive.org/details/imlauer-blog-audio-oracle-licencias-linux-zfs-9c39125e">Ver en Internet Archive</a></p>
+  </div>
+  
+  
+  
+  <section class="tts-reader" data-tts-reader>
+  <p class="audio-label">Leer en voz alta (navegador)</p>
+  <div class="tts-controls">
+    <button type="button" data-tts-play>Leer</button>
+    <button type="button" data-tts-pause disabled>Pausar</button>
+    <button type="button" data-tts-stop disabled>Detener</button>
+    <label class="tts-rate">Velocidad
+      <input type="range" min="0.75" max="2" step="0.05" value="1" data-tts-rate>
+      <span data-tts-rate-value>1.00x</span>
+    </label>
+    <label class="tts-voice">Voz
+      <select data-tts-voice></select>
+    </label>
+  </div>
+  <p class="audio-meta" data-tts-status>Listo para leer.</p>
+  <p class="audio-meta">Usa la voz del navegador (Web Speech API). Para descargar MP3, usá el reproductor/descarga cuando esté disponible.</p>
+</section>
+
+  <div class="content">
+    <p>Cuando Oracle compró Sun Microsystems (la operación se anunció en 2009 y se cerró en enero de 2010), buena parte de la comunidad de software libre dejó de confiar en los proyectos que heredaba, y varios se bifurcaron (<em>fork</em>) casi de inmediato. De OpenOffice.org salió LibreOffice, y de MySQL salió MariaDB. Hoy la mayoría de las distribuciones Linux traen LibreOffice y MariaDB como opciones por defecto.</p>
+<p>La decisión no fue técnica sino de confianza: la comunidad temía que un proyecto libre en manos de una empresa comercial quedara frenado o cerrado. Ese temor tuvo antecedentes concretos con Java, con OpenSolaris y con ZFS, que son el hilo de este artículo. Para entender por qué ZFS, uno de los sistemas de archivos más valorados, no viene dentro de Linux, hay que pasar por las licencias.</p>
+<h2 id="java-android-y-la-demanda-contra-google">Java, Android y la demanda contra Google</h2>
+<p>Con Sun, Oracle heredó Java. En 2010 demandó a Google porque Android usaba parte de la API de Java, y llegó a pedir hasta 9.000 millones de dólares de indemnización. El caso duró más de una década y terminó en abril de 2021, cuando la Corte Suprema de EE. UU. falló 6 a 2 a favor de Google.</p>
+<p>La Corte consideró que copiar unas 11.500 líneas de declaraciones de la API (cerca del 0,4 % del total) fue &ldquo;uso legítimo&rdquo; (<em>fair use</em>). No resolvió si las APIs se pueden proteger con copyright: lo dio por supuesto solo a efectos del fallo. Quedó así un precedente favorable a la interoperabilidad, pero la pregunta de fondo sigue abierta.</p>
+<p>Android sí usa Java, pero no la máquina virtual de Oracle: las apps (en Java o Kotlin) corren sobre su propio entorno de ejecución, y desde Android 7 las bibliotecas base provienen de OpenJDK, la versión libre de Java. OpenJDK tiene licencia GPLv2 con una excepción (<em>Classpath Exception</em>) que permite enlazarlo con programas de otras licencias, un ejemplo de cómo un detalle de la licencia cambia lo que se puede construir encima.</p>
+<h2 id="opensolaris-illumos-y-el-origen-de-zfs">OpenSolaris, illumos y el origen de ZFS</h2>
+<p>ZFS nació en Sun en 2001 y se liberó en 2005 junto con el código de Solaris, bajo la licencia CDDL (<em>Common Development and Distribution License</em>), basada en la MPL 1.1 de Mozilla. Solaris es un Unix de la familia System V: se parece a Linux en el diseño, pero no comparte código con él.</p>
+<p>En 2010 Oracle discontinuó OpenSolaris y siguió desarrollando Solaris como producto cerrado. Ese mismo año nació illumos, una continuación abierta del último código publicado, de la que salen distribuciones como OpenIndiana. Las mejoras de ZFS siguieron en abierto, y en 2013 se anunció OpenZFS, el proyecto que coordina el desarrollo para todas las plataformas.</p>
+<p>Desde 2010 existen entonces dos ZFS separados: el de Oracle, cerrado, y OpenZFS, abierto. De acá en adelante, &ldquo;ZFS&rdquo; quiere decir OpenZFS.</p>
+<h2 id="licencias-permisivas-y-copyleft">Licencias permisivas y copyleft</h2>
+<p>Las licencias libres se dividen en dos familias. Las permisivas (BSD, Apache 2.0) dejan reutilizar el código, incluso dentro de productos cerrados, sin obligar a publicar los cambios. Las de tipo copyleft (GPL, CDDL) exigen que el código derivado conserve la misma licencia.</p>
+<table>
+	<thead>
+			<tr>
+					<th>Licencia</th>
+					<th>Tipo</th>
+					<th>Si modificás y distribuís</th>
+					<th>Ejemplo</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>BSD (2 cláusulas)</td>
+					<td>Permisiva</td>
+					<td>Conservar el aviso de copyright; no hay que publicar los cambios</td>
+					<td>FreeBSD</td>
+			</tr>
+			<tr>
+					<td>Apache 2.0</td>
+					<td>Permisiva</td>
+					<td>Conservar los avisos; incluye una concesión de patentes</td>
+					<td>AOSP, la base de Android</td>
+			</tr>
+			<tr>
+					<td>CDDL</td>
+					<td>Copyleft débil, por archivo</td>
+					<td>Los archivos CDDL modificados siguen bajo CDDL; se pueden combinar con archivos de otras licencias</td>
+					<td>OpenZFS, illumos</td>
+			</tr>
+			<tr>
+					<td>GPLv2</td>
+					<td>Copyleft fuerte</td>
+					<td>Todo el trabajo derivado se distribuye bajo GPLv2, con su código fuente</td>
+					<td>Kernel Linux</td>
+			</tr>
+	</tbody>
+</table>
+<p>En la GPLv2 la obligación de publicar el código aparece al distribuir el software, no al usarlo. Quien modifica Linux y lo usa solo puertas adentro no tiene que publicar nada. El kernel Linux está bajo &ldquo;GPLv2 solamente&rdquo;, sin la opción de versiones posteriores.</p>
+<p>Las dos posturas tienen argumentos. Los defensores del copyleft sostienen que las licencias permisivas permiten que otros se beneficien sin devolver nada; por ejemplo, Apple reutilizó código de FreeBSD en macOS, algo que la licencia BSD permite. Los defensores de las permisivas responden que el objetivo es que el código se use sin trabas, y el proyecto FreeBSD lo plantea justamente así: un sistema cuyos derivados no cargan con obligaciones adicionales.</p>
+<h2 id="por-qué-la-cddl-y-la-gplv2-no-se-pueden-mezclar">Por qué la CDDL y la GPLv2 no se pueden mezclar</h2>
+<p>A primera vista las dos licencias dicen algo parecido: si copiás el código, compartí los cambios bajo la misma licencia. Ese parecido es justamente el problema, porque cada una exige que el resultado quede bajo <em>su</em> licencia, y no se pueden cumplir las dos a la vez.</p>
+<p>La GPLv2 pide que un trabajo derivado o combinado se distribuya entero bajo GPLv2. La CDDL pide que sus archivos sigan bajo CDDL aunque se los combine con otros. Si un binario junta código de ambas, quien lo distribuye incumpliría una u otra. La Software Freedom Conservancy concluye que ni la CDDL ni la GPLv2 permiten combinar material con derechos bajo la otra licencia.</p>
+<p>Por eso OpenZFS no puede distribuirse como parte del binario del kernel Linux. Se discute si Sun eligió la CDDL justamente para que no se pudiera mezclar con Linux; sea o no cierto, el efecto fue ese. Oracle podría relicenciar el código original de Sun bajo una licencia compatible, pero nunca lo hizo, y hoy OpenZFS ya incluye aportes de muchos otros autores, lo que haría el cambio muy difícil.</p>
+<h2 id="freebsd-sí-linux-solo-como-módulo-externo">FreeBSD sí, Linux solo como módulo externo</h2>
+<p>FreeBSD usa la licencia BSD, permisiva, y esa licencia se lleva bien con la CDDL. Por eso FreeBSD incluye ZFS desde la versión 7.0, de 2008, y su política de licencias aprueba la CDDL expresamente para ZFS y DTrace.</p>
+<p>En Linux, ZFS no está en el kernel principal, pero se puede instalar como módulo externo. Ubuntu lo distribuye así desde 2016 y Proxmox lo usa de base para el almacenamiento. Canonical sostiene que un módulo independiente como <code>zfs.ko</code> no es un trabajo derivado del kernel, y la documentación de OpenZFS indica que ninguna de las dos licencias impide distribuirlo como módulo binario o como código fuente. La Software Freedom Conservancy opina lo contrario, así que la discusión legal sigue abierta.</p>
+<p>Hay además un costo técnico: el kernel reserva algunas funciones internas para módulos con licencia GPL, y eso le complicó a ZFS el trabajo de mantenerse al día con cada versión de Linux.</p>
+<h2 id="android-es-gplv2-porque-usa-linux">¿Android es GPLv2 porque usa Linux?</h2>
+<p>Solo el kernel. Android usa un kernel Linux modificado, y por eso esa parte es GPLv2: quien fabrica o distribuye un dispositivo debe ofrecer el código fuente de sus modificaciones al kernel.</p>
+<p>El resto, el proyecto AOSP (<em>Android Open Source Project</em>), usa mayormente Apache 2.0. Google explica que para el software que no es del kernel prefiere Apache 2.0 y licencias parecidas (BSD, MIT) antes que la LGPL, porque Android se entrega como una imagen de sistema fija y cumplir los requisitos del copyleft limitaría el diseño de los fabricantes. Ese es el motivo por el que los fabricantes pueden agregar capas y componentes propietarios sin liberar todo el sistema.</p>
+<h2 id="qué-sistemas-de-archivos-se-pueden-usar-en-linux">Qué sistemas de archivos se pueden usar en Linux</h2>
+<table>
+	<thead>
+			<tr>
+					<th>Sistema</th>
+					<th>Licencia</th>
+					<th>En el kernel principal</th>
+					<th>Snapshots nativos</th>
+					<th>Nota</th>
+			</tr>
+	</thead>
+	<tbody>
+			<tr>
+					<td>ext4</td>
+					<td>GPL</td>
+					<td>Sí</td>
+					<td>No</td>
+					<td>Opción por defecto en muchas distribuciones</td>
+			</tr>
+			<tr>
+					<td>XFS</td>
+					<td>GPL</td>
+					<td>Sí</td>
+					<td>No</td>
+					<td>Pensado para volúmenes y archivos grandes</td>
+			</tr>
+			<tr>
+					<td>Btrfs</td>
+					<td>GPL</td>
+					<td>Sí</td>
+					<td>Sí</td>
+					<td>Copy-on-write y checksums; RAID 5/6 figura como inestable</td>
+			</tr>
+			<tr>
+					<td>OpenZFS</td>
+					<td>CDDL</td>
+					<td>No (módulo externo)</td>
+					<td>Sí</td>
+					<td>Checksums, snapshots y RAID integrados</td>
+			</tr>
+	</tbody>
+</table>
+<p>Btrfs lo empezó Chris Mason en Oracle en 2007 y entró al kernel en la versión 2.6.29, de 2009. No es una reimplementación de ZFS sino un diseño propio con objetivos parecidos: agregar a Linux funciones que le faltaban, como snapshots, checksums y manejo de varios discos. Su documentación de estado marca el RAID 5/6 como inestable por el problema del <em>write hole</em>, así que conviene revisar esa página antes de usarlo.</p>
+<h2 id="conclusión">Conclusión</h2>
+<p>Linux no trae ZFS por una incompatibilidad de licencias, no por una limitación técnica. La licencia BSD de FreeBSD se lleva bien con la CDDL, y por eso FreeBSD integra OpenZFS; la GPLv2 del kernel Linux no, y por eso en Linux queda como módulo aparte.</p>
+<p>Llamar a ZFS &ldquo;el mejor sistema de archivos del mundo&rdquo; es una opinión. Es muy valorado por la integridad de los datos, pero ext4, XFS y Btrfs resuelven bien otros casos, y ninguno gana en todo.</p>
+<h2 id="fuentes">Fuentes</h2>
+<ul>
+<li><a href="https://www.scotusblog.com/case-files/cases/google-llc-v-oracle-america-inc/">Google v. Oracle, SCOTUSblog</a> y <a href="https://www.jonesday.com/ja/insights/2021/04/supreme-court-google-wins-copyright-battle">Jones Day</a></li>
+<li><a href="https://opensource.com/life/15/9/libreoffice-turns-5">Celebrating 5 years of LibreOffice, Opensource.com</a> y <a href="https://thenewstack.io/may-fork-short-history-open-source-forks/">A short history of open source forks, The New Stack</a></li>
+<li><a href="https://www.openzfs.org/wiki/History">Historia de ZFS, OpenZFS</a> y <a href="https://en.wikipedia.org/wiki/OpenSolaris">OpenSolaris, Wikipedia</a></li>
+<li><a href="https://sfconservancy.org/blog/2016/feb/25/zfs-and-linux/">ZFS and Linux, Software Freedom Conservancy</a> y <a href="https://canonical.com/blog/zfs-licensing-and-linux">ZFS Licensing and Linux, Canonical</a></li>
+<li><a href="https://openzfs.readthedocs.io/en/latest/License.html">Licencia de OpenZFS</a> y <a href="https://docs.freebsd.org/en/articles/license-guide/">Política de licencias de FreeBSD</a></li>
+<li><a href="https://android.googlesource.com/platform/docs/source.android.com/+/0e3ee32/src/source/licenses.md">Licencias de AOSP</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Btrfs">Btrfs, Wikipedia</a> y <a href="https://btrfs.wiki.kernel.org/index.php/Status">Estado de Btrfs</a></li>
+</ul>
+<p>Algunos datos (Proxmox, Android 7 y OpenJDK, Apple y FreeBSD, la Classpath Exception) vienen de conocimiento general y no de estas fuentes.</p>
+
+  </div>
+  <section class="comments" aria-label="Comentarios">
+  <h2>Comentarios</h2>
+  <script src="https://giscus.app/client.js"
+    data-repo="imlauera/giscus"
+    data-repo-id="R_kgDOV5a80w"
+    data-category="General"
+    data-category-id="DIC_kwDOV5a8084DL1K7"
+    data-mapping="pathname"
+    data-strict="0"
+    data-reactions-enabled="1"
+    data-emit-metadata="0"
+    data-input-position="bottom"
+    data-theme="preferred_color_scheme"
+    data-lang="es"
+    crossorigin="anonymous"
+    async>
+  </script>
+</section>
+</article>
+
+  </main>
+  <footer class="site-footer">
+  <a href="/acerca/">acerca</a> · <a href="/servicios/">servicios</a> ·
+  <a href="/index.xml">rss</a> · 
+  <a href="https://github.com/imlauera/">github</a>
+</footer>
+
+  
+  <script src="/js/tts-reader.js" defer></script>
+  
+  
+</body>
+</html>
