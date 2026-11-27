@@ -55,8 +55,8 @@
   
   <div class="audio-player">
     <p class="audio-label">Escuchar este artículo</p>
-    <audio controls preload="metadata" src="https://archive.org/download/imlauer-blog-audio-post-freebsd-instalation-3f57dc11/post-freebsd-instalation-349af92752.mp3"></audio>
-    <p class="audio-meta"><a href="https://archive.org/download/imlauer-blog-audio-post-freebsd-instalation-3f57dc11/post-freebsd-instalation-349af92752.mp3">Descargar MP3</a> · <a href="https://archive.org/details/imlauer-blog-audio-post-freebsd-instalation-3f57dc11">Ver en Internet Archive</a></p>
+    <audio controls preload="metadata" src="https://archive.org/download/imlauer-blog-audio-post-freebsd-instalation-3f57dc11/post-freebsd-instalation-507bf16b87.mp3"></audio>
+    <p class="audio-meta"><a href="https://archive.org/download/imlauer-blog-audio-post-freebsd-instalation-3f57dc11/post-freebsd-instalation-507bf16b87.mp3">Descargar MP3</a> · <a href="https://archive.org/details/imlauer-blog-audio-post-freebsd-instalation-3f57dc11">Ver en Internet Archive</a></p>
   </div>
   
   
@@ -115,7 +115,12 @@ ifconfig_wlan=&#34;WPA DHCP&#34;
 </code></pre><p>Ejecutamos <code>wpa_passphrase tucontraseña_de_wifi &gt;&gt; /etc/wpa_supplicant.conf</code></p>
 <pre tabindex="0"><code>service netif restart (me acuerdo cuando ejecutaba este comando y me daba un panic)
 ifconfig
-</code></pre><h3 id="instalar-wifi-powerd">instalar wifi, powerd</h3>
+</code></pre><h3 id="ssh-se-queda-colgado-en-login-interactivo">SSH se queda colgado en login interactivo</h3>
+<p>Si <code>ssh user@host 'echo ok'</code> funciona pero <code>ssh user@host</code> se queda sin prompt, puede ser un comando en <code>~/.profile</code> o <code>~/.login</code> esperando TTY/terminal size. En mi caso fue <code>resizewin -z</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#75715e"># Query terminal size; useful for serial lines.</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># if [ -x /usr/bin/resizewin ] ; then /usr/bin/resizewin -z ; fi</span>
+</span></span></code></pre></div><p>Comentar esa línea y dejar backup (<code>cp ~/.profile ~/.profile.bak</code>) solucionó el login interactivo.</p>
+<h3 id="instalar-wifi-powerd">instalar wifi, powerd</h3>
 <p>El driver nativo de rtw88 de freebsd no me funcionó bien, el wifi se desconectaba después de unos minutos. La solución fue instalar WiFiBox <a href="https://forums.ghostbsd.org/viewtopic.php?f=64&amp;t=2578&amp;sid=8d568e99cbd80762de39a23c6436ce62">https://forums.ghostbsd.org/viewtopic.php?f=64&amp;t=2578&amp;sid=8d568e99cbd80762de39a23c6436ce62</a></p>
 <p>Y deshabilité la opción de background_dhclient en el /etc/rc.conf</p>
 <h4 id="administración-de-la-energía-en-freebsd">Administración de la energía en FreeBSD</h4>

@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>Guía básica de ZFS en FreeBSD · Imlauer</title>
+  <meta name="description" content="imlauerandres [at] gmail.com">
+  <link rel="canonical" href="https://imlauera.github.io/post/guia_zfs_freebsd/">
+  <link rel="alternate" type="application/rss+xml" href="https://imlauera.github.io/index.xml" title="Imlauer">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+  <a class="site-title" href="/">Imlauer</a>
+</header>
+
+  <main>
+    
+<article class="post">
+  <h1>Guía básica de ZFS en FreeBSD</h1>
+  <p class="meta">
+    <time datetime="2026-11-26">2026-11-26</time>
+    <span class="tags"> · <a href="/tags/freebsd/">freebsd</a>, <a href="/tags/zfs/">zfs</a>, <a href="/tags/filesystem/">filesystem</a></span>
+  </p>
+  
+  
+    
+    
+      
+        
+          
+        
+      
+    
+  
+  
+  
+  
+    
+      
+        
+          
+        
+      
+    
+  
+  
+  
+  
+    
+  
+  
+  
+  
+  <div class="audio-player">
+    <p class="audio-label">Escuchar este artículo</p>
+    <audio controls preload="metadata" src="https://archive.org/download/imlauer-blog-audio-post-guia-zfs-freebsd-6cc44365/post-guia-zfs-freebsd-7889cfc0be.mp3"></audio>
+    <p class="audio-meta"><a href="https://archive.org/download/imlauer-blog-audio-post-guia-zfs-freebsd-6cc44365/post-guia-zfs-freebsd-7889cfc0be.mp3">Descargar MP3</a> · <a href="https://archive.org/details/imlauer-blog-audio-post-guia-zfs-freebsd-6cc44365">Ver en Internet Archive</a></p>
+  </div>
+  
+  
+  
+  <section class="tts-reader" data-tts-reader>
+  <p class="audio-label">Leer en voz alta (navegador)</p>
+  <div class="tts-controls">
+    <button type="button" data-tts-play>Leer</button>
+    <button type="button" data-tts-pause disabled>Pausar</button>
+    <button type="button" data-tts-stop disabled>Detener</button>
+    <label class="tts-rate">Velocidad
+      <input type="range" min="0.75" max="2" step="0.05" value="1" data-tts-rate>
+      <span data-tts-rate-value>1.00x</span>
+    </label>
+    <label class="tts-voice">Voz
+      <select data-tts-voice></select>
+    </label>
+  </div>
+  <p class="audio-meta" data-tts-status>Listo para leer.</p>
+  <p class="audio-meta">Usa la voz del navegador (Web Speech API). Para descargar MP3, usá el reproductor/descarga cuando esté disponible.</p>
+</section>
+
+  <div class="content">
+    <p>ZFS combina filesystem y volume manager. En FreeBSD lo normal es elegir <strong>Auto (ZFS)</strong> durante la instalación.</p>
+<h2 id="por-qué-no-está-integrado-en-linux-mainline">¿Por qué no está integrado en Linux mainline?</h2>
+<p>ZFS sí existe en Linux (OpenZFS), pero normalmente como módulo externo (<code>zfs-dkms</code>, paquetes de distro, etc.), no dentro del kernel oficial. El motivo es la licencia: el kernel Linux es GPLv2 y ZFS es CDDL; distribuir código integrado/derivado con esas licencias se considera incompatible. Por eso en Linux suele instalarse aparte, mientras que en FreeBSD está integrado de forma nativa.</p>
+<h2 id="tipo-de-pool-en-la-instalación">Tipo de pool en la instalación</h2>
+<ul>
+<li><strong>stripe</strong>: sin redundancia, usa toda la capacidad/suma de discos.</li>
+<li><strong>mirror</strong>: espejo, como RAID1.</li>
+<li><strong>raidz1/2/3</strong>: similar a RAID5/6 con 1, 2 o 3 discos de paridad.</li>
+</ul>
+<p>Si en el instalador no elegiste mirror, probablemente elegiste stripe (el primero/sin redundancia).</p>
+<h2 id="conceptos">Conceptos</h2>
+<ul>
+<li><strong>Pool (<code>zpool</code>)</strong>: grupo de discos donde vive ZFS. Ejemplo: <code>zroot</code>.</li>
+<li><strong>Dataset</strong>: filesystem dentro del pool. Tiene propiedades propias: mountpoint, compresión, quota, etc.</li>
+<li><strong>Snapshot</strong>: foto instantánea de solo lectura.</li>
+<li><strong>Rollback</strong>: volver un dataset al estado de un snapshot.</li>
+<li><strong>Clone</strong>: copia escribible basada en un snapshot.</li>
+<li><strong>Send/Recv</strong>: enviar y recibir snapshots para backup o replicación.</li>
+</ul>
+<h2 id="inspeccionar-el-estado">Inspeccionar el estado</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Pools</span>
+</span></span><span style="display:flex;"><span>zpool status
+</span></span><span style="display:flex;"><span>zpool list
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Datasets</span>
+</span></span><span style="display:flex;"><span>zfs list
+</span></span><span style="display:flex;"><span>zfs mount
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Snapshots</span>
+</span></span><span style="display:flex;"><span>zfs list -t snapshot
+</span></span></code></pre></div><h2 id="crear-datasets">Crear datasets</h2>
+<p>Un dataset es mejor que crear directorios sueltos cuando querés propiedades separadas.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Crear dataset</span>
+</span></span><span style="display:flex;"><span>sudo zfs create zroot/data
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Ver dónde está montado</span>
+</span></span><span style="display:flex;"><span>zfs get mountpoint zroot/data
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Cambiar mountpoint</span>
+</span></span><span style="display:flex;"><span>sudo zfs set mountpoint<span style="color:#f92672">=</span>/data zroot/data
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Crear dataset con propiedades</span>
+</span></span><span style="display:flex;"><span>sudo zfs create -o compression<span style="color:#f92672">=</span>lz4 -o quota<span style="color:#f92672">=</span>20G zroot/data/proyectos
+</span></span></code></pre></div><h2 id="propiedades-útiles">Propiedades útiles</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Ver propiedades</span>
+</span></span><span style="display:flex;"><span>zfs get compression,quota,atime,mountpoint zroot/data
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Activar compresión (recomendado)</span>
+</span></span><span style="display:flex;"><span>sudo zfs set compression<span style="color:#f92672">=</span>lz4 zroot
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Cuota y reserva</span>
+</span></span><span style="display:flex;"><span>sudo zfs set quota<span style="color:#f92672">=</span>50G zroot/home/esotericwarfare
+</span></span><span style="display:flex;"><span>sudo zfs set reservation<span style="color:#f92672">=</span>10G zroot/data
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Desactivar atime si querés menos escrituras</span>
+</span></span><span style="display:flex;"><span>sudo zfs set atime<span style="color:#f92672">=</span>off zroot
+</span></span></code></pre></div><h2 id="snapshots-y-rollback">Snapshots y rollback</h2>
+<p>Esto es lo que ext4 no trae nativo: volver atrás un filesystem completo al instante.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Crear dataset de prueba</span>
+</span></span><span style="display:flex;"><span>sudo zfs create zroot/tmp/zfs_demo
+</span></span><span style="display:flex;"><span>echo <span style="color:#e6db74">&#34;version 1: datos importantes&#34;</span> &gt; /tmp/zfs_demo/nota.txt
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Snapshot antes del desastre</span>
+</span></span><span style="display:flex;"><span>sudo zfs snapshot zroot/tmp/zfs_demo@antes_del_desastre
+</span></span><span style="display:flex;"><span>zfs list -t snapshot -r zroot/tmp/zfs_demo
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Simular desastre</span>
+</span></span><span style="display:flex;"><span>rm -f /tmp/zfs_demo/nota.txt
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Rollback instantáneo</span>
+</span></span><span style="display:flex;"><span>sudo zfs rollback zroot/tmp/zfs_demo@antes_del_desastre
+</span></span><span style="display:flex;"><span>cat /tmp/zfs_demo/nota.txt
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># -&gt; version 1: datos importantes</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Limpiar</span>
+</span></span><span style="display:flex;"><span>sudo zfs destroy zroot/tmp/zfs_demo@antes_del_desastre
+</span></span><span style="display:flex;"><span>sudo zfs destroy zroot/tmp/zfs_demo
+</span></span></code></pre></div><h2 id="ver-diferencias">Ver diferencias</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Diferencias entre snapshot y estado actual</span>
+</span></span><span style="display:flex;"><span>sudo zfs diff zroot/data@antes_del_cambio zroot/data
+</span></span></code></pre></div><h2 id="backup-y-replicación">Backup y replicación</h2>
+<p><code>zfs send/recv</code> replica snapshots, ideal para backups incrementales.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Backup local a otro pool</span>
+</span></span><span style="display:flex;"><span>sudo zfs snapshot zroot/data@backup-2026-11-26
+</span></span><span style="display:flex;"><span>sudo zfs send zroot/data@backup-2026-11-26 | sudo zfs recv backup/data
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Incremental</span>
+</span></span><span style="display:flex;"><span>sudo zfs snapshot zroot/data@backup-2026-11-27
+</span></span><span style="display:flex;"><span>sudo zfs send -i @backup-2026-11-26 zroot/data@backup-2026-11-27 | sudo zfs recv backup/data
+</span></span></code></pre></div><h2 id="scrub-e-integridad">Scrub e integridad</h2>
+<p>ZFS usa checksums para detectar corrupción. El scrub lee los datos y verifica integridad. Con redundancia (mirror/raidz), puede reparar bloques corruptos automáticamente (self-healing).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span><span style="color:#75715e"># Iniciar scrub</span>
+</span></span><span style="display:flex;"><span>sudo zpool scrub zroot
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Ver progreso/estado</span>
+</span></span><span style="display:flex;"><span>zpool status -v zroot
+</span></span></code></pre></div><h2 id="clones-escribibles-instantáneos">Clones escribibles instantáneos</h2>
+<p>Un clone es una copia escribible de un snapshot: se crea en segundos y solo consume los bloques que cambian (CoW). Útil para probar cambios riesgosos.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo zfs snapshot zroot/data@base
+</span></span><span style="display:flex;"><span>sudo zfs clone zroot/data@base zroot/data-test
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Trabajá en zroot/data-test; zroot/data queda intacto</span>
+</span></span><span style="display:flex;"><span>sudo zfs destroy zroot/data-test
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Si el snapshot tiene clones, primero destruí los clones o usá -R con cuidado</span>
+</span></span></code></pre></div><h2 id="boot-environments-freebsd">Boot environments (FreeBSD)</h2>
+<p>Antes de actualizar el sistema podés crear un entorno booteable y volver atrás desde el loader si algo falla. Esto no es nativo en ext4.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo bectl create antes-upgrade
+</span></span><span style="display:flex;"><span>sudo bectl list
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Actualizás/pruebas cambios...</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Si algo sale mal, activar el entorno anterior</span>
+</span></span><span style="display:flex;"><span>sudo bectl activate antes-upgrade
+</span></span><span style="display:flex;"><span>sudo reboot
+</span></span></code></pre></div><h2 id="compresión-transparente">Compresión transparente</h2>
+<p>Se activa por dataset/pool y las apps no necesitan cambios. <code>lz4</code> es rápido; <code>zstd</code> suele comprimir más.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo zfs set compression<span style="color:#f92672">=</span>zstd zroot
+</span></span><span style="display:flex;"><span>zfs get compression,compressratio zroot
+</span></span></code></pre></div><h2 id="cifrado-nativo-por-dataset">Cifrado nativo por dataset</h2>
+<p>ZFS puede cifrar datasets individuales, con claves/propiedades por dataset.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo zfs create -o encryption<span style="color:#f92672">=</span>on -o keyformat<span style="color:#f92672">=</span>passphrase zroot/secretos
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Al montar/bootear según configuración, pedirá cargar la key</span>
+</span></span><span style="display:flex;"><span>sudo zfs load-key zroot/secretos
+</span></span><span style="display:flex;"><span>sudo zfs mount zroot/secretos
+</span></span></code></pre></div><h2 id="copies2-redundancia-extra-en-un-solo-disco"><code>copies=2</code> (redundancia extra en un solo disco)</h2>
+<p>Guarda copias adicionales de bloques seleccionados. Ayuda ante sectores malos, pero <strong>no reemplaza</strong> un mirror.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>sudo zfs set copies<span style="color:#f92672">=</span><span style="color:#ae81ff">2</span> zroot/important
+</span></span><span style="display:flex;"><span>zfs get copies zroot/important
+</span></span></code></pre></div><h2 id="comandos-peligrosos">Comandos peligrosos</h2>
+<ul>
+<li><code>zfs destroy</code> borra datasets/snapshots; no hay papelera.</li>
+<li><code>zpool destroy</code> borra el pool completo.</li>
+<li><code>zfs rollback</code> descarta cambios posteriores al snapshot.</li>
+</ul>
+<p>Antes de destruir, revisá con <code>zfs list -r -t all nombre</code>.</p>
+<h2 id="resumen">Resumen</h2>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-text-size-adjust:none;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>zpool status                  <span style="color:#75715e"># estado del pool</span>
+</span></span><span style="display:flex;"><span>zfs list                      <span style="color:#75715e"># datasets</span>
+</span></span><span style="display:flex;"><span>zfs snapshot pool/ds@nombre   <span style="color:#75715e"># snapshot</span>
+</span></span><span style="display:flex;"><span>zfs rollback pool/ds@nombre   <span style="color:#75715e"># volver atrás</span>
+</span></span><span style="display:flex;"><span>zfs clone snap pool/ds        <span style="color:#75715e"># clone escribible</span>
+</span></span><span style="display:flex;"><span>zfs send/recv                 <span style="color:#75715e"># replicar</span>
+</span></span><span style="display:flex;"><span>zpool scrub pool              <span style="color:#75715e"># verificar integridad</span>
+</span></span><span style="display:flex;"><span>bectl create/activate         <span style="color:#75715e"># boot environments</span>
+</span></span></code></pre></div>
+  </div>
+  <section class="comments" aria-label="Comentarios">
+  <h2>Comentarios</h2>
+  <script src="https://giscus.app/client.js"
+    data-repo="imlauera/giscus"
+    data-repo-id="R_kgDOV5a80w"
+    data-category="General"
+    data-category-id="DIC_kwDOV5a8084DL1K7"
+    data-mapping="pathname"
+    data-strict="0"
+    data-reactions-enabled="1"
+    data-emit-metadata="0"
+    data-input-position="bottom"
+    data-theme="preferred_color_scheme"
+    data-lang="es"
+    crossorigin="anonymous"
+    async>
+  </script>
+</section>
+</article>
+
+  </main>
+  <footer class="site-footer">
+  <a href="/acerca/">acerca</a> · <a href="/servicios/">servicios</a> ·
+  <a href="/index.xml">rss</a> · 
+  <a href="https://github.com/imlauera/">github</a>
+</footer>
+
+  
+  <script src="/js/tts-reader.js" defer></script>
+  
+  
+</body>
+</html>
